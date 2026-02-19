@@ -1,0 +1,218 @@
+/**
+ * Monthly Results Landing Page Styles
+ * Border-free pure mobile layout
+ */
+
+.monthly-results {
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+}
+
+.mb-30 {
+  margin-bottom: 0;
+}
+
+.monthly-results .excel-card {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+  border: none;
+  margin: 0;
+  width: 100%;
+}
+
+.monthly-results .excel-card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 0.75rem);
+  font-weight: 600;
+  font-size: clamp(1rem, 4vw, 1.1rem);
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  margin-bottom: clamp(1rem, 3vw, 1.5rem);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.monthly-results-header {
+  justify-content: center !important;
+  text-align: center !important;
+}
+
+.monthly-results .excel-card-body {
+  padding: clamp(1rem, 3vw, 1.5rem);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.stats-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(0.75rem, 2vw, 12px);
+  box-sizing: border-box;
+}
+
+.stat-card {
+  background: white;
+  border: none;
+  border-radius: 16px;
+  padding: clamp(1.25rem, 3vw, 1.5rem);
+  text-align: center;
+  text-decoration: none !important;
+  color: inherit;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  min-height: clamp(120px, 25vw, 140px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.stat-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+  transform-origin: left;
+  border-radius: 16px 16px 0 0;
+}
+
+.stat-card:hover,
+.stat-card:active,
+.stat-card:focus {
+  border: none;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25);
+  transform: translateY(-4px);
+  text-decoration: none !important;
+  color: inherit;
+  outline: none;
+}
+
+.stat-card:hover::before,
+.stat-card:active::before,
+.stat-card:focus::before {
+  transform: scaleX(1);
+}
+
+.stat-card:active,
+.stat-card:visited {
+  text-decoration: none !important;
+  color: inherit;
+}
+
+.stat-number {
+  font-size: clamp(1.25rem, 5vw, 1.5rem);
+  font-weight: 700;
+  color: #111827;
+  margin-bottom: clamp(0.25rem, 1vw, 0.5rem);
+  text-decoration: none !important;
+  line-height: 1.3;
+}
+
+.stat-label {
+  font-size: clamp(0.75rem, 3vw, 0.875rem);
+  color: #6b7280;
+  text-decoration: none !important;
+  line-height: 1.4;
+}
+
+.monthly-results-hover-tick {
+  position: absolute;
+  top: clamp(8px, 2vw, 12px);
+  right: clamp(8px, 2vw, 12px);
+  font-size: clamp(18px, 5vw, 24px);
+  color: #28a745;
+  opacity: 0;
+  transform: scale(0.8);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  z-index: 10;
+}
+
+.stat-card:hover .monthly-results-hover-tick,
+.stat-card:active .monthly-results-hover-tick {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Tablet and larger screens */
+@media (min-width: 640px) {
+  .monthly-results {
+    padding: clamp(1rem, 3vw, 1.5rem);
+  }
+
+  .monthly-results .excel-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .monthly-results .excel-card-header {
+    border-radius: 16px 16px 0 0;
+    margin-bottom: 0;
+    position: relative;
+    top: auto;
+  }
+
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1rem;
+  }
+}
+
+/* Desktop screens */
+@media (min-width: 1024px) {
+  .stats-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .stat-card {
+    min-height: clamp(140px, 30vw, 160px);
+  }
+
+  .stat-card:active {
+    transform: translateY(-2px) scale(0.98);
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+    gap: clamp(0.5rem, 1.5vw, 0.75rem);
+  }
+
+  .stat-card {
+    min-height: clamp(100px, 22vw, 120px);
+    padding: clamp(1rem, 2.5vw, 1.25rem);
+  }
+}
+
+@media (max-width: 768px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}

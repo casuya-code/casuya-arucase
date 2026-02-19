@@ -1,0 +1,247 @@
+import { createContext, useContext, useState, useEffect } from 'react';
+import api from '../services/api';
+
+const AuthContext = createContext(null);
+
+export const useAuth = () => {
+  const context = useContext(AuthContext);
+  if (!context) {
+    throw new Error('useAuth must be used within AuthProvider');
+  }
+  return context;
+};
+
+export const AuthProvider = ({ children }) => {
+  const [user, setUser] = useState(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    // Listen for logout events from API interceptor
+    const handleLogout = () => {
+      setUser(null);
+      setLoading(false);
+    };
+    window.addEventListener('auth:logout', handleLogout);
+
+    // Check if user is logged in on mount and verify token before rendering protected content
+    const token = localStorage.getItem('token');
+    const savedUser = localStorage.getItem('user');
+
+    if (!token || !savedUser) {
+      setLoading(false);
+      return () => window.removeEventListener('auth:logout', handleLogout);
+    }
+
+    let cancelled = false;
+    window.__verifyingToken = true;
+    api.get('/auth/me')
+      .then((response) => {
+        if (cancelled) return;
+        setUser(response.data.user);
+        localStorage.setItem('user', JSON.stringify(response.data.user));
+      })
+      .catch((error) => {
+        if (cancelled) return;
+        if (error.response?.status === 401) {
+          localStorage.removeItem('token');
+          localStorage.removeItem('user');
+          setUser(null);
+        } else {
+          try {
+            setUser(JSON.parse(savedUser));
+          } catch {
+            localStorage.removeItem('token');
+            localStorage.removeItem('user');
+            setUser(null);
+          }
+        }
+      })
+      .finally(() => {
+        window.__verifyingToken = false;
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+      window.removeEventListener('auth:logout', handleLogout);
+    };
+  }, []);
+
+  const verifyToken = async () => {
+    try {
+      // Add a flag to prevent interceptor from logging out during verification
+      window.__verifyingToken = true;
+      const response = await api.get('/auth/me');
+      setUser(response.data.user);
+      localStorage.setItem('user', JSON.stringify(response.data.user));
+      window.__verifyingToken = false;
+      return true;
+    } catch (error) {
+      console.error('Token verification failed:', error);
+      window.__verifyingToken = false;
+      
+      // Only clear user if token is truly invalid (401)
+      if (error.response?.status === 401) {
+        // Token is invalid - clear it but don't redirect immediately
+        // Let the ProtectedRoute or next API call handle the redirect
+        setUser(null);
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+      }
+      return false;
+    }
+  };
+
+  const login = async (username, password) => {
+    try {
+      const response = await api.post('/auth/login', { username, password });
+      const data = response?.data;
+      // Handle 2xx responses that indicate failure (e.g. code 403 in body)
+      if (data && (data.code === 403 || data.success === false)) {
+        const msg = data.message || data.error || data.msg || 'Access denied.';
+        return { success: false, error: msg };
+      }
+      const token = data?.token;
+      const user = data?.user;
+      if (!token || !user) {
+        return { success: false, error: data?.message || 'Invalid response from server.' };
+      }
+      localStorage.setItem('token', token);
+      localStorage.setItem('user', JSON.stringify(user));
+      setUser(user);
+      return { success: true };
+    } catch (error) {
+      const msg = error?.response?.data?.message ?? error?.response?.data?.error ?? error?.message;
+      return {
+        success: false,
+        error: msg && String(msg).trim() ? String(msg) : 'Login failed. Please try again.',
+      };
+    }
+  };
+
+  const logout = () => {
+    localStorage.removeItem('token');
+    localStorage.removeItem('user');
+    setUser(null);
+    window.location.href = '/login';
+  };
+
+  const isAuthenticated = () => {
+    return !!user && !!localStorage.getItem('token');
+  };
+
+  const hasRole = (role) => {
+    return user?.role === role;
+  };
+
+  const hasPermission = (permission) => {
+    if (!user?.permissions) return false;
+    const permissions = typeof user.permissions === 'string' 
+      ? JSON.parse(user.permissions) 
+      : user.permissions;
+    return permissions[permission] === true;
+  };
+
+  const isAdminLike = () => {
+    const role = user?.role?.toLowerCase?.() ?? user?.role;
+    return role === 'admin' || role === 'superadmin';
+  };
+
+  const getParsedPermissions = () => {
+    if (!user?.permissions) return {};
+    try {
+      return typeof user.permissions === 'string'
+        ? JSON.parse(user.permissions)
+        : user.permissions;
+    } catch {
+      return {};
+    }
+  };
+
+  /** For non-admin: returns allowed years for a class, or null = all years, or [] = no access */
+  const getAllowedYearsForClass = (className) => {
+    if (isAdminLike()) return null;
+    const perms = getParsedPermissions();
+    const hasAccess = (perms.class_subjects && Object.keys(perms.class_subjects).includes(className)) ||
+      (perms.classes || []).includes(className);
+    if (!hasAccess) return [];
+    const cp = perms.class_permissions || {};
+    const years = cp[className]?.years;
+    if (Array.isArray(years) && years.length > 0) return years.map((y) => Number(y));
+    return null;
+  };
+
+  /** For non-admin: returns allowed subject names (union of all classes), or null = all subjects */
+  const getAllowedSubjects = () => {
+    if (isAdminLike()) return null;
+    const perms = getParsedPermissions();
+    if (perms.class_subjects && typeof perms.class_subjects === 'object') {
+      const union = new Set();
+      Object.values(perms.class_subjects).forEach((arr) => {
+        if (Array.isArray(arr)) arr.forEach((s) => union.add(s));
+      });
+      return union.size ? Array.from(union) : [];
+    }
+    return perms.subjects || [];
+  };
+
+  /** For non-admin: returns allowed subject names for a specific class, or null = all subjects for that class */
+  const getAllowedSubjectsForClass = (className) => {
+    if (isAdminLike()) return null;
+    const perms = getParsedPermissions();
+    if (perms.class_subjects && perms.class_subjects[className]) {
+      const list = perms.class_subjects[className];
+      return Array.isArray(list) ? list : [];
+    }
+    if ((perms.classes || []).includes(className)) return perms.subjects || [];
+    return [];
+  };
+
+  /** For non-admin: returns allowed score-entry month names, or null = all months allowed */
+  const getAllowedScoreEntryMonths = () => {
+    if (isAdminLike()) return null;
+    const perms = getParsedPermissions();
+    const months = perms.score_entry_months;
+    if (!Array.isArray(months) || months.length === 0) return null;
+    return months;
+  };
+
+  /** True if user has access to this class (admin always true) */
+  const hasClass = (className) => {
+    if (isAdminLike()) return true;
+    const perms = getParsedPermissions();
+    if (perms.class_subjects && Object.keys(perms.class_subjects).includes(className)) return true;
+    return (perms.classes || []).includes(className);
+  };
+
+  /** True if user has the given module (admin/superadmin always have all). Used for registration, etc. */
+  const hasModule = (moduleId) => {
+    if (isAdminLike()) return true;
+    const perms = getParsedPermissions();
+    const modules = perms.modules;
+    if (!Array.isArray(modules)) return false;
+    return modules.includes('all') || modules.includes(moduleId);
+  };
+
+  const value = {
+    user,
+    loading,
+    login,
+    logout,
+    verifyToken,
+    isAuthenticated,
+    hasRole,
+    hasPermission,
+    isAdminLike,
+    getParsedPermissions,
+    getAllowedYearsForClass,
+    getAllowedSubjects,
+    getAllowedSubjectsForClass,
+    getAllowedScoreEntryMonths,
+    hasClass,
+    hasModule,
+  };
+
+  return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
+};
+

@@ -1,0 +1,262 @@
+.privacy-policy-page {
+  width: 100%;
+  min-width: 100%;
+  max-width: 100vw;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 2rem clamp(1rem, 4vw, 2rem);
+  background: #f9fafb;
+  overflow-x: hidden;
+}
+
+.privacy-policy-page .header {
+  background: linear-gradient(135deg, #1a5490 0%, #2d7bc4 100%);
+  color: white;
+  padding: 3rem 2rem;
+  text-align: center;
+}
+
+.privacy-policy-page .header h1 {
+  font-size: 2.5rem;
+  margin-bottom: 0.5rem;
+  font-weight: 700;
+}
+
+.privacy-policy-page .header p {
+  opacity: 0.9;
+  font-size: 1rem;
+}
+
+.privacy-policy-page .container {
+  max-width: 1000px;
+  margin: 0 auto;
+  padding: 2rem;
+}
+
+.policy-card {
+  background: white;
+  border-radius: 8px;
+  padding: 2rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.policy-card h2 {
+  color: #1a5490;
+  font-size: 1.75rem;
+  margin-bottom: 1rem;
+  font-weight: 700;
+}
+
+.policy-card h3 {
+  color: #2d7bc4;
+  font-size: 1.25rem;
+  margin-top: 1.5rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.policy-card p {
+  line-height: 1.8;
+  margin-bottom: 1rem;
+  color: #374151;
+}
+
+.policy-card ul {
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+
+.policy-card li {
+  line-height: 1.8;
+  margin-bottom: 0.75rem;
+  color: #374151;
+}
+
+.policy-card strong {
+  color: #1a5490;
+  font-weight: 600;
+}
+
+.highlight-box {
+  background: #eff6ff;
+  border-left: 4px solid #1a5490;
+  padding: 1rem 1.5rem;
+  margin: 1.5rem 0;
+  border-radius: 4px;
+}
+
+.highlight-box strong {
+  color: #1a5490;
+}
+
+.back-button-container {
+  text-align: center;
+  margin-top: 3rem;
+}
+
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.5rem;
+  background: #1a5490;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background 0.2s;
+  font-weight: 500;
+}
+
+.back-button:hover {
+  background: #2d7bc4;
+}
+
+/* ===========================================
+   RESPONSIVE DESIGN - MOBILE FIRST APPROACH
+   =========================================== */
+
+/* Extra Small Devices (phones, 320px and up) */
+@media (min-width: 320px) {
+  .privacy-policy-page .header {
+    padding: 2rem 1rem;
+  }
+
+  .privacy-policy-page .header h1 {
+    font-size: clamp(1.5rem, 6vw, 2rem);
+    margin-bottom: 0.75rem;
+    line-height: 1.3;
+  }
+
+  .privacy-policy-page .header p {
+    font-size: clamp(0.875rem, 3vw, 0.9375rem);
+  }
+
+  .privacy-policy-page .container {
+    padding: 1rem 0.75rem;
+  }
+
+  .policy-card {
+    padding: 1.25rem;
+    margin-bottom: 1.25rem;
+    border-radius: 12px;
+  }
+
+  .policy-card h2 {
+    font-size: clamp(1.25rem, 5vw, 1.5rem);
+    margin-bottom: 0.875rem;
+    line-height: 1.4;
+  }
+
+  .policy-card h3 {
+    font-size: clamp(1.125rem, 4vw, 1.125rem);
+    margin-top: 1.25rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.4;
+  }
+
+  .policy-card p {
+    font-size: clamp(0.9375rem, 3.5vw, 1rem);
+    line-height: 1.7;
+  }
+
+  .policy-card ul {
+    padding-left: 1.5rem;
+  }
+
+  .policy-card li {
+    font-size: clamp(0.9375rem, 3.5vw, 1rem);
+    line-height: 1.7;
+  }
+
+  .highlight-box {
+    padding: 1rem 1.25rem;
+    margin: 1.25rem 0;
+  }
+
+  .back-button {
+    padding: 0.875rem 1.25rem;
+    font-size: clamp(0.875rem, 3vw, 1rem);
+    min-height: 44px;
+    width: 100%;
+  }
+}
+
+/* Small Devices (landscape phones, 480px and up) */
+@media (min-width: 480px) {
+  .privacy-policy-page .header {
+    padding: 2.5rem 1.5rem;
+  }
+
+  .privacy-policy-page .container {
+    padding: 1.5rem 1rem;
+  }
+
+  .policy-card {
+    padding: 1.5rem;
+  }
+
+  .back-button {
+    width: auto;
+  }
+}
+
+/* Medium Devices (tablets, 640px and up) */
+@media (min-width: 640px) {
+  .privacy-policy-page .container {
+    padding: 2rem 1.5rem;
+  }
+
+  .policy-card {
+    padding: 1.75rem;
+  }
+}
+
+/* Large Devices (tablets landscape, 768px and up) */
+@media (min-width: 768px) {
+  .privacy-policy-page .header {
+    padding: 3rem 2rem;
+  }
+
+  .privacy-policy-page .header h1 {
+    font-size: 2.5rem;
+  }
+
+  .privacy-policy-page .header p {
+    font-size: 1rem;
+  }
+
+  .privacy-policy-page .container {
+    padding: 2rem;
+    max-width: 1000px;
+  }
+
+  .policy-card {
+    padding: 2rem;
+  }
+
+  .policy-card h2 {
+    font-size: 1.75rem;
+  }
+
+  .policy-card h3 {
+    font-size: 1.25rem;
+  }
+
+  .policy-card p {
+    font-size: 1rem;
+  }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .back-button {
+    min-height: 48px;
+    padding: 1rem 1.5rem;
+  }
+
+  .back-button:active {
+    transform: scale(0.98);
+  }
+}
+

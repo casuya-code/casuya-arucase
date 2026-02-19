@@ -1,0 +1,1042 @@
+/**
+ * Monthly Results Management Styles
+ * Border-free pure mobile layout
+ */
+
+.monthly-results-mgmt-page-container {
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  margin: 0;
+}
+
+.monthly-results-mgmt-page-container .excel-card {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  overflow: visible;
+  margin: 0;
+  width: 100%;
+}
+
+.monthly-results-mgmt-page-container .excel-card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  margin-bottom: clamp(1rem, 3vw, 1.5rem);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.monthly-results-mgmt-page-container .excel-card-body {
+  padding: clamp(1rem, 3vw, 2rem);
+  background: transparent;
+  border: none;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.monthly-results-management {
+  margin-bottom: 0;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  color: #9ca3af;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.empty-state h3 {
+  margin: 0 0 0.5rem 0;
+  color: #111827;
+}
+
+.empty-state p {
+  margin: 0 0 2rem 0;
+  color: #6b7280;
+}
+
+.results-info {
+  display: flex;
+  justify-content: space-around;
+  flex-wrap: wrap;
+  gap: clamp(0.75rem, 2vw, 15px);
+  margin-bottom: clamp(1rem, 3vw, 1.5rem);
+  padding: clamp(0.75rem, 2vw, 1rem);
+  background: rgba(249, 250, 251, 0.8);
+  border-radius: 12px;
+  border: none;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
+}
+
+.info-item {
+  padding: clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px);
+  background: rgba(249, 250, 251, 0.6);
+  border-radius: 8px;
+  font-size: clamp(0.75rem, 2vw, 13px);
+  border: none;
+}
+
+.info-item strong {
+  color: #000000;
+  margin-right: 5px;
+}
+
+/* Report Header Styles */
+.report-header-section {
+  background: linear-gradient(135deg, #87ceeb 0%, #b0e0e6 100%);
+  padding: clamp(10px, 2.5vw, 15px);
+  margin-bottom: clamp(3px, 1vw, 5px);
+  border-radius: 0;
+  border: none;
+  font-family: 'Times New Roman', Times, serif;
+}
+
+.report-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding-bottom: clamp(15px, 3vw, 20px);
+  position: relative;
+  max-width: 1200px;
+  margin: 0 auto;
+  gap: clamp(10px, 2vw, 20px);
+}
+
+.logo-section, .logo-section-right {
+  flex: 0 0 auto;
+  width: clamp(80px, 12vw, 120px);
+  height: clamp(80px, 12vw, 120px);
+  min-width: clamp(80px, 12vw, 120px);
+  max-width: clamp(80px, 12vw, 120px);
+  min-height: clamp(80px, 12vw, 120px);
+  max-height: clamp(80px, 12vw, 120px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
+}
+
+.logo-section {
+  order: 1;
+}
+
+.logo-section-right {
+  order: 3;
+}
+
+.school-logo, .school-logo-right {
+  width: clamp(80px, 12vw, 120px);
+  height: clamp(80px, 12vw, 120px);
+  min-width: clamp(80px, 12vw, 120px);
+  max-width: clamp(80px, 12vw, 120px);
+  min-height: clamp(80px, 12vw, 120px);
+  max-height: clamp(80px, 12vw, 120px);
+  display: block;
+  object-fit: contain;
+  object-position: center;
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background: white;
+  padding: 4px;
+  box-sizing: border-box;
+}
+
+.school-logo-placeholder {
+  width: clamp(80px, 12vw, 120px);
+  height: clamp(80px, 12vw, 120px);
+  border: 2px solid rgba(0, 0, 0, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f3f4f6;
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  color: #6b7280;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  box-sizing: border-box;
+}
+
+.school-info {
+  flex: 1;
+  text-align: center;
+  padding: 0 clamp(10px, 2vw, 20px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  order: 2;
+}
+
+.school-info h1 {
+  font-size: clamp(10px, 2vw, 24px);
+  font-weight: bold;
+  margin: 0;
+  color: #000000;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.school-info h2 {
+  font-size: clamp(9px, 1.75vw, 20px);
+  font-weight: bold;
+  margin: clamp(2px, 0.5vw, 5px) 0;
+  color: #000000;
+  text-align: center;
+  line-height: 1.2;
+}
+
+.contact-info {
+  text-align: center;
+  margin-top: clamp(3px, 0.75vw, 8px);
+}
+
+.contact-info p {
+  margin: clamp(0px, 0.25vw, 2px) 0;
+  font-size: clamp(8px, 1.5vw, 14px);
+  color: #000000;
+  text-align: center;
+  font-weight: 500;
+  line-height: 1.3;
+}
+
+.test-info-bar {
+  background-color: #87ceeb;
+  color: #000000;
+  text-align: center;
+  padding: clamp(6px, 1.5vw, 10px);
+  font-size: clamp(10px, 2vw, 16px);
+  font-weight: bold;
+  letter-spacing: clamp(0.5px, 0.5vw, 1px);
+  margin-top: clamp(2px, 0.75vw, 5px);
+  margin-bottom: 0;
+  font-family: 'Times New Roman', Times, serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+}
+
+/* Results Table Container */
+.results-table-container {
+  margin: clamp(0.25rem, 1vw, 5px) 0 clamp(1rem, 3vw, 20px) 0;
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+  border: none;
+}
+
+.results-table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+  overflow-y: visible;
+  -webkit-overflow-scrolling: touch;
+  box-sizing: border-box;
+}
+
+.compact-results-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+  font-family: 'Times New Roman', Times, serif;
+  table-layout: auto;
+  white-space: nowrap;
+  line-height: 1.2;
+}
+
+.compact-results-table thead {
+  background: white;
+  color: #000000;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.compact-results-table th {
+  padding: clamp(6px, 1.5vw, 8px) clamp(3px, 1vw, 4px);
+  font-weight: 600;
+  text-align: center;
+  border: none;
+  font-size: clamp(11px, 2vw, 13px);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: white !important;
+  color: #000000 !important;
+  line-height: 1.2;
+}
+
+/* Ensure ALL header columns have white background */
+.compact-results-table thead th.sticky-col,
+.compact-results-table thead th.subject-col,
+.compact-results-table thead th.result-col,
+.compact-results-table thead th.remarks-col {
+  background: white !important;
+  color: #000000 !important;
+}
+
+.compact-results-table td {
+  padding: clamp(4px, 1vw, 6px) clamp(3px, 1vw, 4px);
+  border: none;
+  text-align: center;
+  font-size: clamp(10px, 1.75vw, 12px);
+  font-family: 'Times New Roman', Times, serif;
+  line-height: 1.2;
+}
+
+.compact-results-table tbody tr {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.compact-results-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+/* Sticky Columns */
+.sticky-col {
+  position: sticky;
+  z-index: 5;
+  box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+}
+
+/* Body sticky columns have white background by default */
+.compact-results-table tbody .sticky-col {
+  background: white;
+}
+
+/* Header sticky columns have white background */
+.compact-results-table thead th.sticky-col {
+  background: white !important;
+  color: var(--gray-900) !important;
+}
+
+.col-sn {
+  left: 0;
+  width: 35px;
+  min-width: 35px;
+  max-width: 35px;
+  font-size: 12px;
+}
+
+.col-fname {
+  left: 35px;
+  width: 70px;
+  min-width: 70px;
+  max-width: 70px;
+  text-align: left !important;
+  padding-left: 6px !important;
+  padding-right: 2px !important;
+}
+
+.col-mname {
+  left: 105px;
+  width: 60px;
+  min-width: 60px;
+  max-width: 60px;
+  text-align: left !important;
+  padding-left: 6px !important;
+  padding-right: 2px !important;
+}
+
+.col-sname {
+  left: 165px;
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
+  text-align: left !important;
+  padding-left: 6px !important;
+  padding-right: 2px !important;
+}
+
+/* Subject Columns */
+.subject-col {
+  width: 32px;
+  min-width: 32px;
+  max-width: 32px;
+  padding: 4px 2px !important;
+  font-size: 11px;
+  font-weight: 500;
+}
+
+.rotate-header {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  white-space: nowrap;
+  font-size: 12px;
+  font-weight: 600;
+  padding: 4px 0;
+  height: 60px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000000;
+}
+
+/* Result Columns */
+.result-col {
+  width: 40px;
+  min-width: 40px;
+  max-width: 40px;
+  font-weight: 600;
+  font-size: 12px;
+}
+
+.tot-col {
+  font-weight: 700;
+}
+
+.grd-col {
+  font-weight: 700;
+  font-size: 12px;
+}
+
+/* Remarks Column */
+.remarks-col {
+  width: 80px;
+  min-width: 80px;
+  max-width: 80px;
+  font-size: 11px;
+  text-align: left !important;
+  padding-left: 4px !important;
+}
+
+/* Grade-based Row Colors */
+.grade-row-A {
+  background: linear-gradient(90deg, #166534 0%, #22c55e 100%) !important;
+  color: white !important;
+  font-weight: 600;
+}
+
+.grade-row-A td,
+.grade-row-A .sticky-col {
+  background: linear-gradient(90deg, #166534 0%, #22c55e 100%) !important;
+  color: white !important;
+}
+
+.grade-row-B {
+  background: #86efac !important;
+  color: #14532d !important;
+}
+
+.grade-row-B td,
+.grade-row-B .sticky-col {
+  background: #86efac !important;
+  color: #14532d !important;
+}
+
+.a-level.grade-row-B {
+  background: #22c55e !important;
+  color: white !important;
+}
+
+.a-level.grade-row-B td,
+.a-level.grade-row-B .sticky-col {
+  background: #22c55e !important;
+  color: white !important;
+}
+
+.grade-row-C {
+  background: #fef9c3 !important;
+  color: #713f12 !important;
+}
+
+.grade-row-C td,
+.grade-row-C .sticky-col {
+  background: #fef9c3 !important;
+  color: #713f12 !important;
+}
+
+.a-level.grade-row-C {
+  background: #86efac !important;
+  color: #14532d !important;
+}
+
+.a-level.grade-row-C td,
+.a-level.grade-row-C .sticky-col {
+  background: #86efac !important;
+  color: #14532d !important;
+}
+
+.grade-row-C-low {
+  background: #fecaca !important;
+  color: #7f1d1d !important;
+}
+
+.grade-row-C-low td,
+.grade-row-C-low .sticky-col {
+  background: #fecaca !important;
+  color: #7f1d1d !important;
+}
+
+.grade-row-D,
+.grade-row-E,
+.grade-row-S,
+.grade-row-F {
+  background: #fecaca !important;
+  color: #7f1d1d !important;
+}
+
+.grade-row-D td,
+.grade-row-E td,
+.grade-row-S td,
+.grade-row-F td,
+.grade-row-D .sticky-col,
+.grade-row-E .sticky-col,
+.grade-row-S .sticky-col,
+.grade-row-F .sticky-col {
+  background: #fecaca !important;
+  color: #7f1d1d !important;
+}
+
+.a-level.grade-row-D {
+  background: #fef9c3 !important;
+  color: #713f12 !important;
+}
+
+.a-level.grade-row-D td,
+.a-level.grade-row-D .sticky-col {
+  background: #fef9c3 !important;
+  color: #713f12 !important;
+}
+
+/* Grade E, S, F - A-Level (same as O-Level for these) */
+.a-level.grade-row-E,
+.a-level.grade-row-S,
+.a-level.grade-row-F {
+  background: #fecaca !important;
+  color: #7f1d1d !important;
+}
+
+.a-level.grade-row-E td,
+.a-level.grade-row-S td,
+.a-level.grade-row-F td,
+.a-level.grade-row-E .sticky-col,
+.a-level.grade-row-S .sticky-col,
+.a-level.grade-row-F .sticky-col {
+  background: #fecaca !important;
+  color: #7f1d1d !important;
+}
+
+/* Default row - No grade (White background) */
+.grade-row-none {
+  background: #ffffff !important;
+}
+
+.grade-row-none td,
+.grade-row-none .sticky-col {
+  background: #ffffff !important;
+}
+
+/* Alternating row shading for rows without grades */
+.compact-results-table tbody tr.grade-row-none:nth-child(even) {
+  background: #f9fafb !important;
+}
+
+.compact-results-table tbody tr.grade-row-none:nth-child(even) td,
+.compact-results-table tbody tr.grade-row-none:nth-child(even) .sticky-col {
+  background: #f9fafb !important;
+}
+
+.compact-results-table tbody tr:hover {
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transform: scale(1.002);
+  transition: all 0.2s ease;
+  filter: brightness(1.1);
+}
+
+/* Print Button */
+.print-button-container {
+  text-align: center;
+  margin: 15px 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 15px;
+  flex-wrap: wrap;
+}
+
+.download-btn-monthly {
+  background: linear-gradient(135deg, #6b7280 0%, #111827 100%);
+  color: white;
+  border: none;
+  padding: clamp(8px, 2vw, 12px) clamp(12px, 3vw, 24px);
+  font-size: clamp(10px, 2vw, 14px);
+  font-weight: 600;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.25rem, 1vw, 0.5rem);
+  white-space: nowrap;
+}
+
+.download-btn-monthly:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
+}
+
+.back-margin {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.excel-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #f9fafb;
+  color: #374151;
+  text-decoration: none;
+  border-radius: 6px;
+  font-weight: 500;
+  transition: all 0.2s ease;
+  border: none;
+  cursor: pointer;
+}
+
+.excel-btn:hover {
+  background: #e5e7eb;
+  transform: translateX(-3px);
+}
+
+.csv-btn {
+  background: #6b7280 !important;
+  color: white !important;
+  margin-left: 10px;
+}
+
+.csv-btn:hover {
+  background: #111827 !important;
+  transform: translateY(-2px);
+}
+
+.print-spacer-bottom {
+  display: none;
+}
+
+/* Mobile-first responsive design */
+@media (max-width: 768px) {
+  .monthly-results-mgmt-page-container {
+    padding: 0;
+  }
+
+  .monthly-results-mgmt-page-container .excel-card-header {
+    padding: clamp(0.875rem, 2.5vw, 1rem);
+    margin-bottom: clamp(0.75rem, 2vw, 1rem);
+    font-size: clamp(0.9375rem, 3vw, 1.125rem);
+  }
+
+  .monthly-results-mgmt-page-container .excel-card-body {
+    padding: clamp(0.75rem, 2vw, 1rem);
+  }
+
+  .results-info {
+    padding: clamp(0.5rem, 1.5vw, 0.75rem);
+    gap: clamp(0.5rem, 1.5vw, 0.75rem);
+  }
+
+  .info-item {
+    font-size: clamp(0.6875rem, 1.75vw, 0.8125rem);
+    padding: clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px);
+  }
+
+  .results-table-container {
+    margin: 0 clamp(-0.5rem, -2vw, -1rem);
+    padding: 0 clamp(0.5rem, 2vw, 1rem);
+    width: calc(100% + clamp(1rem, 4vw, 2rem));
+  }
+
+  .results-table-wrapper {
+    margin: 0;
+  }
+
+  .compact-results-table {
+    font-size: clamp(10px, 1.75vw, 12px);
+  }
+
+  .compact-results-table th {
+    padding: clamp(4px, 1vw, 6px) clamp(2px, 0.75vw, 3px);
+    font-size: clamp(10px, 1.75vw, 11px);
+  }
+
+  .compact-results-table td {
+    padding: clamp(3px, 0.75vw, 4px) clamp(2px, 0.75vw, 3px);
+    font-size: clamp(9px, 1.5vw, 10px);
+  }
+
+  .report-header-section {
+    padding: clamp(8px, 2vw, 12px);
+    margin-bottom: clamp(2px, 0.75vw, 3px);
+  }
+
+  .report-header {
+    flex-direction: row;
+    align-items: center;
+    gap: clamp(3px, 1vw, 10px);
+    padding-bottom: clamp(8px, 1.5vw, 15px);
+  }
+
+  .logo-section, .logo-section-right {
+    width: clamp(40px, 8vw, 100px);
+    height: clamp(40px, 8vw, 100px);
+    min-width: clamp(40px, 8vw, 100px);
+    max-width: clamp(40px, 8vw, 100px);
+    min-height: clamp(40px, 8vw, 100px);
+    max-height: clamp(40px, 8vw, 100px);
+  }
+
+  .logo-section {
+    order: 1;
+  }
+
+  .logo-section-right {
+    order: 3;
+  }
+
+  .school-info {
+    order: 2;
+    flex: 1;
+    padding: 0 clamp(3px, 1vw, 10px);
+    min-width: 0;
+  }
+
+  .school-info h1 {
+    font-size: clamp(8px, 1.5vw, 24px);
+    line-height: 1.1;
+  }
+
+  .school-info h2 {
+    font-size: clamp(7px, 1.25vw, 20px);
+    line-height: 1.1;
+    margin: clamp(1px, 0.25vw, 5px) 0;
+  }
+
+  .contact-info {
+    margin-top: clamp(2px, 0.5vw, 8px);
+  }
+
+  .contact-info p {
+    font-size: clamp(6px, 1.25vw, 14px);
+    line-height: 1.2;
+    margin: clamp(0px, 0.15vw, 2px) 0;
+  }
+
+  .school-logo, .school-logo-right {
+    width: clamp(40px, 8vw, 100px);
+    height: clamp(40px, 8vw, 100px);
+    min-width: clamp(40px, 8vw, 100px);
+    max-width: clamp(40px, 8vw, 100px);
+    min-height: clamp(40px, 8vw, 100px);
+    max-height: clamp(40px, 8vw, 100px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    border-radius: 4px;
+    padding: 2px;
+  }
+
+  .school-logo-placeholder {
+    width: clamp(40px, 8vw, 100px);
+    height: clamp(40px, 8vw, 100px);
+    min-width: clamp(40px, 8vw, 100px);
+    max-width: clamp(40px, 8vw, 100px);
+    min-height: clamp(40px, 8vw, 100px);
+    max-height: clamp(40px, 8vw, 100px);
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    font-size: clamp(0.75rem, 2vw, 1.5rem);
+  }
+
+  .test-info-bar {
+    padding: clamp(4px, 1vw, 8px);
+    font-size: clamp(9px, 1.75vw, 14px);
+  }
+
+  .print-button-container {
+    margin: clamp(8px, 2vw, 15px) 0;
+    gap: clamp(6px, 1.5vw, 12px);
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .download-btn-monthly {
+    padding: clamp(6px, 1.5vw, 12px) clamp(10px, 2.5vw, 24px);
+    font-size: clamp(9px, 1.75vw, 14px);
+    min-height: clamp(36px, 8vw, 48px);
+    white-space: nowrap;
+  }
+
+  .back-margin {
+    margin-top: clamp(15px, 3vw, 20px);
+  }
+
+  .excel-btn {
+    width: 100%;
+    padding: clamp(8px, 2vw, 10px) clamp(16px, 4vw, 20px);
+    font-size: clamp(0.875rem, 3vw, 1rem);
+    min-height: clamp(44px, 10vw, 48px);
+    justify-content: center;
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+  .monthly-results-mgmt-page-container .excel-card-header {
+    padding: clamp(0.75rem, 2vw, 0.875rem);
+  }
+
+  .monthly-results-mgmt-page-container .excel-card-body {
+    padding: clamp(0.5rem, 1.5vw, 0.75rem);
+  }
+
+  .results-table-container {
+    margin: 0 clamp(-0.25rem, -1vw, -0.5rem);
+    padding: 0 clamp(0.25rem, 1vw, 0.5rem);
+    width: calc(100% + clamp(0.5rem, 2vw, 1rem));
+  }
+
+  .compact-results-table th,
+  .compact-results-table td {
+    padding: clamp(2px, 0.5vw, 3px) clamp(1px, 0.5vw, 2px);
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .results-table-container {
+    margin-left: clamp(-1rem, -2vw, -1.25rem);
+    margin-right: clamp(-1rem, -2vw, -1.25rem);
+    width: calc(100% + clamp(2rem, 4vw, 2.5rem));
+  }
+}
+
+/* Print Styles */
+@media print {
+  @page {
+    size: A4 landscape;
+    margin: 10mm 5mm 35mm 5mm;
+  }
+  
+  * {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  .monthly-results-management,
+  .excel-card,
+  .excel-card-body,
+  .print-button-container,
+  .back-margin,
+  .sidebar,
+  nav,
+  header {
+    display: none !important;
+  }
+  
+  body {
+    margin: 0;
+    padding: 0;
+    background: white;
+    font-family: 'Times New Roman', Times, serif;
+  }
+  
+  /* Preserve report header layout with logos */
+  .report-header-section {
+    display: block !important;
+    visibility: visible !important;
+    background: linear-gradient(135deg, #87ceeb 0%, #b0e0e6 100%) !important;
+    padding: 15px !important;
+    margin-bottom: 5px !important;
+    border-radius: 6px !important;
+    page-break-inside: avoid;
+  }
+
+  .report-header {
+    display: flex !important;
+    justify-content: space-between !important;
+    align-items: center !important;
+    width: 100% !important;
+    gap: 20px !important;
+  }
+
+  .logo-section,
+  .logo-section-right {
+    flex: 0 0 auto !important;
+    width: 120px !important;
+    height: 120px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 !important;
+    margin: 0 !important;
+  }
+
+  .school-logo,
+  .school-logo-right {
+    width: 120px !important;
+    height: 120px !important;
+    display: block !important;
+    object-fit: contain !important;
+    object-position: center !important;
+    border: 2px solid rgba(0, 0, 0, 0.1) !important;
+    border-radius: 8px !important;
+    background: white !important;
+    padding: 4px !important;
+    box-sizing: border-box !important;
+  }
+
+  .school-logo-placeholder {
+    width: 120px !important;
+    height: 120px !important;
+    display: flex !important;
+    border: 2px solid rgba(0, 0, 0, 0.1) !important;
+    box-sizing: border-box !important;
+  }
+
+  .school-info {
+    flex: 1 !important;
+    text-align: center !important;
+    padding: 0 20px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+  
+  /* Preserve table structure and cell layout */
+  .results-table-container {
+    display: block !important;
+    margin: 5px 0 20px 0;
+    overflow: visible;
+    page-break-inside: avoid;
+  }
+  
+  .results-table-wrapper {
+    overflow: visible !important;
+  }
+  
+  .compact-results-table {
+    display: table !important;
+    width: 100% !important;
+    font-size: 12px !important;
+    border-collapse: collapse !important;
+    table-layout: fixed !important;
+  }
+  
+  .compact-results-table th,
+  .compact-results-table td {
+    border: 1px solid #000 !important;
+    padding: 4px 6px !important;
+    text-align: center !important;
+    vertical-align: middle !important;
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  .compact-results-table th {
+    background-color: #e5e7eb !important;
+    font-weight: bold !important;
+    page-break-after: avoid;
+  }
+  
+  .compact-results-table tbody tr {
+    page-break-inside: avoid;
+    break-inside: avoid;
+  }
+  
+  /* Page break before specific rows */
+  .page-break-before-row {
+    page-break-before: always !important;
+    break-before: page !important;
+  }
+  
+  /* Prevent breaking header row */
+  .compact-results-table thead {
+    display: table-header-group !important;
+  }
+  
+  /* Repeat header on each page */
+  .compact-results-table thead tr {
+    page-break-after: avoid;
+    page-break-inside: avoid;
+  }
+  
+  /* Preserve sticky columns */
+  .sticky-col {
+    position: static !important;
+    box-shadow: none !important;
+    background-color: #f9fafb !important;
+  }
+  
+  .compact-results-table thead .sticky-col {
+    background-color: #e5e7eb !important;
+  }
+  
+  /* Rotate headers back to horizontal for print */
+  .rotate-header {
+    writing-mode: horizontal-tb !important;
+    transform: none !important;
+    height: auto !important;
+    white-space: nowrap !important;
+  }
+  
+  /* Preserve grade-based row colors */
+  .grade-row-A,
+  .grade-row-B,
+  .grade-row-C,
+  .grade-row-C-low,
+  .grade-row-D,
+  .grade-row-E,
+  .grade-row-S,
+  .grade-row-F {
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+  
+  /* Ensure subject columns maintain width */
+  .subject-col {
+    width: auto !important;
+    min-width: 50px !important;
+  }
+  
+  .result-col {
+    width: auto !important;
+    min-width: 60px !important;
+  }
+  
+  .remarks-col {
+    width: auto !important;
+    min-width: 100px !important;
+  }
+  
+  .print-spacer-bottom {
+    display: block !important;
+    height: 40mm !important;
+    min-height: 40mm !important;
+    width: 100% !important;
+  }
+}

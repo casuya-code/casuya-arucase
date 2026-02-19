@@ -1,0 +1,970 @@
+/**
+ * Public Website Routes
+ */
+const express = require('express');
+const router = express.Router();
+const { query } = require('../config/database');
+const { updateVisitorStats } = require('../utils/visitorStats');
+const axios = require('axios');
+const cheerio = require('cheerio');
+const { calculateGrade } = require('../utils/calculations');
+const { sendError } = require('../utils/safeError');
+
+// Homepage data
+router.get('/homepage', async (req, res) => {
+  try {
+    // Get website settings
+    const settingsResult = await query('SELECT * FROM website_settings WHERE id = 1');
+    const settings = settingsResult.rows[0] || {};
+    
+    // Get school logo from school_logo table and add to settings
+    try {
+      const logoResult = await query('SELECT logo_image_path FROM school_logo WHERE id = 1');
+      if (logoResult.rows.length > 0 && logoResult.rows[0].logo_image_path) {
+        settings.school_logo = logoResult.rows[0].logo_image_path;
+      }
+    } catch (logoError) {
+      // If school_logo table doesn't exist or has no logo, use default or keep existing
+      console.log('[HOMEPAGE] Could not fetch school logo:', logoError.message);
+    }
+    
+    // Get gallery photos (limit 12)
+    const galleryResult = await query(
+      'SELECT * FROM gallery_photos ORDER BY created_at DESC LIMIT 12'
+    );
+    const gallery_photos = galleryResult.rows;
+    
+    // Get active FAQs (limit 5)
+    const faqsResult = await query(
+      'SELECT * FROM faqs WHERE active = TRUE ORDER BY display_order, created_at LIMIT 5'
+    );
+    const faqs = faqsResult.rows;
+    
+    // Get active administrators
+    const adminResult = await query(
+      'SELECT * FROM administrators WHERE active = TRUE ORDER BY display_order, created_at'
+    );
+    const administrators = adminResult.rows;
+    
+    // Get recent announcements (limit 5)
+    const announcementsResult = await query(
+      'SELECT * FROM public_announcements WHERE active = TRUE ORDER BY created_at DESC LIMIT 5'
+    );
+    const announcements = announcementsResult.rows;
+    
+    res.setHeader('Cache-Control', 'public, max-age=60'); // 1 min cache for fast repeat loads on slow/mobile
+    res.json({
+      settings,
+      gallery_photos,
+      faqs,
+      administrators,
+      announcements
+    });
+  } catch (error) {
+    console.error('Homepage error:', error);
+    return sendError(res, error, 500);
+  }
+});
+
+// Get announcements
+router.get('/announcements', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 10;
+    const result = await query(
+      'SELECT * FROM public_announcements WHERE active = TRUE ORDER BY created_at DESC LIMIT $1',
+      [limit]
+    );
+    res.setHeader('Cache-Control', 'public, max-age=60');
+    res.json({ announcements: result.rows });
+  } catch (error) {
+    return sendError(res, error, 500);
+  }
+});
+
+// Events routes removed
+
+// Get gallery photos
+router.get('/gallery', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 20;
+    const result = await query(
+      'SELECT * FROM gallery_photos ORDER BY created_at DESC LIMIT $1',
+      [limit]
+    );
+    res.setHeader('Cache-Control', 'public, max-age=60');
+    res.json({ photos: result.rows });
+  } catch (error) {
+    return sendError(res, error, 500);
+  }
+});
+
+// Get alumni
+router.get('/alumni', async (req, res) => {
+  try {
+    const limit = parseInt(req.query.limit) || 20;
+    const result = await query(
+      "SELECT * FROM alumni WHERE status = 'approved' ORDER BY created_at DESC LIMIT $1",
+      [limit]
+    );
+    res.setHeader('Cache-Control', 'public, max-age=60');
+    res.json({ alumni: result.rows });
+  } catch (error) {
+    return sendError(res, error, 500);
+  }
+});
+
+// Get FAQs
+router.get('/faqs', async (req, res) => {
+  try {
+    const result = await query(
+      'SELECT * FROM faqs WHERE active = TRUE ORDER BY display_order, created_at'
+    );
+    res.json({ faqs: result.rows });
+  } catch (error) {
+    return sendError(res, error, 500);
+  }
+});
+
+// Public chatbot – replaces FAQ for common questions. No student/admission/credentials data.
+const { getClient, callClaude } = require('../utils/anthropic');
+const { getNectaSummaryForAI } = require('../utils/nectaAnalyticsForAI');
+router.post('/chat', async (req, res) => {
+  try {
+    const { message } = req.body || {};
+    if (!message || typeof message !== 'string') {
+      return res.status(400).json({ error: 'Message is required' });
+    }
+    const userMessage = message.trim().slice(0, 2000);
+    if (!userMessage) {
+      return res.status(400).json({ error: 'Message cannot be empty' });
+    }
+    if (!getClient()) {
+      return res.status(503).json({
+        error: 'Chat is not configured',
+        reply: 'Sorry, the assistant is not available right now. Please contact the school directly for questions.',
+      });
+    }
+    const faqsResult = await query(
+      'SELECT question, answer, category FROM faqs WHERE active = TRUE ORDER BY display_order, created_at'
+    );
+    const faqList = (faqsResult.rows || []).map((f) => `Q: ${f.question}\nA: ${f.answer}`).join('\n\n');
+
+    let docContent = '';
+    try {
+      const docsResult = await query(
+        'SELECT name, extracted_text FROM ai_matters_documents WHERE extracted_text IS NOT NULL AND extracted_text != \'\' ORDER BY created_at DESC'
+      );
+      docContent = (docsResult.rows || [])
+        .map((d) => `--- Document: ${d.name} ---\n${(d.extracted_text || '').slice(0, 150000)}`)
+        .join('\n\n');
+    } catch (e) {
+      // ai_matters_documents table may not exist yet
+    }
+
+    let publicPagesContent = '';
+    try {
+      const pagesResult = await query(
+        'SELECT page_name, title, html_content FROM public_pages WHERE html_content IS NOT NULL AND html_content != \'\''
+      );
+      publicPagesContent = (pagesResult.rows || [])
+        .map((p) => {
+          const $ = cheerio.load(p.html_content || '');
+          const text = ($('body').length ? $('body').text() : $.root().text()).replace(/\s+/g, ' ').trim().slice(0, 80000);
+          return `--- Public page: ${p.title || p.page_name} (${p.page_name}) ---\n${text}`;
+        })
+        .filter((block) => block.length > 30)
+        .join('\n\n');
+    } catch (e) {
+      // public_pages table may not exist
+    }
+
+    let nectaSummary = '';
+    try {
+      nectaSummary = await getNectaSummaryForAI(query, { includeTopCandidates: false });
+    } catch (e) {
+      nectaSummary = 'No NECTA data available.';
+    }
+    const nectaSection = nectaSummary ? `\n\n${nectaSummary}` : '';
+    const docSection = docContent
+      ? `\n\nAttached documents (AI Matters – search and use when relevant):\n${docContent}`
+      : '';
+    const publicPagesSection = publicPagesContent
+      ? `\n\nPublic website pages (search and use when relevant):\n${publicPagesContent}`
+      : '';
+    const systemPrompt = `You are the friendly, professional assistant for Arusha Catholic Seminary (Arusha, Tanzania). Your role is to answer questions about the school using ONLY the content provided below.
+
+Rules:
+1. Use only the FAQs, attached documents, public pages, and NECTA summary below. Do not invent facts or figures.
+2. When you use specific information, briefly say where it comes from (e.g. "According to our FAQs...", "On the fees page...").
+3. Answer in the same language the user used (English or Swahili). If unclear, use English.
+4. Be concise and clear. Use short paragraphs or bullet points when it helps.
+5. Do NOT mention individual student names, admission numbers, or any confidential data. You MAY use aggregated NECTA data (totals, subject GPAs, grade counts by year).
+6. If the question is not covered by the content below, say so and suggest contacting the school: arucase@gmail.com or the Contact page.
+
+School identity: Arusha Catholic Seminary. Contact: arucase@gmail.com.
+
+FAQ content:
+${faqList || 'No FAQ content available.'}${docSection}${publicPagesSection}${nectaSection}
+
+If you cannot find an answer above, reply that the user should contact the school (arucase@gmail.com or the Contact page).`;
+
+    const reply = await callClaude(systemPrompt, userMessage, 2048);
+    res.json({ reply: (reply || '').trim() || "I couldn't find an answer. Please contact the school directly." });
+  } catch (error) {
+    console.error('Public chat error:', error);
+    return sendError(res, { message: 'Something went wrong. Please try again or contact the school directly.' }, 500);
+  }
+});
+
+// Get administrators
+router.get('/administrators', async (req, res) => {
+  try {
+    const result = await query(
+      'SELECT * FROM administrators WHERE active = TRUE ORDER BY display_order, created_at'
+    );
+    res.json({ administrators: result.rows });
+  } catch (error) {
+    return sendError(res, error, 500);
+  }
+});
+
+// Get public page (returns default empty page for known slugs when not in DB)
+const KNOWN_PAGE_SLUGS = ['school-fee', 'fees', 'about', 'contact', 'admissions', 'staff', 'student_life', 'student_report', 'privacy'];
+router.get('/page/:pageName', async (req, res) => {
+  try {
+    const { pageName } = req.params;
+    let result;
+    try {
+      result = await query(
+        'SELECT * FROM public_pages WHERE page_name = $1',
+        [pageName]
+      );
+    } catch (dbError) {
+      // Table might not exist yet; return default for known slugs
+      if (KNOWN_PAGE_SLUGS.includes(pageName)) {
+        return res.json({ page: { page_name: pageName, html_content: null, content: null } });
+      }
+      throw dbError;
+    }
+    
+    if (result.rows.length === 0) {
+      if (KNOWN_PAGE_SLUGS.includes(pageName)) {
+        return res.json({ page: { page_name: pageName, html_content: null, content: null } });
+      }
+      return res.status(404).json({ message: 'Page not found' });
+    }
+    
+    res.json({ page: result.rows[0] });
+  } catch (error) {
+    return sendError(res, error, 500);
+  }
+});
+
+// Testimony routes removed
+
+// Submit alumni
+router.post('/alumni/submit', async (req, res) => {
+  try {
+    const {
+      official_names, year_start, year_end, class_level,
+      current_position, phone, email, social_media, philosophy, photo
+    } = req.body;
+    
+    const id = `alumni_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`;
+    
+    await query(
+      `INSERT INTO alumni (id, official_names, year_start, year_end, class_level,
+       current_position, phone, email, social_media, philosophy, photo, status)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, 'pending')`,
+      [id, official_names, year_start, year_end, class_level,
+       current_position, phone, email, social_media, philosophy, photo]
+    );
+    
+    res.status(201).json({ message: 'Alumni information submitted successfully', id });
+  } catch (error) {
+    return sendError(res, error, 500);
+  }
+});
+
+
+// Track visitor (dedicated endpoint)
+router.post('/track-visitor', async (req, res) => {
+  try {
+    await updateVisitorStats();
+    res.json({ success: true, message: 'Visitor tracked' });
+  } catch (error) {
+    console.error('Error tracking visitor:', error);
+    return sendError(res, error, 500);
+  }
+});
+
+// Get visitor stats
+router.get('/visitor-stats', async (req, res) => {
+  try {
+    const today = new Date().toISOString().split('T')[0];
+    const week = `${new Date().getFullYear()}-W${getWeekNumber(new Date())}`;
+    
+    const stats = {};
+    
+    // Get total
+    const totalResult = await query(
+      "SELECT stat_value FROM visitor_stats WHERE stat_type = 'total' AND stat_key = 'total_visits'"
+    );
+    stats.total = totalResult.rows[0]?.stat_value || 0;
+    
+    // Get today
+    const todayResult = await query(
+      'SELECT stat_value FROM visitor_stats WHERE stat_type = $1 AND stat_key = $2',
+      ['daily', today]
+    );
+    stats.today = todayResult.rows[0]?.stat_value || 0;
+    
+    // Get this week
+    const weekResult = await query(
+      'SELECT stat_value FROM visitor_stats WHERE stat_type = $1 AND stat_key = $2',
+      ['weekly', week]
+    );
+    stats.week = weekResult.rows[0]?.stat_value || 0;
+    
+    res.json({ stats });
+  } catch (error) {
+    return sendError(res, error, 500);
+  }
+});
+
+function getWeekNumber(date) {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()));
+  const dayNum = d.getUTCDay() || 7;
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum);
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1));
+  return Math.ceil((((d - yearStart) / 86400000) + 1) / 7);
+}
+
+// Get NECTA URL (check database first, fallback to generated)
+router.get('/necta-url/:examType/:year', async (req, res) => {
+  try {
+    const { examType, year } = req.params;
+    const yearInt = parseInt(year);
+    
+    // First, check if custom URL exists in database
+    const customUrlResult = await query(
+      'SELECT url FROM necta_result_urls WHERE exam_type = $1 AND year = $2 AND active = TRUE',
+      [examType.toLowerCase(), yearInt]
+    );
+    
+    if (customUrlResult.rows.length > 0) {
+      return res.json({ url: customUrlResult.rows[0].url, source: 'custom' });
+    }
+    
+    // Fallback to generated URL
+    let url;
+    if (yearInt >= 2020 && yearInt <= 2021) {
+      const examUpper = examType.toUpperCase();
+      const schoolCode = examType === 'csee' ? 's0171' : 'S0171';
+      url = `https://maktaba.tetea.org/exam-results/${examUpper}${yearInt}/${schoolCode}.htm`;
+    } else {
+      const schoolCode = examType === 'ftna' ? 'S0171' : 's0171';
+      url = `https://onlinesys.necta.go.tz/results/${yearInt}/${examType}/results/${schoolCode}.htm`;
+    }
+    
+    res.json({ url, source: 'generated' });
+  } catch (error) {
+    return sendError(res, error, 500);
+  }
+});
+
+// Fetch NECTA results
+router.post('/necta-results', async (req, res) => {
+  try {
+    const { exam_type, year } = req.body;
+    
+    if (!exam_type || !year) {
+      return res.status(400).json({ success: false, message: 'Missing exam_type or year' });
+    }
+    
+    // Validate exam_type
+    if (!['ftna', 'csee', 'acsee'].includes(exam_type)) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Invalid exam_type: ${exam_type}. Must be ftna, csee, or acsee` 
+      });
+    }
+    
+    // Validate year
+    const yearInt = parseInt(year);
+    if (isNaN(yearInt) || yearInt < 2020 || yearInt > 2030) {
+      return res.status(400).json({ 
+        success: false, 
+        message: `Year must be between 2020 and 2030` 
+      });
+    }
+    
+    // Check for custom URL first, then fallback to generated
+    let url;
+    const customUrlResult = await query(
+      'SELECT url FROM necta_result_urls WHERE exam_type = $1 AND year = $2 AND active = TRUE',
+      [exam_type.toLowerCase(), yearInt]
+    );
+    
+    if (customUrlResult.rows.length > 0) {
+      url = customUrlResult.rows[0].url;
+    } else {
+      // Build URL - different format for 2020 and 2021, and different case sensitivity per exam type
+      if (yearInt >= 2020 && yearInt <= 2021) {
+        // Use TETEA archive for 2020 and 2021
+        // CSEE uses lowercase s0171, FTNA and ACSEE use uppercase S0171
+        const examUpper = exam_type.toUpperCase();
+        const schoolCode = exam_type === 'csee' ? 's0171' : 'S0171';
+        url = `https://maktaba.tetea.org/exam-results/${examUpper}${yearInt}/${schoolCode}.htm`;
+      } else {
+        // Use current NECTA system for 2022+
+        const schoolCode = exam_type === 'ftna' ? 'S0171' : 's0171';
+        url = `https://onlinesys.necta.go.tz/results/${yearInt}/${exam_type}/results/${schoolCode}.htm`;
+      }
+    }
+    
+    // Fetch the HTML page
+    const response = await axios.get(url, { timeout: 15000 });
+    
+    if (response.status === 200) {
+      const $ = cheerio.load(response.data);
+      
+      const stats = {
+        total_registered: 0,
+        division_i: 0,
+        division_ii: 0,
+        division_iii: 0,
+        division_iv: 0,
+        division_0: 0
+      };
+      
+      // Find the division performance summary table
+      $('table').each((_, table) => {
+        const rows = $(table).find('tr');
+        
+        rows.each((_, row) => {
+          const cells = $(row).find('td');
+          if (cells.length >= 6) {
+            const firstCell = $(cells[0]).text().trim().toUpperCase();
+            if (['T', 'TOTAL', 'TOT'].includes(firstCell)) {
+              // Extract division counts
+              try {
+                stats.division_i = parseInt($(cells[1]).text().trim()) || 0;
+                stats.division_ii = parseInt($(cells[2]).text().trim()) || 0;
+                stats.division_iii = parseInt($(cells[3]).text().trim()) || 0;
+                stats.division_iv = parseInt($(cells[4]).text().trim()) || 0;
+                stats.division_0 = parseInt($(cells[5]).text().trim()) || 0;
+                stats.total_registered = stats.division_i + stats.division_ii + 
+                                        stats.division_iii + stats.division_iv + stats.division_0;
+                return false; // Break out of loop
+              } catch (err) {
+                // Continue to next row
+              }
+            }
+          }
+        });
+        
+        // If we found stats, stop searching
+        if (stats.total_registered > 0) {
+          return false;
+        }
+      });
+      
+      // Alternative: Look for REGIST column in another table
+      if (stats.total_registered === 0) {
+        $('table').each((_, table) => {
+          const rows = $(table).find('tr');
+          const headers = [];
+          
+          rows.each((rowIdx, row) => {
+            const ths = $(row).find('th');
+            if (ths.length > 0) {
+              // This is a header row
+              ths.each((_, th) => {
+                headers.push($(th).text().trim().toUpperCase());
+              });
+            } else {
+              const cells = $(row).find('td');
+              if (cells.length >= 6 && headers.length > 0) {
+                // Try to find REGIST column
+                const registIdx = headers.indexOf('REGIST');
+                if (registIdx >= 0 && registIdx < cells.length) {
+                  try {
+                    stats.total_registered = parseInt($(cells[registIdx]).text().trim()) || 0;
+                    
+                    // Look for division columns
+                    const div1Idx = headers.indexOf('DIV I');
+                    const div2Idx = headers.indexOf('DIV II');
+                    const div3Idx = headers.indexOf('DIV III');
+                    const div4Idx = headers.indexOf('DIV IV');
+                    const div0Idx = headers.indexOf('DIV 0');
+                    
+                    if (div1Idx >= 0) stats.division_i = parseInt($(cells[div1Idx]).text().trim()) || 0;
+                    if (div2Idx >= 0) stats.division_ii = parseInt($(cells[div2Idx]).text().trim()) || 0;
+                    if (div3Idx >= 0) stats.division_iii = parseInt($(cells[div3Idx]).text().trim()) || 0;
+                    if (div4Idx >= 0) stats.division_iv = parseInt($(cells[div4Idx]).text().trim()) || 0;
+                    if (div0Idx >= 0) stats.division_0 = parseInt($(cells[div0Idx]).text().trim()) || 0;
+                    
+                    return false; // Break
+                  } catch (err) {
+                    // Continue
+                  }
+                }
+              }
+            }
+          });
+          
+          if (stats.total_registered > 0) {
+            return false;
+          }
+        });
+      }
+      
+      res.json({ success: true, stats });
+    } else {
+      res.status(response.status).json({ 
+        success: false, 
+        message: `NECTA website returned status ${response.status}` 
+      });
+    }
+  } catch (error) {
+    console.error('NECTA results error:', error.message);
+    
+    // Provide helpful error messages
+    if (error.code === 'ECONNREFUSED' || error.code === 'ETIMEDOUT') {
+      res.status(503).json({ 
+        success: false, 
+        message: 'Could not connect to NECTA website. Please try again later or access results directly via the links.' 
+      });
+    } else if (error.response) {
+      res.status(error.response.status).json({ 
+        success: false, 
+        message: `NECTA website returned error: ${error.response.status}. Results may not be available for this year/exam type.` 
+      });
+    } else {
+      return sendError(res, error, 500);
+    }
+  }
+});
+
+// ========== STUDENT PORTAL ==========
+
+// Student login (verify Pass ID)
+router.post('/student/login', async (req, res) => {
+  try {
+    const { adm_no, year, pass_id } = req.body;
+    
+    if (!adm_no || !year || !pass_id) {
+      return res.status(400).json({ message: 'adm_no, year, and pass_id are required' });
+    }
+    
+    // Find matching Pass ID
+    const passIdResult = await query(
+      `SELECT sp.*, s.first_name, s.middle_name, s.surname, s.level, s.stream
+       FROM student_pass_ids sp
+       JOIN students s ON sp.adm_no = s.adm_no 
+         AND sp.level = s.level 
+         AND sp.year = s.year
+       WHERE sp.adm_no = $1 AND sp.year = $2 AND sp.pass_id = $3
+       ORDER BY sp.created_at DESC
+       LIMIT 1`,
+      [adm_no, parseInt(year), pass_id.toUpperCase()]
+    );
+    
+    if (passIdResult.rows.length === 0) {
+      return res.status(401).json({ message: 'Invalid credentials. Please check your Admission Number, Year, and Pass ID.' });
+    }
+    
+    const studentData = passIdResult.rows[0];
+    
+    res.json({
+      success: true,
+      student: {
+        adm_no: studentData.adm_no,
+        name: `${studentData.first_name} ${studentData.middle_name} ${studentData.surname}`,
+        level: studentData.level,
+        stream: studentData.stream,
+        year: studentData.year
+      }
+    });
+  } catch (error) {
+    console.error('Student login error:', error);
+    return sendError(res, error, 500);
+  }
+});
+
+// Get available months and terms for a student
+router.get('/student/:admNo/months', async (req, res) => {
+  try {
+    const { admNo } = req.params;
+    const { year } = req.query;
+    
+    if (!year) {
+      return res.status(400).json({ message: 'year is required' });
+    }
+    
+    // Get student info
+    const studentResult = await query(
+      'SELECT level, stream FROM students WHERE adm_no = $1 AND year = $2 LIMIT 1',
+      [admNo, parseInt(year)]
+    );
+    
+    if (studentResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+    
+    const student = studentResult.rows[0];
+    
+    // Calculate student_index: position in sorted list of students (1-based)
+    const allStudentsResult = await query(
+      'SELECT adm_no FROM students WHERE level = $1 AND stream = $2 AND year = $3 ORDER BY adm_no',
+      [student.level, student.stream, parseInt(year)]
+    );
+    
+    const sortedAdmNos = allStudentsResult.rows.map(s => s.adm_no).sort();
+    const studentIndex = (sortedAdmNos.indexOf(admNo) + 1).toString();
+    
+    // Get distinct months from monthly_results for this student (using student_index)
+    const monthsFromResults = await query(
+      `SELECT DISTINCT mr.month, mr.year
+       FROM monthly_results mr
+       WHERE mr.student_index = $1 AND mr.level = $2 AND mr.stream = $3 AND mr.year = $4`,
+      [studentIndex, student.level, student.stream, parseInt(year)]
+    );
+    
+    // Also get months from individual_scores (in case monthly_results doesn't have all months)
+    const monthsFromScores = await query(
+      `SELECT DISTINCT month, year
+       FROM individual_scores
+       WHERE adm_no = $1 AND year = $2`,
+      [admNo, parseInt(year)]
+    );
+    
+    // Combine and deduplicate months
+    const allMonths = new Map();
+    [...monthsFromResults.rows, ...monthsFromScores.rows].forEach(row => {
+      const key = `${row.month}-${row.year}`;
+      if (!allMonths.has(key)) {
+        allMonths.set(key, row);
+      }
+    });
+    
+    const monthsArray = Array.from(allMonths.values()).sort((a, b) => {
+      const monthOrder = {
+        // Swahili month names
+        'Jrb1': 1, 'Robo': 2, 'Jrb2': 3, 'Nusu': 4, 'Muh': 5,
+        // English month names - chronological order
+        'January': 1, 'February': 2, 'March': 3, 'April': 4, 'May': 5,
+        'June': 6, 'July': 7, 'August': 8, 'September': 9, 'October': 10,
+        'November': 11, 'December': 12
+      };
+      const orderA = monthOrder[a.month] || 999;
+      const orderB = monthOrder[b.month] || 999;
+      // If same month order, sort by year ascending
+      if (orderA === orderB) {
+        return (a.year || 0) - (b.year || 0);
+      }
+      return orderA - orderB;
+    });
+    
+    // Get distinct terms where comments exist for this student
+    const termsResult = await query(
+      `SELECT DISTINCT term,
+         CASE term
+           WHEN 'Term I' THEN 1
+           WHEN 'Term II' THEN 2
+           WHEN 'Term III' THEN 3
+           ELSE 4
+         END as term_order
+       FROM comments
+       WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4
+       ORDER BY term_order`,
+      [studentIndex, student.level, student.stream, parseInt(year)]
+    );
+    
+    // Get distinct terms where tabia_mwenendo exists
+    const tabiaMwenendoTermsResult = await query(
+      `SELECT DISTINCT term,
+         CASE term
+           WHEN 'Term I' THEN 1
+           WHEN 'Term II' THEN 2
+           WHEN 'Term III' THEN 3
+           ELSE 4
+         END as term_order
+       FROM tabia_mwenendo
+       WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4
+       ORDER BY term_order`,
+      [studentIndex, student.level, student.stream, parseInt(year)]
+    );
+    
+    // Combine all terms
+    const allTerms = new Set();
+    termsResult.rows.forEach(row => allTerms.add(row.term));
+    tabiaMwenendoTermsResult.rows.forEach(row => allTerms.add(row.term));
+    
+    res.json({ 
+      months: monthsArray,
+      terms: Array.from(allTerms).sort((a, b) => {
+        const order = { 'Term I': 1, 'Term II': 2, 'Term III': 3 };
+        return (order[a] || 4) - (order[b] || 4);
+      })
+    });
+  } catch (error) {
+    console.error('Get student months error:', error);
+    return sendError(res, error, 500);
+  }
+});
+
+// Get student photo
+router.get('/student/:admNo/photo', async (req, res) => {
+  try {
+    const { admNo } = req.params;
+    const { level, stream, year } = req.query;
+    
+    if (!level || !stream || !year) {
+      return res.status(400).json({ message: 'level, stream, and year are required' });
+    }
+    
+    // Get all students for the class, sorted by name: first_name, then middle_name, then surname (A-Z)
+    // This matches how student_index is calculated in the admin panel
+    const studentsResult = await query(
+      `SELECT adm_no FROM students 
+       WHERE level = $1 AND stream = $2 AND year = $3 
+       ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC`,
+      [level, stream, parseInt(year)]
+    );
+    
+    // Find the student_index (0-based position in sorted list)
+    const studentIndex = studentsResult.rows.findIndex(s => s.adm_no === admNo);
+    
+    if (studentIndex === -1) {
+      return res.status(404).json({ message: 'Student not found in this class' });
+    }
+    
+    // Get photo using student_index
+    const photoResult = await query(
+      `SELECT photo_filename FROM student_photos 
+       WHERE level = $1 AND stream = $2 AND year = $3 AND student_index = $4`,
+      [level, stream, parseInt(year), studentIndex]
+    );
+    
+    if (photoResult.rows.length === 0 || !photoResult.rows[0].photo_filename) {
+      return res.json({ photo: null });
+    }
+    
+    res.json({ photo: { photo_filename: photoResult.rows[0].photo_filename } });
+  } catch (error) {
+    console.error('Get student photo error:', error);
+    return sendError(res, error, 500);
+  }
+});
+
+// Get student monthly results with all comments
+router.get('/student/:admNo/results/:month', async (req, res) => {
+  try {
+    const { admNo, month } = req.params;
+    const { year, term } = req.query;
+    
+    if (!year) {
+      return res.status(400).json({ message: 'year is required' });
+    }
+    
+    // Get student info (including student_index)
+    const studentResult = await query(
+      'SELECT * FROM students WHERE adm_no = $1 AND year = $2 LIMIT 1',
+      [admNo, parseInt(year)]
+    );
+    
+    if (studentResult.rows.length === 0) {
+      return res.status(404).json({ message: 'Student not found' });
+    }
+    
+    const student = studentResult.rows[0];
+    
+    // Calculate student_index: position in sorted list of students (1-based)
+    const allStudentsResult = await query(
+      'SELECT adm_no FROM students WHERE level = $1 AND stream = $2 AND year = $3 ORDER BY adm_no',
+      [student.level, student.stream, parseInt(year)]
+    );
+    
+    const sortedAdmNos = allStudentsResult.rows.map(s => s.adm_no).sort();
+    const studentIndex = (sortedAdmNos.indexOf(admNo) + 1).toString();
+    
+    // Determine term from month if not provided
+    // Map months to terms: Jrb1, Robo -> Term I; Jrb2, Nusu -> Term II; Muh -> Term II
+    let determinedTerm = term;
+    if (!determinedTerm) {
+      if (['Jrb1', 'Robo', 'February', 'March', 'April'].includes(month)) {
+        determinedTerm = 'Term I';
+      } else if (['Jrb2', 'Nusu', 'Muh', 'May', 'August', 'September'].includes(month)) {
+        determinedTerm = 'Term II';
+      } else {
+        determinedTerm = 'Term I'; // Default
+      }
+    }
+    
+    // Get subject-level results from individual_scores (this is what students need to see)
+    const resultsResult = await query(
+      `SELECT 
+        adm_no,
+        subject_code,
+        month,
+        year,
+        level,
+        stream,
+        score as total
+       FROM individual_scores
+       WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4 AND month = $5
+       ORDER BY subject_code`,
+      [admNo, student.level, student.stream, student.year, month]
+    );
+    
+    // Get all students' scores for each subject to calculate ranks
+    const allScoresResult = await query(
+      `SELECT 
+        adm_no,
+        subject_code,
+        score
+       FROM individual_scores
+       WHERE level = $1 AND stream = $2 AND year = $3 AND month = $4
+       ORDER BY subject_code, score DESC`,
+      [student.level, student.stream, student.year, month]
+    );
+    
+    // Calculate grades and ranks for each subject
+    const results = resultsResult.rows.map(result => {
+      const score = parseFloat(result.total) || 0;
+      const grade = calculateGrade(score, student.level);
+      
+      // Calculate rank for this subject
+      const subjectScores = allScoresResult.rows
+        .filter(s => s.subject_code === result.subject_code)
+        .map(s => ({ adm_no: s.adm_no, score: parseFloat(s.score) || 0 }))
+        .sort((a, b) => b.score - a.score);
+      
+      const rank = subjectScores.findIndex(s => s.adm_no === admNo) + 1;
+      
+      return {
+        ...result,
+        grade: grade,
+        rank: rank > 0 ? rank : null
+      };
+    });
+    
+    // Also get summary from monthly_results if available (for total, average, grade, position)
+    const summaryResult = await query(
+      `SELECT total_marks, average, grade, position, remarks
+       FROM monthly_results
+       WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4 AND month = $5
+       LIMIT 1`,
+      [studentIndex, student.level, student.stream, student.year, month]
+    );
+    
+    // Get all comment types for this student and term
+    const commentTypes = ['sala', 'tabia', 'michezo', 'taaluma', 'mwalimu_taaluma', 'mkuu_shule', 'huduma'];
+    const commentsResult = await query(
+      `SELECT comment_type, comment_text
+       FROM comments
+       WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5
+       AND comment_type = ANY($6::text[])`,
+      [studentIndex, student.level, student.stream, student.year, determinedTerm, commentTypes]
+    );
+    
+    const comments = {};
+    commentsResult.rows.forEach(comment => {
+      comments[comment.comment_type] = comment.comment_text || '';
+    });
+    
+    // Get TABIA NA MWENENDO (behavior evaluations) - this is stored separately
+    // Each row has criterion (901-911) and evaluation (A, B, C, etc.)
+    const tabiaMwenendoResult = await query(
+      `SELECT criterion, evaluation
+       FROM tabia_mwenendo
+       WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5
+       ORDER BY criterion`,
+      [studentIndex, student.level, student.stream, student.year, determinedTerm]
+    );
+    
+    // Format TABIA NA MWENENDO data as object: { "901": "A", "902": "B", ... }
+    const tabiaMwenendo = {};
+    tabiaMwenendoResult.rows.forEach(row => {
+      tabiaMwenendo[row.criterion] = row.evaluation;
+    });
+    
+    // Calculate summary - use monthly_results if available, otherwise calculate from individual_scores
+    let totalScore, average, grade, position, remarks;
+    
+    if (summaryResult.rows.length > 0) {
+      const summary = summaryResult.rows[0];
+      totalScore = parseFloat(summary.total_marks) || 0;
+      average = parseFloat(summary.average) || 0;
+      grade = summary.grade;
+      position = summary.position;
+      remarks = summary.remarks;
+    } else {
+      // Calculate from individual_scores
+      totalScore = results.reduce((sum, r) => sum + (parseFloat(r.total) || 0), 0);
+      average = results.length > 0 ? totalScore / results.length : 0;
+      // Calculate grade from average
+      grade = average > 0 ? calculateGrade(average, student.level) : null;
+      remarks = null;
+      
+      // Calculate position by comparing total scores with all students in the class
+      const allStudentsTotalsResult = await query(
+        `SELECT 
+          adm_no,
+          SUM(score) as total_score
+         FROM individual_scores
+         WHERE level = $1 AND stream = $2 AND year = $3 AND month = $4
+         GROUP BY adm_no
+         ORDER BY total_score DESC`,
+        [student.level, student.stream, student.year, month]
+      );
+      
+      const sortedStudents = allStudentsTotalsResult.rows.map((s, index) => ({
+        adm_no: s.adm_no,
+        total_score: parseFloat(s.total_score) || 0,
+        position: index + 1
+      }));
+      
+      const studentPosition = sortedStudents.findIndex(s => s.adm_no === admNo);
+      position = studentPosition >= 0 ? studentPosition + 1 : null;
+    }
+    
+    // Get total number of students in the class for "out of"
+    const totalStudentsResult = await query(
+      `SELECT COUNT(DISTINCT adm_no) as total_students
+       FROM individual_scores
+       WHERE level = $1 AND stream = $2 AND year = $3 AND month = $4`,
+      [student.level, student.stream, student.year, month]
+    );
+    const totalStudents = parseInt(totalStudentsResult.rows[0]?.total_students) || 0;
+    
+    res.json({
+      student,
+      results,
+      comments: {
+        ...comments,
+        tabia_mwenendo: tabiaMwenendo
+      },
+      summary: {
+        totalScore,
+        average,
+        subjectCount: results.length,
+        grade,
+        position,
+        totalStudents,
+        remarks
+      },
+      month,
+      term: determinedTerm,
+      year: parseInt(year)
+    });
+  } catch (error) {
+    console.error('Get student results error:', error);
+    return sendError(res, error, 500);
+  }
+});
+
+module.exports = router;
+

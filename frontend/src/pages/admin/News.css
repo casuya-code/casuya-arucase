@@ -1,0 +1,211 @@
+/**
+ * News & Announcements Styles - Modern Responsive Design
+ * Large, Readable Content on Small Screens
+ */
+.news-page-container {
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  font-size: clamp(18px, 4vw, 20px);
+  line-height: 1.75;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+}
+
+.add-announcement-form {
+  background: #f9fafb;
+  padding: 1.5rem;
+  border-radius: 8px;
+  margin-bottom: 2rem;
+  border: 1px solid #e5e7eb;
+}
+
+.add-announcement-form h3 {
+  margin: 0 0 1rem 0;
+  color: #111827;
+}
+
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.form-group label {
+  margin-bottom: clamp(0.5rem, 2vw, 0.75rem);
+  font-weight: 600;
+  color: #374151;
+  font-size: clamp(1rem, 3vw, 1.125rem);
+  line-height: 1.5;
+}
+
+.excel-input {
+  padding: clamp(1rem, 3.5vw, 1.25rem);
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  font-size: clamp(1rem, 4vw, 1.125rem);
+  font-family: inherit;
+  line-height: 1.6;
+  min-height: 52px;
+  transition: all 0.2s;
+}
+
+.excel-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1rem;
+}
+
+.announcements-table-container {
+  overflow-x: auto;
+}
+
+.excel-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.excel-table th {
+  background: #f3f4f6;
+  padding: clamp(1rem, 3vw, 1.25rem);
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  font-size: clamp(1rem, 3vw, 1.125rem);
+  line-height: 1.5;
+}
+
+.excel-table td {
+  padding: clamp(1rem, 3vw, 1.25rem);
+  border-bottom: 1px solid #e5e7eb;
+  font-size: clamp(1rem, 3vw, 1.125rem);
+  line-height: 1.6;
+}
+
+.excel-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.news-content {
+  max-width: 400px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.priority-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.priority-high {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.priority-normal {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.priority-low {
+  background: #f3f4f6;
+  color: #374151;
+}
+
+.empty-table-message {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+}
+
+.excel-btn {
+  padding: clamp(1rem, 3.5vw, 1.25rem) clamp(1.5rem, 5vw, 2rem);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: clamp(1rem, 4vw, 1.125rem);
+  font-weight: 600;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 0.75rem);
+  text-decoration: none;
+  color: white;
+  min-height: 52px;
+  line-height: 1.5;
+}
+
+.excel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.excel-btn.primary {
+  background: #3b82f6;
+}
+
+.excel-btn.primary:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.excel-btn.secondary {
+  background: #6b7280;
+}
+
+.excel-btn.secondary:hover {
+  background: #4b5563;
+}
+
+.excel-btn.danger {
+  background: #ef4444;
+}
+
+.excel-btn.danger:hover {
+  background: #dc2626;
+}
+
+.excel-btn.small {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+@media (max-width: 768px) {
+  .form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .announcements-table-container {
+    overflow-x: scroll;
+  }
+
+  .excel-table {
+    min-width: 800px;
+  }
+}
+

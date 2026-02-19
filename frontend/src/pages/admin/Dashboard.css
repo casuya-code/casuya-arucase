@@ -1,0 +1,642 @@
+/* ===========================================
+   DASHBOARD STYLES - Scalable & Responsive
+   Supports both Admin and Non-Admin users
+   =========================================== */
+
+/* Loading & Error States */
+.dashboard-loading,
+.dashboard-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 400px;
+  padding: 2rem;
+  text-align: center;
+}
+
+.dashboard-loading .loading-spinner {
+  width: 48px;
+  height: 48px;
+  border: 4px solid #e2e8f0;
+  border-top-color: #01a72b;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.dashboard-error {
+  color: #ef4444;
+}
+
+.dashboard-error i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+/* ===========================================
+   ADMIN DASHBOARD STYLES
+   =========================================== */
+
+.dashboard-layout {
+  background: #a3d4f2;
+  min-height: 100vh;
+  width: 100%;
+  padding: 0;
+  margin: 0;
+}
+
+/* Welcome Header */
+.welcome-header {
+  background: transparent;
+  padding: 2rem 1.5rem;
+  text-align: center;
+}
+
+.welcome-header-content {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.welcome-text h2 {
+  font-size: clamp(1.75rem, 6vw, 2.5rem);
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.75rem, 2vw, 1rem);
+  line-height: 1.3;
+}
+
+.welcome-text h2 i {
+  color: #01a72b;
+}
+
+/* Main Grid Layout */
+.dashboard-main-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 2rem;
+  padding: 0 1.5rem 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.dashboard-left-column {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+/* Dashboard Sections */
+.dashboard-section {
+  background: transparent;
+  padding: 0;
+}
+
+.section-title {
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  font-weight: 700;
+  color: #000000;
+  margin-bottom: clamp(1.5rem, 4vw, 2rem);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.5rem, 2vw, 0.75rem);
+  text-align: center;
+  line-height: 1.35;
+}
+
+.section-title i {
+  color: #01a72b;
+}
+
+/* Statistics Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.stats-grid-students {
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+}
+
+/* Per-year student cards (2025=56, 2026=55, ...) */
+.stats-year-row {
+  margin-bottom: 1.5rem;
+}
+
+.stats-grid-years {
+  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
+  gap: 0.75rem;
+}
+
+.stat-card-year {
+  min-height: 90px;
+  padding: 0.75rem;
+}
+
+.stat-card-year .stat-number-year {
+  font-size: clamp(1.125rem, 3vw, 1.375rem);
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0 0 0.25rem 0;
+  line-height: 1.2;
+}
+
+.stat-card-year .stat-number-year-value {
+  font-size: clamp(1.5rem, 4vw, 2rem);
+  font-weight: 700;
+  color: #01a72b;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.stat-card-year .stat-label {
+  font-size: 0.8125rem;
+  margin-top: 0.25rem;
+}
+
+.stats-grid-academic {
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+/* Stat Cards */
+.stat-card {
+  background: #ffffff;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s ease;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 110px;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  border-color: #01a72b;
+}
+
+.stat-card-featured {
+  background: linear-gradient(135deg, #01a72b 0%, #028a23 100%);
+  color: #ffffff;
+  border-color: #01a72b;
+}
+
+.stat-card-featured .stat-number,
+.stat-card-featured .stat-label,
+.stat-card-featured .stat-description {
+  color: #000000;
+}
+
+.stat-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  margin-bottom: 0.75rem;
+}
+
+.stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  color: #01a72b;
+  background: rgba(1, 167, 43, 0.1);
+}
+
+.stat-icon-primary {
+  background: rgba(255, 255, 255, 0.2);
+  color: #ffffff;
+}
+
+.stat-card-featured .stat-trend {
+  color: rgba(0, 0, 0, 0.6);
+}
+
+.stat-icon-academic {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
+}
+
+.stat-trend {
+  color: rgba(255, 255, 255, 0.8);
+  font-size: 1.25rem;
+}
+
+.stat-number {
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  font-weight: 700;
+  color: #1e293b;
+  margin: clamp(0.5rem, 2vw, 0.75rem) 0;
+  line-height: 1.2;
+}
+
+.stat-number-primary {
+  font-size: clamp(2rem, 6vw, 3rem);
+  color: #ffffff;
+}
+
+.stat-label {
+  font-size: clamp(1rem, 3vw, 1.125rem);
+  font-weight: 600;
+  color: #475569;
+  margin-top: clamp(0.25rem, 1vw, 0.5rem);
+  line-height: 1.5;
+}
+
+.stat-description {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.9);
+  margin-top: 0.25rem;
+}
+
+.stat-progress {
+  width: 100%;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 2px;
+  margin-top: 0.5rem;
+  overflow: hidden;
+}
+
+.stat-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, #01a72b 0%, #028a23 100%);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+/* ===========================================
+   NON-ADMIN (TEACHER) DASHBOARD STYLES
+   =========================================== */
+
+.teacher-dashboard-container {
+  background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+  min-height: 100vh;
+  padding: 0;
+  margin: 0;
+  width: 100%;
+}
+
+/* Sky Background */
+.sky-background {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  min-height: 160px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+  width: 100%;
+  padding: 1.5rem;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.sky-background::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: url('data:image/svg+xml,<svg width="100" height="100" xmlns="http://www.w3.org/2000/svg"><circle cx="20" cy="20" r="2" fill="rgba(255,255,255,0.1)"/><circle cx="80" cy="40" r="1.5" fill="rgba(255,255,255,0.1)"/><circle cx="40" cy="60" r="1" fill="rgba(255,255,255,0.1)"/></svg>');
+  opacity: 0.3;
+  z-index: 1;
+}
+
+.welcome-overlay {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  color: #ffffff;
+  padding: 0.5rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+.welcome-title {
+  font-size: clamp(1.75rem, 6vw, 2.75rem);
+  font-weight: 700;
+  margin: 0 auto clamp(0.5rem, 2vw, 0.75rem) auto;
+  color: #ffffff;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  letter-spacing: -0.02em;
+  text-align: center;
+  display: block;
+  width: 100%;
+  line-height: 1.3;
+}
+
+.welcome-subtitle {
+  font-size: clamp(1rem, 3vw, 1.375rem);
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.95);
+  line-height: 1.6;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  display: block;
+  width: 100%;
+  margin: 0 auto;
+}
+
+/* Guidelines Section */
+.guidelines-section {
+  background: #ffffff;
+  padding: 2rem 1.5rem;
+  margin: 0;
+  width: 100%;
+  max-width: 1400px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.guidelines-header {
+  color: #1e293b;
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  font-weight: 700;
+  margin-bottom: clamp(0.75rem, 2vw, 1rem);
+  text-align: left;
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 0.75rem);
+  line-height: 1.35;
+}
+
+.guidelines-header i {
+  color: #667eea;
+  font-size: 1.1em;
+}
+
+.guidelines-intro {
+  color: #475569;
+  font-size: clamp(1rem, 3vw, 1.25rem);
+  margin-bottom: clamp(1.5rem, 4vw, 2rem);
+  text-align: left;
+  line-height: 1.75;
+  max-width: 900px;
+}
+
+.guidelines-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.25rem;
+  margin-top: 1rem;
+  width: 100%;
+}
+
+/* Guideline Cards */
+.guideline-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  text-align: left;
+  display: block;
+  position: relative;
+  overflow: hidden;
+}
+
+.guideline-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  transform: scaleX(0);
+  transform-origin: left;
+  transition: transform 0.3s ease;
+}
+
+.guideline-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.15);
+  border-color: #c7d2fe;
+}
+
+.guideline-card:hover::before {
+  transform: scaleX(1);
+}
+
+.guideline-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 0.875rem;
+  color: #ffffff;
+  font-size: 1.25rem;
+  box-shadow: 0 3px 8px rgba(102, 126, 234, 0.3);
+  transition: transform 0.3s ease;
+}
+
+.guideline-card:hover .guideline-icon {
+  transform: scale(1.1);
+}
+
+.guideline-card h3 {
+  font-size: clamp(1.125rem, 3.5vw, 1.375rem);
+  font-weight: 600;
+  color: #1e293b;
+  margin: 0 0 clamp(0.5rem, 2vw, 0.75rem) 0;
+  line-height: 1.4;
+}
+
+.guideline-card p {
+  font-size: clamp(1rem, 3vw, 1.125rem);
+  color: #64748b;
+  line-height: 1.75;
+  margin: 0;
+}
+
+.guidelines-footer {
+  margin-top: 2rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid #e2e8f0;
+  text-align: center;
+}
+
+.guidelines-footer p {
+  font-size: clamp(0.875rem, 1.8vw, 1rem);
+  color: #475569;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.guidelines-footer i {
+  color: #f59e0b;
+}
+
+/* ===========================================
+   RESPONSIVE DESIGN
+   =========================================== */
+
+@media (min-width: 768px) {
+  .dashboard-main-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+  
+  .stats-grid-students {
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  }
+}
+
+@media (min-width: 1024px) {
+  .dashboard-main-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+  
+  .stats-grid-students {
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  }
+  
+  .guidelines-grid {
+    grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  }
+}
+
+@media (min-width: 1280px) {
+  .stats-grid {
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+  }
+  
+  .stats-grid-students {
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  }
+  
+  /* Reduce font sizes on large screens */
+  .stat-number {
+    font-size: 1.75rem !important;
+  }
+  
+  .stat-number-primary {
+    font-size: 2rem !important;
+  }
+  
+  .stat-label {
+    font-size: 0.875rem !important;
+  }
+  
+  .stat-description {
+    font-size: 0.75rem !important;
+  }
+  
+  .stat-icon {
+    width: 36px !important;
+    height: 36px !important;
+    font-size: 1.125rem !important;
+  }
+  
+  .stat-card {
+    padding: 1rem !important;
+    min-height: 100px !important;
+  }
+}
+
+/* Extra large screens - further reduce sizes */
+@media (min-width: 1536px) {
+  .stat-number {
+    font-size: 1.5rem !important;
+  }
+  
+  .stat-number-primary {
+    font-size: 1.75rem !important;
+  }
+  
+  .stat-label {
+    font-size: 0.8125rem !important;
+  }
+  
+  .stat-icon {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: 1rem !important;
+  }
+  
+  .stat-card {
+    padding: 0.875rem !important;
+    min-height: 95px !important;
+  }
+  
+  .section-title {
+    font-size: 1.25rem !important;
+  }
+}
+
+@media (max-width: 767px) {
+  .dashboard-layout,
+  .teacher-dashboard-container {
+    padding: 0;
+  }
+  
+  .welcome-header {
+    padding: 1.5rem 1rem;
+  }
+  
+  .dashboard-main-grid {
+    padding: 0 1rem 1.5rem;
+  }
+  
+  .stats-grid,
+  .stats-grid-students,
+  .stats-grid-academic {
+    grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+    gap: 0.75rem;
+  }
+  
+  .stat-card {
+    padding: 1rem;
+    min-height: 100px;
+  }
+  
+  .stat-number {
+    font-size: 1.5rem;
+  }
+  
+  .guidelines-section {
+    padding: 1.5rem 1rem;
+  }
+  
+  .guidelines-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+}
+

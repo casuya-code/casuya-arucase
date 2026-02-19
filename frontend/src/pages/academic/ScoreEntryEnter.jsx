@@ -1,0 +1,736 @@
+/**
+ * Score Entry Page - Actual score input interface
+ * Non-admin without access to this class is redirected to score entry.
+ */
+import { useState, useEffect } from 'react';
+import { useParams, Link, Navigate } from 'react-router-dom';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { toast } from 'react-toastify';
+import AdminLayout from '../../components/layout/AdminLayout';
+import { useAuth } from '../../context/AuthContext';
+import { studentsAPI } from '../../services/students';
+import { requiresSpecialAcademicYearLogic, getApiYearForFormVVI } from '../../utils/academicYearUtils';
+import './ScoreEntryEnter.css';
+
+const ScoreEntryEnter = ({ formLevel }) => {
+  const params = useParams();
+  // React Router v6 automatically decodes URL parameters, but we'll decode explicitly to be safe
+  const year = params.year;
+  const stream = params.stream;
+  const subjectCodeParam = params.subjectCode;
+  const monthParam = params.month;
+  
+  // Decode subject code to handle URL-encoded values (e.g., "A%2FPHY" -> "A/PHY")
+  // React Router should decode automatically, but decodeURIComponent is safe (idempotent for already-decoded values)
+  const subjectCode = subjectCodeParam ? decodeURIComponent(subjectCodeParam) : '';
+  // Decode month to handle URL-encoded values
+  const month = monthParam ? decodeURIComponent(monthParam) : '';
+  
+  const queryClient = useQueryClient();
+  const { getAllowedScoreEntryMonths, hasClass, isAdminLike, hasModule } = useAuth();
+  
+  const [scores, setScores] = useState({});
+  const [saveTimeouts, setSaveTimeouts] = useState({});
+
+  // Normalize form level (convert to uppercase: "form-i" -> "FORM I")
+  const normalizedLevel = formLevel
+    ? formLevel.split('-').map(w => w.toUpperCase()).join(' ')
+    : '';
+  
+  // Normalize stream: use 'A' as default for Form I-IV (previously 'NA')
+  // For Form V-VI, use the actual stream value
+  const normalizedStream = (() => {
+    const isFormVOrVI = normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI';
+    if (isFormVOrVI) {
+      return stream || '';
+    }
+    return stream || 'A';
+  })();
+
+  const currentClassKey = (normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI')
+    ? `${normalizedLevel} ${normalizedStream}`
+    : normalizedLevel;
+
+  // Validate required parameters before proceeding
+  // If critical parameters are missing, show error instead of redirecting
+  const hasRequiredParams = normalizedLevel && year && month && subjectCode && normalizedStream;
+  
+  // For Form V-VI, stream is required - check it explicitly
+  const isFormVOrVILevel = normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI';
+  const hasValidStream = isFormVOrVILevel ? (normalizedStream && normalizedStream.trim() !== '') : true;
+  const allParamsValid = hasRequiredParams && hasValidStream;
+  
+  if (!allParamsValid) {
+    console.error('ScoreEntryEnter: Missing required parameters', {
+      normalizedLevel,
+      year,
+      month,
+      subjectCode,
+      normalizedStream,
+      stream,
+      hasValidStream,
+      isFormVOrVILevel,
+      params: params,
+      pathname: window.location.pathname,
+      formLevel
+    });
+  }
+
+  // Only check access if we have valid parameters
+  // This prevents false negatives when stream is missing for Form V-VI
+  if (allParamsValid && !isAdminLike() && !hasClass(currentClassKey)) {
+    console.warn('ScoreEntryEnter: User does not have access to this class', {
+      isAdminLike: isAdminLike(),
+      currentClassKey,
+      hasClass: hasClass(currentClassKey),
+      normalizedLevel,
+      normalizedStream,
+      stream
+    });
+    return <Navigate to="/admin/score-entry" replace />;
+  }
+
+  // Non-admin may be restricted to specific months; if so, block entry for other months
+  const allowedMonths = getAllowedScoreEntryMonths();
+  const isMonthAllowed = allowedMonths === null || allowedMonths.length === 0 || (month && allowedMonths.includes(month));
+  
+  // Validate required parameters
+  useEffect(() => {
+    if (!normalizedLevel || !year || !month || !subjectCode) {
+      console.error('ScoreEntryEnter: Missing required parameters!', {
+        normalizedLevel,
+        year,
+        month,
+        subjectCode
+      });
+    }
+  }, [normalizedLevel, year, month, subjectCode]);
+  
+
+  // Helper function to sort students by name: first_name, then middle_name, then surname (A-Z)
+  const sortStudentsByName = (students) => {
+    return [...students].sort((a, b) => {
+      // Sort by first_name first
+      const firstNameA = String(a.first_name || '').toLowerCase().trim();
+      const firstNameB = String(b.first_name || '').toLowerCase().trim();
+      const firstNameCompare = firstNameA.localeCompare(firstNameB, undefined, { sensitivity: 'base' });
+      if (firstNameCompare !== 0) return firstNameCompare;
+      
+      // If first names are equal, sort by middle_name
+      const middleNameA = String(a.middle_name || '').toLowerCase().trim();
+      const middleNameB = String(b.middle_name || '').toLowerCase().trim();
+      const middleNameCompare = middleNameA.localeCompare(middleNameB, undefined, { sensitivity: 'base' });
+      if (middleNameCompare !== 0) return middleNameCompare;
+      
+      // If middle names are equal, sort by surname
+      const surnameA = String(a.surname || '').toLowerCase().trim();
+      const surnameB = String(b.surname || '').toLowerCase().trim();
+      return surnameA.localeCompare(surnameB, undefined, { sensitivity: 'base' });
+    });
+  };
+
+  // For Form V-VI, convert display year to API year (academic year start year)
+  // Example: If user selects 2026, query for 2025 (academic year start)
+  const apiYear = (() => {
+    if (requiresSpecialAcademicYearLogic(normalizedLevel)) {
+      const yearNum = parseInt(year, 10);
+      if (!isNaN(yearNum)) {
+        return getApiYearForFormVVI(yearNum, normalizedLevel);
+      }
+    }
+    return year;
+  })();
+
+  // Fetch students for this class - sorted by name: first_name, then middle_name, then surname (A-Z)
+  // For streams A, B, C, D: also fetch students from stream "NA"
+  // For Form V-VI, use apiYear (academic year start) instead of display year
+  const { data: studentsData = [], isLoading: studentsLoading, error: studentsError } = useQuery({
+    queryKey: ['students', normalizedLevel, normalizedStream, apiYear],
+    queryFn: async () => {
+      if (!normalizedLevel || !apiYear) {
+        console.warn('ScoreEntryEnter: Missing required params for getStudents', { normalizedLevel, apiYear, displayYear: year });
+        return [];
+      }
+      
+      let students = [];
+      
+      try {
+        // Fetch students for the normalized stream
+        // Note: All "NA" stream values have been normalized to "A" in the database
+        // For Form V-VI, use apiYear (academic year start) instead of display year
+        const res = await studentsAPI.getStudents({
+          level: normalizedLevel,
+          stream: normalizedStream,
+          year: apiYear,
+        });
+        
+        students = res.data.students || [];
+        
+        // Sort students by name: first_name, then middle_name, then surname (A-Z)
+        const sorted = sortStudentsByName(students);
+        return sorted;
+      } catch (error) {
+        // Only log non-401 errors to avoid spam
+        if (error.response?.status !== 401) {
+          console.error('ScoreEntryEnter: Error fetching students:', error);
+          console.error('ScoreEntryEnter: Error details:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+            url: error.config?.url
+          });
+        }
+        // Don't throw error on 401 - just return empty array to prevent UI breakage
+        if (error.response?.status === 401) {
+          // Silently handle 401 - token will be cleared by interceptor
+          return [];
+        }
+        throw error;
+      }
+    },
+    enabled: !!normalizedLevel && !!year && !!normalizedStream && !!localStorage.getItem('token') && !!subjectCode && !!month,
+    retry: false, // Prevent repeated failed requests
+    staleTime: 0, // Always fetch fresh data
+    refetchOnWindowFocus: false, // Prevent refetch on focus to avoid race conditions
+  });
+  
+  const students = studentsData;
+
+  // Fetch existing scores for this subject and month
+  // For Form V-VI, use apiYear (academic year start) instead of display year
+  const { data: existingScores = {}, isLoading: scoresLoading } = useQuery({
+    queryKey: ['scores', normalizedLevel, normalizedStream, apiYear, month, subjectCode, students.length],
+    queryFn: async () => {
+      try {
+        const res = await studentsAPI.getClassScores({
+          level: normalizedLevel,
+          stream: normalizedStream,
+          year: apiYear,
+          month: month,
+          subject_code: subjectCode,
+        });
+        
+        const scores = res.data.scores || {};
+        return scores;
+      } catch (error) {
+        // Only log non-401 errors to avoid spam
+        if (error.response?.status !== 401) {
+          console.error('ScoreEntryEnter: Error fetching scores:', error);
+          console.error('ScoreEntryEnter: Score error details:', {
+            message: error.message,
+            response: error.response?.data,
+            status: error.response?.status,
+            url: error.config?.url
+          });
+        }
+        // Don't throw error on 401 - just return empty object to prevent UI breakage
+        if (error.response?.status === 401) {
+          // Silently handle 401 - token will be cleared by interceptor
+          return {};
+        }
+        throw error; // Re-throw other errors
+      }
+    },
+    enabled: students.length > 0 && !!normalizedLevel && !!apiYear && !!month && !!subjectCode && !!normalizedStream && !!localStorage.getItem('token'),
+    retry: false, // Prevent repeated failed requests
+    staleTime: 0, // Always fetch fresh data
+    refetchOnWindowFocus: false, // Prevent refetch on focus to avoid race conditions
+  });
+
+  // Initialize scores from existing scores - filter to only include current students
+  useEffect(() => {
+    if (Object.keys(existingScores).length > 0 && students.length > 0) {
+      // Filter scores to only include students that are currently in the class
+      const studentAdmNos = new Set(students.map(s => s.adm_no));
+      const filteredScores = {};
+      Object.keys(existingScores).forEach(admNo => {
+        if (studentAdmNos.has(admNo)) {
+          filteredScores[admNo] = existingScores[admNo];
+        }
+      });
+      setScores(filteredScores);
+    } else if (students.length > 0) {
+      // Initialize empty scores object for all students when no existing scores
+      // Check if we need to initialize by comparing student count
+      const currentStudentCount = Object.keys(scores).length;
+      if (currentStudentCount !== students.length) {
+        const emptyScores = {};
+        students.forEach(student => {
+          // Preserve existing scores if any
+          emptyScores[student.adm_no] = scores[student.adm_no] ?? '';
+        });
+        setScores(emptyScores);
+      }
+    }
+  }, [existingScores, students.length]); // Only depend on students.length to prevent loops
+
+  // Save score mutation
+  const saveScoreMutation = useMutation({
+    mutationFn: async ({ admNo, score }) => {
+      const numScore = typeof score === 'number' ? score : parseFloat(score);
+      if (isNaN(numScore) || numScore < 0 || numScore > 100) {
+        throw new Error('Score must be between 0 and 100');
+      }
+      // For Form V-VI, use apiYear (academic year start) instead of display year
+      const yearToUse = requiresSpecialAcademicYearLogic(normalizedLevel) 
+        ? parseInt(apiYear, 10) 
+        : parseInt(year, 10);
+      
+      return studentsAPI.saveScore(admNo, {
+        level: normalizedLevel,
+        stream: normalizedStream,
+        year: yearToUse,
+        month: month,
+        subject_code: subjectCode,
+        score: numScore,
+      });
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries(['scores', normalizedLevel, normalizedStream, apiYear, month, subjectCode]);
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Failed to save score');
+    },
+  });
+
+  const handleScoreChange = (admNo, value) => {
+    const newScores = { ...scores, [admNo]: value };
+    setScores(newScores);
+
+    // Clear existing timeout for this student
+    if (saveTimeouts[admNo]) {
+      clearTimeout(saveTimeouts[admNo]);
+    }
+
+    // Auto-save after 3 seconds of inactivity
+    const timeout = setTimeout(() => {
+      if (value !== '' && value !== null && value !== undefined) {
+        const numValue = parseFloat(value);
+        if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
+          saveScoreMutation.mutate({ admNo, score: numValue });
+        }
+      }
+    }, 3000);
+
+    setSaveTimeouts(prev => ({ ...prev, [admNo]: timeout }));
+  };
+
+  // Handle blur - save immediately when clicking on another input
+  const handleScoreBlur = (admNo, value) => {
+    // Clear the timeout since we're saving now
+    if (saveTimeouts[admNo]) {
+      clearTimeout(saveTimeouts[admNo]);
+      setSaveTimeouts(prev => {
+        const newTimeouts = { ...prev };
+        delete newTimeouts[admNo];
+        return newTimeouts;
+      });
+    }
+
+    // Save immediately on blur (when clicking another input)
+    if (value !== '' && value !== null && value !== undefined) {
+      const numValue = parseFloat(value);
+      if (!isNaN(numValue) && numValue >= 0 && numValue <= 100) {
+        saveScoreMutation.mutate({ admNo, score: numValue });
+      }
+    }
+  };
+
+  const handleSaveAll = async () => {
+    const validScores = Object.entries(scores).filter(([admNo, score]) => {
+      const numScore = parseFloat(score);
+      return score !== '' && !isNaN(numScore) && numScore >= 0 && numScore <= 100;
+    });
+
+    if (validScores.length === 0) {
+      toast.warning('No valid scores to save');
+      return;
+    }
+
+    if (window.confirm(`Save ${validScores.length} scores?`)) {
+      for (const [admNo, score] of validScores) {
+        await saveScoreMutation.mutateAsync({ admNo, score });
+      }
+      toast.success(`Saved ${validScores.length} scores successfully!`);
+    }
+  };
+
+  const handleClearAll = () => {
+    if (window.confirm('Clear all scores? This action cannot be undone.')) {
+      setScores({});
+      toast.info('All scores cleared');
+    }
+  };
+
+  const handleDownloadTemplate = async () => {
+    try {
+      // For Form V-VI, use apiYear (academic year start) instead of display year
+      const yearToUse = requiresSpecialAcademicYearLogic(normalizedLevel) 
+        ? parseInt(apiYear, 10) 
+        : parseInt(year, 10);
+      
+      const res = await studentsAPI.getScoreEntryTemplate({
+        level: normalizedLevel,
+        stream: normalizedStream,
+        year: yearToUse,
+        month,
+        subject_code: subjectCode,
+      });
+      const blob = res.data;
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `score_entry_${normalizedLevel}_${normalizedStream}_${year}_${month}_${subjectCode}.csv`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      toast.success('Template downloaded');
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to download template');
+    }
+  };
+
+  const uploadScoresCsvMutation = useMutation({
+    mutationFn: async (formData) => {
+      const res = await studentsAPI.uploadScoresCsv(formData);
+      return res.data;
+    },
+    onSuccess: (data) => {
+      queryClient.invalidateQueries(['scores', normalizedLevel, normalizedStream, apiYear, month, subjectCode]);
+      const msg = data.saved != null ? `Saved ${data.saved} score(s) from CSV.` : data.message || 'Upload complete.';
+      if (data.errors && data.errors.length > 0) {
+        toast.warning(`${msg} ${data.errors.length} row(s) had errors.`);
+      } else {
+        toast.success(msg);
+      }
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'CSV upload failed');
+    },
+  });
+
+  const handleUploadCsv = (e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      toast.error('Please select a CSV file');
+      e.target.value = '';
+      return;
+    }
+    // For Form V-VI, use apiYear (academic year start) instead of display year
+    const yearToUse = requiresSpecialAcademicYearLogic(normalizedLevel) 
+      ? parseInt(apiYear, 10) 
+      : parseInt(year, 10);
+    
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('level', normalizedLevel);
+    formData.append('stream', normalizedStream);
+    formData.append('year', yearToUse);
+    formData.append('month', month);
+    formData.append('subject_code', subjectCode);
+    uploadScoresCsvMutation.mutate(formData, {
+      onSettled: () => {
+        e.target.value = '';
+      },
+    });
+  };
+
+  const getBackPath = () => {
+    // Use encoded subject code for URL consistency
+    const encodedSubjectCode = subjectCodeParam || encodeURIComponent(subjectCode);
+    if (normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI') {
+      return `/admin/score-entry/${formLevel}/stream/${stream}/year/${year}/subject/${encodedSubjectCode}/months`;
+    } else {
+      return `/admin/score-entry/${formLevel}/year/${year}/stream/${stream}/subject/${encodedSubjectCode}/months`;
+    }
+  };
+
+  const getRegistrationPath = () => {
+    // Generate the correct registration URL based on form level
+    if (normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI') {
+      // FORM V-VI: /admin/students/registration/form-vi/stream/{stream}/year/{year}
+      return `/admin/students/registration/${formLevel}/stream/${stream}/year/${year}`;
+    } else {
+      // FORM I-IV: /admin/students/registration/form-i/year/{year}/stream/{stream}
+      return `/admin/students/registration/${formLevel}/year/${year}/stream/${normalizedStream}`;
+    }
+  };
+
+  // Fetch subject info
+  const { data: subjects = [] } = useQuery({
+    queryKey: ['subjects', normalizedLevel, normalizedStream, year],
+    queryFn: async () => {
+      const res = await studentsAPI.getSubjects({
+        level: normalizedLevel,
+        stream: normalizedStream,
+        year: year,
+      });
+      return res.data.subjects || [];
+    },
+  });
+
+  const subject = subjects.find(s => s.subject_code === subjectCode || s.subject_abbreviation === subjectCode);
+
+  // Show error if required parameters are missing
+  if (!allParamsValid) {
+    const missingParams = [];
+    if (!normalizedLevel) missingParams.push('Form Level');
+    if (!year) missingParams.push('Year');
+    if (!month) missingParams.push('Month');
+    if (!subjectCode) missingParams.push('Subject');
+    if (isFormVOrVILevel && !hasValidStream) missingParams.push('Stream');
+    
+    return (
+      <AdminLayout>
+        <div className="score-entry-enter-page-container">
+          <div className="excel-card">
+            <div className="excel-card-header">
+              <i className="fas fa-exclamation-triangle"></i>
+              Missing Required Parameters
+            </div>
+            <div className="excel-card-body">
+              <p style={{ color: '#f44336', marginBottom: '20px' }}>
+                Some required parameters are missing from the URL. Please navigate back and try again.
+              </p>
+              {missingParams.length > 0 && (
+                <p style={{ fontSize: '14px', color: '#666', marginBottom: '10px' }}>
+                  Missing: {missingParams.join(', ')}
+                </p>
+              )}
+              {isFormVOrVILevel && !hasValidStream && (
+                <p style={{ fontSize: '14px', color: '#f44336', marginBottom: '10px', fontWeight: 'bold' }}>
+                  ⚠️ For {normalizedLevel}, a stream parameter is required in the URL.
+                </p>
+              )}
+              <p style={{ fontSize: '14px', color: '#666', marginBottom: '10px' }}>Debug Info:</p>
+              <pre style={{ background: '#f5f5f5', padding: '10px', borderRadius: '4px', fontSize: '12px', overflow: 'auto' }}>
+                {JSON.stringify({ normalizedLevel, year, month, subjectCode, normalizedStream, stream, hasValidStream, isFormVOrVILevel, formLevel, params }, null, 2)}
+              </pre>
+              <Link to="/admin/score-entry" className="excel-btn primary" style={{ marginTop: '20px' }}>
+                <i className="fas fa-arrow-left"></i> Back to Score Entry
+              </Link>
+            </div>
+          </div>
+        </div>
+      </AdminLayout>
+    );
+  }
+
+  return (
+    <AdminLayout>
+      <div className="score-entry-enter-page-container">
+        <div className="excel-card">
+          <div className="excel-card-header">
+            <i className="fas fa-graduation-cap"></i>
+            {year} - {subject?.subject_name || subjectCode} - {month}
+            {students.length > 0 && (
+              <span className="score-entry-header-badge">
+                {students.length} student{students.length !== 1 ? 's' : ''} loaded
+              </span>
+            )}
+            {!studentsLoading && students.length === 0 && (
+              <span className="score-entry-header-badge error">No students found</span>
+            )}
+            <div className="header-actions">
+              {students.length > 0 && (
+                <>
+                  <button
+                    type="button"
+                    className="excel-btn small secondary"
+                    onClick={handleDownloadTemplate}
+                    title="Download CSV template"
+                  >
+                    <i className="fas fa-download"></i> CSV template
+                  </button>
+                  <label className="excel-btn small secondary" style={{ marginBottom: 0 }}>
+                    <i className="fas fa-upload"></i> Upload CSV
+                    <input
+                      type="file"
+                      accept=".csv"
+                      style={{ position: 'absolute', width: 0, height: 0, opacity: 0 }}
+                      onChange={handleUploadCsv}
+                      disabled={uploadScoresCsvMutation.isLoading}
+                    />
+                  </label>
+                </>
+              )}
+              <Link to={getBackPath()} className="excel-btn small secondary">
+                <i className="fas fa-arrow-left"></i> Back to Months
+              </Link>
+            </div>
+          </div>
+          <div className="excel-card-body">
+            {!isMonthAllowed ? (
+              <div className="empty-state">
+                <i className="fas fa-calendar-times"></i>
+                <h3>Score entry not allowed for this month</h3>
+                <p>You are only allowed to enter scores for: {allowedMonths?.join(', ') || '—'}. Contact an administrator to change your score entry months in User Management.</p>
+                <Link to={getBackPath()} className="excel-btn primary" style={{ marginTop: '1rem' }}>
+                  <i className="fas fa-arrow-left"></i> Back to Months
+                </Link>
+              </div>
+            ) : studentsError ? (
+              <div className="empty-state">
+                <i className="fas fa-exclamation-triangle"></i>
+                <h3>Error Loading Students</h3>
+                <p>{studentsError.message || 'Failed to load students. Please try again.'}</p>
+                <p style={{ fontSize: '12px', color: '#666', marginTop: '10px' }}>
+                  Debug: {normalizedLevel} | {normalizedStream} | {year}
+                </p>
+              </div>
+            ) : studentsLoading ? (
+              <div className="loading-state">Loading students...</div>
+            ) : students.length === 0 ? (
+              <div className="empty-state">
+                <i className="fas fa-user-graduate"></i>
+                <h3>No Students Registered</h3>
+                <p>No students have been registered for this class yet.</p>
+                <p style={{ fontSize: '12px', color: '#666', marginTop: '10px' }}>
+                  {normalizedLevel} | {normalizedStream} | {year} | Students loaded: {students.length}
+                </p>
+                {(isAdminLike() || hasModule('student_registration')) && (
+                  <Link to={getRegistrationPath()} className="excel-btn primary">
+                    <i className="fas fa-plus"></i> Register Students
+                  </Link>
+                )}
+              </div>
+            ) : (
+              <>
+                {/* Desktop Table View */}
+                <div className="score-entry-student-list table-container">
+                  <table className="excel-table">
+                      <thead>
+                        <tr>
+                          <th>S/N</th>
+                          <th>Adm No</th>
+                          <th>First Name</th>
+                          <th>Middle Name</th>
+                          <th>Surname</th>
+                          <th>Sex</th>
+                          <th>Score</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {students.map((student, index) => {
+                          const studentScore = scores[student.adm_no];
+                          return (
+                            <tr key={student.adm_no}>
+                              <td data-label="No."><span className="score-entry-cell-value">{index + 1}</span></td>
+                              <td data-label="Adm No"><span className="score-entry-cell-value">{student.adm_no}</span></td>
+                              <td data-label="First Name"><span className="score-entry-cell-value">{student.first_name}</span></td>
+                              <td data-label="Middle Name"><span className="score-entry-cell-value">{student.middle_name || '-'}</span></td>
+                              <td data-label="Surname"><span className="score-entry-cell-value">{student.surname}</span></td>
+                              <td data-label="Sex"><span className="score-entry-cell-value">{student.sex}</span></td>
+                              <td data-label="Score">
+                                <span className="score-entry-cell-value">
+                                <input
+                                  type="number"
+                                  className="score-input"
+                                  id={`score_${student.adm_no}`}
+                                  value={studentScore !== undefined && studentScore !== null ? studentScore : ''}
+                                  onChange={(e) => handleScoreChange(student.adm_no, e.target.value)}
+                                  onBlur={(e) => handleScoreBlur(student.adm_no, e.target.value)}
+                                  min="0"
+                                  max="100"
+                                  step="0.1"
+                                  placeholder="0.0"
+                                />
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                </div>
+
+                {/* Mobile Card View (same style as Huduma) */}
+                <div className="mobile-students-list">
+                  {students.map((student, index) => {
+                    const studentScore = scores[student.adm_no];
+                    return (
+                      <div key={student.adm_no} className="mobile-student-card">
+                        <div className="mobile-student-card-header">
+                          <div className="student-info">
+                            <div className="student-name">
+                              {index + 1}. {student.first_name} {student.middle_name || ''} {student.surname}
+                            </div>
+                            <div className="student-adm">Adm No: {student.adm_no}</div>
+                          </div>
+                        </div>
+                        <div className="mobile-student-card-body">
+                          <div className="mobile-student-field">
+                            <span className="mobile-student-field-label">Sex</span>
+                            <span className="mobile-student-field-value">{student.sex}</span>
+                          </div>
+                          <div className="mobile-student-field mobile-score-field">
+                            <span className="mobile-student-field-label">Score</span>
+                            <input
+                              type="number"
+                              className="score-input"
+                              value={studentScore !== undefined && studentScore !== null ? studentScore : ''}
+                              onChange={(e) => handleScoreChange(student.adm_no, e.target.value)}
+                              onBlur={(e) => handleScoreBlur(student.adm_no, e.target.value)}
+                              min="0"
+                              max="100"
+                              step="0.1"
+                              placeholder="0.0"
+                            />
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="bulk-actions">
+                  <button
+                    type="button"
+                    className="excel-btn primary"
+                    onClick={handleSaveAll}
+                    disabled={saveScoreMutation.isLoading}
+                  >
+                    <i className="fas fa-save"></i> Save All Scores
+                  </button>
+                  <button
+                    type="button"
+                    className="excel-btn secondary"
+                    onClick={handleClearAll}
+                  >
+                    <i className="fas fa-eraser"></i> Clear All Scores
+                  </button>
+                  <button
+                    type="button"
+                    className="excel-btn secondary"
+                    onClick={handleDownloadTemplate}
+                    title="Download CSV with Adm No, names, and Score column (fill scores and upload)"
+                  >
+                    <i className="fas fa-download"></i> Download CSV template
+                  </button>
+                  <label className="excel-btn secondary" style={{ marginBottom: 0 }}>
+                    <i className="fas fa-upload"></i> Upload CSV
+                    <input
+                      type="file"
+                      accept=".csv"
+                      style={{ position: 'absolute', width: 0, height: 0, opacity: 0 }}
+                      onChange={handleUploadCsv}
+                      disabled={uploadScoresCsvMutation.isLoading}
+                    />
+                  </label>
+                  {uploadScoresCsvMutation.isLoading && (
+                    <span className="score-entry-upload-status">Uploading…</span>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      </div>
+    </AdminLayout>
+  );
+};
+
+export default ScoreEntryEnter;
+

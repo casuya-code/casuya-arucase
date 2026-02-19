@@ -1,0 +1,103 @@
+/**
+ * Score Entry Stream Selection Styles
+ */
+.score-entry-stream-selection-page-container {
+  padding: 2rem;
+}
+
+.stream-selection-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+}
+
+.stream-selection-card-item {
+  background: white;
+  border: 2px solid #e5e7eb;
+  border-radius: 8px;
+  padding: 1.5rem;
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s ease;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.stream-selection-card-item:hover {
+  border-color: #3b82f6;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
+  transform: translateY(-2px);
+  color: inherit;
+  text-decoration: none;
+}
+
+.stream-selection-name {
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.stream-selection-subtitle {
+  font-size: 0.875rem;
+  color: #6b7280;
+}
+
+/* Smartphone layout */
+@media (max-width: 768px) {
+  .score-entry-stream-selection-page-container {
+    padding: clamp(1rem, 4vw, 1.5rem);
+  }
+
+  .score-entry-stream-selection-page-container .excel-card {
+    border-radius: 0;
+    box-shadow: none;
+    overflow: visible;
+  }
+
+  .score-entry-stream-selection-page-container .excel-card-header {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .score-entry-stream-selection-page-container .header-actions {
+    margin-left: 0;
+  }
+
+  .score-entry-stream-selection-page-container .excel-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+    padding: 0.75rem 1rem;
+  }
+
+  .score-entry-stream-selection-page-container .excel-card-body {
+    padding: 1rem;
+  }
+
+  .score-entry-stream-selection-page-container .stream-selection-grid {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .score-entry-stream-selection-page-container .stream-selection-card-item {
+    padding: 1.25rem;
+    min-height: 72px;
+  }
+
+  .score-entry-stream-selection-page-container .stream-selection-name {
+    font-size: clamp(0.9375rem, 3.5vw, 1rem);
+    line-height: 1.3;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .score-entry-stream-selection-page-container .stream-selection-subtitle {
+    font-size: clamp(0.75rem, 2.5vw, 0.8125rem);
+  }
+}
+
+

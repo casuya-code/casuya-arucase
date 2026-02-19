@@ -1,0 +1,288 @@
+/* NECTA Results — compact, clear layout */
+.necta-results {
+  width: 100%;
+  max-width: 720px;
+  margin: 0 auto;
+  padding: clamp(1.25rem, 4vw, 2.5rem) clamp(1rem, 4vw, 1.5rem);
+  min-height: 60vh;
+}
+
+.necta-header {
+  text-align: center;
+  margin-bottom: 1.75rem;
+}
+
+.necta-title {
+  font-size: clamp(1.5rem, 4.5vw, 1.875rem);
+  font-weight: 700;
+  color: #0f172a;
+  margin: 0 0 0.25rem 0;
+  letter-spacing: -0.02em;
+}
+
+.necta-school {
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  color: #475569;
+  margin: 0 0 0.5rem 0;
+}
+
+.necta-hint {
+  font-size: 0.8125rem;
+  color: #64748b;
+  margin: 0;
+}
+
+.necta-intro {
+  font-size: 0.875rem;
+  color: #475569;
+  line-height: 1.5;
+  margin: 0.75rem auto 0;
+  max-width: 520px;
+}
+
+/* Tabs */
+.necta-tabs {
+  display: flex;
+  gap: 0.5rem;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 1.5rem;
+}
+
+.necta-tab {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.625rem 1.25rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 10px;
+  background: #fff;
+  color: #475569;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.necta-tab:hover {
+  border-color: #1e40af;
+  color: #1e40af;
+  background: #f8fafc;
+}
+
+.necta-tab.active {
+  border-color: #1e40af;
+  background: #1e40af;
+  color: #fff;
+}
+
+.necta-tab-label {
+  line-height: 1.2;
+}
+
+.necta-tab-sub {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  opacity: 0.85;
+  margin-top: 0.125rem;
+}
+
+/* Year section */
+.necta-year-section {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.25rem 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  margin-bottom: 1.5rem;
+}
+
+.necta-year-label {
+  font-size: 0.8125rem;
+  color: #64748b;
+  margin: 0 0 1rem 0;
+  text-align: center;
+  font-weight: 500;
+}
+
+.necta-years {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(72px, 1fr));
+  gap: 0.5rem;
+}
+
+.necta-year-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.625rem 0.5rem;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: #f8fafc;
+  color: #334155;
+  font-size: 0.875rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.2s, background 0.2s, color 0.2s;
+}
+
+.necta-year-btn:hover:not(:disabled) {
+  border-color: #1e40af;
+  background: #eff6ff;
+  color: #1e40af;
+}
+
+.necta-year-btn:disabled {
+  opacity: 0.7;
+  cursor: wait;
+}
+
+.necta-year-icon {
+  font-size: 0.65rem;
+  opacity: 0.7;
+}
+
+.necta-year-btn:hover:not(:disabled) .necta-year-icon {
+  opacity: 1;
+}
+
+/* Loading */
+.necta-loading {
+  text-align: center;
+  padding: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+/* Note (when stats fail) */
+.necta-note {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #f1f5f9;
+  border-radius: 8px;
+  font-size: 0.8125rem;
+  color: #475569;
+  margin-bottom: 1rem;
+}
+
+.necta-note i {
+  color: #64748b;
+  flex-shrink: 0;
+}
+
+/* Stats block */
+.necta-stats {
+  background: #fff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  padding: 1.5rem 1rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.necta-stats-title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 1.25rem 0;
+  text-align: center;
+}
+
+.necta-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.necta-stat {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 0.75rem 0.5rem;
+  border-radius: 8px;
+  border: 1px solid #e2e8f0;
+  background: #f8fafc;
+}
+
+.necta-stat-total {
+  grid-column: 1 / -1;
+  background: #eff6ff;
+  border-color: #93c5fd;
+}
+
+.necta-stat-label {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: #64748b;
+  margin-bottom: 0.25rem;
+}
+
+.necta-stat-num {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #0f172a;
+}
+
+.necta-stat-total .necta-stat-num { color: #1e40af; }
+.necta-stat-div1 .necta-stat-num { color: #059669; }
+.necta-stat-div2 .necta-stat-num { color: #2563eb; }
+.necta-stat-div3 .necta-stat-num { color: #d97706; }
+.necta-stat-div4 .necta-stat-num { color: #dc2626; }
+.necta-stat-div0 .necta-stat-num { color: #64748b; }
+
+.necta-open-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  width: 100%;
+  padding: 0.75rem 1rem;
+  background: #1e40af;
+  color: #fff;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  text-decoration: none;
+  transition: background 0.2s, transform 0.15s;
+}
+
+.necta-open-btn:hover {
+  background: #1d4ed8;
+  color: #fff;
+  transform: translateY(-1px);
+}
+
+/* Responsive */
+@media (min-width: 480px) {
+  .necta-years {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 640px) {
+  .necta-years {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .necta-stats-grid {
+    grid-template-columns: repeat(6, 1fr);
+  }
+
+  .necta-stat-total {
+    grid-column: auto;
+  }
+}
+
+@media (hover: none) and (pointer: coarse) {
+  .necta-tab,
+  .necta-year-btn,
+  .necta-open-btn {
+    min-height: 44px;
+  }
+}

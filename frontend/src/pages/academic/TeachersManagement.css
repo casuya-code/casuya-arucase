@@ -1,0 +1,490 @@
+/**
+ * Teachers Management Styles
+ * Mobile-first responsive design with flexible font sizes
+ */
+.subject-teachers-mgmt-page-container {
+  padding: clamp(0.75rem, 3vw, 2rem);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.subject-teachers-mgmt-card {
+  background: white;
+  border-radius: clamp(8px, 2vw, 12px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: clamp(1rem, 3vw, 2rem);
+  width: 100%;
+}
+
+.subject-teachers-mgmt-card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 0.75rem);
+  font-size: clamp(0.875rem, 3vw, 1rem);
+}
+
+.subject-teachers-mgmt-back-btn-top {
+  color: white;
+  text-decoration: none;
+  padding: clamp(0.375rem, 2vw, 0.5rem);
+  border-radius: 4px;
+  transition: background 0.2s;
+  font-size: clamp(1rem, 3vw, 1.25rem);
+  min-width: clamp(36px, 8vw, 44px);
+  min-height: clamp(36px, 8vw, 44px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.subject-teachers-mgmt-back-btn-top:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+  text-decoration: none;
+}
+
+.subject-teachers-mgmt-card-header i {
+  font-size: clamp(1rem, 3vw, 1.25rem);
+}
+
+.subject-teachers-mgmt-card-header span {
+  font-size: clamp(1rem, 4vw, 1.25rem);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.subject-teachers-mgmt-card-body {
+  padding: clamp(1rem, 3vw, 2rem);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.loading-state {
+  text-align: center;
+  padding: clamp(2rem, 6vw, 3rem);
+  color: #6b7280;
+  font-size: clamp(0.875rem, 3vw, 1rem);
+}
+
+.empty-state {
+  text-align: center;
+  padding: clamp(2rem, 6vw, 4rem) clamp(1rem, 3vw, 2rem);
+}
+
+.empty-state i {
+  font-size: clamp(3rem, 12vw, 4rem);
+  color: #9ca3af;
+  margin-bottom: clamp(0.75rem, 2vw, 1rem);
+  display: block;
+}
+
+.empty-state h3 {
+  margin: 0 0 clamp(0.375rem, 1vw, 0.5rem) 0;
+  color: #111827;
+  font-size: clamp(1.125rem, 4vw, 1.5rem);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.empty-state p {
+  margin: 0 0 clamp(1.5rem, 4vw, 2rem) 0;
+  color: #6b7280;
+  font-size: clamp(0.875rem, 3vw, 1rem);
+  line-height: 1.6;
+}
+
+.subject-teachers-mgmt-table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.subject-teachers-mgmt-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+}
+
+.subject-teachers-mgmt-table th {
+  background: #f3f4f6;
+  padding: clamp(0.5rem, 2vw, 0.75rem);
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+  white-space: nowrap;
+}
+
+.subject-teachers-mgmt-table td {
+  padding: clamp(0.5rem, 2vw, 0.75rem);
+  border-bottom: 1px solid #e5e7eb;
+  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.subject-teachers-mgmt-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.subject-code {
+  display: inline-block;
+  padding: clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem);
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: clamp(3px, 1vw, 4px);
+  font-size: clamp(0.6875rem, 2vw, 0.875rem);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.subject-abbreviation {
+  display: inline-block;
+  padding: clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem);
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: clamp(3px, 1vw, 4px);
+  font-size: clamp(0.6875rem, 2vw, 0.875rem);
+  font-weight: 500;
+  line-height: 1.4;
+}
+
+.teacher-name {
+  font-weight: 500;
+  color: #111827;
+  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+  line-height: 1.5;
+}
+
+.no-teacher {
+  color: #9ca3af;
+  font-style: italic;
+  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+}
+
+.teacher-signature {
+  font-size: clamp(0.6875rem, 2vw, 0.875rem);
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.no-signature {
+  color: #9ca3af;
+  font-style: italic;
+  font-size: clamp(0.6875rem, 2vw, 0.875rem);
+}
+
+.action-buttons {
+  display: flex;
+  gap: clamp(0.375rem, 1.5vw, 0.5rem);
+  flex-wrap: wrap;
+}
+
+.excel-btn {
+  padding: clamp(0.375rem, 1.5vw, 0.5rem) clamp(0.5rem, 2vw, 0.75rem);
+  border: none;
+  border-radius: clamp(3px, 1vw, 4px);
+  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.25rem, 1vw, 0.375rem);
+  min-width: clamp(36px, 8vw, 44px);
+  min-height: clamp(36px, 8vw, 44px);
+}
+
+.excel-btn.small {
+  padding: clamp(0.25rem, 1vw, 0.375rem) clamp(0.375rem, 1.5vw, 0.5rem);
+  font-size: clamp(0.6875rem, 2vw, 0.8125rem);
+}
+
+.excel-btn:not(.danger) {
+  background: #3b82f6;
+  color: white;
+}
+
+.excel-btn:not(.danger):hover {
+  background: #2563eb;
+}
+
+.excel-btn.danger {
+  background: #ef4444;
+  color: white;
+}
+
+.excel-btn.danger:hover {
+  background: #dc2626;
+}
+
+.excel-btn.primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.excel-btn.primary:hover {
+  background: #2563eb;
+}
+
+.subject-teachers-mgmt-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(0.375rem, 1.5vw, 0.5rem);
+  padding: clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem);
+  background: #6b7280;
+  color: white;
+  text-decoration: none;
+  border-radius: clamp(4px, 1.5vw, 6px);
+  transition: background 0.2s;
+  font-size: clamp(0.875rem, 3vw, 1rem);
+  font-weight: 500;
+  min-height: clamp(44px, 10vw, 48px);
+}
+
+.subject-teachers-mgmt-back-btn:hover {
+  background: #4b5563;
+  color: white;
+  text-decoration: none;
+}
+
+.subject-teachers-mgmt-back-btn i {
+  font-size: clamp(0.875rem, 3vw, 1rem);
+}
+
+/* Modal Styles */
+.subject-teachers-mgmt-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.subject-teachers-mgmt-modal-content {
+  background: white;
+  border-radius: clamp(8px, 2vw, 12px);
+  width: 90%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  margin: clamp(1rem, 3vw, 1.5rem);
+}
+
+.subject-teachers-mgmt-modal-header {
+  padding: clamp(1rem, 3vw, 1.5rem);
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.subject-teachers-mgmt-modal-header h3 {
+  margin: 0;
+  color: #111827;
+  font-size: clamp(1.125rem, 4vw, 1.25rem);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.subject-teachers-mgmt-modal-close {
+  background: none;
+  border: none;
+  font-size: clamp(1.25rem, 4vw, 1.5rem);
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0;
+  width: clamp(32px, 8vw, 40px);
+  height: clamp(32px, 8vw, 40px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s;
+  min-width: clamp(36px, 8vw, 44px);
+  min-height: clamp(36px, 8vw, 44px);
+}
+
+.subject-teachers-mgmt-modal-close:hover {
+  background: #f3f4f6;
+}
+
+.subject-teachers-mgmt-modal-body {
+  padding: clamp(1rem, 3vw, 1.5rem);
+}
+
+.subject-teachers-mgmt-form-group {
+  margin-bottom: clamp(1rem, 3vw, 1.5rem);
+}
+
+.subject-teachers-mgmt-form-group label {
+  display: block;
+  margin-bottom: clamp(0.375rem, 1vw, 0.5rem);
+  color: #374151;
+  font-weight: 500;
+  font-size: clamp(0.875rem, 3vw, 1rem);
+  line-height: 1.5;
+}
+
+.subject-teachers-mgmt-form-group .req {
+  color: #ef4444;
+  font-size: clamp(0.875rem, 3vw, 1rem);
+}
+
+.form-control {
+  width: 100%;
+  padding: clamp(0.625rem, 2vw, 0.75rem);
+  border: 1px solid #d1d5db;
+  border-radius: clamp(4px, 1vw, 6px);
+  font-size: clamp(16px, 4vw, 1rem);
+  transition: border-color 0.2s;
+  line-height: 1.5;
+  box-sizing: border-box;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-control:disabled,
+.form-control[readonly] {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.subject-teachers-mgmt-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: clamp(0.5rem, 2vw, 0.75rem);
+  margin-top: clamp(1rem, 3vw, 1.5rem);
+  padding-top: clamp(1rem, 3vw, 1.5rem);
+  border-top: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem);
+  border: none;
+  border-radius: clamp(4px, 1vw, 6px);
+  font-size: clamp(0.875rem, 3vw, 1rem);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  min-height: clamp(44px, 10vw, 48px);
+  line-height: 1.5;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #6b7280;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #4b5563;
+}
+
+/* Mobile-first responsive adjustments */
+@media (max-width: 768px) {
+  .subject-teachers-mgmt-page-container {
+    padding: clamp(0.5rem, 2vw, 1rem);
+  }
+
+  .subject-teachers-mgmt-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    margin: 0 clamp(-0.5rem, -2vw, -1rem);
+    padding: 0 clamp(0.5rem, 2vw, 1rem);
+  }
+
+  .subject-teachers-mgmt-table {
+    min-width: 800px;
+    font-size: clamp(0.6875rem, 2vw, 0.8125rem);
+  }
+
+  .subject-teachers-mgmt-table th,
+  .subject-teachers-mgmt-table td {
+    padding: clamp(0.375rem, 1.5vw, 0.5rem);
+    font-size: clamp(0.6875rem, 2vw, 0.8125rem);
+  }
+
+  .subject-teachers-mgmt-modal-content {
+    width: calc(100% - clamp(1rem, 4vw, 2rem));
+    max-width: calc(100% - clamp(1rem, 4vw, 2rem));
+    margin: clamp(0.5rem, 2vw, 1rem);
+    max-height: calc(100vh - clamp(1rem, 4vw, 2rem));
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+
+  .excel-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .subject-teachers-mgmt-table {
+    font-size: clamp(0.8125rem, 2vw, 0.875rem);
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .excel-btn,
+  .subject-teachers-mgmt-back-btn,
+  .btn-primary,
+  .btn-secondary {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .subject-teachers-mgmt-table td,
+  .subject-teachers-mgmt-table th {
+    padding: clamp(0.625rem, 2vw, 0.75rem);
+  }
+}
+
+/* Landscape mobile orientation */
+@media (max-width: 768px) and (orientation: landscape) {
+  .subject-teachers-mgmt-modal-content {
+    max-height: calc(100vh - clamp(0.5rem, 2vw, 1rem));
+  }
+}
+
+

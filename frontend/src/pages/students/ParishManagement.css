@@ -1,0 +1,404 @@
+/**
+ * Parish Management Styles
+ */
+.parish-mgmt-page-container {
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.parish-mgmt-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: clamp(1.5rem, 3vw, 2rem);
+}
+
+.parish-mgmt-card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.parish-mgmt-card-body {
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.loading-state,
+.empty-state {
+  text-align: center;
+  padding: clamp(2rem, 5vw, 3rem);
+  color: #6b7280;
+}
+
+.empty-icon {
+  font-size: clamp(2rem, 6vw, 3rem);
+  margin-bottom: 1rem;
+  display: block;
+  color: #9ca3af;
+}
+
+.empty-state h3 {
+  margin: 0 0 0.5rem 0;
+  color: #111827;
+  font-size: clamp(1.125rem, 3vw, 1.25rem);
+}
+
+.empty-state p {
+  margin: 0;
+  color: #6b7280;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+.parish-mgmt-table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.parish-mgmt-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.parish-mgmt-table th {
+  background: #f3f4f6;
+  padding: clamp(0.5rem, 1.5vw, 0.75rem);
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+  white-space: nowrap;
+}
+
+.parish-mgmt-table td {
+  padding: clamp(0.5rem, 1.5vw, 0.75rem);
+  border-bottom: 1px solid #e5e7eb;
+  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+}
+
+.parish-mgmt-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.parish-badge {
+  display: inline-block;
+  padding: clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 1.5vw, 0.75rem);
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 4px;
+  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.no-parish {
+  color: #9ca3af;
+  font-style: italic;
+  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+}
+
+.action-buttons {
+  display: flex;
+  gap: clamp(0.25rem, 1vw, 0.5rem);
+  flex-wrap: wrap;
+}
+
+.parish-btn {
+  padding: clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 1.5vw, 0.75rem);
+  border: none;
+  border-radius: 4px;
+  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.parish-btn.small {
+  padding: clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 1.5vw, 0.75rem);
+  font-size: clamp(0.75rem, 1.5vw, 0.8125rem);
+}
+
+.parish-btn.primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.parish-btn.primary:hover {
+  background: #2563eb;
+}
+
+.parish-btn.danger {
+  background: #ef4444;
+  color: white;
+}
+
+.parish-btn.danger:hover {
+  background: #dc2626;
+}
+
+.parish-mgmt-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 2.5vw, 1.5rem);
+  background: #6b7280;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background 0.2s;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+.parish-mgmt-back-btn:hover {
+  background: #4b5563;
+  color: white;
+  text-decoration: none;
+}
+
+/* Modal Styles */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: clamp(0.5rem, 2vw, 1rem);
+}
+
+.modal-content {
+  background: white;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 500px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.modal-header {
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.modal-header h3 {
+  margin: 0;
+  color: #111827;
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  word-break: break-word;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0;
+  width: clamp(28px, 4vw, 32px);
+  height: clamp(28px, 4vw, 32px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.close-btn:hover {
+  background: #f3f4f6;
+}
+
+.modal-body {
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.form-group {
+  margin-bottom: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #374151;
+  font-weight: 500;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+.form-group .required {
+  color: #ef4444;
+}
+
+.form-control {
+  width: 100%;
+  padding: clamp(0.625rem, 1.5vw, 0.75rem);
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  transition: border-color 0.2s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-control:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: clamp(0.5rem, 1.5vw, 0.75rem);
+  margin-top: clamp(1rem, 2.5vw, 1.5rem);
+  padding-top: clamp(1rem, 2.5vw, 1.5rem);
+  border-top: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: clamp(0.625rem, 1.5vw, 0.75rem) clamp(1rem, 2.5vw, 1.5rem);
+  border: none;
+  border-radius: 4px;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+  min-width: 100px;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #6b7280;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #4b5563;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 599px) {
+  .parish-mgmt-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .parish-mgmt-table {
+    min-width: 800px;
+  }
+  
+  .parish-mgmt-table th,
+  .parish-mgmt-table td {
+    padding: 0.5rem 0.375rem;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .parish-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .modal-content {
+    width: 100%;
+    max-height: 95vh;
+    border-radius: 8px 8px 0 0;
+  }
+  
+  .modal-footer {
+    flex-direction: column-reverse;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 767px) {
+  .parish-mgmt-table-container {
+    overflow-x: auto;
+  }
+
+  .parish-mgmt-table {
+    min-width: 800px;
+  }
+  
+  .action-buttons {
+    flex-wrap: wrap;
+  }
+  
+  .modal-content {
+    width: 95%;
+  }
+}
+
+@media (min-width: 768px) {
+  .parish-mgmt-table-container {
+    overflow-x: auto;
+  }
+  
+  .modal-footer {
+    flex-direction: row;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    flex: none;
+  }
+}
+
+@media (min-width: 1200px) {
+  .parish-mgmt-page-container {
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  
+  .parish-mgmt-table th,
+  .parish-mgmt-table td {
+    padding: 1rem;
+  }
+}
+

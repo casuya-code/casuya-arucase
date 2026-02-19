@@ -1,0 +1,12 @@
+# Arusha Catholic Seminary - robots.txt
+User-agent: *
+Allow: /
+
+# Sitemap location (crawlers use this to discover pages)
+Sitemap: https://www.arushacatholicseminary.co.tz/sitemap.xml
+
+# Disallow admin and protected areas from general indexing
+Disallow: /admin
+Disallow: /login
+Disallow: /student/dashboard
+# Note: /student-login is allowed (public page students need to find)

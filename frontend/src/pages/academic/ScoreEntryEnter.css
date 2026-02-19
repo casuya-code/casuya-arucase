@@ -1,0 +1,534 @@
+/**
+ * Score Entry Enter Styles - Huduma-like layout (gradient, cards on mobile)
+ */
+.score-entry-enter-page-container {
+  padding: 0;
+  width: 100%;
+  max-width: 100%;
+  overflow-x: hidden;
+  box-sizing: border-box;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+}
+
+.score-entry-enter-page-container .excel-card {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  overflow: visible;
+  margin: 0;
+}
+
+.score-entry-enter-page-container .excel-card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  margin-bottom: clamp(1rem, 3vw, 1.5rem);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  color: #fff;
+}
+
+.score-entry-enter-page-container .excel-card-header i.fa-graduation-cap {
+  font-size: 1.25rem;
+}
+
+.score-entry-header-badge {
+  font-size: 0.875rem;
+  padding: 0.25rem 0.75rem;
+  background: rgba(255, 255, 255, 0.25);
+  border-radius: 9999px;
+  font-weight: 500;
+}
+
+.score-entry-header-badge.error {
+  background: rgba(255, 255, 255, 0.3);
+  color: #fecaca;
+}
+
+.score-entry-enter-page-container .excel-card-header .header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+  margin-left: auto;
+}
+
+.score-entry-enter-page-container .excel-card-header .header-actions .excel-btn,
+.score-entry-enter-page-container .excel-card-header .header-actions label.excel-btn {
+  color: #fff;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.4);
+}
+
+.score-entry-enter-page-container .excel-card-header .header-actions .excel-btn:hover,
+.score-entry-enter-page-container .excel-card-header .header-actions label.excel-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+  color: #fff;
+}
+
+.score-entry-enter-page-container .excel-card-header .header-actions label.excel-btn {
+  cursor: pointer;
+}
+
+.score-entry-enter-page-container .excel-card-body {
+  padding: clamp(1rem, 3vw, 2rem);
+  background: transparent;
+  border: none;
+}
+
+/* Mobile card list - hidden on desktop */
+.score-entry-enter-page-container .mobile-students-list {
+  display: none;
+}
+
+.score-entry-enter-page-container .mobile-student-card {
+  display: none;
+}
+
+.loading-state {
+  text-align: center;
+  padding: clamp(2rem, 5vw, 3rem);
+  color: #6b7280;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+.empty-state {
+  text-align: center;
+  padding: clamp(2rem, 5vw, 4rem) clamp(1rem, 3vw, 2rem);
+}
+
+.empty-state i {
+  font-size: clamp(3rem, 8vw, 4rem);
+  color: #9ca3af;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.empty-state h3 {
+  margin: 0 0 0.5rem 0;
+  color: #111827;
+  font-size: clamp(1.125rem, 3vw, 1.25rem);
+}
+
+.empty-state p {
+  margin: 0 0 2rem 0;
+  color: #6b7280;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+.table-container {
+  overflow-x: auto;
+  margin-bottom: clamp(1.5rem, 3vw, 2rem);
+  -webkit-overflow-scrolling: touch;
+  width: 100%;
+}
+
+.excel-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: white;
+}
+
+  .excel-table th {
+    background: white;
+    padding: clamp(0.75rem, 2vw, 0.875rem) clamp(0.5rem, 1.5vw, 0.75rem);
+    text-align: left;
+    font-weight: 600;
+    color: #000000;
+    border: none;
+    white-space: nowrap;
+    font-size: clamp(0.75rem, 1.8vw, 0.875rem);
+  }
+  
+  .excel-table td {
+    padding: clamp(0.75rem, 2vw, 0.875rem) clamp(0.5rem, 1.5vw, 0.75rem);
+    border: none;
+    color: #000000;
+    font-size: clamp(0.75rem, 1.8vw, 0.875rem);
+    background: white;
+  }
+
+.excel-table tbody tr {
+  background: white;
+  border: none;
+}
+
+.excel-table tbody tr:hover {
+  background: white;
+}
+
+.excel-table tbody tr:last-child td {
+  border: none;
+}
+
+.score-input {
+  width: 100%;
+  max-width: 120px;
+  padding: clamp(0.5rem, 1.5vw, 0.625rem);
+  border: 1px solid #e5e7eb;
+  border-radius: 4px;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  transition: border-color 0.2s;
+  box-sizing: border-box;
+  background: white;
+  color: #000000;
+}
+
+.score-input:focus {
+  outline: none;
+  border-color: #000000;
+  box-shadow: 0 0 0 2px rgba(0, 0, 0, 0.1);
+}
+
+.bulk-actions {
+  display: flex;
+  gap: clamp(0.75rem, 2vw, 1rem);
+  margin-top: clamp(1rem, 2.5vw, 1.5rem);
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.bulk-actions label.excel-btn {
+  cursor: pointer;
+  margin-bottom: 0;
+}
+
+.score-entry-upload-status {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-left: 0.25rem;
+}
+
+.excel-btn {
+  padding: clamp(0.625rem, 1.5vw, 0.75rem) clamp(1rem, 2.5vw, 1.5rem);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  font-weight: 500;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  flex: 1;
+  min-width: 120px;
+  justify-content: center;
+}
+
+.excel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.excel-btn.primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.excel-btn.primary:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.excel-btn.secondary {
+  background: #6b7280;
+  color: white;
+}
+
+.excel-btn.secondary:hover {
+  background: #4b5563;
+}
+
+/* ============================================
+   MOBILE-FIRST PROFESSIONAL LAYOUT (≤768px)
+   Native App-Like Experience - Fully Flexible
+   ============================================ */
+@media (max-width: 768px) {
+  .admin-main-content:has(.score-entry-enter-page-container) {
+    padding: 0 !important;
+    padding-top: clamp(3.5rem, 8vw, 4rem) !important;
+  }
+
+  .score-entry-enter-page-container {
+    padding: 0;
+    background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  }
+
+  .score-entry-enter-page-container .excel-card-header {
+    padding: clamp(1rem, 3vw, 1.5rem);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    font-size: clamp(1rem, 4vw, 1.125rem);
+  }
+
+  .score-entry-enter-page-container .excel-card-header .header-actions {
+    width: 100%;
+    margin-left: 0;
+    flex-direction: column;
+  }
+
+  .score-entry-enter-page-container .excel-card-header .header-actions .excel-btn,
+  .score-entry-enter-page-container .excel-card-header .header-actions label.excel-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .score-entry-enter-page-container .excel-card-body {
+    padding: clamp(1rem, 3vw, 1.5rem);
+  }
+
+  /* Hide desktop table on mobile */
+  .score-entry-enter-page-container .table-container {
+    display: none;
+  }
+
+  /* Show mobile cards (Huduma-style) */
+  .score-entry-enter-page-container .mobile-students-list {
+    display: block;
+    width: 100%;
+  }
+
+  .score-entry-enter-page-container .mobile-student-card {
+    display: block;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .score-entry-enter-page-container .mobile-student-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+    border-bottom: 2px solid #e5e7eb;
+  }
+
+  .score-entry-enter-page-container .mobile-student-card-header .student-info {
+    flex: 1;
+  }
+
+  .score-entry-enter-page-container .mobile-student-card-header .student-name {
+    font-weight: 600;
+    font-size: clamp(1rem, 3vw, 1.125rem);
+    color: #111827;
+    margin-bottom: 0.25rem;
+  }
+
+  .score-entry-enter-page-container .mobile-student-card-header .student-adm {
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+    color: #6b7280;
+  }
+
+  .score-entry-enter-page-container .mobile-student-card-body {
+    display: grid;
+    gap: 0.75rem;
+  }
+
+  .score-entry-enter-page-container .mobile-student-field {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0.75rem;
+    background: #f9fafb;
+    border-radius: 6px;
+  }
+
+  .score-entry-enter-page-container .mobile-student-field.mobile-score-field {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .score-entry-enter-page-container .mobile-score-field .mobile-student-field-label {
+    font-weight: 600;
+    color: #374151;
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+    margin-bottom: 0.5rem;
+  }
+
+  .score-entry-enter-page-container .mobile-student-field-value {
+    color: #111827;
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+    text-align: right;
+  }
+
+  .score-entry-enter-page-container .mobile-score-field .score-input {
+    width: 100%;
+    max-width: none;
+    padding: 0.75rem;
+    font-size: 1rem;
+    text-align: center;
+    font-weight: 600;
+    background: white;
+    border: 1px solid #d1d5db;
+    border-radius: 6px;
+    color: #000;
+    min-height: 44px;
+    box-sizing: border-box;
+  }
+
+  .score-entry-enter-page-container .mobile-score-field .score-input:focus {
+    outline: none;
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.2);
+  }
+
+  /* Bulk actions */
+  .score-entry-enter-page-container .bulk-actions {
+    flex-direction: column;
+    gap: 0.75rem;
+    margin-top: 1.5rem;
+    padding-bottom: max(1rem, env(safe-area-inset-bottom));
+  }
+
+  .score-entry-enter-page-container .bulk-actions .excel-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 48px;
+  }
+
+  .loading-state,
+  .empty-state {
+    padding: 2rem 1rem;
+  }
+}
+
+/* Tablet (481px - 767px): same as mobile - cards shown, table hidden */
+@media (min-width: 481px) and (max-width: 767px) {
+  .score-entry-enter-page-container .excel-card-header {
+    padding: clamp(1rem, 2.5vw, 1.25rem);
+  }
+  .score-entry-enter-page-container .excel-card-body {
+    padding: clamp(1rem, 2.5vw, 1.25rem);
+  }
+}
+
+/* Desktop Layout (≥768px) - Table visible, mobile cards hidden */
+@media (min-width: 768px) {
+  .score-entry-enter-page-container .mobile-students-list {
+    display: none;
+  }
+
+  .score-entry-enter-page-container .mobile-student-card {
+    display: none;
+  }
+
+  .score-entry-enter-page-container {
+    padding: 0;
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .excel-card {
+    width: 100%;
+    max-width: 100%;
+    overflow-x: hidden;
+  }
+  
+  .excel-card-body {
+    overflow-x: hidden;
+    width: 100%;
+    max-width: 100%;
+  }
+  
+  .table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    width: 100%;
+  }
+  
+  .excel-table {
+    display: table;
+    width: 100%;
+    table-layout: auto;
+  }
+  
+  .excel-table thead {
+    display: table-header-group;
+  }
+  
+  .excel-table tbody {
+    display: table-row-group;
+  }
+  
+  .excel-table tbody tr {
+    display: table-row;
+  }
+  
+  .excel-table tbody td {
+    display: table-cell;
+  }
+  
+  .excel-table tbody td::before {
+    display: none;
+  }
+  
+  .excel-table th {
+    padding: clamp(0.75rem, 1.5vw, 1rem);
+    font-size: clamp(0.8125rem, 1.5vw, 0.875rem);
+  }
+  
+  .excel-table td {
+    padding: clamp(0.75rem, 1.5vw, 1rem);
+    font-size: clamp(0.8125rem, 1.5vw, 0.875rem);
+  }
+  
+  .excel-table td:nth-child(7) {
+    min-width: clamp(130px, 15vw, 150px);
+    width: clamp(130px, 15vw, 150px);
+    max-width: 180px;
+  }
+  
+  .score-input {
+    width: 100%;
+    max-width: clamp(120px, 15vw, 150px);
+    min-width: 120px;
+    padding: clamp(0.625rem, 1.2vw, 0.75rem);
+    font-size: clamp(0.9375rem, 1.8vw, 1rem);
+  }
+  
+  .bulk-actions {
+    flex-direction: row;
+    position: relative;
+    background: white;
+    border-top: none;
+    box-shadow: none;
+    padding: clamp(1.25rem, 2.5vw, 1.5rem) 0 0 0;
+    gap: clamp(0.875rem, 1.5vw, 1rem);
+  }
+  
+  .excel-btn {
+    flex: none;
+    padding: clamp(0.75rem, 1.5vw, 0.875rem) clamp(1.25rem, 2.5vw, 1.5rem);
+    font-size: clamp(0.9375rem, 1.8vw, 1rem);
+  }
+}
+
+@media (min-width: 1200px) {
+  .score-entry-enter-page-container {
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  
+  .excel-table th,
+  .excel-table td {
+    padding: 1rem;
+  }
+  
+  .score-input {
+    max-width: 140px;
+  }
+}

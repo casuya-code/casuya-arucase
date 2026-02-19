@@ -1,0 +1,48 @@
+/* Network Status Banner - Fixed at top, non-blocking */
+.network-status-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 9998;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  text-align: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  animation: network-banner-slide 0.3s ease-out;
+}
+
+@keyframes network-banner-slide {
+  from {
+    transform: translateY(-100%);
+  }
+  to {
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .network-status-banner {
+    animation: none;
+  }
+}
+
+.network-status-banner__icon {
+  flex-shrink: 0;
+  font-size: 1rem;
+}
+
+.network-status-banner--offline {
+  background: #dc3545;
+  color: white;
+}
+
+.network-status-banner--slow {
+  background: #ffc107;
+  color: #333;
+}

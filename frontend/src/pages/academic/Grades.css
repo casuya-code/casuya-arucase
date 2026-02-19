@@ -1,0 +1,510 @@
+/**
+ * Grades Page Styles - Comprehensive Grade Template
+ * Mobile-first responsive design with flexible font sizes
+ */
+.grades-page-container {
+  padding: clamp(0.75rem, 3vw, 2rem);
+  max-width: 1400px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.excel-card {
+  background: white;
+  border-radius: clamp(8px, 2vw, 12px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: clamp(1rem, 3vw, 2rem);
+  width: 100%;
+}
+
+.excel-card-header {
+  background: linear-gradient(135deg, #1e3a8a 0%, #3b82f6 100%);
+  color: white;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  font-size: clamp(1rem, 4vw, 1.25rem);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 0.75rem);
+  line-height: 1.4;
+}
+
+.excel-card-header i {
+  font-size: clamp(1rem, 3vw, 1.25rem);
+}
+
+.excel-card-body {
+  padding: clamp(1rem, 3vw, 2rem);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.system-description {
+  text-align: center;
+  padding: clamp(0.75rem, 2vw, 1rem);
+}
+
+.system-description p {
+  margin: 0;
+  color: #374151;
+  line-height: 1.6;
+  font-size: clamp(0.875rem, 3vw, 1rem);
+}
+
+.table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin: clamp(0.75rem, 2vw, 1rem) 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.grade-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+  min-width: 600px;
+  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+}
+
+.grade-table th {
+  background: #f3f4f6;
+  padding: clamp(0.5rem, 2vw, 0.75rem);
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  white-space: nowrap;
+  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+  line-height: 1.5;
+}
+
+.grade-table td {
+  padding: clamp(0.5rem, 2vw, 0.75rem);
+  border-bottom: 1px solid #e5e7eb;
+  color: #374151;
+  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+.grade-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.grade-row {
+  transition: background-color 0.2s;
+}
+
+.grade-badge {
+  display: inline-block;
+  padding: clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 2vw, 0.75rem);
+  border-radius: clamp(3px, 1vw, 4px);
+  font-weight: 700;
+  font-size: clamp(0.6875rem, 2vw, 0.875rem);
+  min-width: clamp(28px, 6vw, 32px);
+  text-align: center;
+  line-height: 1.4;
+}
+
+.grade-a {
+  background: linear-gradient(135deg, #166534 0%, #22c55e 100%);
+  color: white;
+}
+
+.grade-b {
+  background: #86efac;
+  color: #065f46;
+}
+
+.grade-c {
+  background: #fef9c3;
+  color: #854d0e;
+}
+
+.grade-d,
+.grade-e,
+.grade-s,
+.grade-f {
+  background: #fecaca;
+  color: #991b1b;
+}
+
+.english-translation {
+  font-style: italic;
+  color: #6b7280;
+  font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+}
+
+.color-sample {
+  width: clamp(30px, 6vw, 40px);
+  height: clamp(18px, 4vw, 24px);
+  border-radius: clamp(3px, 1vw, 4px);
+  border: 1px solid #d1d5db;
+  display: inline-block;
+}
+
+.color-dark-green {
+  background: linear-gradient(135deg, #166534 0%, #22c55e 100%);
+}
+
+.color-green {
+  background: #22c55e;
+}
+
+.color-light-green {
+  background: #86efac;
+}
+
+.color-yellow {
+  background: #fef9c3;
+}
+
+.color-light-red {
+  background: #fecaca;
+}
+
+.division-section {
+  max-width: 100%;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.division-section h3 {
+  margin: clamp(1rem, 3vw, 1.5rem) 0 clamp(0.75rem, 2vw, 1rem) 0;
+  color: #111827;
+  font-size: clamp(1.125rem, 4vw, 1.25rem);
+  font-weight: 600;
+  border-bottom: 2px solid #e5e7eb;
+  padding-bottom: clamp(0.375rem, 1vw, 0.5rem);
+  line-height: 1.4;
+}
+
+.division-section h3:first-child {
+  margin-top: 0;
+}
+
+.division-section p {
+  margin: clamp(0.75rem, 2vw, 1rem) 0;
+  color: #374151;
+  line-height: 1.6;
+  font-size: clamp(0.875rem, 3vw, 1rem);
+}
+
+.division-section ol {
+  margin: clamp(0.75rem, 2vw, 1rem) 0;
+  padding-left: clamp(1.5rem, 4vw, 2rem);
+  color: #374151;
+}
+
+.division-section li {
+  margin: clamp(0.375rem, 1vw, 0.5rem) 0;
+  line-height: 1.6;
+  font-size: clamp(0.875rem, 3vw, 1rem);
+}
+
+.note {
+  background: #fef3c7;
+  padding: clamp(0.75rem, 2vw, 1rem);
+  border-left: clamp(3px, 1vw, 4px) solid #f59e0b;
+  border-radius: clamp(3px, 1vw, 4px);
+  margin: clamp(1rem, 3vw, 1.5rem) 0;
+}
+
+.note strong {
+  color: #92400e;
+  font-size: clamp(0.875rem, 3vw, 1rem);
+}
+
+.note p {
+  font-size: clamp(0.875rem, 3vw, 1rem);
+  line-height: 1.6;
+  margin: 0;
+}
+
+.example-calculation {
+  margin: clamp(1rem, 3vw, 2rem) 0;
+}
+
+.example-result {
+  margin-top: clamp(1rem, 3vw, 1.5rem);
+  padding: clamp(1rem, 3vw, 1.5rem);
+  background: #f9fafb;
+  border-radius: clamp(6px, 1.5vw, 8px);
+  border: 2px solid #e5e7eb;
+}
+
+.result-item {
+  margin: clamp(0.5rem, 1.5vw, 0.75rem) 0;
+  font-size: clamp(1rem, 3vw, 1.125rem);
+  color: #111827;
+  line-height: 1.5;
+}
+
+.result-item strong {
+  color: #1e3a8a;
+  margin-right: clamp(0.375rem, 1vw, 0.5rem);
+  font-size: clamp(1rem, 3vw, 1.125rem);
+}
+
+.quick-links {
+  display: flex;
+  gap: clamp(0.75rem, 2vw, 1rem);
+  flex-wrap: wrap;
+  justify-content: center;
+}
+
+.excel-btn {
+  padding: clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 3vw, 1.5rem);
+  border: none;
+  border-radius: clamp(4px, 1.5vw, 6px);
+  cursor: pointer;
+  font-size: clamp(0.875rem, 3vw, 1rem);
+  font-weight: 500;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.375rem, 1.5vw, 0.5rem);
+  text-decoration: none;
+  color: white;
+  min-height: clamp(44px, 10vw, 48px);
+  line-height: 1.5;
+}
+
+.excel-btn i {
+  font-size: clamp(0.875rem, 3vw, 1rem);
+}
+
+.excel-btn.primary {
+  background: #3b82f6;
+}
+
+.excel-btn.primary:hover {
+  background: #2563eb;
+  color: white;
+  text-decoration: none;
+}
+
+.excel-btn.secondary {
+  background: #6b7280;
+}
+
+.excel-btn.secondary:hover {
+  background: #4b5563;
+  color: white;
+  text-decoration: none;
+}
+
+/* ============================================
+   SMARTPHONE LAYOUT (≤768px)
+   Card-based tables, stacked layout, touch-friendly
+   ============================================ */
+@media (max-width: 768px) {
+  .grades-page-container {
+    padding: clamp(1rem, 4vw, 1.5rem);
+  }
+
+  .grades-page-container .excel-card {
+    border-radius: 0;
+    margin-bottom: clamp(1rem, 3vw, 1.5rem);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.08);
+    overflow: visible !important;
+  }
+
+  .grades-page-container .excel-card-body {
+    overflow: visible !important;
+  }
+
+  .grades-page-container .excel-card-header {
+    padding: clamp(1rem, 4vw, 1.25rem);
+    font-size: clamp(1rem, 4vw, 1.125rem);
+    flex-wrap: wrap;
+    line-height: 1.4;
+  }
+
+  .grades-page-container .excel-card-header i {
+    font-size: clamp(1.125rem, 4vw, 1.25rem);
+  }
+
+  .grades-page-container .excel-card-body {
+    padding: clamp(1rem, 4vw, 1.25rem);
+  }
+
+  /* Tables - ensure visible, horizontal scroll on mobile */
+  .grades-page-container .table-container {
+    display: block !important;
+    visibility: visible !important;
+    margin: 0;
+    padding: 0;
+    overflow-x: auto !important;
+    overflow-y: visible !important;
+    width: 100% !important;
+    min-height: 120px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .grades-page-container .grade-table {
+    display: table !important;
+    visibility: visible !important;
+    min-width: 480px;
+    width: 100%;
+    background: #fff;
+  }
+
+  .grades-page-container .grade-table thead {
+    display: table-header-group !important;
+  }
+
+  .grades-page-container .grade-table tbody {
+    display: table-row-group !important;
+  }
+
+  .grades-page-container .grade-table tbody tr {
+    display: table-row !important;
+  }
+
+  .grades-page-container .grade-table tbody td {
+    display: table-cell !important;
+    padding: clamp(0.5rem, 2vw, 0.75rem);
+    border-bottom: 1px solid #e5e7eb;
+    font-size: clamp(0.8125rem, 2.5vw, 0.875rem);
+    color: #374151;
+    background: #fff;
+  }
+
+  .grades-page-container .grade-table tbody td::before {
+    display: none !important;
+  }
+
+  .grades-page-container .grade-table th {
+    display: table-cell !important;
+    padding: clamp(0.5rem, 2vw, 0.75rem);
+    font-size: clamp(0.8125rem, 2.5vw, 0.875rem);
+    background: #f3f4f6;
+    color: #374151;
+  }
+
+  /* Division section - readable on mobile */
+  .grades-page-container .division-section h3 {
+    font-size: clamp(1.0625rem, 4vw, 1.125rem);
+    margin-top: clamp(1.25rem, 4vw, 1.5rem);
+    margin-bottom: clamp(0.75rem, 2vw, 1rem);
+    padding-bottom: 0.5rem;
+  }
+
+  .grades-page-container .division-section p,
+  .grades-page-container .division-section li {
+    font-size: clamp(0.9375rem, 3vw, 1rem);
+    line-height: 1.6;
+  }
+
+  .grades-page-container .division-section ol {
+    padding-left: clamp(1.25rem, 4vw, 1.5rem);
+  }
+
+  .grades-page-container .note {
+    padding: 1rem;
+    font-size: clamp(0.9375rem, 3vw, 1rem);
+  }
+
+  .grades-page-container .example-result {
+    padding: 1rem;
+  }
+
+  .grades-page-container .result-item {
+    font-size: clamp(1rem, 3vw, 1.0625rem);
+  }
+
+  /* Quick links - full width, touch-friendly */
+  .grades-page-container .quick-links {
+    flex-direction: column;
+    gap: 0.75rem;
+  }
+
+  .grades-page-container .quick-links .excel-btn {
+    width: 100%;
+    justify-content: center;
+    padding: clamp(0.875rem, 3vw, 1rem) clamp(1.25rem, 4vw, 1.5rem);
+    min-height: 48px;
+    font-size: clamp(0.9375rem, 3vw, 1rem);
+    color: #ffffff;
+    text-decoration: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .grades-page-container .quick-links .excel-btn.secondary {
+    background: #4b5563;
+    color: #ffffff;
+  }
+
+  .grades-page-container .quick-links .excel-btn.secondary:hover {
+    background: #374151;
+    color: #ffffff;
+  }
+
+  .color-sample {
+    width: clamp(28px, 6vw, 36px);
+    height: clamp(20px, 4vw, 24px);
+  }
+}
+
+/* Small smartphones */
+@media (max-width: 480px) {
+  .grades-page-container {
+    padding: 0.75rem;
+  }
+
+  .grades-page-container .excel-card-header,
+  .grades-page-container .excel-card-body {
+    padding: 1rem;
+  }
+
+  .grades-page-container .grade-table tbody td::before {
+    min-width: 80px;
+    font-size: 0.8125rem;
+  }
+}
+
+/* Tablet adjustments */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .grade-table {
+    font-size: clamp(0.8125rem, 2vw, 0.875rem);
+  }
+
+  .grade-table th,
+  .grade-table td {
+    padding: clamp(0.625rem, 1.5vw, 0.75rem);
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .excel-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  .grade-table td,
+  .grade-table th {
+    padding: clamp(0.625rem, 2vw, 0.75rem);
+  }
+
+  .grade-badge {
+    min-width: clamp(32px, 7vw, 36px);
+    padding: clamp(0.375rem, 1.5vw, 0.5rem) clamp(0.625rem, 2.5vw, 0.75rem);
+  }
+}
+
+/* Landscape mobile orientation */
+@media (max-width: 768px) and (orientation: landscape) {
+  .grades-page-container {
+    padding: clamp(0.5rem, 2vw, 0.75rem);
+  }
+
+  .excel-card {
+    margin-bottom: clamp(0.75rem, 2vw, 1rem);
+  }
+}

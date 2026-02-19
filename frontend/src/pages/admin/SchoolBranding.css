@@ -1,0 +1,179 @@
+/**
+ * School Branding Styles
+ */
+.branding-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+  gap: 2rem;
+  margin-top: 2rem;
+}
+
+.branding-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.branding-card-header {
+  padding: 1.5rem;
+  color: white;
+}
+
+.branding-card-header h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.blue-gradient {
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+}
+
+.green-gradient {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+}
+
+.branding-card-body {
+  padding: 1.5rem;
+}
+
+.branding-form-group {
+  margin-bottom: 1.5rem;
+}
+
+.branding-form-label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #333;
+  font-weight: 500;
+}
+
+.branding-form-control {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+.branding-btn-primary,
+.branding-btn-success {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.branding-btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.branding-btn-primary:hover {
+  background: #2563eb;
+}
+
+.branding-btn-success {
+  background: #10b981;
+  color: white;
+}
+
+.branding-btn-success:hover {
+  background: #059669;
+}
+
+.branding-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: 2rem;
+}
+
+.branding-section-title {
+  margin: 0 0 1rem 0;
+  color: #333;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.branding-empty-state {
+  text-align: center;
+  padding: 2rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  margin-bottom: 1rem;
+}
+
+.branding-empty-state i {
+  font-size: 3rem;
+  color: #9ca3af;
+  margin-bottom: 0.5rem;
+  display: block;
+}
+
+.branding-empty-state p {
+  margin: 0;
+  color: #6b7280;
+}
+
+.branding-file-input {
+  width: 100%;
+  padding: 0.5rem;
+  margin-bottom: 1rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+}
+
+.branding-image-preview {
+  margin-bottom: 1rem;
+  text-align: center;
+}
+
+.branding-preview-image {
+  max-width: 100%;
+  max-height: 200px;
+  border-radius: 8px;
+  border: 2px solid #e5e7eb;
+  object-fit: contain;
+}
+
+.branding-btn-success:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: #6b7280;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+.btn-secondary:hover {
+  background: #4b5563;
+  color: white;
+}
+
+@media (max-width: 768px) {
+  .branding-container {
+    grid-template-columns: 1fr;
+  }
+
+  .branding-grid {
+    grid-template-columns: 1fr;
+  }
+}
+

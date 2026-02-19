@@ -1,0 +1,318 @@
+/**
+ * Promotion Pages Styles - Modern Responsive Design
+ * Large, Readable Content on Small Screens
+ */
+.promotion-page-container {
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  font-size: clamp(18px, 4vw, 20px);
+  line-height: 1.75;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+}
+
+.no-data {
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+  font-style: italic;
+}
+
+.promotion-stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.stat-card {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.stat-icon {
+  font-size: 2rem;
+  color: #3b82f6;
+}
+
+.stat-content h3 {
+  margin: 0;
+  font-size: clamp(1.75rem, 5vw, 2.5rem);
+  color: #111827;
+  line-height: 1.2;
+}
+
+.stat-content p {
+  margin: clamp(0.25rem, 1vw, 0.5rem) 0 0 0;
+  color: #6b7280;
+  font-size: clamp(1rem, 3vw, 1.125rem);
+  line-height: 1.5;
+}
+
+.sessions-table-container {
+  margin-top: 2rem;
+}
+
+.sessions-table-container h3 {
+  margin: 0 0 clamp(1rem, 3vw, 1.5rem) 0;
+  color: #111827;
+  font-size: clamp(1.5rem, 5vw, 2rem);
+  font-weight: 700;
+  line-height: 1.35;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  color: #9ca3af;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.empty-state p {
+  margin: 0 0 2rem 0;
+  color: #6b7280;
+}
+
+.excel-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.excel-table th {
+  background: #f3f4f6;
+  padding: clamp(1rem, 3vw, 1.25rem);
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  font-size: clamp(1rem, 3vw, 1.125rem);
+  line-height: 1.5;
+}
+
+.excel-table td {
+  padding: clamp(1rem, 3vw, 1.25rem);
+  border-bottom: 1px solid #e5e7eb;
+  font-size: clamp(1rem, 3vw, 1.125rem);
+  line-height: 1.6;
+}
+
+.excel-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.success-text {
+  color: #059669;
+  font-weight: 600;
+}
+
+.warning-text {
+  color: #d97706;
+  font-weight: 600;
+}
+
+.warning-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: #fef3c7;
+  border-left: 4px solid #f59e0b;
+  border-radius: 4px;
+  margin-bottom: 1.5rem;
+  color: #92400e;
+}
+
+.promotion-info {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.info-card {
+  padding: 1rem;
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.info-card h4 {
+  margin: 0 0 clamp(0.5rem, 2vw, 0.75rem) 0;
+  color: #6b7280;
+  font-size: clamp(1rem, 3vw, 1.125rem);
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.info-card p {
+  margin: 0;
+  color: #111827;
+  font-size: clamp(1.25rem, 4vw, 1.5rem);
+  font-weight: 600;
+  line-height: 1.4;
+}
+
+.stream-selection {
+  margin-bottom: 2rem;
+  padding: 1rem;
+  background: #eff6ff;
+  border-radius: 8px;
+  border: 1px solid #bfdbfe;
+}
+
+.stream-selection label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #1e40af;
+}
+
+.students-list-section {
+  margin-bottom: 2rem;
+}
+
+.students-list-section h3 {
+  margin: 0 0 0.5rem 0;
+  color: #111827;
+}
+
+.section-hint {
+  margin: 0 0 1rem 0;
+  color: #6b7280;
+  font-size: 0.875rem;
+}
+
+.students-table-container {
+  overflow-x: auto;
+}
+
+.excluded-row {
+  background: #fee2e2;
+  opacity: 0.7;
+}
+
+.status-badge {
+  padding: 0.25rem 0.75rem;
+  border-radius: 12px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  display: inline-block;
+}
+
+.badge-active {
+  background: #d1fae5;
+  color: #065f46;
+}
+
+.badge-inactive {
+  background: #fee2e2;
+  color: #991b1b;
+}
+
+.promotion-actions {
+  display: flex;
+  justify-content: center;
+  margin-top: 2rem;
+}
+
+.excel-btn {
+  padding: clamp(1rem, 3.5vw, 1.25rem) clamp(1.5rem, 5vw, 2rem);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: clamp(1rem, 4vw, 1.125rem);
+  font-weight: 600;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 0.75rem);
+  text-decoration: none;
+  color: white;
+  min-height: 52px;
+  line-height: 1.5;
+}
+
+.excel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.excel-btn.primary {
+  background: #3b82f6;
+}
+
+.excel-btn.primary:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.excel-btn.secondary {
+  background: #6b7280;
+}
+
+.excel-btn.secondary:hover {
+  background: #4b5563;
+}
+
+.excel-btn.small {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.excel-btn.large {
+  padding: 1rem 2rem;
+  font-size: 1.125rem;
+}
+
+.excel-input {
+  padding: clamp(1rem, 3.5vw, 1.25rem);
+  border: 2px solid #d1d5db;
+  border-radius: 8px;
+  font-size: clamp(1rem, 4vw, 1.125rem);
+  font-family: inherit;
+  width: 100%;
+  line-height: 1.6;
+  min-height: 52px;
+  transition: all 0.2s;
+}
+
+.excel-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+@media (max-width: 768px) {
+  .promotion-stats,
+  .promotion-info {
+    grid-template-columns: 1fr;
+  }
+
+  .students-table-container {
+    overflow-x: scroll;
+  }
+
+  .excel-table {
+    min-width: 800px;
+  }
+}
+

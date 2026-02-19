@@ -1,0 +1,480 @@
+/**
+ * Subjects Management Styles
+ */
+.subjects-mgmt-page-container {
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.subjects-mgmt-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  margin-bottom: clamp(1.5rem, 3vw, 2rem);
+}
+
+.subjects-mgmt-card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.subjects-mgmt-card-header-title {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.subjects-mgmt-header-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.subjects-mgmt-add-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: clamp(0.625rem, 1.5vw, 0.75rem) clamp(1rem, 2.5vw, 1.5rem);
+  background: white;
+  color: #667eea;
+  border: none;
+  border-radius: 6px;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.subjects-mgmt-add-btn:hover {
+  background: #f3f4f6;
+  transform: translateY(-1px);
+}
+
+.subjects-mgmt-card-body {
+  padding: clamp(1rem, 3vw, 2rem);
+}
+
+.loading-state {
+  text-align: center;
+  padding: clamp(2rem, 5vw, 3rem);
+  color: #6b7280;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+.subjects-mgmt-empty-state {
+  text-align: center;
+  padding: clamp(2rem, 5vw, 4rem) clamp(1rem, 3vw, 2rem);
+}
+
+.subjects-mgmt-empty-state i {
+  font-size: clamp(3rem, 8vw, 4rem);
+  color: #9ca3af;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.subjects-mgmt-empty-state h3 {
+  margin: 0 0 0.5rem 0;
+  color: #111827;
+  font-size: clamp(1.125rem, 3vw, 1.25rem);
+}
+
+.subjects-mgmt-empty-state p {
+  margin: 0 0 2rem 0;
+  color: #6b7280;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+.subjects-mgmt-table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+.subjects-mgmt-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.subjects-mgmt-table th {
+  background: #f3f4f6;
+  padding: clamp(0.5rem, 1.5vw, 0.75rem);
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+  white-space: nowrap;
+}
+
+.subjects-mgmt-table td {
+  padding: clamp(0.5rem, 1.5vw, 0.75rem);
+  border-bottom: 1px solid #e5e7eb;
+  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+}
+
+.subjects-mgmt-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.subject-code {
+  display: inline-block;
+  padding: clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 1.5vw, 0.75rem);
+  background: #dbeafe;
+  color: #1e40af;
+  border-radius: 4px;
+  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.subject-abbreviation {
+  display: inline-block;
+  padding: clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 1.5vw, 0.75rem);
+  background: #fef3c7;
+  color: #92400e;
+  border-radius: 4px;
+  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+  font-weight: 500;
+  word-break: break-word;
+}
+
+.action-buttons {
+  display: flex;
+  gap: clamp(0.25rem, 1vw, 0.5rem);
+  flex-wrap: wrap;
+}
+
+.excel-btn {
+  padding: clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 1.5vw, 0.75rem);
+  border: none;
+  border-radius: 4px;
+  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  white-space: nowrap;
+}
+
+.excel-btn.small {
+  padding: clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 1.5vw, 0.75rem);
+  font-size: clamp(0.75rem, 1.5vw, 0.8125rem);
+}
+
+.excel-btn:not(.danger) {
+  background: #3b82f6;
+  color: white;
+}
+
+.excel-btn:not(.danger):hover {
+  background: #2563eb;
+}
+
+.excel-btn.danger {
+  background: #ef4444;
+  color: white;
+}
+
+.excel-btn.danger:hover {
+  background: #dc2626;
+}
+
+.subjects-mgmt-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 2.5vw, 1.5rem);
+  background: #6b7280;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background 0.2s;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+.subjects-mgmt-back-btn:hover {
+  background: #4b5563;
+  color: white;
+  text-decoration: none;
+}
+
+/* Modal Styles */
+.subjects-mgmt-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: clamp(0.5rem, 2vw, 1rem);
+}
+
+.subjects-mgmt-modal-content {
+  background: white;
+  border-radius: 8px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+}
+
+.subjects-mgmt-modal-header {
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.subjects-mgmt-modal-header h3 {
+  margin: 0;
+  color: #111827;
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  word-break: break-word;
+}
+
+.subjects-mgmt-modal-close {
+  background: none;
+  border: none;
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  color: #6b7280;
+  cursor: pointer;
+  padding: 0;
+  width: clamp(28px, 4vw, 32px);
+  height: clamp(28px, 4vw, 32px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 4px;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.subjects-mgmt-modal-close:hover {
+  background: #f3f4f6;
+}
+
+.subjects-mgmt-modal-body {
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.subjects-mgmt-form-group {
+  margin-bottom: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.subjects-mgmt-form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: #374151;
+  font-weight: 500;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+}
+
+.subjects-mgmt-form-group .req {
+  color: #ef4444;
+}
+
+.subjects-mgmt-form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: clamp(0.75rem, 2vw, 1rem);
+}
+
+.form-control {
+  width: 100%;
+  padding: clamp(0.625rem, 1.5vw, 0.75rem);
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  transition: border-color 0.2s;
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.form-control:disabled {
+  background: #f3f4f6;
+  color: #6b7280;
+  cursor: not-allowed;
+}
+
+.form-help {
+  display: block;
+  margin-top: 0.25rem;
+  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+  color: #6b7280;
+}
+
+.subjects-mgmt-modal-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: clamp(0.5rem, 1.5vw, 0.75rem);
+  margin-top: clamp(1rem, 2.5vw, 1.5rem);
+  padding-top: clamp(1rem, 2.5vw, 1.5rem);
+  border-top: 1px solid #e5e7eb;
+  flex-wrap: wrap;
+}
+
+.btn-primary,
+.btn-secondary {
+  padding: clamp(0.625rem, 1.5vw, 0.75rem) clamp(1rem, 2.5vw, 1.5rem);
+  border: none;
+  border-radius: 4px;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  flex: 1;
+  min-width: 100px;
+}
+
+.btn-primary {
+  background: #3b82f6;
+  color: white;
+}
+
+.btn-primary:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.btn-primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background: #6b7280;
+  color: white;
+}
+
+.btn-secondary:hover {
+  background: #4b5563;
+}
+
+/* Mobile Responsiveness */
+@media (max-width: 599px) {
+  .subjects-mgmt-card-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+  
+  .subjects-mgmt-header-actions {
+    width: 100%;
+  }
+  
+  .subjects-mgmt-add-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .subjects-mgmt-table-container {
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .subjects-mgmt-table {
+    min-width: 800px;
+  }
+  
+  .subjects-mgmt-table th,
+  .subjects-mgmt-table td {
+    padding: 0.5rem 0.375rem;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .excel-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .subjects-mgmt-form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .subjects-mgmt-modal-content {
+    width: 100%;
+    max-height: 95vh;
+    border-radius: 8px 8px 0 0;
+  }
+  
+  .subjects-mgmt-modal-footer {
+    flex-direction: column-reverse;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    width: 100%;
+  }
+}
+
+@media (min-width: 600px) and (max-width: 767px) {
+  .subjects-mgmt-table-container {
+    overflow-x: auto;
+  }
+
+  .subjects-mgmt-table {
+    min-width: 800px;
+  }
+  
+  .action-buttons {
+    flex-wrap: wrap;
+  }
+
+  .subjects-mgmt-modal-content {
+    width: 95%;
+  }
+}
+
+@media (min-width: 768px) {
+  .subjects-mgmt-table-container {
+    overflow-x: auto;
+  }
+  
+  .subjects-mgmt-modal-footer {
+    flex-direction: row;
+  }
+  
+  .btn-primary,
+  .btn-secondary {
+    flex: none;
+  }
+}
+
+@media (min-width: 1200px) {
+  .subjects-mgmt-page-container {
+    max-width: 1600px;
+    margin: 0 auto;
+  }
+  
+  .subjects-mgmt-table th,
+  .subjects-mgmt-table td {
+    padding: 1rem;
+  }
+}
+

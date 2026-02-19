@@ -1,0 +1,255 @@
+/**
+ * Puppeteer-based PDF Generator for Individual Reports
+ * Renders the actual HTML page to PDF, preserving all CSS styling
+ */
+const puppeteer = require('puppeteer');
+const axios = require('axios');
+const { normalizeStream } = require('./streamNormalizer');
+
+/**
+ * Generate PDF from the individual report page using Puppeteer
+ * Fetches data from API and renders HTML server-side, then converts to PDF
+ * @param {string} form - Form level (e.g., 'FORM I')
+ * @param {string} stream - Stream (e.g., 'NA', 'A', 'PCB')
+ * @param {number} year - Year (e.g., 2025)
+ * @param {string} term - Term (e.g., 'Term I', 'Term II')
+ * @param {string} admNo - Admission number
+ * @param {string} apiUrl - Backend API URL (default: http://localhost:5000)
+ * @param {string} authToken - Auth token for API requests
+ * @returns {Promise<Buffer>} PDF buffer
+ */
+async function generateIndividualReportPDFWithPuppeteer(
+  form,
+  stream,
+  year,
+  term,
+  admNo,
+  apiUrl = process.env.API_URL || 'http://localhost:5000',
+  authToken = null
+) {
+  let browser = null;
+  
+  try {
+    // Normalize stream: NA -> A (important for database queries)
+    const normalizedStream = normalizeStream(stream || 'NA');
+    
+    // Encode parameters for URL
+    const encodedForm = encodeURIComponent(form);
+    const encodedStream = encodeURIComponent(normalizedStream);
+    const encodedTerm = encodeURIComponent(term);
+    
+    // Fetch report data from API
+    console.log('Fetching report data from API...');
+    console.log('Stream normalization:', { original: stream, normalized: normalizedStream });
+    const reportDataUrl = `${apiUrl}/api/reports/individual/${encodedForm}/${encodedStream}/${year}/${encodedTerm}/${admNo}`;
+    console.log('Report data URL:', reportDataUrl);
+    console.log('API URL base:', apiUrl);
+    console.log('Auth token present:', !!authToken);
+    
+    const headers = {};
+    if (authToken) {
+      headers['Authorization'] = `Bearer ${authToken}`;
+    }
+    
+    let reportDataResponse;
+    try {
+      console.log('Making API request...');
+      reportDataResponse = await axios.get(reportDataUrl, { headers, timeout: 30000 });
+      console.log('API response status:', reportDataResponse.status);
+      console.log('API response data keys:', Object.keys(reportDataResponse.data || {}));
+    } catch (apiError) {
+      console.error('API request failed:', apiError.message);
+      console.error('API error details:', {
+        status: apiError.response?.status,
+        statusText: apiError.response?.statusText,
+        data: apiError.response?.data,
+        url: reportDataUrl,
+        hasAuthToken: !!authToken
+      });
+      
+      // Provide more detailed error message
+      if (apiError.response) {
+        const status = apiError.response.status;
+        const errorData = apiError.response.data;
+        const errorMsg = errorData?.message || errorData?.error || apiError.message;
+        throw new Error(`API request failed (${status}): ${errorMsg}`);
+      } else if (apiError.code === 'ECONNREFUSED') {
+        throw new Error(`Cannot connect to API server at ${apiUrl}. Make sure the backend server is running.`);
+      } else if (apiError.code === 'ETIMEDOUT') {
+        throw new Error(`API request timed out after 30 seconds. The server may be overloaded.`);
+      } else {
+        throw new Error(`API request failed: ${apiError.message}`);
+      }
+    }
+    
+    const reportData = reportDataResponse.data;
+    
+    console.log('Report data fetched successfully');
+    
+    // Generate HTML from report data
+    const { generateReportHTML } = require('./htmlReportRenderer');
+    const html = await generateReportHTML({
+      ...reportData,
+      form,
+      term,
+      year
+    }, apiUrl);
+    
+    // Validate HTML
+    if (!html || typeof html !== 'string' || html.trim().length === 0) {
+      throw new Error('Generated HTML is empty or invalid');
+    }
+    
+    console.log(`HTML generated successfully. Length: ${html.length} characters`);
+    
+    // Launch browser with optimized settings
+    console.log('Launching Puppeteer browser...');
+    try {
+      browser = await puppeteer.launch({
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--disable-gpu',
+          '--disable-web-security',
+          '--disable-features=IsolateOrigins,site-per-process'
+        ],
+        timeout: 30000
+      });
+      console.log('Browser launched successfully');
+    } catch (browserError) {
+      console.error('Failed to launch browser:', browserError);
+      throw new Error(`Browser launch failed: ${browserError.message}`);
+    }
+    
+    const page = await browser.newPage();
+    
+    // Set viewport for consistent rendering - wider to match screen view
+    await page.setViewport({
+      width: 1920,
+      height: 1600,
+      deviceScaleFactor: 2
+    });
+    
+    // Set base URL for relative image paths
+    const baseUrl = apiUrl.replace('/api', '');
+    
+    // Set auth headers for image requests (before setContent so they're used)
+    if (authToken) {
+      await page.setExtraHTTPHeaders({
+        'Authorization': `Bearer ${authToken}`
+      });
+    }
+    
+    // Set content directly from HTML string
+    try {
+      await page.setContent(html, {
+        waitUntil: 'networkidle0',
+        timeout: 30000,
+        baseURL: baseUrl
+      });
+    } catch (contentError) {
+      console.error('Error setting page content:', contentError);
+      throw new Error(`Failed to load HTML content: ${contentError.message}`);
+    }
+    
+    // Wait for any images/fonts to load (using Promise-based delay instead of deprecated waitForTimeout)
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    
+    // Verify page loaded correctly
+    const pageTitle = await page.title();
+    console.log('Page loaded. Title:', pageTitle);
+    
+    // Generate PDF with optimized settings for A4 printing - maximize width to match screen view
+    let pdfBuffer;
+    try {
+      pdfBuffer = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: {
+          top: '0.5mm',
+          right: '0.5mm',
+          bottom: '0.5mm',
+          left: '0.5mm'
+        },
+        preferCSSPageSize: true,
+        displayHeaderFooter: false,
+        scale: 1.0
+      });
+    } catch (pdfError) {
+      console.error('Error generating PDF:', pdfError);
+      throw new Error(`Failed to generate PDF: ${pdfError.message}`);
+    }
+    
+    // Validate PDF buffer
+    if (!pdfBuffer) {
+      throw new Error('PDF buffer is null or undefined');
+    }
+    
+    // Ensure it's a Buffer
+    let buffer;
+    if (Buffer.isBuffer(pdfBuffer)) {
+      buffer = pdfBuffer;
+    } else if (pdfBuffer instanceof Uint8Array) {
+      buffer = Buffer.from(pdfBuffer);
+    } else {
+      buffer = Buffer.from(pdfBuffer);
+    }
+    
+    if (buffer.length === 0) {
+      throw new Error('PDF buffer is empty');
+    }
+    
+    // Verify it's a valid PDF (starts with %PDF)
+    const firstBytes = buffer.slice(0, 4);
+    if (firstBytes[0] !== 0x25 || firstBytes[1] !== 0x50 || firstBytes[2] !== 0x44 || firstBytes[3] !== 0x46) {
+      console.error('Invalid PDF buffer. First bytes:', buffer.slice(0, 20).toString('hex'));
+      console.error('First bytes (ascii):', buffer.slice(0, 20).toString('ascii'));
+      throw new Error('Generated file is not a valid PDF');
+    }
+    
+    console.log(`PDF generated successfully. Size: ${buffer.length} bytes`);
+    console.log('PDF first bytes:', buffer.slice(0, 10).toString('hex'));
+    
+    return buffer;
+    
+  } catch (error) {
+    console.error('Puppeteer PDF Generation Error:', error);
+    console.error('Error stack:', error.stack);
+    console.error('Error details:', {
+      message: error.message,
+      name: error.name,
+      code: error.code,
+      form,
+      stream,
+      year,
+      term,
+      admNo
+    });
+    
+    // Provide more specific error messages
+    if (error.message.includes('Browser launch')) {
+      throw new Error(`Failed to launch browser for PDF generation: ${error.message}. Make sure Puppeteer dependencies are installed.`);
+    } else if (error.message.includes('API request failed')) {
+      throw new Error(`Failed to fetch report data: ${error.message}`);
+    } else if (error.message.includes('HTML')) {
+      throw new Error(`Failed to generate HTML: ${error.message}`);
+    } else {
+      throw new Error(`Failed to generate PDF: ${error.message}`);
+    }
+  } finally {
+    if (browser) {
+      try {
+        await browser.close();
+      } catch (closeError) {
+        console.error('Error closing browser:', closeError);
+      }
+    }
+  }
+}
+
+module.exports = {
+  generateIndividualReportPDFWithPuppeteer
+};

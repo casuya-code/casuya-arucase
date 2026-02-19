@@ -1,0 +1,244 @@
+/**
+ * Fees Announcements Management Styles - Modern Responsive Design
+ * Large, Readable Content on Small Screens
+ */
+.fees-mgmt-page-container {
+  padding: clamp(1.5rem, 4vw, 2.5rem);
+  font-size: clamp(18px, 4vw, 20px);
+  line-height: 1.75;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.excel-card {
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+  overflow: hidden;
+}
+
+.excel-card-header {
+  background: #f9fafb;
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+  border-bottom: 2px solid #e5e7eb;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  font-size: clamp(1.125rem, 4vw, 1.5rem);
+  font-weight: 600;
+  color: #111827;
+}
+
+.excel-card-header i {
+  color: #3b82f6;
+  margin-right: 0.5rem;
+}
+
+.excel-card-body {
+  padding: clamp(1.25rem, 3vw, 1.75rem);
+}
+
+.loading-state {
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+}
+
+.fees-description {
+  margin-bottom: 1.5rem;
+  color: #374151;
+  font-size: 0.875rem;
+}
+
+.fees-form {
+  width: 100%;
+}
+
+.table-container {
+  overflow-x: auto;
+  margin-bottom: 1.5rem;
+}
+
+.announcements-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.announcements-table th {
+  background: #f3f4f6;
+  padding: clamp(1rem, 3vw, 1.25rem);
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  font-size: clamp(1rem, 3vw, 1.125rem);
+  line-height: 1.5;
+}
+
+.announcements-table td {
+  padding: clamp(1rem, 3vw, 1.25rem);
+  border-bottom: 1px solid #e5e7eb;
+  font-size: clamp(1rem, 3vw, 1.125rem);
+  line-height: 1.6;
+}
+
+.table-serial-number {
+  width: 60px;
+  text-align: center;
+}
+
+.table-center {
+  text-align: center;
+}
+
+.announcement-input {
+  width: 100%;
+  min-height: 60px;
+  padding: 0.75rem;
+  border: 1px solid #d1d5db;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.announcement-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.fees-actions {
+  display: flex;
+  gap: 1rem;
+  margin-top: 1.5rem;
+}
+
+.excel-btn {
+  padding: clamp(1rem, 3.5vw, 1.25rem) clamp(1.5rem, 5vw, 2rem);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: clamp(1rem, 4vw, 1.125rem);
+  font-weight: 600;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 0.75rem);
+  text-decoration: none;
+  color: white;
+  min-height: 52px;
+  line-height: 1.5;
+}
+
+.excel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.excel-btn.primary {
+  background: #3b82f6;
+}
+
+.excel-btn.primary:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.excel-btn.secondary {
+  background: #6b7280;
+}
+
+.excel-btn.secondary:hover {
+  background: #4b5563;
+  color: white;
+  text-decoration: none;
+}
+
+.excel-btn.small {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+@media (max-width: 768px) {
+  .fees-mgmt-page-container {
+    padding: 0;
+  }
+
+  .excel-card {
+    border-radius: 0;
+    margin: 0;
+    box-shadow: none;
+  }
+
+  .excel-card-header {
+    padding: clamp(1rem, 3vw, 1.5rem);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    font-size: clamp(1rem, 4vw, 1.125rem);
+  }
+
+  .excel-card-header > div:first-child {
+    width: 100%;
+  }
+
+  .excel-card-header .header-actions {
+    width: 100%;
+    margin-left: 0;
+    flex-direction: column;
+  }
+
+  .excel-card-header .header-actions .excel-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .excel-card-body {
+    padding: clamp(1rem, 3vw, 1.5rem);
+  }
+
+  .table-container {
+    overflow-x: auto;
+    width: 100%;
+    display: block;
+    margin-bottom: 1.5rem;
+  }
+
+  .announcements-table {
+    min-width: 500px;
+    width: 100%;
+    display: table;
+  }
+
+  .announcements-table th,
+  .announcements-table td {
+    padding: clamp(0.75rem, 2.5vw, 1rem);
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+  }
+
+  .announcement-input {
+    min-height: 50px;
+    font-size: clamp(0.875rem, 2.5vw, 1rem);
+    padding: 0.625rem;
+  }
+
+  .fees-actions {
+    flex-direction: column;
+  }
+
+  .fees-actions .excel-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+

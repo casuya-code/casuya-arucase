@@ -1,0 +1,419 @@
+/**
+ * Individual Debt Management Styles - Modern Responsive Design
+ * Mobile-First Approach with Card Layout for Small Screens
+ */
+.debts-mgmt-page-container {
+  padding: clamp(1rem, 3vw, 2.5rem);
+  font-size: clamp(16px, 4vw, 20px);
+  line-height: 1.75;
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.empty-icon {
+  font-size: clamp(3rem, 8vw, 4rem);
+  color: #9ca3af;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.empty-state h3 {
+  margin: 0 0 0.5rem 0;
+  color: #111827;
+  font-size: clamp(1.25rem, 5vw, 1.5rem);
+}
+
+.empty-state p {
+  margin: 0 0 2rem 0;
+  color: #6b7280;
+  font-size: clamp(0.875rem, 3vw, 1rem);
+}
+
+/* Desktop Table View */
+.table-container {
+  overflow-x: auto;
+  margin-bottom: 2rem;
+  width: 100%;
+}
+
+.excel-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.excel-table th {
+  background: #f3f4f6;
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border-bottom: 2px solid #e5e7eb;
+  font-size: clamp(0.875rem, 2.5vw, 1.125rem);
+  line-height: 1.5;
+}
+
+.excel-table td {
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+  border-bottom: 1px solid #e5e7eb;
+  font-size: clamp(0.875rem, 2.5vw, 1.125rem);
+  line-height: 1.6;
+}
+
+.excel-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.debt-amount {
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.debt-text {
+  color: #374151;
+}
+
+.text-muted {
+  color: #6b7280;
+}
+
+.debt-input {
+  width: 100%;
+  padding: clamp(0.625rem, 2vw, 0.75rem);
+  border: 1px solid #d1d5db;
+  border-radius: 6px;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  box-sizing: border-box;
+}
+
+.debt-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.actions-col {
+  white-space: nowrap;
+}
+
+.action-btn {
+  padding: clamp(0.5rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem);
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  margin: 0 0.25rem;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px; /* Touch-friendly */
+  touch-action: manipulation;
+}
+
+.action-btn.edit-btn {
+  background: #3b82f6;
+  color: white;
+}
+
+.action-btn.edit-btn:hover {
+  background: #2563eb;
+}
+
+.action-btn.save-btn {
+  background: #10b981;
+  color: white;
+}
+
+.action-btn.save-btn:hover {
+  background: #059669;
+}
+
+.action-btn.cancel-btn {
+  background: #6b7280;
+  color: white;
+}
+
+.action-btn.cancel-btn:hover {
+  background: #4b5563;
+}
+
+.action-btn.delete-btn {
+  background: #ef4444;
+  color: white;
+}
+
+.action-btn.delete-btn:hover {
+  background: #dc2626;
+}
+
+.csv-section {
+  margin-top: 2rem;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  background: #f9fafb;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+}
+
+.csv-section h3 {
+  margin: 0 0 0.5rem 0;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: clamp(1rem, 3vw, 1.25rem);
+}
+
+.csv-help {
+  margin: 0 0 1rem 0;
+  color: #6b7280;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+}
+
+.csv-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.excel-btn {
+  padding: clamp(0.875rem, 3vw, 1.25rem) clamp(1.25rem, 4vw, 2rem);
+  border: none;
+  border-radius: 12px;
+  cursor: pointer;
+  font-size: clamp(0.875rem, 3vw, 1.125rem);
+  font-weight: 600;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 0.75rem);
+  text-decoration: none;
+  color: white;
+  min-height: 52px;
+  line-height: 1.5;
+  touch-action: manipulation;
+}
+
+.excel-btn.primary {
+  background: #3b82f6;
+}
+
+.excel-btn.primary:hover {
+  background: #2563eb;
+}
+
+.excel-btn.success {
+  background: #10b981;
+}
+
+.excel-btn.success:hover {
+  background: #059669;
+}
+
+.excel-btn.secondary {
+  background: #6b7280;
+}
+
+.excel-btn.secondary:hover {
+  background: #4b5563;
+}
+
+.excel-btn.small {
+  padding: clamp(0.5rem, 2vw, 0.75rem) clamp(0.75rem, 3vw, 1rem);
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  min-height: 44px;
+}
+
+.header-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-left: auto;
+}
+
+/* Mobile Card Layout */
+.mobile-students-list {
+  display: none;
+}
+
+.mobile-student-card {
+  display: none;
+}
+
+.mobile-student-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.mobile-student-card-header .student-info {
+  flex: 1;
+}
+
+.mobile-student-card-header .student-name {
+  font-weight: 600;
+  font-size: clamp(1rem, 3vw, 1.125rem);
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.mobile-student-card-header .student-adm {
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  color: #6b7280;
+}
+
+.mobile-student-card-body {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.mobile-student-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-radius: 6px;
+}
+
+.mobile-student-field-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+}
+
+.mobile-student-field-value {
+  color: #111827;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  text-align: right;
+}
+
+.mobile-student-field-value.debt-amount {
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.mobile-student-field-value.text-muted {
+  color: #6b7280;
+}
+
+.mobile-student-field input.debt-input {
+  width: 100%;
+  max-width: 200px;
+  margin-left: auto;
+  text-align: right;
+}
+
+.mobile-student-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.mobile-student-actions .action-btn {
+  flex: 1;
+  min-width: 120px;
+  justify-content: center;
+  margin: 0;
+}
+
+/* Responsive Breakpoints */
+@media (max-width: 768px) {
+  .debts-mgmt-page-container {
+    padding: 0;
+  }
+
+  .excel-card {
+    border-radius: 0;
+    margin: 0;
+    box-shadow: none;
+  }
+
+  .excel-card-header {
+    padding: clamp(1rem, 3vw, 1.5rem);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    font-size: clamp(1rem, 4vw, 1.125rem);
+  }
+
+  .excel-card-header > div:first-child {
+    width: 100%;
+  }
+
+  .excel-card-header .header-actions {
+    width: 100%;
+    margin-left: 0;
+  }
+
+  .excel-card-header .header-actions .excel-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .excel-card-body {
+    padding: clamp(1rem, 3vw, 1.5rem);
+  }
+
+  /* Hide desktop table on mobile */
+  .table-container {
+    display: none;
+  }
+
+  /* Show mobile cards */
+  .mobile-students-list {
+    display: block;
+    width: 100%;
+  }
+
+  .mobile-student-card {
+    display: block;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .csv-section {
+    margin-top: 1.5rem;
+    padding: clamp(1rem, 3vw, 1.5rem);
+  }
+
+  .csv-actions {
+    flex-direction: column;
+  }
+
+  .csv-actions .excel-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 769px) {
+  /* Hide mobile cards on desktop */
+  .mobile-students-list {
+    display: none;
+  }
+
+  .mobile-student-card {
+    display: none;
+  }
+}
+

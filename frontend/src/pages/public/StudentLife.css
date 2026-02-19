@@ -1,0 +1,182 @@
+.student-life-page {
+  width: 100%;
+  min-width: 100%;
+  max-width: 100vw;
+  min-height: 100vh;
+  min-height: 100dvh;
+  padding: 2rem clamp(1rem, 4vw, 2rem);
+  overflow-x: hidden;
+}
+
+.student-life-page .home-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 2rem;
+  padding: 0.75rem 1.5rem;
+  background: #1a5490;
+  color: white;
+  text-decoration: none;
+  border-radius: 6px;
+  transition: background 0.2s;
+  font-weight: 500;
+}
+
+.student-life-page .home-button:hover {
+  background: #2d7bc4;
+}
+
+.student-life-page .content-card {
+  background: white;
+  border-radius: 8px;
+  padding: 2.5rem;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  max-width: 900px;
+  margin: 0 auto;
+}
+
+.student-life-page .content-card h2 {
+  color: #1a5490;
+  font-size: 2rem;
+  margin-bottom: 1.5rem;
+  font-weight: 700;
+}
+
+.student-life-page .content-card h3 {
+  color: #1a5490;
+  font-size: 1.75rem;
+  margin-top: 2rem;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.student-life-page .content-card p {
+  line-height: 1.8;
+  margin-bottom: 1rem;
+  color: #374151;
+  font-size: 1.0625rem;
+}
+
+.student-life-page .content-card ul {
+  margin: 1rem 0;
+  padding-left: 2rem;
+}
+
+.student-life-page .content-card li {
+  line-height: 1.8;
+  margin-bottom: 0.75rem;
+  color: #374151;
+}
+
+.student-life-page .content-card strong {
+  color: #1a5490;
+  font-weight: 600;
+}
+
+/* ===========================================
+   RESPONSIVE DESIGN - MOBILE FIRST APPROACH
+   =========================================== */
+
+/* Extra Small Devices (phones, 320px and up) */
+@media (min-width: 320px) {
+  .student-life-page {
+    padding: 1rem 0;
+  }
+
+  .student-life-page .home-button {
+    padding: 0.875rem 1.25rem;
+    font-size: clamp(0.875rem, 3vw, 1rem);
+    min-height: 44px;
+    margin-bottom: 1.5rem;
+  }
+
+  .student-life-page .content-card {
+    padding: 1.25rem;
+    margin: 0 0.75rem;
+    border-radius: 12px;
+  }
+
+  .student-life-page .content-card h2 {
+    font-size: clamp(1.5rem, 6vw, 1.75rem);
+    margin-bottom: 1.25rem;
+    line-height: 1.3;
+  }
+
+  .student-life-page .content-card h3 {
+    font-size: clamp(1.25rem, 5vw, 1.5rem);
+    margin-top: 1.5rem;
+    margin-bottom: 0.875rem;
+    line-height: 1.4;
+  }
+
+  .student-life-page .content-card p {
+    font-size: clamp(0.9375rem, 3.5vw, 1rem);
+    line-height: 1.7;
+  }
+
+  .student-life-page .content-card ul {
+    padding-left: 1.5rem;
+  }
+
+  .student-life-page .content-card li {
+    font-size: clamp(0.9375rem, 3.5vw, 1rem);
+    line-height: 1.7;
+  }
+}
+
+/* Small Devices (landscape phones, 480px and up) */
+@media (min-width: 480px) {
+  .student-life-page {
+    padding: 1.5rem 0;
+  }
+
+  .student-life-page .content-card {
+    padding: 1.5rem;
+    margin: 0 1rem;
+  }
+}
+
+/* Medium Devices (tablets, 640px and up) */
+@media (min-width: 640px) {
+  .student-life-page .content-card {
+    padding: 2rem;
+    margin: 0 auto;
+  }
+}
+
+/* Large Devices (tablets landscape, 768px and up) */
+@media (min-width: 768px) {
+  .student-life-page {
+    padding: 2rem 0;
+  }
+
+  .student-life-page .content-card {
+    padding: 2.5rem;
+    max-width: 900px;
+  }
+
+  .student-life-page .content-card h2 {
+    font-size: 2rem;
+  }
+
+  .student-life-page .content-card h3 {
+    font-size: 1.75rem;
+  }
+
+  .student-life-page .content-card p {
+    font-size: 1.0625rem;
+  }
+}
+
+/* Touch Device Optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .student-life-page .home-button {
+    min-height: 48px;
+    padding: 1rem 1.5rem;
+  }
+
+  .student-life-page .home-button:active {
+    transform: scale(0.98);
+  }
+}
+

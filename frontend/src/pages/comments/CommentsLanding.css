@@ -1,0 +1,275 @@
+/**
+ * Comments Landing Page Styles
+ * Modern mobile app-like flexible layout
+ */
+.comments-landing-page-container {
+  padding: 0;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.comments-card {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  overflow: visible;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.comments-card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: clamp(1.25rem, 4vw, 1.5rem);
+  font-size: clamp(1.125rem, 4vw, 1.25rem);
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: clamp(0.5rem, 2vw, 0.75rem);
+  border-radius: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: clamp(1.5rem, 4vw, 2rem);
+  line-height: 1.4;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.comments-card-header i {
+  font-size: clamp(1.25rem, 4vw, 1.5rem);
+}
+
+.comments-card-body {
+  padding: clamp(1rem, 3vw, 2rem);
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.comments-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: clamp(1rem, 3vw, 1.5rem);
+  width: 100%;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+.comments-form-card {
+  background: white;
+  border: 2px solid rgba(255, 255, 255, 0.8);
+  border-radius: 16px;
+  padding: clamp(1.5rem, 4vw, 2rem);
+  text-align: center;
+  text-decoration: none;
+  color: inherit;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.5rem, 2vw, 0.75rem);
+  min-height: clamp(140px, 30vw, 180px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.comments-form-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+  transform: scaleX(0);
+  transition: transform 0.3s ease;
+  transform-origin: left;
+}
+
+.comments-form-card:hover,
+.comments-form-card:active,
+.comments-form-card:focus {
+  border-color: #667eea;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.25);
+  transform: translateY(-4px);
+  color: inherit;
+  text-decoration: none;
+  outline: none;
+}
+
+.comments-form-card:hover::before,
+.comments-form-card:active::before,
+.comments-form-card:focus::before {
+  transform: scaleX(1);
+}
+
+.comments-form-icon {
+  font-size: clamp(1.75rem, 6vw, 2.5rem);
+  color: #667eea;
+  transition: transform 0.3s ease;
+  filter: drop-shadow(0 2px 4px rgba(102, 126, 234, 0.2));
+}
+
+.comments-form-card:hover .comments-form-icon,
+.comments-form-card:active .comments-form-icon,
+.comments-form-card:focus .comments-form-icon {
+  transform: scale(1.1) rotate(5deg);
+}
+
+.comments-form-content {
+  width: 100%;
+}
+
+.comments-form-content h3 {
+  margin: 0;
+  font-size: clamp(1.25rem, 5vw, 1.5rem);
+  font-weight: 700;
+  color: #111827;
+  line-height: 1.3;
+  letter-spacing: -0.02em;
+}
+
+.comments-form-content p {
+  margin: clamp(0.25rem, 1vw, 0.5rem) 0 0 0;
+  font-size: clamp(0.75rem, 3vw, 0.875rem);
+  color: #6b7280;
+  line-height: 1.4;
+  font-weight: 500;
+}
+
+/* Tablet and larger screens */
+@media (min-width: 640px) {
+  .comments-landing-page-container {
+    padding: clamp(1rem, 3vw, 1.5rem);
+  }
+
+  .comments-card {
+    background: white;
+    border-radius: 16px;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+    max-width: 1200px;
+    margin: 0 auto;
+  }
+
+  .comments-card-header {
+    border-radius: 16px 16px 0 0;
+    margin-bottom: 0;
+    position: relative;
+    top: auto;
+  }
+
+  .comments-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 1.5rem;
+  }
+
+  .comments-form-card {
+    min-height: 180px;
+  }
+}
+
+/* Desktop screens */
+@media (min-width: 1024px) {
+  .comments-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+
+  .comments-form-card {
+    min-height: 200px;
+    padding: 2rem;
+  }
+}
+
+/* Large desktop screens */
+@media (min-width: 1280px) {
+  .comments-grid {
+    grid-template-columns: repeat(3, 1fr);
+    gap: 2rem;
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .comments-form-card {
+    min-height: clamp(160px, 35vw, 200px);
+    padding: clamp(1.75rem, 5vw, 2rem);
+    -webkit-tap-highlight-color: rgba(102, 126, 234, 0.1);
+  }
+
+  .comments-form-card:active {
+    transform: translateY(-2px) scale(0.98);
+    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.2);
+  }
+
+  .comments-form-icon {
+    font-size: clamp(2rem, 7vw, 2.5rem);
+  }
+}
+
+/* Landscape mobile orientation */
+@media (max-width: 768px) and (orientation: landscape) {
+  .comments-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .comments-form-card {
+    min-height: clamp(120px, 25vw, 160px);
+  }
+}
+
+/* Extra small devices */
+@media (max-width: 480px) {
+  .comments-grid {
+    grid-template-columns: 1fr;
+    gap: clamp(0.75rem, 2vw, 1rem);
+  }
+
+  .comments-form-card {
+    min-height: clamp(120px, 28vw, 150px);
+    padding: clamp(1.25rem, 3.5vw, 1.5rem);
+    border-radius: 12px;
+  }
+
+  .comments-card-header {
+    padding: clamp(1rem, 3vw, 1.25rem);
+    font-size: clamp(1rem, 3.5vw, 1.125rem);
+  }
+}
+
+/* Smooth scroll behavior */
+@media (prefers-reduced-motion: no-preference) {
+  .comments-form-card {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+}
+
+/* Dark mode support (if needed in future) */
+@media (prefers-color-scheme: dark) {
+  .comments-landing-page-container {
+    background: linear-gradient(135deg, #1a1a1a 0%, #2d2d2d 100%);
+  }
+
+  .comments-card {
+    background: #2d2d2d;
+  }
+
+  .comments-form-card {
+    background: #1a1a1a;
+    border-color: rgba(255, 255, 255, 0.1);
+  }
+
+  .comments-form-content h3 {
+    color: #ffffff;
+  }
+
+  .comments-form-content p {
+    color: #a0a0a0;
+  }
+}
+

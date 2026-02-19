@@ -1,0 +1,389 @@
+/**
+ * Comments Management Styles
+ * Border-free modern mobile layout
+ */
+.comments-mgmt-page-container {
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
+  min-height: 100vh;
+  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
+}
+
+.comments-mgmt-page-container .excel-card {
+  background: transparent;
+  border-radius: 0;
+  box-shadow: none;
+  border: none;
+  overflow: visible;
+  margin: 0;
+}
+
+.comments-mgmt-page-container .excel-card-header {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  padding: clamp(1rem, 3vw, 1.5rem);
+  margin-bottom: clamp(1rem, 3vw, 1.5rem);
+}
+
+.comments-mgmt-page-container .excel-card-body {
+  padding: clamp(1rem, 3vw, 2rem);
+  background: transparent;
+  border: none;
+}
+
+.loading-state {
+  text-align: center;
+  padding: 3rem;
+  color: #6b7280;
+}
+
+.empty-state {
+  text-align: center;
+  padding: 4rem 2rem;
+}
+
+.empty-icon {
+  font-size: 4rem;
+  color: #9ca3af;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.empty-state h3 {
+  margin: 0 0 0.5rem 0;
+  color: #111827;
+}
+
+.empty-state p {
+  margin: 0 0 2rem 0;
+  color: #6b7280;
+}
+
+.comments-mgmt-page-container .header-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.comments-mgmt-page-container .header-actions label.excel-btn {
+  cursor: pointer;
+  margin-bottom: 0;
+}
+
+.comments-mgmt-page-container .switch-term-btn,
+.comments-mgmt-page-container .switch-term-btn i {
+  color: #000 !important;
+}
+.comments-mgmt-page-container .switch-term-btn:hover,
+.comments-mgmt-page-container .switch-term-btn:hover i {
+  color: #000 !important;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.table-container {
+  overflow-x: auto;
+}
+
+.excel-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.excel-table th {
+  background: #f3f4f6;
+  padding: 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: #374151;
+  border: none;
+  border-bottom: none;
+  white-space: nowrap;
+}
+
+.excel-table td {
+  padding: 0.75rem;
+  border: none;
+  border-bottom: none;
+}
+
+.excel-table tbody tr:hover {
+  background: #f9fafb;
+}
+
+.excel-table tbody tr {
+  border-bottom: 1px solid transparent;
+  transition: background-color 0.2s;
+}
+
+.excel-table tbody tr:not(:last-child) {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.comment-input-wrapper {
+  position: relative;
+}
+
+.comment-input {
+  width: 100%;
+  min-width: 300px;
+  padding: 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-family: inherit;
+  resize: vertical;
+  transition: background-color 0.2s, box-shadow 0.2s;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.comment-input:focus {
+  outline: none;
+  background: #f9fafb;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.15);
+}
+
+.comment-input.saving {
+  background: #fffbeb;
+  box-shadow: 0 2px 6px rgba(245, 158, 11, 0.15);
+}
+
+.comment-input.saved {
+  background: #f0fdf4;
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.15);
+}
+
+.save-indicator {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  font-size: 0.75rem;
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  pointer-events: none;
+}
+
+.save-indicator.saving {
+  color: #f59e0b;
+}
+
+.save-indicator.saved {
+  color: #10b981;
+}
+
+.excel-btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-decoration: none;
+  color: white;
+}
+
+.excel-btn.primary {
+  background: #3b82f6;
+}
+
+.excel-btn.primary:hover {
+  background: #2563eb;
+  color: white;
+  text-decoration: none;
+}
+
+.excel-btn.secondary {
+  background: #6b7280;
+}
+
+.excel-btn.secondary:hover {
+  background: #4b5563;
+  color: white;
+  text-decoration: none;
+}
+
+.excel-btn.small {
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+}
+
+/* Mobile Card Layout (same style as Debts page) */
+.mobile-students-list {
+  display: none;
+}
+
+.mobile-student-card {
+  display: none;
+}
+
+.mobile-student-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #e5e7eb;
+}
+
+.mobile-student-card-header .student-info {
+  flex: 1;
+}
+
+.mobile-student-card-header .student-name {
+  font-weight: 600;
+  font-size: clamp(1rem, 3vw, 1.125rem);
+  color: #111827;
+  margin-bottom: 0.25rem;
+}
+
+.mobile-student-card-header .student-adm {
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  color: #6b7280;
+}
+
+.mobile-student-card-body {
+  display: grid;
+  gap: 0.75rem;
+}
+
+.mobile-student-field {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem;
+  background: #f9fafb;
+  border-radius: 6px;
+}
+
+.mobile-student-field.mobile-comment-field {
+  flex-direction: column;
+  align-items: stretch;
+}
+
+.mobile-student-field-label {
+  font-weight: 600;
+  color: #374151;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  margin-bottom: 0.5rem;
+}
+
+.mobile-comment-field .mobile-student-field-label {
+  margin-bottom: 0.5rem;
+}
+
+.mobile-student-field-value {
+  color: #111827;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  text-align: right;
+}
+
+.mobile-comment-input-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.mobile-comment-input-wrapper .comment-input {
+  min-width: unset;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Responsive Breakpoints - Debts-style mobile layout */
+@media (max-width: 768px) {
+  .comments-mgmt-page-container {
+    padding: 0;
+  }
+
+  .comments-mgmt-page-container .excel-card {
+    border-radius: 0;
+    margin: 0;
+    box-shadow: none;
+  }
+
+  .comments-mgmt-page-container .excel-card-header {
+    padding: clamp(1rem, 3vw, 1.5rem);
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 1rem;
+    font-size: clamp(1rem, 4vw, 1.125rem);
+  }
+
+  .comments-mgmt-page-container .excel-card-header > div:first-child {
+    width: 100%;
+  }
+
+  .comments-mgmt-page-container .excel-card-header .header-actions {
+    width: 100%;
+    flex-direction: column;
+  }
+
+  .comments-mgmt-page-container .excel-card-header .header-actions .excel-btn,
+  .comments-mgmt-page-container .excel-card-header .header-actions label.excel-btn {
+    width: 100%;
+    justify-content: center;
+    min-height: 44px;
+  }
+
+  .comments-mgmt-page-container .excel-card-body {
+    padding: clamp(1rem, 3vw, 1.5rem);
+  }
+
+  /* Hide desktop table on mobile */
+  .table-container {
+    display: none;
+  }
+
+  /* Show mobile cards */
+  .mobile-students-list {
+    display: block;
+    width: 100%;
+  }
+
+  .mobile-student-card {
+    display: block;
+    background: white;
+    border: 1px solid #e5e7eb;
+    border-radius: 12px;
+    padding: clamp(1rem, 3vw, 1.5rem);
+    margin-bottom: 1rem;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  }
+
+  .action-buttons {
+    flex-direction: column;
+    margin-bottom: clamp(1rem, 2.5vw, 1.5rem);
+  }
+
+  .action-buttons .excel-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (min-width: 769px) {
+  /* Hide mobile cards on desktop */
+  .mobile-students-list {
+    display: none;
+  }
+
+  .mobile-student-card {
+    display: none;
+  }
+}
+

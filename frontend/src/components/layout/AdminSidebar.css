@@ -1,0 +1,422 @@
+/* Admin Sidebar Styles */
+.admin-sidebar {
+  position: fixed;
+  left: 0;
+  top: 0;
+  height: 100vh;
+  width: 280px;
+  background: linear-gradient(180deg, #1e40af 0%, #1e3a8a 100%);
+  color: white;
+  display: flex;
+  flex-direction: column;
+  z-index: 1000;
+  transition: transform 0.3s ease, width 0.3s ease;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.admin-sidebar.collapsed {
+  width: 70px;
+}
+
+/* Sidebar Header */
+.sidebar-header {
+  padding: 1.5rem 1rem;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.sidebar-logo {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+}
+
+.sidebar-logo i {
+  font-size: 1.5rem;
+  color: #60a5fa;
+}
+
+.sidebar-toggle {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: white;
+  width: 32px;
+  height: 32px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.2s ease;
+}
+
+.sidebar-toggle:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Sidebar Navigation */
+.sidebar-nav {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 1rem 0;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.3) transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar {
+  width: 6px;
+}
+
+.sidebar-nav::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 3px;
+}
+
+.sidebar-nav-desktop {
+  display: block;
+}
+
+.sidebar-nav-mobile {
+  display: none;
+}
+
+/* Navigation Category */
+.nav-category {
+  margin-bottom: 1.5rem;
+}
+
+.category-title {
+  padding: 0.5rem 1rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.6);
+  margin-bottom: 0.5rem;
+}
+
+.nav-items {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  transition: all 0.2s ease;
+  border-left: 3px solid transparent;
+  margin: 0.25rem 0;
+}
+
+.nav-item:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-left-color: #60a5fa;
+  color: white;
+}
+
+.nav-item.active {
+  background: rgba(96, 165, 250, 0.2);
+  border-left-color: #60a5fa;
+  color: white;
+  font-weight: 600;
+}
+
+.nav-item i {
+  font-size: 1.1rem;
+  width: 20px;
+  text-align: center;
+  flex-shrink: 0;
+}
+
+.nav-item-text {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Collapsed State */
+.admin-sidebar.collapsed .category-title,
+.admin-sidebar.collapsed .nav-item-text {
+  display: none;
+}
+
+.admin-sidebar.collapsed .nav-item {
+  justify-content: center;
+  padding: 0.75rem;
+}
+
+/* Sidebar Footer */
+.sidebar-footer {
+  padding: 1rem;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  flex-shrink: 0;
+}
+
+.user-info {
+  margin-bottom: 1rem;
+}
+
+.user-name {
+  font-weight: 600;
+  font-size: 0.9rem;
+  margin-bottom: 0.25rem;
+}
+
+.user-role {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-transform: capitalize;
+}
+
+.logout-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  background: rgba(239, 68, 68, 0.2);
+  border: 1px solid rgba(239, 68, 68, 0.3);
+  color: white;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.logout-btn:hover {
+  background: rgba(239, 68, 68, 0.3);
+  border-color: rgba(239, 68, 68, 0.5);
+}
+
+.logout-btn i {
+  font-size: 1rem;
+}
+
+.admin-sidebar.collapsed .user-info,
+.admin-sidebar.collapsed .logout-btn span {
+  display: none;
+}
+
+.admin-sidebar.collapsed .logout-btn {
+  justify-content: center;
+  padding: 0.75rem;
+}
+
+/* Mobile Menu Toggle Button */
+.admin-mobile-menu-toggle {
+  display: none; /* Hidden by default, shown only on mobile */
+  position: fixed;
+  top: 12px;
+  left: 12px;
+  z-index: 1002;
+  background: #1e40af;
+  color: white;
+  border: none;
+  padding: 0.75rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+  align-items: center;
+  gap: 0.5rem;
+  transition: background 0.2s ease;
+  min-width: 48px; /* Touch-friendly */
+  min-height: 48px; /* Touch-friendly */
+  touch-action: manipulation; /* Prevent double-tap zoom */
+}
+
+.admin-mobile-menu-toggle:hover {
+  background: #1e3a8a;
+}
+
+.admin-mobile-menu-toggle i {
+  font-size: 1.1rem;
+}
+
+/* Mobile Menu Overlay */
+.admin-mobile-menu-overlay {
+  display: none; /* Hidden by default, shown only on mobile */
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+}
+
+/* Mobile Styles */
+@media (max-width: 768px) {
+  /* Show mobile menu toggle only on mobile */
+  .admin-mobile-menu-toggle {
+    display: flex !important;
+  }
+
+  /* Show overlay only when menu is open (controlled by React conditional rendering) */
+  .admin-mobile-menu-overlay {
+    display: block;
+  }
+
+  /* Hide sidebar by default on mobile, show when menu is open */
+  .admin-sidebar {
+    transform: translateX(-100%);
+    width: 280px;
+    z-index: 1001;
+  }
+
+  .admin-sidebar.mobile-open {
+    transform: translateX(0);
+  }
+
+  /* Don't allow collapsing on mobile */
+  .admin-sidebar.collapsed {
+    width: 280px;
+  }
+
+  /* Hide desktop navigation, show mobile navigation */
+  .sidebar-nav-desktop {
+    display: none;
+  }
+
+  .sidebar-nav-mobile {
+    display: block;
+  }
+
+  /* Hide sidebar toggle button on mobile */
+  .sidebar-toggle {
+    display: none;
+  }
+}
+
+/* Ensure mobile elements are hidden on large screens */
+@media (min-width: 769px) {
+  .admin-mobile-menu-toggle {
+    display: none !important;
+  }
+
+  .admin-mobile-menu-overlay {
+    display: none !important;
+  }
+
+  .sidebar-nav-mobile {
+    display: none !important;
+  }
+
+  .admin-sidebar {
+    transform: translateX(0) !important;
+  }
+}
+
+  /* Mobile Navigation Items */
+  .mobile-nav-items {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .mobile-nav-item {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    padding: 1.25rem 1.5rem;
+    color: rgba(255, 255, 255, 0.9);
+    text-decoration: none;
+    transition: all 0.2s ease;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(255, 255, 255, 0.05);
+    width: 100%;
+    min-height: 52px; /* Touch-friendly - larger than 48px standard */
+    touch-action: manipulation; /* Prevent double-tap zoom */
+  }
+
+  .mobile-nav-item:hover,
+  .mobile-nav-item:active {
+    background: rgba(96, 165, 250, 0.2);
+    color: white;
+  }
+
+  .mobile-nav-item.active {
+    background: rgba(96, 165, 250, 0.3);
+    border-left: 4px solid #60a5fa;
+    font-weight: 600;
+  }
+
+  .mobile-nav-item i {
+    font-size: 1.1rem;
+    width: 24px;
+    text-align: center;
+    flex-shrink: 0;
+  }
+
+  .mobile-nav-item .nav-item-text {
+    white-space: normal;
+    word-wrap: break-word;
+  }
+
+  /* Ensure sidebar is scrollable on mobile */
+  .sidebar-nav {
+    height: calc(100vh - 200px);
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(255, 255, 255, 0.5) rgba(255, 255, 255, 0.1);
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+
+  .sidebar-nav::-webkit-scrollbar {
+    width: 10px;
+  }
+
+  .sidebar-nav::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 5px;
+  }
+
+  .sidebar-nav::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.7);
+    border-radius: 5px;
+    border: 2px solid rgba(255, 255, 255, 0.2);
+  }
+
+  .sidebar-nav::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.9);
+  }
+
+/* Main Content Adjustment */
+.admin-main-content {
+  margin-left: 280px;
+  transition: margin-left 0.3s ease;
+  min-height: 100vh;
+}
+
+.admin-sidebar.collapsed ~ .admin-main-content {
+  margin-left: 70px;
+}
+
+@media (max-width: 768px) {
+  .admin-main-content {
+    margin-left: 0;
+  }
+}
