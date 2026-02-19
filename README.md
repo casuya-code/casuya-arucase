@@ -219,16 +219,6 @@ npm run create-admin   # Create admin user
 - react-lazy-load-image-component
 - react-toastify, xlsx
 
-## 🔄 Migration from Flask
-
-This is a complete rewrite from Flask (Python) to Node.js/Express:
-- ✅ All routes converted
-- ✅ Database operations converted
-- ✅ Authentication system converted
-- ✅ File uploads converted
-- ✅ PDF generation converted
-- ✅ All features preserved
-
 ## 📞 Support
 
 For issues or questions, please check the documentation or contact the development team.
