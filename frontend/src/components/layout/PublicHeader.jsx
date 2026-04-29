@@ -29,8 +29,15 @@ const PublicHeader = () => {
   // Fetch settings for dynamic content
   const { data: homepageData } = useQuery({
     queryKey: ['homepage'],
-    queryFn: () => publicAPI.getHomepage(),
-    select: (res) => res.data,
+    queryFn: async () => {
+      try {
+        const res = await publicAPI.getHomepage();
+        return res.data;
+      } catch (err) {
+        console.error('Error fetching homepage data in header:', err);
+        return { settings: {} };
+      }
+    },
     staleTime: 10 * 60 * 1000,
   });
 

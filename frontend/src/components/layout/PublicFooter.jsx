@@ -7,15 +7,29 @@ import './PublicFooter.css';
 const PublicFooter = () => {
   const { data: homepageData } = useQuery({
     queryKey: ['homepage'],
-    queryFn: () => publicAPI.getHomepage(),
-    select: (res) => res.data,
+    queryFn: async () => {
+      try {
+        const res = await publicAPI.getHomepage();
+        return res.data;
+      } catch (err) {
+        console.error('Error fetching homepage data in footer:', err);
+        return { settings: {} };
+      }
+    },
     staleTime: 10 * 60 * 1000,
   });
 
   const { data: visitorStats, refetch: refetchVisitorStats } = useQuery({
     queryKey: ['visitor-stats'],
-    queryFn: () => publicAPI.getVisitorStats(),
-    select: (res) => res.data,
+    queryFn: async () => {
+      try {
+        const res = await publicAPI.getVisitorStats();
+        return res.data;
+      } catch (err) {
+        console.error('Error fetching visitor stats:', err);
+        return { stats: { daily: 0, weekly: 0, total: 0 } };
+      }
+    },
     staleTime: 5 * 60 * 1000, // 5 minutes
   });
 
