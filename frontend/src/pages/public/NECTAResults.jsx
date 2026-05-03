@@ -84,7 +84,15 @@ const NECTAResults = () => {
     }
   };
 
-  const generateYearButtons = (startYear = 2020, endYear = 2031) => {
+  const generateYearButtons = () => {
+    const currentYear = new Date().getFullYear();
+    const endYear = currentYear + 2; // current + 1 (exclusive upper bound)
+    
+    // Determine start year based on active tab
+    // Form II (ftna) and Form IV (csee): start from 2020
+    // Form VI (acsee): start from 2026
+    const startYear = activeTab === 'form6' ? 2026 : 2020;
+    
     const years = [];
     for (let year = startYear; year < endYear; year++) {
       years.push(year);
@@ -117,11 +125,6 @@ const NECTAResults = () => {
       <div className="necta-results">
         <header className="necta-header">
           <h1 className="necta-title">NECTA Examination Results</h1>
-          <p className="necta-school">Arusha Catholic Seminary — {SCHOOL_CODE}</p>
-          <p className="necta-hint">Click a year to open results on NECTA.</p>
-          <p className="necta-intro">
-            Official NECTA results for Arusha Catholic Seminary (S0171) are published by the National Examinations Council of Tanzania. Below you can open FTNA (Form II), CSEE (Form IV), and ACSEE (Form VI) results by year on the NECTA website.
-          </p>
         </header>
 
         <div className="necta-tabs">

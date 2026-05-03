@@ -14,6 +14,7 @@ function getIsMobile() {
 
 const PublicHeader = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [openDropdown, setOpenDropdown] = useState(null);
   /* Set from first paint so menu is portaled immediately on mobile and never scrolls with header */
   const [isMobile, setIsMobile] = useState(getIsMobile);
   const location = useLocation();
@@ -59,19 +60,47 @@ const PublicHeader = () => {
     return `${baseUrl}/static/${cleanPath}`;
   };
 
-  // Vichwa vya urambazaji — Kiswahili sanifu (njia zile zile za kiufundi)
-  const navigationItems = [
-    { path: '/', label: 'Nyumbani', icon: 'fa-home' },
-    { path: '/about', label: 'Kuhusu Sisi', icon: 'fa-info-circle' },
-    { path: '/admissions', label: 'Udahili', icon: 'fa-user-plus' },
-    { path: '/staff', label: 'Watumishi', icon: 'fa-users' },
-    { path: '/student-life', label: 'Maisha ya Wanafunzi', icon: 'fa-heart' },
-    { path: '/student-login', label: 'Ripoti za Mwanafunzi', icon: 'fa-file-alt' },
-    { path: '/school-fee', label: 'Ada ya Shule', icon: 'fa-money-bill-wave' },
-    { path: '/gallery', label: 'Picha', icon: 'fa-images' },
-    { path: '/announcements', label: 'Matangazo', icon: 'fa-bullhorn' },
-    { path: '/necta-results', label: 'Matokeo ya NECTA', icon: 'fa-certificate' },
-    { path: '/contact', label: 'Mawasiliano', icon: 'fa-envelope' },
+  // Navigation: Home standalone + 3 category dropdowns
+  const homeItem = { path: '/', label: 'Nyumbani', icon: 'fa-home' };
+
+  const navCategories = [
+    {
+      id: 'shule',
+      label: 'Shule Yetu',
+      icon: 'fa-school',
+      items: [
+        { path: '/about', label: 'Kuhusu Sisi', icon: 'fa-info-circle' },
+        { path: '/staff', label: 'Watumishi', icon: 'fa-users' },
+        { path: '/necta-results', label: 'Matokeo ya NECTA', icon: 'fa-certificate' },
+        { path: '/contact', label: 'Mawasiliano', icon: 'fa-envelope' },
+      ],
+    },
+    {
+      id: 'wanafunzi',
+      label: 'Wanafunzi',
+      icon: 'fa-graduation-cap',
+      items: [
+        { path: '/admissions', label: 'Udahili', icon: 'fa-user-plus' },
+        { path: '/student-life', label: 'Maisha ya Wanafunzi', icon: 'fa-heart' },
+        { path: '/student-login', label: 'Ripoti za Mwanafunzi', icon: 'fa-file-alt' },
+        { path: '/school-fee', label: 'Ada ya Shule', icon: 'fa-money-bill-wave' },
+      ],
+    },
+    {
+      id: 'habari',
+      label: 'Habari',
+      icon: 'fa-newspaper',
+      items: [
+        { path: '/gallery', label: 'Picha', icon: 'fa-images' },
+        { path: '/announcements', label: 'Matangazo', icon: 'fa-bullhorn' },
+      ],
+    },
+  ];
+
+  // Flat list for mobile
+  const mobileNavItems = [
+    homeItem,
+    ...navCategories.flatMap((cat) => cat.items),
   ];
 
   const isActive = (path) => {
@@ -81,9 +110,29 @@ const PublicHeader = () => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
-  // Close menu when clicking outside
+  const isCategoryActive = (category) =>
+    category.items.some((item) => isActive(item.path));
+
+  const toggleDropdown = (id) => {
+    setOpenDropdown((prev) => (prev === id ? null : id));
+  };
+
+  // Close dropdown on outside click
+  useEffect(() => {
+    if (!openDropdown) return;
+    const handleClickOutside = (e) => {
+      if (!e.target.closest('.nav-category-wrapper')) {
+        setOpenDropdown(null);
+      }
+    };
+    document.addEventListener('click', handleClickOutside);
+    return () => document.removeEventListener('click', handleClickOutside);
+  }, [openDropdown]);
+
+  // Close menus when clicking outside
   const handleOverlayClick = () => {
     setMobileMenuOpen(false);
+    setOpenDropdown(null);
   };
 
   // Prevent body scroll when menu is open
@@ -98,9 +147,10 @@ const PublicHeader = () => {
     };
   }, [mobileMenuOpen]);
 
-  // Close menu on route change
+  // Close menus on route change
   useEffect(() => {
     setMobileMenuOpen(false);
+    setOpenDropdown(null);
   }, [location.pathname]);
 
   // Prefetch likely next pages on hover for faster navigation (fast-loading plan)
@@ -201,7 +251,7 @@ const PublicHeader = () => {
                     />
                   )}
                   <ul className={`nav-links ${mobileMenuOpen ? 'mobile-open' : ''}`}>
-                    {navigationItems.map((item) => (
+                    {mobileNavItems.map((item) => (
                       <li key={item.path}>
                         <Link
                           to={item.path}
@@ -220,35 +270,47 @@ const PublicHeader = () => {
               )
             ) : (
               <>
-                <button
-                  type="button"
-                  className="mobile-menu-toggle"
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                  aria-label={mobileMenuOpen ? 'Funga menyu' : 'Fungua menyu'}
-                  aria-expanded={mobileMenuOpen}
-                >
-                  <i className={`fas ${mobileMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
-                  <span className="menu-toggle-text">{mobileMenuOpen ? 'Funga' : 'Menyu'}</span>
-                </button>
-                {mobileMenuOpen && (
-                  <div
-                    className="mobile-menu-overlay"
-                    onClick={handleOverlayClick}
-                    aria-hidden="true"
-                  />
-                )}
-                <ul className={`nav-links ${mobileMenuOpen ? 'mobile-open' : ''}`}>
-                  {navigationItems.map((item) => (
-                    <li key={item.path}>
-                      <Link
-                        to={item.path}
-                        className={isActive(item.path) ? 'active' : ''}
-                        onClick={() => setMobileMenuOpen(false)}
-                        onMouseEnter={getPrefetchHandler(item.path)}
+                <ul className="nav-links">
+                  <li>
+                    <Link
+                      to={homeItem.path}
+                      className={isActive(homeItem.path) ? 'active' : ''}
+                    >
+                      <i className={`fas ${homeItem.icon}`}></i>
+                      <span className="nav-link-text">{homeItem.label}</span>
+                    </Link>
+                  </li>
+                  {navCategories.map((category) => (
+                    <li key={category.id} className="nav-category-wrapper">
+                      <button
+                        type="button"
+                        className={`nav-category-btn ${isCategoryActive(category) ? 'category-active' : ''} ${openDropdown === category.id ? 'open' : ''}`}
+                        onClick={() => toggleDropdown(category.id)}
+                        aria-expanded={openDropdown === category.id}
+                        aria-haspopup="true"
                       >
-                        <i className={`fas ${item.icon}`}></i>
-                        <span className="nav-link-text">{item.label}</span>
-                      </Link>
+                        <i className={`fas ${category.icon}`}></i>
+                        <span className="nav-link-text">{category.label}</span>
+                        <i className={`fas fa-chevron-down nav-category-chevron ${openDropdown === category.id ? 'rotated' : ''}`}></i>
+                      </button>
+                      {openDropdown === category.id && (
+                        <ul className="nav-category-dropdown" role="menu">
+                          {category.items.map((item) => (
+                            <li key={item.path} role="none">
+                              <Link
+                                to={item.path}
+                                className={isActive(item.path) ? 'active' : ''}
+                                onClick={() => setOpenDropdown(null)}
+                                onMouseEnter={getPrefetchHandler(item.path)}
+                                role="menuitem"
+                              >
+                                <i className={`fas ${item.icon}`}></i>
+                                <span>{item.label}</span>
+                              </Link>
+                            </li>
+                          ))}
+                        </ul>
+                      )}
                     </li>
                   ))}
                 </ul>

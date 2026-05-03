@@ -2736,8 +2736,16 @@ router.post('/necta/import', async (req, res) => {
     }
     const exam = (exam_type + '').toLowerCase();
     const yearInt = parseInt(year, 10);
-    if (!['ftna', 'csee', 'acsee'].includes(exam) || isNaN(yearInt)) {
-      return res.status(400).json({ message: 'Invalid exam_type or year' });
+    const currentYear = new Date().getFullYear();
+    const maxYear = currentYear + 1;
+    
+    // ACSEE (Form VI) starts from 2026, FTNA/CSEE start from 2020
+    const minYear = exam === 'acsee' ? 2026 : 2020;
+    
+    if (!['ftna', 'csee', 'acsee'].includes(exam) || isNaN(yearInt) || yearInt < minYear || yearInt > maxYear) {
+      return res.status(400).json({ 
+        message: `Invalid exam_type or year. Year must be between ${minYear} and ${maxYear} for ${exam.toUpperCase()}` 
+      });
     }
     await ensureNectaTables();
 

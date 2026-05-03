@@ -230,13 +230,6 @@ const HomePage = () => {
           </div>
         </section>
 
-        {/* Short intro for SEO and visitors */}
-        <section className="home-intro" aria-label="About Arusha Catholic Seminary">
-          <p className="home-intro-text">
-            Seminari ya Kikatoliki Arusha (namba ya kituo S0171) ni shule ya sekondari ya Kikatoliki iliyopo Arusha, Tanzania, inayotoa elimu ya O-Level na A-Level kuanzia Kidato cha I hadi VI, huku ikikuza masomo bora, malezi ya kiroho, na tabia njema; tovuti hii ina taarifa za udahili, watumishi, matokeo ya NECTA, ada, na mawasiliano.
-          </p>
-        </section>
-
         {/* Administrators Section */}
         <section className="administration-section">
           <div className="administration-container">

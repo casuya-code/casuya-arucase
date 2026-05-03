@@ -7,7 +7,32 @@ const AdminSidebar = () => {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
   const location = useLocation();
+
   const navigate = useNavigate();
+
+  // Accordion: expanded category indices (initialized in useEffect to avoid TDZ)
+  const [expandedCategories, setExpandedCategories] = useState([]);
+
+  useEffect(() => {
+    try {
+      const saved = localStorage.getItem('adminSidebarExpanded');
+      if (saved) {
+        setExpandedCategories(JSON.parse(saved));
+        return;
+      }
+    } catch {}
+    setExpandedCategories(navigationItems.map((_, i) => i));
+  }, []);
+
+  const toggleCategory = (index) => {
+    setExpandedCategories((prev) => {
+      const next = prev.includes(index)
+        ? prev.filter((i) => i !== index)
+        : [...prev, index];
+      localStorage.setItem('adminSidebarExpanded', JSON.stringify(next));
+      return next;
+    });
+  };
   const { logout, user } = useAuth();
 
   // Helper: get modules array from user.permissions
@@ -151,8 +176,6 @@ const AdminSidebar = () => {
     })
     .filter(category => category.items.length > 0);
 
-  // Flatten all items for mobile menu (after filtering)
-  const allMenuItems = filteredNavigationItems.flatMap(category => category.items);
 
   const isActive = (path) => {
     if (path === '/admin') {
@@ -229,12 +252,24 @@ const AdminSidebar = () => {
         <nav className="sidebar-nav">
           {/* Desktop Navigation - Grouped by Category */}
           <div className="sidebar-nav-desktop">
-            {filteredNavigationItems.map((category, catIndex) => (
-              <div key={catIndex} className="nav-category">
-                {!sidebarCollapsed && (
-                  <div className="category-title">{category.category}</div>
-                )}
-                <ul className="nav-items">
+            {filteredNavigationItems.map((category, catIndex) => {
+              const isExpanded = expandedCategories.includes(catIndex);
+              return (
+                <div key={catIndex} className={`nav-category ${isExpanded ? 'expanded' : ''}`}>
+                  {!sidebarCollapsed && (
+                    <button
+                      className="category-header"
+                      onClick={() => toggleCategory(catIndex)}
+                      aria-expanded={isExpanded}
+                    >
+                      <span className="category-title-text">{category.category}</span>
+                      <i className={`fas fa-chevron-right category-chevron ${isExpanded ? 'rotated' : ''}`}></i>
+                    </button>
+                  )}
+                  {sidebarCollapsed && (
+                    <div className="category-title">{category.category}</div>
+                  )}
+                  <ul className={`nav-items category-items ${isExpanded ? 'open' : ''}`}>
                   {category.items.map((item) => (
                     <li key={item.path}>
                       <Link 
@@ -249,25 +284,41 @@ const AdminSidebar = () => {
                   ))}
                 </ul>
               </div>
-            ))}
+            );
+            })}
           </div>
 
-          {/* Mobile Navigation - Flat List */}
+          {/* Mobile Navigation - Accordion Categories */}
           <div className="sidebar-nav-mobile">
-            <ul className="mobile-nav-items">
-              {allMenuItems.map((item) => (
-                <li key={item.path}>
-                  <Link 
-                    to={item.path} 
-                    className={`mobile-nav-item ${isActive(item.path) ? 'active' : ''}`}
-                    onClick={() => setMobileMenuOpen(false)}
+            {filteredNavigationItems.map((category, catIndex) => {
+              const isExpanded = expandedCategories.includes(catIndex);
+              return (
+                <div key={catIndex} className={`mobile-nav-category ${isExpanded ? 'expanded' : ''}`}>
+                  <button
+                    className="mobile-category-header"
+                    onClick={() => toggleCategory(catIndex)}
+                    aria-expanded={isExpanded}
                   >
-                    <i className={`fas ${item.icon}`}></i>
-                    <span className="nav-item-text">{item.label}</span>
-                  </Link>
-                </li>
-              ))}
-            </ul>
+                    <span className="category-title-text">{category.category}</span>
+                    <i className={`fas fa-chevron-right category-chevron ${isExpanded ? 'rotated' : ''}`}></i>
+                  </button>
+                  <ul className={`mobile-nav-items mobile-category-items ${isExpanded ? 'open' : ''}`}>
+                    {category.items.map((item) => (
+                      <li key={item.path}>
+                        <Link 
+                          to={item.path} 
+                          className={`mobile-nav-item ${isActive(item.path) ? 'active' : ''}`}
+                          onClick={() => setMobileMenuOpen(false)}
+                        >
+                          <i className={`fas ${item.icon}`}></i>
+                          <span className="nav-item-text">{item.label}</span>
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              );
+            })}
           </div>
         </nav>
 

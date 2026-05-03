@@ -175,8 +175,19 @@ const NECTAUrls = () => {
   ];
 
   const currentYear = new Date().getFullYear();
-  const years = Array.from({ length: 15 }, (_, i) => currentYear - 5 + i);
-  const allYears = Array.from({ length: 11 }, (_, i) => 2020 + i); // 2020-2030
+  const endYear = currentYear + 2; // current + 1 (exclusive upper bound)
+  
+  // Generate year ranges based on exam type
+  // FTNA/CSEE: 2020 to current+1
+  // ACSEE: 2026 to current+1
+  const getYearsForExamType = (examType) => {
+    const startYear = examType === 'acsee' ? 2026 : 2020;
+    const years = [];
+    for (let year = startYear; year < endYear; year++) {
+      years.push(year);
+    }
+    return years;
+  };
 
   // Group URLs by exam type
   const groupedUrls = urls.reduce((acc, url) => {
@@ -256,7 +267,7 @@ const NECTAUrls = () => {
                             </tr>
                           </thead>
                           <tbody>
-                            {allYears.map((year) => {
+                            {getYearsForExamType(examType.value).map((year) => {
                               const existingUrl = examUrls[year];
                               const defaultUrl = generateDefaultUrlForYear(examType.value, year);
                               return (
@@ -406,7 +417,7 @@ const NECTAUrls = () => {
                             className="excel-input"
                             required
                           >
-                            {allYears.map((year) => (
+                            {getYearsForExamType(formData.exam_type).map((year) => (
                               <option key={`necta-${year}`} value={year}>
                                 {year}
                               </option>

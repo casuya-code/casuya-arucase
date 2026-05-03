@@ -6,7 +6,8 @@
   color: white;
   padding: 0;
   position: relative;
-  overflow: hidden;
+  z-index: 2000;
+  overflow: visible;
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
@@ -338,7 +339,8 @@
   max-width: 100%;
   box-sizing: border-box;
   position: relative;
-  z-index: 10;
+  z-index: 1005;
+  overflow: visible;
 }
 
 .nav-container {
@@ -390,6 +392,8 @@
   margin: 0;
   padding: 0;
   align-items: center;
+  position: relative;
+  z-index: 1002;
 }
 
 .nav-links li {
@@ -439,6 +443,129 @@
   border-color: rgba(255,255,255,0.6);
   font-weight: 700;
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.3);
+}
+
+/* Category dropdown button */
+.nav-category-wrapper {
+  position: relative;
+  z-index: 1001;
+}
+
+.nav-category-btn {
+  color: white;
+  text-decoration: none;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: clamp(0.2px, 0.08vw, 1px);
+  font-size: clamp(0.55rem, 1.6vw, 0.7rem);
+  transition: all 0.2s ease;
+  padding: clamp(8px, 1.8vw, 10px) clamp(10px, 2vw, 14px);
+  border-radius: 4px;
+  background: #2563eb;
+  border: 1px solid rgba(255,255,255,0.3);
+  font-family: 'Franklin Gothic Book', 'Franklin Gothic', 'Arial', sans-serif;
+  white-space: nowrap;
+  display: inline-flex;
+  align-items: center;
+  gap: clamp(4px, 1vw, 6px);
+  cursor: pointer;
+}
+
+.nav-category-btn:hover {
+  background: #1e40af;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  border-color: rgba(255,255,255,0.5);
+}
+
+.nav-category-btn.category-active {
+  background: #1e40af;
+  border-color: rgba(255,255,255,0.6);
+  font-weight: 700;
+}
+
+.nav-category-btn i {
+  font-size: clamp(0.65rem, 1.8vw, 0.8rem);
+  flex-shrink: 0;
+}
+
+.nav-category-chevron {
+  font-size: clamp(0.5rem, 1.2vw, 0.6rem) !important;
+  transition: transform 0.25s ease;
+  margin-left: 2px;
+}
+
+.nav-category-chevron.rotated {
+  transform: rotate(180deg);
+}
+
+/* Category dropdown menu */
+.nav-category-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  margin-top: 4px;
+  background: #1e40af;
+  border: 1px solid rgba(255,255,255,0.3);
+  border-radius: 6px;
+  list-style: none;
+  padding: 0.25rem 0;
+  min-width: 200px;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
+  z-index: 1000;
+  animation: dropdownFadeIn 0.15s ease;
+}
+
+@keyframes dropdownFadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.nav-category-dropdown li {
+  width: 100%;
+}
+
+.nav-category-dropdown a {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.65rem 1rem;
+  color: rgba(255, 255, 255, 0.9);
+  text-decoration: none;
+  font-weight: 600;
+  font-size: clamp(0.6rem, 1.4vw, 0.75rem);
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  transition: background 0.15s ease;
+  white-space: nowrap;
+  border-radius: 0;
+  border: none;
+  background: none;
+  font-family: 'Franklin Gothic Book', 'Franklin Gothic', 'Arial', sans-serif;
+}
+
+.nav-category-dropdown a:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.nav-category-dropdown a.active {
+  background: rgba(96, 165, 250, 0.25);
+  color: white;
+  font-weight: 700;
+}
+
+.nav-category-dropdown a i {
+  font-size: 0.85rem;
+  width: 18px;
+  text-align: center;
+  flex-shrink: 0;
 }
 
 /* Responsive Design */
@@ -492,6 +619,11 @@
 
   .mobile-menu-toggle {
     display: flex;
+  }
+
+  /* Hide category dropdowns on mobile — full flat list is shown instead */
+  .nav-category-wrapper {
+    display: none;
   }
 
   /* Stack entire header above chatbot (10000) so mobile menu and toggle are visible */

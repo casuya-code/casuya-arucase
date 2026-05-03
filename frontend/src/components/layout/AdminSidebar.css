@@ -97,9 +97,57 @@
 
 /* Navigation Category */
 .nav-category {
-  margin-bottom: 1.5rem;
+  margin-bottom: 0.75rem;
 }
 
+/* Category header (accordion toggle) */
+.category-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0.5rem 1rem;
+  background: none;
+  border: none;
+  cursor: pointer;
+  color: rgba(255, 255, 255, 0.6);
+  transition: color 0.2s ease;
+}
+
+.category-header:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.category-title-text {
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  pointer-events: none;
+}
+
+.category-chevron {
+  font-size: 0.7rem;
+  transition: transform 0.25s ease;
+  pointer-events: none;
+}
+
+.category-chevron.rotated {
+  transform: rotate(90deg);
+}
+
+/* Collapsible items container */
+.category-items {
+  max-height: 0;
+  overflow: hidden;
+  transition: max-height 0.3s ease;
+}
+
+.category-items.open {
+  max-height: 600px;
+}
+
+/* Legacy category title for collapsed sidebar */
 .category-title {
   padding: 0.5rem 1rem;
   font-size: 0.75rem;
@@ -120,12 +168,12 @@
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  padding: 0.75rem 1rem;
+  padding: 0.6rem 1rem;
   color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
   transition: all 0.2s ease;
   border-left: 3px solid transparent;
-  margin: 0.25rem 0;
+  margin: 0.15rem 0;
 }
 
 .nav-item:hover {
@@ -318,6 +366,59 @@
     display: none;
   }
 
+  /* Mobile accordion category */
+  .mobile-nav-category {
+    margin-bottom: 0.25rem;
+  }
+
+  .mobile-category-header {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 1rem 1.5rem;
+    background: rgba(255, 255, 255, 0.08);
+    border: none;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    cursor: pointer;
+    color: rgba(255, 255, 255, 0.7);
+    min-height: 56px;
+    touch-action: manipulation;
+    transition: background 0.2s ease, color 0.2s ease;
+  }
+
+  .mobile-category-header:hover,
+  .mobile-category-header:active {
+    background: rgba(255, 255, 255, 0.12);
+    color: rgba(255, 255, 255, 0.95);
+  }
+
+  .mobile-category-header .category-title-text {
+    font-size: 0.85rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    pointer-events: none;
+  }
+
+  .mobile-category-header .category-chevron {
+    font-size: 0.8rem;
+    pointer-events: none;
+  }
+
+  .mobile-category-items {
+    max-height: 0;
+    overflow: hidden;
+    transition: max-height 0.3s ease;
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .mobile-category-items.open {
+    max-height: 600px;
+  }
+
   .mobile-nav-items {
     list-style: none;
     padding: 0;
@@ -328,12 +429,12 @@
     display: flex;
     align-items: center;
     gap: 0.75rem;
-    padding: 1.25rem 1.5rem;
+    padding: 1rem 1.5rem 1rem 2rem;
     color: rgba(255, 255, 255, 0.9);
     text-decoration: none;
     transition: all 0.2s ease;
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    background: rgba(255, 255, 255, 0.05);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    background: rgba(255, 255, 255, 0.03);
     width: 100%;
     min-height: 52px;
     touch-action: manipulation;

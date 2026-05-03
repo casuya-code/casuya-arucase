@@ -683,12 +683,18 @@ router.post('/necta-results', async (req, res) => {
       });
     }
     
-    // Validate year
+    // Validate year - dynamic ranges based on exam type
     const yearInt = parseInt(year);
-    if (isNaN(yearInt) || yearInt < 2020 || yearInt > 2030) {
+    const currentYear = new Date().getFullYear();
+    const maxYear = currentYear + 1;
+    
+    // ACSEE (Form VI) starts from 2026, FTNA/CSEE start from 2020
+    const minYear = exam_type === 'acsee' ? 2026 : 2020;
+    
+    if (isNaN(yearInt) || yearInt < minYear || yearInt > maxYear) {
       return res.status(400).json({ 
         success: false, 
-        message: `Year must be between 2020 and 2030` 
+        message: `Year must be between ${minYear} and ${maxYear} for ${exam_type.toUpperCase()}` 
       });
     }
     
