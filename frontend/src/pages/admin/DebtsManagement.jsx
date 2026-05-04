@@ -447,7 +447,7 @@ const DebtsManagement = ({ formLevel }) => {
                 <h3>Error Loading Students</h3>
                 <p>{studentsError.response?.data?.message || studentsError.message || 'Failed to load students. Please try again.'}</p>
                 <p style={{ fontSize: '12px', color: '#666', marginTop: '10px' }}>
-                  Debug: Level={normalizedLevel} | Stream={normalizedStream} | Year={year}
+                  Level={normalizedLevel} | Stream={normalizedStream} | Year={year}
                 </p>
               </div>
             ) : students.length === 0 ? (
@@ -456,7 +456,7 @@ const DebtsManagement = ({ formLevel }) => {
                 <h3>No Students Found</h3>
                 <p>No students have been registered for this class yet.</p>
                 <p style={{ fontSize: '12px', color: '#666', marginTop: '10px' }}>
-                  Debug: Level={normalizedLevel} | Stream={normalizedStream} | Year={year}
+                  Level={normalizedLevel} | Stream={normalizedStream} | Year={year}
                 </p>
               </div>
             ) : (

@@ -2,31 +2,37 @@
  * School Branding Styles
  */
 .branding-page-container {
-  padding: 2rem;
+  width: 100%;
+  max-width: 100%;
+  padding: 0;
+  margin: 0;
+  box-sizing: border-box;
 }
 
 .loading-state {
   text-align: center;
-  padding: 3rem;
+  padding: clamp(0.5rem, 2vw, 1rem);
   color: #6b7280;
 }
 
 .current-logo-section,
 .signature-section {
-  margin-bottom: 2rem;
-  padding-bottom: 2rem;
+  margin-bottom: clamp(0.5rem, 2vw, 1rem);
+  padding-bottom: clamp(0.5rem, 2vw, 1rem);
   border-bottom: 2px solid #e5e7eb;
 }
 
 .current-logo-section:last-child,
 .signature-section:last-child {
   border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
 
 .current-logo-section h3,
 .signature-section h3,
 .upload-section h4 {
-  margin: 0 0 1rem 0;
+  margin: 0 0 clamp(0.5rem, 1.5vw, 0.75rem) 0;
   color: #111827;
 }
 
@@ -35,30 +41,30 @@
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 1rem;
-  padding: 1.5rem;
+  gap: clamp(0.25rem, 1vw, 0.5rem);
+  padding: clamp(0.25rem, 1vw, 0.5rem);
   background: #f9fafb;
   border-radius: 0;
   border: 1px solid #e5e7eb;
 }
 
 .logo-image {
-  max-width: 200px;
-  max-height: 200px;
+  max-width: min(200px, 90vw);
+  max-height: clamp(150px, 20vw, 200px);
   object-fit: contain;
   border-radius: 0;
 }
 
 .stamp-image {
-  max-width: 300px;
-  max-height: 300px;
+  max-width: min(300px, 90vw);
+  max-height: clamp(200px, 25vw, 300px);
   object-fit: contain;
   border-radius: 0;
 }
 
 .signature-image {
-  max-width: 400px;
-  max-height: 80px;
+  max-width: min(400px, 90vw);
+  max-height: clamp(60px, 8vw, 80px);
   object-fit: contain;
   border-radius: 0;
 }
@@ -68,7 +74,7 @@
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 3rem;
+  padding: clamp(1rem, 3vw, 2rem);
   background: #f9fafb;
   border-radius: 0;
   border: 2px dashed #d1d5db;
@@ -95,10 +101,10 @@
 .upload-area {
   border: 2px dashed #d1d5db;
   border-radius: 0;
-  padding: 3rem;
+  padding: clamp(1rem, 3vw, 2rem);
   text-align: center;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.236s;
   background: #f9fafb;
 }
 
@@ -113,9 +119,9 @@
 }
 
 .upload-icon {
-  font-size: 3rem;
+  font-size: clamp(1.5rem, 4vw, 3rem);
   color: #6b7280;
-  margin-bottom: 1rem;
+  margin-bottom: clamp(0.5rem, 1.5vw, 1rem);
 }
 
 .upload-area:hover .upload-icon,
@@ -124,16 +130,16 @@
 }
 
 .upload-text {
-  font-size: 1.125rem;
-  font-weight: 500;
+  font-size: clamp(0.875rem, 2vw, 1.125rem);
+  font-weight: 600;
   color: #374151;
-  margin: 0.5rem 0;
+  margin-bottom: clamp(0.25rem, 1vw, 0.5rem);
 }
 
 .upload-hint {
-  font-size: 0.875rem;
+  font-size: clamp(0.75rem, 2vw, 0.875rem);
   color: #6b7280;
-  margin: 0.5rem 0 0 0;
+  margin-top: clamp(0.25rem, 1vw, 0.5rem);
 }
 
 .upload-progress {
@@ -171,10 +177,10 @@
 }
 
 .excel-input {
-  padding: 0.75rem;
+  padding: clamp(0.25rem, 1vw, 0.5rem);
   border: 1px solid #d1d5db;
-  border-radius: 4px;
-  font-size: 1rem;
+  border-radius: 0;
+  font-size: clamp(0.875rem, 2vw, 1rem);
   font-family: inherit;
 }
 
@@ -188,56 +194,244 @@
   margin-top: 1.5rem;
 }
 
-.excel-btn {
-  padding: 0.75rem 1.5rem;
-  border: none;
-  border-radius: 6px;
-  cursor: pointer;
-  font-size: 1rem;
-  font-weight: 500;
-  transition: all 0.2s;
-  display: inline-flex;
+
+.signature-row {
+  display: flex;
+  gap: clamp(0.75rem, 2vw, var(--fibonacci-21)); /* Responsive gap */
+  align-items: flex-start;
+  width: 100%;
+}
+
+.signature-preview-compact {
+  display: flex;
+  flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  text-decoration: none;
-  color: white;
+  gap: clamp(0.5rem, 1.5vw, var(--fibonacci-13)); /* Responsive gap */
+  flex: 1; /* Equal width - half of the row */
+  min-width: 0; /* Prevent flex items from overflowing */
+  padding: clamp(0.75rem, 2vw, 1rem);
 }
 
-.excel-btn:disabled {
-  opacity: 0.6;
-  cursor: not-allowed;
+.signature-image-small {
+  max-width: min(200px, 90vw); /* Responsive max width */
+  max-height: clamp(40px, 8vw, 50px); /* Responsive height */
+  width: 100%;
+  object-fit: contain;
+  border-radius: 0;
 }
 
-.excel-btn.primary {
-  background: #3b82f6;
+.logo-placeholder-small {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(0.75rem, 2vw, 1rem);
+  background: #f9fafb;
+  border-radius: 0;
+  border: 2px dashed #d1d5db;
+  color: #6b7280;
+  min-width: clamp(120px, 25vw, 150px); /* Responsive min width */
+  min-height: clamp(40px, 8vw, 50px); /* Responsive height */
 }
 
-.excel-btn.primary:hover:not(:disabled) {
-  background: #2563eb;
+.placeholder-icon-small {
+  font-size: clamp(1rem, 3vw, 1.5rem); /* Responsive icon size */
+  margin-bottom: clamp(0.25rem, 0.75vw, 0.5rem);
+  color: #9ca3af;
 }
 
-.excel-btn.danger {
-  background: #ef4444;
+.upload-section-compact {
+  flex: 1; /* Equal width - half of the row */
+  min-width: 0; /* Prevent flex items from overflowing */
+  padding: clamp(0.5rem, 1.5vw, 1rem);
 }
 
-.excel-btn.danger:hover {
-  background: #dc2626;
+.upload-area-small {
+  border: 2px dashed #d1d5db;
+  border-radius: 0;
+  padding: clamp(0.75rem, 2vw, 1rem);
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.236s;
+  background: #f9fafb;
+  min-height: clamp(80px, 15vw, 120px); /* Responsive height */
 }
 
-.excel-btn.small {
-  padding: 0.5rem 1rem;
+.upload-area-small:hover {
+  border-color: #3b82f6;
+  background: #eff6ff;
+}
+
+.upload-area-small.drag-active {
+  border-color: #3b82f6;
+  background: #dbeafe;
+}
+
+.upload-icon-small {
+  font-size: clamp(1.25rem, 3vw, 1.5rem); /* Responsive icon size */
+  color: #6b7280;
+  margin-bottom: clamp(0.375rem, 1vw, 0.5rem);
+}
+
+.upload-area-small:hover .upload-icon-small,
+.upload-area-small.drag-active .upload-icon-small {
+  color: #3b82f6;
+}
+
+.upload-text-small {
+  font-size: clamp(0.75rem, 2vw, 0.875rem); /* Responsive text size */
+  font-weight: 500;
+  color: #374151;
+  margin: clamp(0.25rem, 0.75vw, 0.5rem) 0;
+}
+
+.upload-hint-small {
+  font-size: clamp(0.625rem, 1.5vw, 0.75rem); /* Responsive text size */
+  color: #6b7280;
+  margin: clamp(0.25rem, 0.75vw, 0.5rem) 0 0 0;
+}
+
+.upload-progress-small {
+  margin-top: 0.5rem;
+  text-align: center;
+  color: #3b82f6;
+  font-weight: 500;
   font-size: 0.875rem;
 }
 
+/* Mobile Devices - 320px to 768px */
 @media (max-width: 768px) {
+  .branding-page-container {
+    max-width: 100%;
+    padding: 0 clamp(0.5rem, 3vw, 1rem);
+    margin: 0;
+  }
+
+  .excel-card {
+    margin: 0;
+    width: 100%;
+  }
+
+  .excel-card-body {
+    padding: clamp(0.75rem, 4vw, 1rem);
+  }
+
   .form-row {
     grid-template-columns: 1fr;
+    gap: clamp(0.5rem, 2vw, 0.75rem);
   }
 
   .logo-image,
   .stamp-image,
   .signature-image {
     max-width: 100%;
+  }
+
+  .signature-row {
+    flex-direction: column;
+    gap: clamp(0.75rem, 3vw, 1rem);
+    width: 100%;
+  }
+
+  .signature-preview-compact {
+    align-self: stretch;
+    order: 1;
+    width: 100%;
+  }
+
+  .upload-section-compact {
+    min-width: auto;
+    order: 2;
+    width: 100%;
+  }
+
+  .signature-image-small {
+    max-width: 100%;
+    max-height: clamp(35px, 10vw, 45px);
+  }
+
+  .logo-placeholder-small {
+    min-width: 100%;
+    width: 100%;
+  }
+
+  .upload-area-small {
+    min-height: clamp(70px, 20vw, 100px);
+    width: 100%;
+  }
+
+  .upload-progress-small {
+    font-size: clamp(0.75rem, 2.5vw, 0.875rem);
+  }
+
+  .form-actions {
+    display: flex;
+    justify-content: stretch;
+    gap: clamp(0.5rem, 2vw, 0.75rem);
+  }
+
+  .form-actions .excel-btn {
+    flex: 1;
+    width: 100%;
+  }
+}
+
+/* Tablet Devices - 768px to 1024px */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .signature-row {
+    gap: clamp(1rem, 2.5vw, var(--fibonacci-21));
+  }
+
+  .signature-image-small {
+    max-width: min(180px, 85vw);
+    max-height: clamp(45px, 7vw, 50px);
+  }
+
+  .logo-placeholder-small {
+    min-width: clamp(110px, 20vw, 140px);
+    min-height: clamp(45px, 7vw, 50px);
+  }
+
+  .upload-area-small {
+    min-height: clamp(90px, 12vw, 110px);
+  }
+
+  .upload-icon-small {
+    font-size: clamp(1.125rem, 2.5vw, 1.375rem);
+  }
+}
+
+/* Large Tablets - 1025px to 1440px */
+@media (min-width: 1025px) and (max-width: 1440px) {
+  .signature-row {
+    gap: clamp(1.25rem, 2vw, var(--fibonacci-21));
+  }
+
+  .signature-image-small {
+    max-width: min(190px, 45vw);
+  }
+
+  .logo-placeholder-small {
+    min-width: clamp(130px, 22vw, 145px);
+  }
+}
+
+/* Large Desktops - 1441px and above */
+@media (min-width: 1441px) {
+  .signature-row {
+    gap: var(--fibonacci-21);
+  }
+
+  .signature-image-small {
+    max-width: 200px;
+  }
+
+  .logo-placeholder-small {
+    min-width: 150px;
+  }
+
+  .upload-area-small {
+    min-height: 120px;
   }
 }
 

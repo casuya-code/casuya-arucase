@@ -650,11 +650,7 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
                   ⚠️ For {normalizedLevel}, a stream parameter is required in the URL.
                 </p>
               )}
-              <p style={{ fontSize: '14px', color: '#666', marginBottom: '10px' }}>Debug Info:</p>
-              <pre style={{ background: '#f5f5f5', padding: '10px', borderRadius: '4px', fontSize: '12px', overflow: 'auto' }}>
-                {JSON.stringify({ normalizedLevel, year, month, subjectCode, normalizedStream, stream, hasValidStream, isFormVOrVILevel, formLevelParam, params }, null, 2)}
-              </pre>
-              <Link to="/admin/score-entry" className="excel-btn primary" style={{ marginTop: '20px' }}>
+                            <Link to="/admin/score-entry" className="excel-btn primary" style={{ marginTop: '20px' }}>
                 <i className="fas fa-arrow-left"></i> Back to Score Entry
               </Link>
             </div>
@@ -706,7 +702,7 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
                 <h3>Error Loading Students</h3>
                 <p>{studentsError.message || 'Failed to load students. Please try again.'}</p>
                 <p style={{ fontSize: '12px', color: '#666', marginTop: '10px' }}>
-                  Debug: {normalizedLevel} | {normalizedStream} | {year}
+                  {normalizedLevel} | {normalizedStream} | {year}
                 </p>
               </div>
             ) : studentsLoading ? (

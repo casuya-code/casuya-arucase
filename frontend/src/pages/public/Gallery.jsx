@@ -187,7 +187,7 @@ const Gallery = () => {
         ) : filteredPhotos.length === 0 ? (
           <div className="empty-gallery">
             <i className="fas fa-images"></i>
-            <p>Hakuna picha zilizopatikana kwenye kundi hili.</p>
+            <p>Galeria bado haina picha. Tafadhali tembelea tena baadaye.</p>
             <button
               type="button"
               className="gallery-retry-btn"

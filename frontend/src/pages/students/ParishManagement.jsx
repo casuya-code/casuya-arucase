@@ -656,7 +656,7 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
                 </p>
                 {studentsError.response?.status !== 401 && (
                   <p style={{ fontSize: '12px', color: '#666', marginTop: '10px' }}>
-                    Debug: {normalizedLevel} | {stream} | {apiYear}
+                    {normalizedLevel} | {stream} | {apiYear}
                   </p>
                 )}
               </div>
@@ -668,7 +668,7 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
                 <h3>No Students Found</h3>
                 <p>No students registered for this class yet.</p>
                 <p style={{ fontSize: '12px', color: '#666', marginTop: '10px' }}>
-                  Debug: {normalizedLevel} | {stream} | {apiYear}
+                  {normalizedLevel} | {stream} | {apiYear}
                 </p>
               </div>
             ) : (

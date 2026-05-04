@@ -191,7 +191,7 @@
   z-index: 1;
   width: 100%;
   padding: clamp(4px, 1vw, 7px);
-  border-radius: 3px;
+  border-radius: 0;
   background:
     linear-gradient(
       180deg,
@@ -217,7 +217,7 @@
 .header-tropical-frame__mat {
   background: linear-gradient(180deg, #faf8f3 0%, #f0ebe3 100%);
   padding: clamp(2px, 0.55vw, 5px);
-  border-radius: 2px;
+  border-radius: 0;
   box-shadow:
     inset 0 0 0 1px rgba(255, 255, 255, 0.65),
     inset 0 0 0 2px rgba(61, 45, 34, 0.1);
@@ -306,7 +306,7 @@
 .school-info .banner {
   background: #1e3a8a;
   padding: clamp(6px, 2vw, 10px) clamp(8px, 2.5vw, 18px);
-  border-radius: 4px;
+  border-radius: 0;
   font-size: clamp(0.65rem, 1.8vw, 0.9rem);
   font-weight: 600;
   display: inline-block;
@@ -359,7 +359,7 @@
   font-size: 1.25rem;
   cursor: pointer;
   padding: 0.75rem 1rem;
-  border-radius: 6px;
+  border-radius: 0;
   position: fixed;
   top: clamp(12px, 2.5vw, 18px);
   right: clamp(10px, 2vw, 20px);
@@ -409,7 +409,7 @@
   font-size: clamp(0.55rem, 1.6vw, 0.7rem);
   transition: all 0.2s ease;
   padding: clamp(8px, 1.8vw, 10px) clamp(10px, 2vw, 14px);
-  border-radius: 4px;
+  border-radius: 0;
   background: #2563eb;
   border: 1px solid rgba(255,255,255,0.3);
   position: relative;
@@ -460,7 +460,7 @@
   font-size: clamp(0.55rem, 1.6vw, 0.7rem);
   transition: all 0.2s ease;
   padding: clamp(8px, 1.8vw, 10px) clamp(10px, 2vw, 14px);
-  border-radius: 4px;
+  border-radius: 0;
   background: #2563eb;
   border: 1px solid rgba(255,255,255,0.3);
   font-family: 'Franklin Gothic Book', 'Franklin Gothic', 'Arial', sans-serif;
@@ -507,7 +507,7 @@
   margin-top: 4px;
   background: #1e40af;
   border: 1px solid rgba(255,255,255,0.3);
-  border-radius: 6px;
+  border-radius: 0;
   list-style: none;
   padding: 0.25rem 0;
   min-width: 200px;
@@ -535,6 +535,7 @@
   display: flex;
   align-items: center;
   gap: 0.6rem;
+  text-align: left;
   padding: 0.65rem 1rem;
   color: rgba(255, 255, 255, 0.9);
   text-decoration: none;
@@ -566,6 +567,10 @@
   width: 18px;
   text-align: center;
   flex-shrink: 0;
+}
+
+.nav-category-dropdown a span {
+  text-align: left;
 }
 
 /* Responsive Design */
@@ -701,12 +706,12 @@
 
   .nav-links::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
+    border-radius: 0;
   }
 
   .nav-links::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.7);
-    border-radius: 5px;
+    border-radius: 0;
     border: 2px solid rgba(255, 255, 255, 0.2);
   }
 

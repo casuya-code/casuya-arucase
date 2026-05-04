@@ -539,7 +539,7 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
                 )}
                 {!hasValidParams && (
                   <p style={{ fontSize: '0.85rem', color: '#f59e0b', marginTop: '0.5rem', fontFamily: 'monospace' }}>
-                    Debug: Invalid parameters - Level: "{normalizedLevel}", Stream: "{stream}", Year: {yearNum}
+                    Invalid parameters - Level: "{normalizedLevel}", Stream: "{stream}", Year: {yearNum}
                   </p>
                 )}
                 <p style={{ fontSize: '0.9rem', color: '#6b7280', marginTop: '0.5rem' }}>

@@ -234,52 +234,50 @@ const Authority = () => {
 
                 <div className="signature-section">
                   <h3>Signature Image</h3>
-                  {getSignatureUrl() && authorityData?.signature_image_path ? (
-                    <div className="signature-preview">
-                      <img
-                        src={getSignatureUrl()}
-                        alt="Authority Signature"
-                        className="signature-image"
-                        onError={(e) => {
-                          console.error('[Authority] Signature image load error:', e.target.src);
-                          e.target.style.display = 'none';
-                          const placeholder = e.target.nextElementSibling;
-                          if (placeholder) {
-                            placeholder.style.display = 'block';
-                          }
-                        }}
-                      />
-                      <div className="logo-placeholder" style={{ display: 'none' }}>
-                        <i className="fas fa-signature placeholder-icon"></i>
-                        <p>Signature image not found</p>
-                        <p className="text-muted" style={{ fontSize: '0.875rem', marginTop: '0.5rem' }}>
-                          {authorityData.signature_image_path}
-                        </p>
+                  <div className="signature-row">
+                    {getSignatureUrl() && authorityData?.signature_image_path ? (
+                      <div className="signature-preview-compact">
+                        <img
+                          src={getSignatureUrl()}
+                          alt="Authority Signature"
+                          className="signature-image-small"
+                          onError={(e) => {
+                            console.error('[Authority] Signature image load error:', e.target.src);
+                            e.target.style.display = 'none';
+                            const placeholder = e.target.nextElementSibling;
+                            if (placeholder) {
+                              placeholder.style.display = 'block';
+                            }
+                          }}
+                        />
+                        <div className="logo-placeholder-small" style={{ display: 'none' }}>
+                          <i className="fas fa-signature placeholder-icon-small"></i>
+                          <p style={{ fontSize: '0.75rem', margin: '0.25rem 0' }}>Signature image not found</p>
+                        </div>
+                        <button
+                          onClick={handleDeleteSignature}
+                          className="excel-btn danger small"
+                          disabled={deleteSignatureMutation.isLoading}
+                        >
+                          <i className="fas fa-trash"></i> Delete
+                        </button>
                       </div>
-                      <button
-                        onClick={handleDeleteSignature}
-                        className="excel-btn danger small"
-                        disabled={deleteSignatureMutation.isLoading}
-                      >
-                        <i className="fas fa-trash"></i> Delete Signature Image
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="logo-placeholder">
-                      <i className="fas fa-signature placeholder-icon"></i>
-                      <p>No signature image uploaded</p>
-                    </div>
-                  )}
+                    ) : (
+                      <div className="signature-preview-compact">
+                        <div className="logo-placeholder-small">
+                          <i className="fas fa-signature placeholder-icon-small"></i>
+                          <p style={{ fontSize: '0.75rem', margin: '0.25rem 0' }}>No signature uploaded</p>
+                        </div>
+                        <button
+                          onClick={() => fileInputRef.current?.click()}
+                          className="excel-btn primary small"
+                        >
+                          <i className="fas fa-upload"></i> Upload
+                        </button>
+                      </div>
+                    )}
 
-                  <div className="upload-section">
-                    <h4>Upload Signature Image</h4>
-                    <div
-                      className={`upload-area ${dragActive ? 'drag-active' : ''}`}
-                      onDrop={handleDrop}
-                      onDragOver={handleDragOver}
-                      onDragLeave={handleDragLeave}
-                      onClick={() => fileInputRef.current?.click()}
-                    >
+                    <div className="upload-section-compact">
                       <input
                         ref={fileInputRef}
                         type="file"
@@ -287,20 +285,28 @@ const Authority = () => {
                         onChange={handleFileInputChange}
                         style={{ display: 'none' }}
                       />
-                      <i className="fas fa-cloud-upload-alt upload-icon"></i>
-                      <p className="upload-text">
-                        {dragActive ? 'Drop signature here' : 'Click or drag signature to upload'}
-                      </p>
-                      <p className="upload-hint">
-                        Recommended: Width 200-400px, Height 40-80px (one line)
-                      </p>
-                    </div>
-
-                    {uploadSignatureMutation.isLoading && (
-                      <div className="upload-progress">
-                        <i className="fas fa-spinner fa-spin"></i> Uploading...
+                      <div
+                        className={`upload-area-small ${dragActive ? 'drag-active' : ''}`}
+                        onDrop={handleDrop}
+                        onDragOver={handleDragOver}
+                        onDragLeave={handleDragLeave}
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <i className="fas fa-cloud-upload-alt upload-icon-small"></i>
+                        <p className="upload-text-small">
+                          {dragActive ? 'Drop here' : 'Click or drag to upload'}
+                        </p>
+                        <p className="upload-hint-small">
+                          200-400px × 40-80px
+                        </p>
                       </div>
-                    )}
+
+                      {uploadSignatureMutation.isLoading && (
+                        <div className="upload-progress-small">
+                          <i className="fas fa-spinner fa-spin"></i> Uploading...
+                        </div>
+                      )}
+                    </div>
                   </div>
                 </div>
               </>

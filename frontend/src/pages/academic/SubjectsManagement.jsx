@@ -98,20 +98,6 @@ const SubjectsManagement = ({ formLevel: formLevelProp, stream: streamProp }) =>
 
   // Log errors and debug info
   useEffect(() => {
-    console.log('📊 Subjects Management Debug:', {
-      formLevelProp,
-      formLevelParam,
-      formLevel,
-      normalizedLevel,
-      streamProp,
-      streamParam,
-      normalizedStream,
-      year,
-      subjectsCount: subjects.length,
-      isLoading,
-      hasError: !!subjectsError
-    });
-    
     if (subjectsError) {
       console.error('❌ Subjects query error:', subjectsError);
       console.error('Error details:', {

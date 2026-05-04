@@ -14,6 +14,52 @@
   -webkit-overflow-scrolling: touch;
 }
 
+/* Responsive Chart Container */
+.chart-container {
+  width: 100%;
+  max-width: 100%;
+  height: clamp(300px, 50vw, 500px);
+  position: relative;
+  box-sizing: border-box;
+}
+
+.chart-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  max-height: 100%;
+}
+
+/* Mobile Chart Optimization */
+@media (max-width: 768px) {
+  .chart-container {
+    height: clamp(250px, 60vw, 400px);
+    margin: clamp(0.5rem, 2vw, 1rem) 0;
+  }
+  
+  .analytics-track-page .excel-card-body {
+    padding: clamp(0.75rem, 3vw, 1rem);
+  }
+  
+  /* Reduce font sizes in charts on mobile */
+  .chart-container .chartjs-render-monitor {
+    font-size: clamp(0.625rem, 2vw, 0.75rem) !important;
+  }
+}
+
+/* Tablet Chart Optimization */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .chart-container {
+    height: clamp(350px, 45vw, 450px);
+  }
+}
+
+/* Large Desktop Chart Optimization */
+@media (min-width: 1441px) {
+  .chart-container {
+    height: clamp(400px, 40vw, 500px);
+  }
+}
+
 .analytics-track-page .excel-card {
   background: transparent;
   border-radius: 0;
@@ -809,7 +855,7 @@
   gap: 1rem;
   padding: 1.5rem;
   background: #f9fafb;
-  border-radius: 8px;
+  border-radius: 0;
   border: 1px solid #e5e7eb;
   transition: all 0.2s ease;
 }
@@ -843,7 +889,7 @@
   padding: 1.5rem;
   background: #fef3c7;
   border-left: 4px solid #f59e0b;
-  border-radius: 6px;
+  border-radius: 0;
 }
 
 .implementation-note p {
@@ -863,7 +909,7 @@
   margin-bottom: clamp(1.5rem, 3vw, 2rem);
   padding: clamp(1rem, 2vw, 1.5rem);
   background: white;
-  border-radius: 8px;
+  border-radius: 0;
   border: 1px solid #e5e7eb;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
 }
@@ -886,7 +932,7 @@
 .filter-input {
   padding: clamp(0.625rem, 1.25vw, 0.75rem);
   border: 2px solid #d1d5db;
-  border-radius: 6px;
+  border-radius: 0;
   font-size: clamp(0.875rem, 2vw, 1rem);
   transition: all 0.2s ease;
   background: white;
@@ -909,7 +955,7 @@
 .excel-btn {
   padding: 0.75rem 1.5rem;
   border: none;
-  border-radius: 6px;
+  border-radius: 0;
   cursor: pointer;
   font-size: 1rem;
   font-weight: 500;
@@ -962,7 +1008,7 @@
   gap: 1rem;
   padding: 1rem;
   background: #f9fafb;
-  border-radius: 8px;
+  border-radius: 0;
   border: 1px solid #e5e7eb;
 }
 
@@ -974,7 +1020,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 8px;
+  border-radius: 0;
 }
 
 .category-icon.high {
@@ -1029,7 +1075,7 @@
   margin-top: 2rem;
   padding: 1rem;
   background: #fef3c7;
-  border-radius: 8px;
+  border-radius: 0;
   border-left: 4px solid #f59e0b;
 }
 
@@ -1069,7 +1115,7 @@
 .category-section {
   margin-bottom: clamp(1rem, 2vw, 1.5rem);
   border: 2px solid #e5e7eb;
-  border-radius: 12px;
+  border-radius: 0;
   background: white;
   overflow: hidden;
   min-width: 0;
@@ -1155,7 +1201,7 @@
   background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   color: white;
   padding: clamp(0.375rem, 0.75vw, 0.5rem) clamp(0.75rem, 1.5vw, 1rem);
-  border-radius: 20px;
+  border-radius: 0;
   font-size: clamp(0.75rem, 1.5vw, 0.875rem);
   font-weight: 700;
   box-shadow: 0 2px 4px rgba(59, 130, 246, 0.3);
@@ -1176,7 +1222,7 @@
 
 .student-card {
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 0;
   padding: clamp(2rem, 4vw, 3rem);
   background: #f9fafb;
   overflow-x: auto;
@@ -1194,12 +1240,12 @@
 
 .student-card::-webkit-scrollbar-track {
   background: #f1f1f1;
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 .student-card::-webkit-scrollbar-thumb {
   background: #888;
-  border-radius: 4px;
+  border-radius: 0;
 }
 
 .student-card::-webkit-scrollbar-thumb:hover {
@@ -1247,7 +1293,7 @@
 .student-details span {
   padding: clamp(0.375rem, 0.75vw, 0.5rem) clamp(0.75rem, 1.5vw, 1rem);
   background: rgba(59, 130, 246, 0.1);
-  border-radius: 8px;
+  border-radius: 0;
   color: #1e40af;
   font-weight: 600;
   white-space: nowrap;
@@ -1267,7 +1313,7 @@
   gap: clamp(0.625rem, 1.25vw, 0.875rem);
   padding: clamp(1rem, 2vw, 1.5rem);
   background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
-  border-radius: 12px;
+  border-radius: 0;
   border: 2px solid #e5e7eb;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
   transition: all 0.3s ease;
@@ -1363,12 +1409,12 @@
 
 .timeline-items::-webkit-scrollbar-track {
   background: #f1f1f1;
-  border-radius: 3px;
+  border-radius: 0;
 }
 
 .timeline-items::-webkit-scrollbar-thumb {
   background: #888;
-  border-radius: 3px;
+  border-radius: 0;
 }
 
 .timeline-items::-webkit-scrollbar-thumb:hover {
@@ -1383,7 +1429,7 @@
   padding: clamp(1rem, 2vw, 1.25rem);
   background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
   border: 2px solid #e5e7eb;
-  border-radius: 10px;
+  border-radius: 0;
   font-size: clamp(0.9375rem, 2vw, 1rem);
   transition: all 0.2s ease;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.05);
@@ -1423,7 +1469,7 @@
   margin-bottom: clamp(1.5rem, 3vw, 2rem);
   padding: clamp(1rem, 2vw, 1.5rem);
   background: linear-gradient(135deg, #f9fafb 0%, #ffffff 100%);
-  border-radius: 12px;
+  border-radius: 0;
   border: 1px solid #e5e7eb;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
@@ -1450,7 +1496,7 @@
   gap: clamp(0.5rem, 1vw, 0.75rem);
   padding: clamp(1rem, 2vw, 1.25rem);
   background: white;
-  border-radius: 8px;
+  border-radius: 0;
   border: 2px solid #e5e7eb;
   text-align: center;
   transition: all 0.2s ease;
@@ -1481,7 +1527,7 @@
 .loading-spinner {
   border: 3px solid #f3f4f6;
   border-top: 3px solid #3b82f6;
-  border-radius: 50%;
+  border-radius: 0;
   width: clamp(35px, 5vw, 45px);
   height: clamp(35px, 5vw, 45px);
   animation: spin 1s linear infinite;
@@ -1498,7 +1544,7 @@
   padding: clamp(2rem, 4vw, 3rem);
   color: #ef4444;
   background: #fef2f2;
-  border-radius: 8px;
+  border-radius: 0;
   border: 2px solid #fecaca;
 }
 
@@ -1530,7 +1576,7 @@
   padding: clamp(2rem, 4vw, 3rem);
   color: #6b7280;
   background: #f9fafb;
-  border-radius: 8px;
+  border-radius: 0;
   border: 2px dashed #d1d5db;
 }
 
@@ -1561,7 +1607,7 @@
 
 .recommendation-card {
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 0;
   background: white;
   overflow: hidden;
   transition: box-shadow 0.2s;
@@ -1594,7 +1640,7 @@
 
 .priority-badge {
   padding: 0.25rem 0.75rem;
-  border-radius: 12px;
+  border-radius: 0;
   font-size: 0.75rem;
   font-weight: 700;
   text-transform: uppercase;
@@ -1902,7 +1948,7 @@
   }
 
   .category-section {
-    border-radius: 8px;
+    border-radius: 0;
     margin-bottom: clamp(0.875rem, 1.75vw, 1rem);
   }
 
@@ -1925,7 +1971,7 @@
 
   .student-card {
     padding: clamp(1rem, 2vw, 1.5rem);
-    border-radius: 8px;
+    border-radius: 0;
     margin-bottom: clamp(1rem, 2vw, 1.5rem);
   }
 

@@ -186,7 +186,7 @@ const getOLevelDivision = (divisionPoint) => {
 };
 
 const getALevelDivision = (divisionPoint) => {
-  if (divisionPoint === null || divisionPoint === undefined) return null;
+  if (divisionPoint == null) return null;
   if (divisionPoint >= 3 && divisionPoint <= 9) return 'I';
   if (divisionPoint >= 10 && divisionPoint <= 12) return 'II';
   if (divisionPoint >= 13 && divisionPoint <= 17) return 'III';

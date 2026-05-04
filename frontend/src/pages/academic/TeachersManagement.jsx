@@ -207,7 +207,7 @@ const TeachersManagement = ({ formLevel, stream: streamProp }) => {
                 <i className="fas fa-exclamation-triangle"></i>
                 <strong>Error loading teachers:</strong> {teachersError.message || 'Failed to fetch teachers'}
                 <div style={{ fontSize: '12px', marginTop: '10px', fontFamily: 'monospace' }}>
-                  Debug: Level={normalizedLevel} | Stream={normalizedStream} | DisplayYear={year} | ApiYear={apiYear}
+                  Level={normalizedLevel} | Stream={normalizedStream} | DisplayYear={year} | ApiYear={apiYear}
                 </div>
               </div>
             )}
