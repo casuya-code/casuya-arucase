@@ -77,8 +77,10 @@ const AdminSidebar = () => {
     {
       category: 'Student Management',
       items: [
-        { path: '/admin/students/registration', label: 'Registration', icon: 'fa-user-plus', moduleId: 'student_registration' },
-        { path: '/students/list', label: 'Student List', icon: 'fa-list', moduleId: 'student_registration' },
+        { path: '/admin/students/registration/form-i/years', label: 'Registration (Forms I-IV)', icon: 'fa-user-plus', moduleId: 'student_registration_form_i_iv' },
+        { path: '/admin/students/registration/form-v/years', label: 'Registration (Forms V-VI)', icon: 'fa-user-plus', moduleId: 'student_registration_form_v_vi' },
+        { path: '/admin/pre-form-one', label: 'Registration (Pre-Form)', icon: 'fa-child', moduleId: 'student_registration_pre_form' },
+        { path: '/students/list', label: 'Student List', icon: 'fa-list', moduleId: 'student_registration_form_i_iv' },
         { path: '/admin/students/photos', label: 'Photos', icon: 'fa-camera', moduleId: 'student_photo' },
         { path: '/admin/students/parishes', label: 'Parishes', icon: 'fa-place-of-worship', moduleId: 'student_parishes' }
       ]
@@ -118,7 +120,7 @@ const AdminSidebar = () => {
     {
       category: 'Announcements & Communication',
       items: [
-        { path: '/admin/news', label: 'News', icon: 'fa-newspaper' },
+        { path: '/admin/news', label: 'News', icon: 'fa-newspaper', moduleId: 'news_announcements' },
         { path: '/admin/fees', label: 'Fees', icon: 'fa-money-bill-wave', moduleId: 'fees_announcements' },
         { path: '/admin/debts', label: 'Debts', icon: 'fa-money-bill-wave', moduleId: 'individual_debt' }
       ]
@@ -126,7 +128,10 @@ const AdminSidebar = () => {
     {
       category: 'Analytics',
       items: [
-        { path: '/admin/analytics', label: 'Analytics', icon: 'fa-chart-line', moduleId: 'analytics' }
+        { path: '/admin/analytics', label: 'Analytics View', icon: 'fa-chart-line', moduleId: 'analytics_view' },
+        { path: '/admin/analytics/student-tracking', label: 'Student Tracking', icon: 'fa-user-check', moduleId: 'analytics_student_tracking' },
+        { path: '/admin/analytics/solutions', label: 'Solutions', icon: 'fa-lightbulb', moduleId: 'analytics_solutions' },
+        { path: '/admin/analytics/form-averages', label: 'Form Averages', icon: 'fa-chart-bar', moduleId: 'analytics_form_averages' }
       ]
     },
     {
@@ -143,7 +148,7 @@ const AdminSidebar = () => {
         { path: '/admin/administrators', label: 'Admin', icon: 'fa-user-shield' },
         { path: '/admin/users', label: 'Users', icon: 'fa-users-cog' },
         { path: '/admin/promotion', label: 'Promotion', icon: 'fa-graduation-cap' },
-        { path: '/admin/pre-form-one', label: 'Pre-Form One', icon: 'fa-child' }
+        { path: '/admin/pre-form-one', label: 'Pre-Form One', icon: 'fa-child', moduleId: 'student_registration_pre_form' }
       ]
     },
     {

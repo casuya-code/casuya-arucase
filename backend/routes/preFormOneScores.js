@@ -64,7 +64,7 @@ router.get('/subject/:subjectId', requireAuth, async (req, res) => {
     
     const result = await query(`
       SELECT 
-        s.*,
+        sc.*,
         st.admission_number,
         st.first_name,
         st.surname,
@@ -74,7 +74,6 @@ router.get('/subject/:subjectId', requireAuth, async (req, res) => {
         sc.created_at
       FROM preform_one_scores sc
       JOIN preform_one_students st ON sc.student_id = st.id
-      JOIN preform_one_students s ON sc.student_id = s.id
       WHERE sc.subject_id = $1 AND sc.subject_type = $2
       ORDER BY st.admission_number
     `, [subjectId, type]);
@@ -166,13 +165,15 @@ router.post('/bulk', requireAuth, async (req, res) => {
       for (const scoreData of scores) {
         const { student_id, subject_id, subject_type, score, remarks } = scoreData;
         
-        // Validate input
+        // Validate input - skip invalid entries instead of failing
         if (!student_id || !subject_id || !subject_type || score === undefined) {
-          throw new Error(`Invalid score data for student ${student_id}`);
+          console.warn(`Skipping invalid score data for student ${student_id}`);
+          continue;
         }
         
         if (score < 0 || score > 100) {
-          throw new Error(`Invalid score value for student ${student_id}: ${score}`);
+          console.warn(`Skipping invalid score value for student ${student_id}: ${score}`);
+          continue;
         }
         
         const grade = calculateGrade(score);

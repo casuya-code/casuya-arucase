@@ -67,6 +67,13 @@ const PreFormOneYear = () => {
       icon: 'fa-file-invoice',
       path: `/admin/pre-form-one/${year}/continuing-reports`,
       color: '#ec4899'
+    },
+    {
+      title: 'Pre-Form One Promotion',
+      description: 'Promote students to Form One',
+      icon: 'fa-graduation-cap',
+      path: `/admin/pre-form-one/${year}/promotion`,
+      color: '#10b981'
     }
   ];
 

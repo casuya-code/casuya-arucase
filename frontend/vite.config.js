@@ -8,6 +8,10 @@ export default defineConfig({
     hmr: {
       clientPort: 3001,
     },
+    fs: {
+      // Allow serving files from node_modules
+      allow: ['..'],
+    },
     proxy: {
       '/api': {
         target: process.env.VITE_API_URL || 'http://localhost:5000',

@@ -47,6 +47,11 @@
   visibility: visible !important;
   opacity: 1 !important;
   min-height: 100%;
+  /* Performance optimizations */
+  contain: layout style paint;
+  will-change: transform;
+  -webkit-transform: translateZ(0);
+  transform: translateZ(0);
 }
 
 .main-content::before {
@@ -89,6 +94,9 @@
   will-change: opacity;
   z-index: 1;
   pointer-events: none;
+  /* Performance optimization - lazy load offscreen slides */
+  content-visibility: auto;
+  contain-intrinsic-size: 100% 100%;
 }
 
 .carousel-slide.active {
@@ -716,5 +724,52 @@
 
   .hero-text p {
     font-size: clamp(0.75rem, 2.5vw, 1rem);
+  }
+}
+
+/* Ultra Small Devices (very old phones, 320px and below) */
+@media (max-width: 320px) {
+  .content-card {
+    padding: 1rem;
+    font-size: 0.875rem;
+  }
+  
+  .home-button {
+    font-size: 0.8rem;
+    min-height: 44px;
+    padding: 0.5rem 1rem;
+  }
+  
+  .administration-title {
+    font-size: 1.5rem;
+  }
+  
+  .administration-subtitle {
+    font-size: 1rem;
+  }
+  
+  .admin-card {
+    padding: 1rem;
+  }
+  
+  .admin-card h3 {
+    font-size: 1.1rem;
+  }
+  
+  .admin-card p {
+    font-size: 0.9rem;
+  }
+  
+  .carousel-indicators {
+    bottom: 1rem;
+  }
+  
+  .carousel-indicator {
+    width: 8px;
+    height: 8px;
+  }
+  
+  .carousel-indicator.active {
+    width: 20px;
   }
 }

@@ -68,23 +68,32 @@ class DataPersistenceManager {
       version: '1.0'
     };
 
+    console.log('🔒 PERSISTENCE DEBUG: Starting save for subject:', subjectId, 'type:', scoreType);
+    console.log('🔒 PERSISTENCE DEBUG: Data to save:', data);
+
     try {
       // Layer 1: localStorage (persistent)
+      console.log('🔒 PERSISTENCE DEBUG: Saving to localStorage...');
       this.saveToLocalStorage(subjectId, scoreType, data);
       
       // Layer 2: sessionStorage (session backup)
+      console.log('🔒 PERSISTENCE DEBUG: Saving to sessionStorage...');
       this.saveToSessionStorage(subjectId, scoreType, data);
       
       // Layer 3: IndexedDB (large data backup)
+      console.log('🔒 PERSISTENCE DEBUG: Saving to IndexedDB...');
       await this.saveToIndexedDB(subjectId, scoreType, data);
       
       // Layer 4: Memory (immediate access)
+      console.log('🔒 PERSISTENCE DEBUG: Saving to memory...');
       this.saveToMemory(subjectId, scoreType, data);
       
       // Layer 5: Server (if online)
       if (this.isOnline) {
+        console.log('🔒 PERSISTENCE DEBUG: Saving to server...');
         this.saveToServer(subjectId, scoreType, data);
       } else {
+        console.log('🔒 PERSISTENCE DEBUG: Queuing for server sync...');
         this.queueForServerSync(subjectId, scoreType, data);
       }
       
@@ -92,6 +101,13 @@ class DataPersistenceManager {
       return true;
     } catch (error) {
       console.error('❌ DATA PERSISTENCE: Error saving data:', error);
+      console.error('🔒 PERSISTENCE DEBUG: Save error details:', {
+        subjectId,
+        scoreType,
+        scoresCount: Object.keys(scores || {}).length,
+        errorMessage: error.message,
+        errorStack: error.stack
+      });
       return false;
     }
   }
@@ -101,46 +117,63 @@ class DataPersistenceManager {
    */
   async loadData(subjectId, scoreType) {
     const storageKey = this.getStorageKey(subjectId, scoreType);
+    console.log('🔒 PERSISTENCE DEBUG: Starting load for subject:', subjectId, 'type:', scoreType);
+    console.log('🔒 PERSISTENCE DEBUG: Storage key:', storageKey);
     
     try {
       // Layer 1: Memory (fastest)
+      console.log('🔒 PERSISTENCE DEBUG: Checking memory storage...');
       const memoryData = this.loadFromMemory(subjectId, scoreType);
+      console.log('🔒 PERSISTENCE DEBUG: Memory data:', memoryData);
       if (memoryData && this.isValidData(memoryData)) {
         console.log('🔒 DATA PERSISTENCE: Loaded from memory');
+        console.log('🔒 PERSISTENCE DEBUG: Returning', Object.keys(memoryData.scores).length, 'scores from memory');
         return memoryData.scores;
       }
 
       // Layer 2: localStorage (persistent)
+      console.log('🔒 PERSISTENCE DEBUG: Checking localStorage...');
       const localData = this.loadFromLocalStorage(subjectId, scoreType);
+      console.log('🔒 PERSISTENCE DEBUG: LocalStorage data:', localData);
       if (localData && this.isValidData(localData)) {
         console.log('🔒 DATA PERSISTENCE: Loaded from localStorage');
+        console.log('🔒 PERSISTENCE DEBUG: Returning', Object.keys(localData.scores).length, 'scores from localStorage');
         // Restore to memory for faster access
         this.saveToMemory(subjectId, scoreType, localData);
         return localData.scores;
       }
 
       // Layer 3: sessionStorage (session backup)
+      console.log('🔒 PERSISTENCE DEBUG: Checking sessionStorage...');
       const sessionData = this.loadFromSessionStorage(subjectId, scoreType);
+      console.log('🔒 PERSISTENCE DEBUG: SessionStorage data:', sessionData);
       if (sessionData && this.isValidData(sessionData)) {
         console.log('🔒 DATA PERSISTENCE: Loaded from sessionStorage');
+        console.log('🔒 PERSISTENCE DEBUG: Returning', Object.keys(sessionData.scores).length, 'scores from sessionStorage');
         this.saveToMemory(subjectId, scoreType, sessionData);
         return sessionData.scores;
       }
 
       // Layer 4: IndexedDB (large data)
+      console.log('🔒 PERSISTENCE DEBUG: Checking IndexedDB...');
       const indexedData = await this.loadFromIndexedDB(subjectId, scoreType);
+      console.log('🔒 PERSISTENCE DEBUG: IndexedDB data:', indexedData);
       if (indexedData && this.isValidData(indexedData)) {
         console.log('🔒 DATA PERSISTENCE: Loaded from IndexedDB');
+        console.log('🔒 PERSISTENCE DEBUG: Returning', Object.keys(indexedData.scores).length, 'scores from IndexedDB');
         this.saveToMemory(subjectId, scoreType, indexedData);
         return indexedData.scores;
       }
 
       // Layer 5: Server (if online)
       if (this.isOnline) {
+        console.log('🔒 PERSISTENCE DEBUG: Checking server storage...');
         try {
           const serverData = await this.loadFromServer(subjectId, scoreType);
+          console.log('🔒 PERSISTENCE DEBUG: Server data:', serverData);
           if (serverData) {
             console.log('🔒 DATA PERSISTENCE: Loaded from server');
+            console.log('🔒 PERSISTENCE DEBUG: Returning', Object.keys(serverData.scores).length, 'scores from server');
             this.saveToMemory(subjectId, scoreType, serverData);
             return serverData.scores;
           }
@@ -150,9 +183,16 @@ class DataPersistenceManager {
       }
 
       console.log('🔒 DATA PERSISTENCE: No data found, returning empty object');
+      console.log('🔒 PERSISTENCE DEBUG: All storage layers checked, no data found');
       return {};
     } catch (error) {
       console.error('❌ DATA PERSISTENCE: Error loading data:', error);
+      console.error('🔒 PERSISTENCE DEBUG: Load error details:', {
+        subjectId,
+        scoreType,
+        errorMessage: error.message,
+        errorStack: error.stack
+      });
       return {};
     }
   }
@@ -208,15 +248,28 @@ class DataPersistenceManager {
    */
   async saveToIndexedDB(subjectId, scoreType, data) {
     try {
+      console.log('🔒 PERSISTENCE DEBUG: Attempting IndexedDB save...');
       const db = await this.getIndexedDB();
+      if (!db) {
+        console.error('❌ IndexedDB save error: Database not available');
+        return false;
+      }
+      
       const transaction = db.transaction(['scores'], 'readwrite');
       const store = transaction.objectStore('scores');
       const key = `${subjectId}_${scoreType}`;
       
-      await store.put({ key, data, timestamp: Date.now() });
+      const result = await store.put({ key, data, timestamp: Date.now() });
+      console.log('🔒 PERSISTENCE DEBUG: IndexedDB save successful:', result);
       return true;
     } catch (error) {
       console.error('❌ IndexedDB save error:', error);
+      console.error('🔒 PERSISTENCE DEBUG: IndexedDB save error details:', {
+        subjectId,
+        scoreType,
+        errorMessage: error.message,
+        errorName: error.name
+      });
       return false;
     }
   }

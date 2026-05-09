@@ -15,7 +15,7 @@
 .term-selection-card-item {
   background: white;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 0;
   padding: clamp(1rem, 3vw, 2rem);
   text-align: center;
   text-decoration: none;

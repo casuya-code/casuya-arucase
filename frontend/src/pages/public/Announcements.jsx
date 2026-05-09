@@ -2,13 +2,14 @@
  * Announcements Page - Data from server (publicAPI.getAnnouncements)
  */
 import { useQuery } from '@tanstack/react-query';
-import { useMemo, useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import PublicLayout from '../../components/layout/PublicLayout';
+import Loading from '../../components/common/Loading';
 import SkeletonLoader from '../../components/common/SkeletonLoader';
 import { publicAPI } from '../../services/public';
-import './About.css';
 import './Announcements.css';
+import DOMPurify from 'dompurify';
 
 const Announcements = () => {
   const [search, setSearch] = useState('');
@@ -124,7 +125,7 @@ const Announcements = () => {
                     ) : null}
                   </div>
                   {ann.content ? (
-                    <div className="announcement-content" dangerouslySetInnerHTML={{ __html: ann.content }} />
+                    <div className="announcement-content" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(ann.content) }} />
                   ) : ann.body ? (
                     <p className="announcement-content">{ann.body}</p>
                   ) : null}

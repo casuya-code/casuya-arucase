@@ -19,22 +19,40 @@ const JWT_SECRET = validateJwtSecret();
 
 const requireAuth = (req, res, next) => {
   try {
-    const authHeader = req.headers.authorization;
+    // Try to get token from cookie first, then from header for backward compatibility
+    const cookieToken = req.cookies?.token;
+    const headerToken = req.headers.authorization?.split(' ')[1];
+    const token = cookieToken || headerToken;
     
-    if (!authHeader) {
+    console.log('🔐 AUTH MIDDLEWARE DEBUG:', {
+      url: req.url,
+      method: req.method,
+      hasCookieToken: !!cookieToken,
+      hasHeaderToken: !!headerToken,
+      tokenUsed: cookieToken ? 'cookie' : 'header',
+      tokenPrefix: token ? token.substring(0, 20) + '...' : 'none',
+      userAgent: req.headers['user-agent']
+    });
+    
+    if (!token) {
+      console.log('🔐 AUTH MIDDLEWARE: No token found');
       return res.status(401).json({ message: 'Authentication required' });
     }
     
-    const token = authHeader.split(' ')[1] || authHeader;
-    
-    if (!token) {
-      return res.status(401).json({ message: 'Token not provided' });
-    }
-    
     const decoded = jwt.verify(token, JWT_SECRET);
+    console.log('🔐 AUTH MIDDLEWARE: Token verified successfully', {
+      userId: decoded.user_id,
+      role: decoded.role,
+      exp: new Date(decoded.exp * 1000).toISOString()
+    });
     req.user = decoded;
     next();
   } catch (error) {
+    console.log('🔐 AUTH MIDDLEWARE: Token verification failed', {
+      errorName: error.name,
+      errorMessage: error.message,
+      url: req.url
+    });
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({ message: 'Token expired' });
     }

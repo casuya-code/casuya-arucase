@@ -3,20 +3,8 @@ import api from './api';
 export const preFormOneService = {
   // Get all students for a specific year
   getStudents: async (year) => {
-    console.log('🔍 SERVICE DEBUG: getStudents called for year:', year);
     try {
-      console.log('🔍 SERVICE DEBUG: Making API request to get students');
       const response = await api.get(`/pre-form-one/${year}`);
-      console.log('🔍 SERVICE DEBUG: Get students API response received:', response);
-      console.log('🔍 SERVICE DEBUG: Response status:', response.status);
-      console.log('🔍 SERVICE DEBUG: Response data:', response.data);
-      console.log('🔍 SERVICE DEBUG: Response data type:', typeof response.data);
-      console.log('🔍 SERVICE DEBUG: Is response.data array:', Array.isArray(response.data));
-      
-      if (response.data && response.data.data) {
-        console.log('🔍 SERVICE DEBUG: Found nested data.data:', response.data.data);
-        console.log('🔍 SERVICE DEBUG: Is data.data array:', Array.isArray(response.data.data));
-      }
       
       return response.data;
     } catch (error) {
@@ -45,12 +33,8 @@ export const preFormOneService = {
 
   // Create a single student
   createStudent: async (studentData) => {
-    console.log('🔍 SERVICE DEBUG: createStudent called with data:', studentData);
     try {
-      console.log('🔍 SERVICE DEBUG: Making API request to /pre-form-one');
       const response = await api.post('/pre-form-one', studentData);
-      console.log('🔍 SERVICE DEBUG: API response received:', response);
-      console.log('🔍 SERVICE DEBUG: Response data:', response.data);
       return response.data;
     } catch (error) {
       console.error('🔍 SERVICE DEBUG: Error creating student:');
@@ -78,13 +62,8 @@ export const preFormOneService = {
 
   // Create multiple students (bulk registration)
   createBulkStudents: async (students) => {
-    console.log('🔍 SERVICE DEBUG: createBulkStudents called with students:', students);
-    console.log('🔍 SERVICE DEBUG: Number of students:', students?.length || 0);
     try {
-      console.log('🔍 SERVICE DEBUG: Making API request to /pre-form-one/bulk');
       const response = await api.post('/pre-form-one/bulk', { students });
-      console.log('🔍 SERVICE DEBUG: Bulk API response received:', response);
-      console.log('🔍 SERVICE DEBUG: Bulk response data:', response.data);
       return response.data;
     } catch (error) {
       console.error('🔍 SERVICE DEBUG: Error creating bulk students:');
@@ -98,14 +77,8 @@ export const preFormOneService = {
 
   // Update student parish
   updateStudentParish: async (studentId, parish) => {
-    console.log('🔍 SERVICE DEBUG: updateStudentParish called');
-    console.log('🔍 SERVICE DEBUG: Student ID:', studentId);
-    console.log('🔍 SERVICE DEBUG: Parish:', parish);
     try {
-      console.log('🔍 SERVICE DEBUG: Making API request to update parish');
       const response = await api.put(`/pre-form-one/${studentId}/parish`, { parish });
-      console.log('🔍 SERVICE DEBUG: Parish update API response received:', response);
-      console.log('🔍 SERVICE DEBUG: Parish update response data:', response.data);
       return response.data;
     } catch (error) {
       console.error('🔍 SERVICE DEBUG: Error updating student parish:');
@@ -119,14 +92,8 @@ export const preFormOneService = {
 
   // Bulk update parishes for multiple students
   bulkUpdateParishes: async (updates) => {
-    console.log('🔍 SERVICE DEBUG: bulkUpdateParishes called');
-    console.log('🔍 SERVICE DEBUG: Updates data:', updates);
-    console.log('🔍 SERVICE DEBUG: Number of updates:', updates?.length || 0);
     try {
-      console.log('🔍 SERVICE DEBUG: Making API request to bulk update parishes');
       const response = await api.put('/pre-form-one/bulk-parish', { updates });
-      console.log('🔍 SERVICE DEBUG: Bulk parish API response received:', response);
-      console.log('🔍 SERVICE DEBUG: Bulk parish response data:', response.data);
       return response.data;
     } catch (error) {
       console.error('🔍 SERVICE DEBUG: Error bulk updating parishes:');
@@ -140,14 +107,8 @@ export const preFormOneService = {
 
   // Update a student
   updateStudent: async (id, studentData) => {
-    console.log('🔍 SERVICE DEBUG: updateStudent called');
-    console.log('🔍 SERVICE DEBUG: Student ID:', id);
-    console.log('🔍 SERVICE DEBUG: Student data:', studentData);
     try {
-      console.log('🔍 SERVICE DEBUG: Making API request to update student');
       const response = await api.put(`/pre-form-one/${id}`, studentData);
-      console.log('🔍 SERVICE DEBUG: Update student API response received:', response);
-      console.log('🔍 SERVICE DEBUG: Update student response data:', response.data);
       return response.data;
     } catch (error) {
       console.error('🔍 SERVICE DEBUG: Error updating student:');
@@ -161,13 +122,8 @@ export const preFormOneService = {
 
   // Delete a student
   deleteStudent: async (studentId) => {
-    console.log('🔍 SERVICE DEBUG: deleteStudent called');
-    console.log('🔍 SERVICE DEBUG: Student ID:', studentId);
     try {
-      console.log('🔍 SERVICE DEBUG: Making API request to delete student');
       const response = await api.delete(`/pre-form-one/${studentId}`);
-      console.log('🔍 SERVICE DEBUG: Delete student API response received:', response);
-      console.log('🔍 SERVICE DEBUG: Delete student response data:', response.data);
       return response.data;
     } catch (error) {
       console.error('🔍 SERVICE DEBUG: Error deleting student:');
@@ -199,6 +155,361 @@ export const preFormOneService = {
       return response;
     } catch (error) {
       console.error('Error exporting students:', error);
+      throw error;
+    }
+  },
+
+  // Get interview results for a specific year and optional month
+  getInterviewResults: async (year, month = null) => {
+    try {
+      let url = `/pre-form-one/${year}/interview-results`;
+      if (month && month !== 'all') {
+        url += `?month=${encodeURIComponent(month)}`;
+      }
+      const response = await api.get(url);
+      
+      return response.data;
+    } catch (error) {
+      console.error('🔍 SERVICE DEBUG: Error fetching interview results:');
+      console.error('🔍 SERVICE DEBUG: Error object:', error);
+      console.error('🔍 SERVICE DEBUG: Error response:', error.response);
+      console.error('🔍 SERVICE DEBUG: Error status:', error.response?.status);
+      console.error('🔍 SERVICE DEBUG: Error data:', error.response?.data);
+      
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        throw new Error('Request timed out. Please check your connection and try again.');
+      }
+      
+      if (error.response?.status === 401) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+      
+      if (error.response?.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      }
+      
+      throw error;
+    }
+  },
+
+  // Get continuing results for a specific year and optional month
+  getContinuingResults: async (year, month = null) => {
+    try {
+      let url = `/pre-form-one/${year}/continuing-results`;
+      if (month && month !== 'all') {
+        url += `?month=${encodeURIComponent(month)}`;
+      }
+      const response = await api.get(url);
+      
+      return response.data;
+    } catch (error) {
+      console.error('🔍 SERVICE DEBUG: Error fetching continuing results:');
+      console.error('🔍 SERVICE DEBUG: Error object:', error);
+      console.error('🔍 SERVICE DEBUG: Error response:', error.response);
+      console.error('🔍 SERVICE DEBUG: Error status:', error.response?.status);
+      console.error('🔍 SERVICE DEBUG: Error data:', error.response?.data);
+      
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        throw new Error('Request timed out. Please check your connection and try again.');
+      }
+      
+      if (error.response?.status === 401) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+      
+      if (error.response?.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      }
+      
+      throw error;
+    }
+  },
+
+  // Calculate interview results
+  calculateInterviewResults: async (year, month = null) => {
+    try {
+      let url = `/pre-form-one/${year}/interview-results/calculate`;
+      if (month && month !== 'all') {
+        url += `?month=${encodeURIComponent(month)}`;
+      }
+      const response = await api.post(url);
+      
+      return response.data;
+    } catch (error) {
+      console.error('🔍 SERVICE DEBUG: Error calculating interview results:');
+      console.error('🔍 SERVICE DEBUG: Error object:', error);
+      console.error('🔍 SERVICE DEBUG: Error response:', error.response);
+      console.error('🔍 SERVICE DEBUG: Error status:', error.response?.status);
+      console.error('🔍 SERVICE DEBUG: Error data:', error.response?.data);
+      
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        throw new Error('Request timed out. Please check your connection and try again.');
+      }
+      
+      if (error.response?.status === 401) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+      
+      if (error.response?.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      }
+      
+      throw error;
+    }
+  },
+
+  // Calculate continuing results
+  calculateContinuingResults: async (year, month = null) => {
+    try {
+      let url = `/pre-form-one/${year}/continuing-results/calculate`;
+      if (month && month !== 'all') {
+        url += `?month=${encodeURIComponent(month)}`;
+      }
+      const response = await api.post(url);
+      
+      return response.data;
+    } catch (error) {
+      console.error('🔍 SERVICE DEBUG: Error calculating continuing results:');
+      console.error('🔍 SERVICE DEBUG: Error object:', error);
+      console.error('🔍 SERVICE DEBUG: Error response:', error.response);
+      console.error('🔍 SERVICE DEBUG: Error status:', error.response?.status);
+      console.error('🔍 SERVICE DEBUG: Error data:', error.response?.data);
+      
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        throw new Error('Request timed out. Please check your connection and try again.');
+      }
+      
+      if (error.response?.status === 401) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+      
+      if (error.response?.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      }
+      
+      throw error;
+    }
+  },
+
+  // Get student score for a specific subject
+  getStudentScore: async (studentId, subjectId, type) => {
+    try {
+      let endpoint;
+      if (type === 'interview') {
+        endpoint = `/pre-form-one/student-score/${studentId}/${subjectId}`;
+      } else if (type === 'continuing') {
+        endpoint = `/pre-form-one/student-score/${studentId}/${subjectId}?type=continuing`;
+      } else {
+        throw new Error('Invalid score type. Must be "interview" or "continuing"');
+      }
+      
+      const response = await api.get(endpoint);
+      
+      return response.data?.score || 0;
+    } catch (error) {
+      console.error('🔍 SERVICE DEBUG: Error getting student score:');
+      console.error('🔍 SERVICE DEBUG: Error object:', error);
+      console.error('🔍 SERVICE DEBUG: Error response:', error.response);
+      console.error('🔍 SERVICE DEBUG: Error status:', error.response?.status);
+      console.error('🔍 SERVICE DEBUG: Error data:', error.response?.data);
+      
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        throw new Error('Request timed out. Please check your connection and try again.');
+      }
+      
+      if (error.response?.status === 401) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+      
+      if (error.response?.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      }
+      
+      throw error;
+    }
+  },
+
+  // Save interview result
+  saveInterviewResult: async (data) => {
+    try {
+      const response = await api.post('/pre-form-one/interview-result', data);
+      
+      return response.data;
+    } catch (error) {
+      console.error('🔍 SERVICE DEBUG: Error saving interview result:');
+      console.error('🔍 SERVICE DEBUG: Error object:', error);
+      console.error('🔍 SERVICE DEBUG: Error response:', error.response);
+      console.error('🔍 SERVICE DEBUG: Error status:', error.response?.status);
+      console.error('🔍 SERVICE DEBUG: Error data:', error.response?.data);
+      
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        throw new Error('Request timed out. Please check your connection and try again.');
+      }
+      
+      if (error.response?.status === 401) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+      
+      if (error.response?.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      }
+      
+      throw error;
+    }
+  },
+
+  // Save continuing result
+  saveContinuingResult: async (data) => {
+    try {
+      const response = await api.post('/pre-form-one/continuing-result', data);
+      
+      return response.data;
+    } catch (error) {
+      console.error('🔍 SERVICE DEBUG: Error saving continuing result:');
+      console.error('🔍 SERVICE DEBUG: Error object:', error);
+      console.error('🔍 SERVICE DEBUG: Error response:', error.response);
+      console.error('🔍 SERVICE DEBUG: Error status:', error.response?.status);
+      console.error('🔍 SERVICE DEBUG: Error data:', error.response?.data);
+      
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        throw new Error('Request timed out. Please check your connection and try again.');
+      }
+      
+      if (error.response?.status === 401) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+      
+      if (error.response?.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      }
+      
+      throw error;
+    }
+  },
+
+  // Delete interview result
+  deleteInterviewResult: async (studentId, year) => {
+    try {
+      const response = await api.delete(`/pre-form-one/interview-result/${studentId}?year=${year}`);
+      
+      return response.data;
+    } catch (error) {
+      console.error('🔍 SERVICE DEBUG: Error deleting interview result:');
+      console.error('🔍 SERVICE DEBUG: Error object:', error);
+      console.error('🔍 SERVICE DEBUG: Error response:', error.response);
+      console.error('🔍 SERVICE DEBUG: Error status:', error.response?.status);
+      console.error('🔍 SERVICE DEBUG: Error data:', error.response?.data);
+      
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        throw new Error('Request timed out. Please check your connection and try again.');
+      }
+      
+      if (error.response?.status === 401) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+      
+      if (error.response?.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      }
+      
+      throw error;
+    }
+  },
+
+  // Delete continuing result
+  deleteContinuingResult: async (studentId, year) => {
+    try {
+      const response = await api.delete(`/pre-form-one/continuing-result/${studentId}?year=${year}`);
+      
+      return response.data;
+    } catch (error) {
+      console.error('🔍 SERVICE DEBUG: Error deleting continuing result:');
+      console.error('🔍 SERVICE DEBUG: Error object:', error);
+      console.error('🔍 SERVICE DEBUG: Error response:', error.response);
+      console.error('🔍 SERVICE DEBUG: Error status:', error.response?.status);
+      console.error('🔍 SERVICE DEBUG: Error data:', error.response?.data);
+      
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        throw new Error('Request timed out. Please check your connection and try again.');
+      }
+      
+      if (error.response?.status === 401) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+      
+      if (error.response?.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      }
+      
+      throw error;
+    }
+  },
+
+  // Download interview results PDF
+  downloadInterviewResultsPDF: async (year) => {
+    try {
+      const response = await api.get(`/pre-form-one/${year}/interview-results/pdf`, {
+        responseType: 'blob'
+      });
+      
+      return response;
+    } catch (error) {
+      console.error('🔍 SERVICE DEBUG: Error downloading interview results PDF:');
+      console.error('🔍 SERVICE DEBUG: Error object:', error);
+      console.error('🔍 SERVICE DEBUG: Error response:', error.response);
+      console.error('🔍 SERVICE DEBUG: Error status:', error.response?.status);
+      console.error('🔍 SERVICE DEBUG: Error data:', error.response?.data);
+      
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        throw new Error('Request timed out. Please check your connection and try again.');
+      }
+      
+      if (error.response?.status === 401) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+      
+      if (error.response?.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      }
+      
+      throw error;
+    }
+  },
+
+  // Download continuing results PDF
+  downloadContinuingResultsPDF: async (year) => {
+    try {
+      const response = await api.get(`/pre-form-one/${year}/continuing-results/pdf`, {
+        responseType: 'blob'
+      });
+      
+      return response;
+      
+      // Validate blob
+      if (!response.data || !(response.data instanceof Blob)) {
+        throw new Error('Invalid PDF response from server');
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('🔍 SERVICE DEBUG: Error downloading continuing results PDF:');
+      console.error('🔍 SERVICE DEBUG: Error object:', error);
+      console.error('🔍 SERVICE DEBUG: Error response:', error.response);
+      console.error('🔍 SERVICE DEBUG: Error status:', error.response?.status);
+      console.error('🔍 SERVICE DEBUG: Error data:', error.response?.data);
+      
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        throw new Error('Request timed out. Please check your connection and try again.');
+      }
+      
+      if (error.response?.status === 401) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+      
+      if (error.response?.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      }
+      
       throw error;
     }
   }

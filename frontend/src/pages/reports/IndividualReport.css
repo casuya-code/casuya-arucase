@@ -206,7 +206,7 @@
 .year-card {
   background: white;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 0;
   padding: clamp(0.75rem, 2vw, 1.25rem);
   text-align: center;
   cursor: pointer;
@@ -268,7 +268,7 @@
 .term-card {
   background: white;
   border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  border-radius: 0;
   padding: clamp(0.75rem, 2vw, 1.5rem);
   text-align: center;
   cursor: pointer;
@@ -339,7 +339,7 @@
   color: white;
   border: none;
   padding: clamp(0.375rem, 1vw, 0.5rem) clamp(0.625rem, 1.5vw, 0.875rem);
-  border-radius: 6px;
+  border-radius: 0;
   cursor: pointer;
   font-size: clamp(0.65rem, 1.5vw, 0.8rem);
   transition: background 0.2s ease;

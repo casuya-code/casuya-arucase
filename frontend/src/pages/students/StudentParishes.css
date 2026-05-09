@@ -9,7 +9,7 @@
 
 .parish-card {
   background: white;
-  border-radius: 8px;
+  border-radius: 0;
   box-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
   overflow: hidden;
 }
@@ -39,7 +39,7 @@
 .parish-form-card {
   background: white;
   border: 1px solid #e5e7eb;
-  border-radius: 6px;
+  border-radius: 0;
   padding: clamp(0.75rem, 2vw, 1rem);
   text-align: center;
   text-decoration: none;

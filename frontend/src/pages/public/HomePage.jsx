@@ -212,9 +212,10 @@ const HomePage = () => {
             )}
           </div>
 
-          {/* Login Button - Top Right Corner */}
-          <Link to="/login" className="login-button-top-right" title="Login">
-            <i className="fas fa-sign-in-alt"></i>
+          {/* Home Button - Top Right Corner */}
+          <Link to="/" className="home-button" aria-label="Navigate to homepage">
+            <i className="fas fa-home" aria-hidden="true"></i>
+            <span className="sr-only">Navigate to homepage</span> Rudi Nyumbani
           </Link>
 
           {/* Scrolling Text at Bottom - Rector Statement */}

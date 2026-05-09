@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import './PreFormOneInterviewSubjects.css';
 import { preFormOneInterviewSubjectsService } from '../../services/preFormOneInterviewSubjectsService';
 
 const PreFormOneInterviewSubjects = () => {
+  const { year } = useParams();
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -11,6 +13,9 @@ const PreFormOneInterviewSubjects = () => {
   const [formData, setFormData] = useState({
     subject_name: '',
     subject_code: '',
+    description: '',
+    max_marks: 100,
+    interview_duration_minutes: 30,
     is_active: true
   });
 
@@ -384,6 +389,13 @@ const PreFormOneInterviewSubjects = () => {
             </table>
           </div>
         )}
+      </div>
+      
+      <div className="back-navigation-bottom">
+        <Link to={`/admin/pre-form-one/${year}`} className="back-button">
+          <i className="fas fa-arrow-left"></i>
+          Back to Modules
+        </Link>
       </div>
     </div>
   );

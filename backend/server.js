@@ -8,6 +8,7 @@ const cors = require('cors');
 const compression = require('compression');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
+const cookieParser = require('cookie-parser');
 const http = require('http');
 const { Server } = require('socket.io');
 const path = require('path');
@@ -150,11 +151,22 @@ setImmediate(() => {
     .catch(err => console.warn('[migration] DIV to A/DIV migration failed:', err.message));
 });
 
-// Middleware
+// Enhanced Security Middleware
+const { securityHeaders, customSecurityHeaders, securityMonitor } = require('./middleware/securityHeaders');
+const { globalApiRateLimit } = require('./middleware/enhancedRateLimiting');
+
+// Apply security middleware to all requests
+app.use(securityHeaders);
+app.use(customSecurityHeaders);
+app.use(securityMonitor);
+app.use(globalApiRateLimit);
+
+// Original middleware
 app.use(helmet({
   crossOriginResourcePolicy: { policy: "cross-origin" }
 }));
 app.use(compression());
+app.use(cookieParser());
 app.use(cors({
   origin: process.env.ALLOWED_ORIGINS?.split(',') || (process.env.NODE_ENV === 'production' ? [] : [
     'http://localhost:3000',
@@ -320,6 +332,7 @@ app.use('/api/', requestLogger);
 const adminRoutes = require('./routes/admin');
 const analyticsRoutes = require('./routes/analytics');
 const authRoutes = require('./routes/auth');
+const { router: authRefreshRoutes } = require('./routes/auth-refresh');
 const publicRoutes = require('./routes/public');
 const reportsRoutes = require('./routes/reports');
 const dtaMonitorRoutes = require('./routes/dtaMonitor');
@@ -328,9 +341,11 @@ const preFormOneRoutes = require('./routes/preFormOne');
 const preFormOneInterviewSubjectsRoutes = require('./routes/preFormOneInterviewSubjects');
 const preFormOneContinuingSubjectsRoutes = require('./routes/preFormOneContinuingSubjects');
 const preFormOneScoresRoutes = require('./routes/preFormOneScores');
+const preFormOnePromotionRoutes = require('./routes/preFormOnePromotion');
 const systemGradesRoutes = require('./routes/systemGrades');
 
 app.use('/api/auth', authRoutes);
+app.use('/api/auth', authRefreshRoutes);
 app.use('/api/public', publicRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/students', studentsRoutes);
@@ -341,6 +356,7 @@ app.use('/api/pre-form-one', preFormOneRoutes);
 app.use('/api/preformone-interview-subjects', preFormOneInterviewSubjectsRoutes);
 app.use('/api/preformone-continuing-subjects', preFormOneContinuingSubjectsRoutes);
 app.use('/api/preformone-scores', preFormOneScoresRoutes);
+app.use('/api/preformone-promotion', preFormOnePromotionRoutes);
 app.use('/api/system', systemGradesRoutes);
 
 // Socket.IO authentication middleware

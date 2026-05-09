@@ -37,7 +37,7 @@ const PreFormOneRegistration = () => {
         console.log('🔍 FRONTEND DEBUG: Is response.data array:', Array.isArray(response?.data));
         
         // Ensure we always set an array
-        const studentsData = Array.isArray(response) ? response : (response?.data || []);
+        const studentsData = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
         console.log('🔍 FRONTEND DEBUG: Final students data to set:', studentsData);
         console.log('🔍 FRONTEND DEBUG: Students count:', studentsData.length);
         

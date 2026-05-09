@@ -466,7 +466,7 @@
 .photo-preview {
   max-width: 200px;
   max-height: 200px;
-  border-radius: 8px;
+  border-radius: 0;
   object-fit: cover;
 }
 
@@ -611,7 +611,7 @@
     max-height: 85vh; /* fallback */
     max-height: min(85vh, calc(100vh - env(safe-area-inset-top) - 0.5rem));
     height: auto;
-    border-radius: 16px 16px 0 0;
+    border-radius: 0;
     padding-bottom: max(1rem, env(safe-area-inset-bottom));
     display: flex;
     flex-direction: column;

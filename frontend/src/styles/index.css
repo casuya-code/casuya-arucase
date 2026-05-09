@@ -794,12 +794,7 @@ img {
   opacity: 1;
 }
 
-/* Optimize font loading */
-@font-face {
-  font-family: 'FontAwesome';
-  src: local('FontAwesome'), url('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/webfonts/fa-solid-900.woff2') format('woff2');
-  font-display: swap; /* Show fallback font immediately */
-}
+/* FontAwesome is loaded via npm package in main.jsx - no custom font-face needed */
 
 /* Reduce repaints on scroll */
 .gallery-grid,

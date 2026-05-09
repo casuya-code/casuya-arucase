@@ -30,7 +30,7 @@ const pool = new Pool({
   password: process.env.PGPASSWORD || process.env.POSTGRES_PASSWORD || '',
   database: process.env.PGDATABASE || process.env.POSTGRES_DB || 'railway',
   connectionString: process.env.DATABASE_URL,
-  ssl: false, // Force SSL to false for local PostgreSQL
+  ssl: process.env.NODE_ENV === 'production' ? { rejectUnauthorized: false } : false, // SSL for production, disabled for local
   max: poolMax,
   idleTimeoutMillis: 30000,
   connectionTimeoutMillis: 5000,

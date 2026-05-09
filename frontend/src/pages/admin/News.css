@@ -17,7 +17,7 @@
 .add-announcement-form {
   background: #f9fafb;
   padding: 1.5rem;
-  border-radius: 8px;
+  border-radius: 0;
   margin-bottom: 2rem;
   border: 1px solid #e5e7eb;
 }
@@ -50,7 +50,7 @@
 .excel-input {
   padding: clamp(1rem, 3.5vw, 1.25rem);
   border: 2px solid #d1d5db;
-  border-radius: 8px;
+  border-radius: 0;
   font-size: clamp(1rem, 4vw, 1.125rem);
   font-family: inherit;
   line-height: 1.6;
@@ -111,7 +111,7 @@
 
 .priority-badge {
   padding: 0.25rem 0.75rem;
-  border-radius: 12px;
+  border-radius: 0;
   font-size: 0.875rem;
   font-weight: 500;
   display: inline-block;
@@ -141,7 +141,7 @@
 .excel-btn {
   padding: clamp(1rem, 3.5vw, 1.25rem) clamp(1.5rem, 5vw, 2rem);
   border: none;
-  border-radius: 12px;
+  border-radius: 0;
   cursor: pointer;
   font-size: clamp(1rem, 4vw, 1.125rem);
   font-weight: 600;

@@ -1,12 +1,14 @@
 /**
  * Admissions Page - Full Content from Python Template
  */
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import PublicLayout from '../../components/layout/PublicLayout';
 import Loading from '../../components/common/Loading';
 import { publicAPI } from '../../services/public';
 import './Admissions.css';
+import DOMPurify from 'dompurify';
 
 const Admissions = () => {
   const { data: pageData, isLoading, isError } = useQuery({
@@ -116,7 +118,7 @@ const Admissions = () => {
           </div>
           <div 
             className="content-card"
-            dangerouslySetInnerHTML={{ __html: page.html_content || page.content || '' }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(page.html_content || page.content || '') }}
           />
         </div>
       ) : (

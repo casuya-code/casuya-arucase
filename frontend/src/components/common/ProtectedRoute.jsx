@@ -16,22 +16,16 @@ const ProtectedRoute = ({ children, requiredRole = null, requiredPermission = nu
     const token = localStorage.getItem('token');
     const hasUser = isAuthenticated();
     
-    console.log('🔍 PROTECTED ROUTE DEBUG: Token verification check', {
-      hasToken: !!token,
-      hasUser,
-      loading,
-      isVerifying,
-      currentPath: location.pathname
-    });
-    
-    // If we have a token but no user state, verify it
+    // Token verification check
     if (token && !hasUser && !loading && !isVerifying) {
-      console.log('🔍 PROTECTED ROUTE DEBUG: Starting token verification');
       setIsVerifying(true);
-      verifyToken().finally(() => {
-        setIsVerifying(false);
-        console.log('🔍 PROTECTED ROUTE DEBUG: Token verification completed');
-      });
+      verifyToken()
+        .catch((error) => {
+          // Token verification failed
+        })
+        .finally(() => {
+          setIsVerifying(false);
+        });
     }
   }, [loading, isAuthenticated, verifyToken, isVerifying, location.pathname]);
 
@@ -40,9 +34,6 @@ const ProtectedRoute = ({ children, requiredRole = null, requiredPermission = nu
   }
 
   if (!isAuthenticated()) {
-    console.log('🔍 PROTECTED ROUTE DEBUG: Not authenticated, redirecting to login');
-    console.log('🔍 PROTECTED ROUTE DEBUG: Current path:', location.pathname);
-    console.log('🔍 PROTECTED ROUTE DEBUG: Has token:', !!localStorage.getItem('token'));
     return <Navigate to="/login" replace />;
   }
 

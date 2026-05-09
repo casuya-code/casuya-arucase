@@ -1,12 +1,14 @@
 /**
  * About Page - Full Content from Python Template
  */
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import PublicLayout from '../../components/layout/PublicLayout';
 import Loading from '../../components/common/Loading';
 import { publicAPI } from '../../services/public';
 import './About.css';
+import DOMPurify from 'dompurify';
 
 const About = () => {
   // Try to fetch page content from database, but have fallback content
@@ -20,8 +22,9 @@ const About = () => {
   // Fallback content from Python template
   const fallbackContent = (
     <div className="about-page">
-      <Link to="/" className="home-button">
-        <i className="fas fa-home"></i> Rudi Nyumbani
+      <Link to="/" className="home-button" aria-label="Navigate to homepage">
+        <i className="fas fa-home" aria-hidden="true"></i>
+        <span className="sr-only">Navigate to homepage</span> Rudi Nyumbani
       </Link>
 
       <div className="content-card">
@@ -45,6 +48,29 @@ const About = () => {
           <strong>Jibu:</strong> Kuwajenga vijana wa kiume wawe wakomavu kiroho, wabora kitaaluma,
           na wenye maadili mema ili wawe viongozi wa baadaye katika Kanisa Katoliki na jamii kwa ujumla.
         </p>
+
+        <!-- Related Pages for SEO -->
+        <div className="related-pages">
+          <h3>Pages Zinazohusiana</h3>
+          <div className="related-links">
+            <Link to="/admissions" className="related-link">
+              <i className="fas fa-graduation-cap"></i>
+              <span>Udahili</span>
+            </Link>
+            <Link to="/staff" className="related-link">
+              <i className="fas fa-users"></i>
+              <span>Wafanyakazi</span>
+            </Link>
+            <Link to="/student-life" className="related-link">
+              <i className="fas fa-heart"></i>
+              <span>Maisha ya Mwanafunzi</span>
+            </Link>
+            <Link to="/contact" className="related-link">
+              <i className="fas fa-envelope"></i>
+              <span>Mawasiliano</span>
+            </Link>
+          </div>
+        </div>
 
         <h2>Maono Yetu</h2>
         <p>
@@ -89,7 +115,7 @@ const About = () => {
           </Link>
           <div 
             className="content-card"
-            dangerouslySetInnerHTML={{ __html: page.html_content || page.content || '' }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(page.html_content || page.content || '') }}
           />
         </div>
       ) : (

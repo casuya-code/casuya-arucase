@@ -156,6 +156,7 @@ const PreFormOneInterviewResults = lazy(() => import('./pages/admin/PreFormOneIn
 const PreFormOneContinuingResults = lazy(() => import('./pages/admin/PreFormOneContinuingResults'));
 const PreFormOneInterviewReports = lazy(() => import('./pages/admin/PreFormOneInterviewReports'));
 const PreFormOneContinuingReports = lazy(() => import('./pages/admin/PreFormOneContinuingReports'));
+const PreFormOnePromotion = lazy(() => import('./pages/admin/PreFormOnePromotion'));
 
 // Analytics (lazy)
 const AnalyticsTrackSelection = lazy(() => import('./pages/analytics/AnalyticsTrackSelection'));
@@ -355,7 +356,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-i/years"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_i_iv">
                   <YearSelection formLevel="FORM I" />
                 </ProtectedRoute>
               }
@@ -363,7 +364,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-ii/years"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_i_iv">
                   <YearSelection formLevel="FORM II" />
                 </ProtectedRoute>
               }
@@ -371,7 +372,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-iii/years"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_i_iv">
                   <YearSelection formLevel="FORM III" />
                 </ProtectedRoute>
               }
@@ -379,7 +380,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-iv/years"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_i_iv">
                   <YearSelection formLevel="FORM IV" />
                 </ProtectedRoute>
               }
@@ -387,7 +388,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-i/year/:year/streams"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_i_iv">
                   <StreamSelection formLevel="FORM I" />
                 </ProtectedRoute>
               }
@@ -395,7 +396,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-ii/year/:year/streams"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_i_iv">
                   <StreamSelection formLevel="FORM II" />
                 </ProtectedRoute>
               }
@@ -403,7 +404,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-iii/year/:year/streams"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_i_iv">
                   <StreamSelection formLevel="FORM III" />
                 </ProtectedRoute>
               }
@@ -411,7 +412,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-iv/year/:year/streams"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_i_iv">
                   <StreamSelection formLevel="FORM IV" />
                 </ProtectedRoute>
               }
@@ -420,7 +421,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-i/year/:year/stream/:stream/actions"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_i_iv">
                   <ActionSelection formLevel="FORM I" />
                 </ProtectedRoute>
               }
@@ -428,7 +429,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-ii/year/:year/stream/:stream/actions"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_i_iv">
                   <ActionSelection formLevel="FORM II" />
                 </ProtectedRoute>
               }
@@ -436,7 +437,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-iii/year/:year/stream/:stream/actions"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_i_iv">
                   <ActionSelection formLevel="FORM III" />
                 </ProtectedRoute>
               }
@@ -444,7 +445,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-iv/year/:year/stream/:stream/actions"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_i_iv">
                   <ActionSelection formLevel="FORM IV" />
                 </ProtectedRoute>
               }
@@ -453,7 +454,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-v/streams"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_v_vi">
                   <StreamSelection formLevel="FORM V" isFormVOrVI={true} />
                 </ProtectedRoute>
               }
@@ -461,7 +462,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-vi/streams"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_v_vi">
                   <StreamSelection formLevel="FORM VI" isFormVOrVI={true} />
                 </ProtectedRoute>
               }
@@ -469,7 +470,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-v/stream/:stream/years"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_v_vi">
                   <FormVVIYearSelection formLevel="FORM V" />
                 </ProtectedRoute>
               }
@@ -477,7 +478,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-vi/stream/:stream/years"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_v_vi">
                   <FormVVIYearSelection formLevel="FORM VI" />
                 </ProtectedRoute>
               }
@@ -486,7 +487,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-v/stream/:stream/year/:year/terms"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_v_vi">
                   <CommentsTermSelection formLevel="form-v" moduleName="students" basePath="/admin/students/registration" />
                 </ProtectedRoute>
               }
@@ -494,7 +495,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-vi/stream/:stream/year/:year/terms"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_v_vi">
                   <CommentsTermSelection formLevel="form-vi" moduleName="students" basePath="/admin/students/registration" />
                 </ProtectedRoute>
               }
@@ -502,7 +503,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-v/stream/:stream/year/:year/term/:term/actions"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_v_vi">
                   <ActionSelectionVVI formLevel="FORM V" />
                 </ProtectedRoute>
               }
@@ -510,7 +511,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-vi/stream/:stream/year/:year/term/:term/actions"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_v_vi">
                   <ActionSelectionVVI formLevel="FORM VI" />
                 </ProtectedRoute>
               }
@@ -519,7 +520,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-i/year/:year/stream/:stream"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_i_iv">
                   <RegistrationForm />
                 </ProtectedRoute>
               }
@@ -527,7 +528,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-ii/year/:year/stream/:stream"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_i_iv">
                   <RegistrationForm />
                 </ProtectedRoute>
               }
@@ -535,7 +536,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-iii/year/:year/stream/:stream"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_i_iv">
                   <RegistrationForm />
                 </ProtectedRoute>
               }
@@ -543,7 +544,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-iv/year/:year/stream/:stream"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_i_iv">
                   <RegistrationForm />
                 </ProtectedRoute>
               }
@@ -551,7 +552,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-v/stream/:stream/year/:year/term/:term"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_v_vi">
                   <RegistrationForm />
                 </ProtectedRoute>
               }
@@ -559,7 +560,7 @@ function App() {
             <Route
               path="/admin/students/registration/form-vi/stream/:stream/year/:year/term/:term"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_v_vi">
                   <RegistrationForm />
                 </ProtectedRoute>
               }
@@ -567,7 +568,7 @@ function App() {
             <Route
               path="/students/list"
               element={
-                <ProtectedRoute requiredModule="student_registration">
+                <ProtectedRoute requiredModule="student_registration_form_i_iv">
                   <StudentList />
                 </ProtectedRoute>
               }
@@ -1792,10 +1793,12 @@ function App() {
             <Route path="/admin/tabia/form-iv/year/:year/stream/:stream/terms" element={<ProtectedRoute><CommentsTermSelection formLevel="form-iv" moduleName="tabia" /></ProtectedRoute>} />
             <Route path="/admin/tabia/form-v/stream/:stream/year/:year/terms" element={<ProtectedRoute><CommentsTermSelection formLevel="form-v" moduleName="tabia" /></ProtectedRoute>} />
             <Route path="/admin/tabia/form-vi/stream/:stream/year/:year/terms" element={<ProtectedRoute><CommentsTermSelection formLevel="form-vi" moduleName="tabia" /></ProtectedRoute>} />
-            <Route path="/admin/tabia/form-i/year/:year/stream/:stream/term/:term" element={<ProtectedRoute><CommentsManagement formLevel="form-i" moduleName="tabia" commentType="tabia" moduleLabel="Tabia Comments" icon="fa-user-check" /></ProtectedRoute>} />
-            <Route path="/admin/tabia/form-ii/year/:year/stream/:stream/term/:term" element={<ProtectedRoute><CommentsManagement formLevel="form-ii" moduleName="tabia" commentType="tabia" moduleLabel="Tabia Comments" icon="fa-user-check" /></ProtectedRoute>} />
-            <Route path="/admin/tabia/form-iii/year/:year/stream/:stream/term/:term" element={<ProtectedRoute><CommentsManagement formLevel="form-iii" moduleName="tabia" commentType="tabia" moduleLabel="Tabia Comments" icon="fa-user-check" /></ProtectedRoute>} />
-            <Route path="/admin/tabia/form-iv/year/:year/stream/:stream/term/:term" element={<ProtectedRoute><CommentsManagement formLevel="form-iv" moduleName="tabia" commentType="tabia" moduleLabel="Tabia Comments" icon="fa-user-check" /></ProtectedRoute>} />
+            <Route path="/admin/tabia/form-i/year/:year/stream/:stream/term/:term" element={<ProtectedRoute requiredModule="tabia_comments"><CommentsManagement formLevel="form-i" moduleName="tabia" commentType="tabia" moduleLabel="Tabia Comments" icon="fa-user-check" /></ProtectedRoute>} />
+            <Route path="/admin/tabia/form-ii/year/:year/stream/:stream/term/:term" element={<ProtectedRoute requiredModule="tabia_comments"><CommentsManagement formLevel="form-ii" moduleName="tabia" commentType="tabia" moduleLabel="Tabia Comments" icon="fa-user-check" /></ProtectedRoute>} />
+            <Route path="/admin/tabia/form-iii/year/:year/stream/:stream/term/:term" element={<ProtectedRoute requiredModule="tabia_comments"><CommentsManagement formLevel="form-iii" moduleName="tabia" commentType="tabia" moduleLabel="Tabia Comments" icon="fa-user-check" /></ProtectedRoute>} />
+            <Route path="/admin/tabia/form-iv/year/:year/stream/:stream/term/:term" element={<ProtectedRoute requiredModule="tabia_comments"><CommentsManagement formLevel="form-iv" moduleName="tabia" commentType="tabia" moduleLabel="Tabia Comments" icon="fa-user-check" /></ProtectedRoute>} />
+            <Route path="/admin/tabia/form-v/stream/:stream/year/:year/term/:term" element={<ProtectedRoute requiredModule="tabia_comments"><CommentsManagement formLevel="form-v" moduleName="tabia" commentType="tabia" moduleLabel="Tabia Comments" icon="fa-user-check" /></ProtectedRoute>} />
+            <Route path="/admin/tabia/form-vi/stream/:stream/year/:year/term/:term" element={<ProtectedRoute requiredModule="tabia_comments"><CommentsManagement formLevel="form-vi" moduleName="tabia" commentType="tabia" moduleLabel="Tabia Comments" icon="fa-user-check" /></ProtectedRoute>} />
             <Route path="/admin/tabia/form-v/stream/:stream/year/:year/term/:term" element={<ProtectedRoute><CommentsManagement formLevel="form-v" moduleName="tabia" commentType="tabia" moduleLabel="Tabia Comments" icon="fa-user-check" /></ProtectedRoute>} />
             <Route path="/admin/tabia/form-vi/stream/:stream/year/:year/term/:term" element={<ProtectedRoute><CommentsManagement formLevel="form-vi" moduleName="tabia" commentType="tabia" moduleLabel="Tabia Comments" icon="fa-user-check" /></ProtectedRoute>} />
 
@@ -2059,71 +2062,71 @@ function App() {
               }
             />
             {/* Analytics Routes */}
-            <Route path="/admin/analytics" element={<ProtectedRoute><Analytics /></ProtectedRoute>} />
-            <Route path="/admin/analytics/all-forms-averages" element={<ProtectedRoute><AllFormsAverages /></ProtectedRoute>} />
-            <Route path="/admin/analytics/:form" element={<ProtectedRoute><AnalyticsTrackSelection /></ProtectedRoute>} />
-            <Route path="/admin/analytics/:form/student-track" element={<ProtectedRoute><StudentTrack /></ProtectedRoute>} />
-            <Route path="/admin/analytics/:form/class-track" element={<ProtectedRoute><ClassTrack /></ProtectedRoute>} />
-            <Route path="/admin/analytics/:form/subject-track" element={<ProtectedRoute><SubjectTrack /></ProtectedRoute>} />
-            <Route path="/admin/analytics/:form/who-and-when" element={<ProtectedRoute><WhoAndWhenTrack /></ProtectedRoute>} />
-            <Route path="/admin/analytics/:form/solutions" element={<ProtectedRoute><SolutionsTrack /></ProtectedRoute>} />
+            <Route path="/admin/analytics" element={<ProtectedRoute requiredModule="analytics_view"><Analytics /></ProtectedRoute>} />
+            <Route path="/admin/analytics/all-forms-averages" element={<ProtectedRoute requiredModule="analytics_form_averages"><AllFormsAverages /></ProtectedRoute>} />
+            <Route path="/admin/analytics/:form" element={<ProtectedRoute requiredModule="analytics_view"><AnalyticsTrackSelection /></ProtectedRoute>} />
+            <Route path="/admin/analytics/:form/student-track" element={<ProtectedRoute requiredModule="analytics_student_tracking"><StudentTrack /></ProtectedRoute>} />
+            <Route path="/admin/analytics/:form/class-track" element={<ProtectedRoute requiredModule="analytics_student_tracking"><ClassTrack /></ProtectedRoute>} />
+            <Route path="/admin/analytics/:form/subject-track" element={<ProtectedRoute requiredModule="analytics_student_tracking"><SubjectTrack /></ProtectedRoute>} />
+            <Route path="/admin/analytics/:form/who-and-when" element={<ProtectedRoute requiredModule="analytics_student_tracking"><WhoAndWhenTrack /></ProtectedRoute>} />
+            <Route path="/admin/analytics/:form/solutions" element={<ProtectedRoute requiredModule="analytics_solutions"><SolutionsTrack /></ProtectedRoute>} />
 
             {/* Announcements & Communication Routes */}
             {/* News */}
-            <Route path="/admin/news" element={<ProtectedRoute><News /></ProtectedRoute>} />
+            <Route path="/admin/news" element={<ProtectedRoute requiredModule="news_announcements"><News /></ProtectedRoute>} />
 
             {/* Fees Announcements */}
-            <Route path="/admin/fees" element={<ProtectedRoute><Fees /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-i/years" element={<ProtectedRoute><CommentsYearSelection formLevel="FORM I" moduleName="fees" /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-ii/years" element={<ProtectedRoute><CommentsYearSelection formLevel="FORM II" moduleName="fees" /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-iii/years" element={<ProtectedRoute><CommentsYearSelection formLevel="FORM III" moduleName="fees" /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-iv/years" element={<ProtectedRoute><CommentsYearSelection formLevel="FORM IV" moduleName="fees" /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-v/streams" element={<ProtectedRoute><CommentsStreamSelection formLevel="FORM V" moduleName="fees" isFormVOrVI={true} /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-vi/streams" element={<ProtectedRoute><CommentsStreamSelection formLevel="FORM VI" moduleName="fees" isFormVOrVI={true} /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-v/stream/:stream/years" element={<ProtectedRoute><CommentsFormVVIYearSelection formLevel="FORM V" moduleName="fees" /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-vi/stream/:stream/years" element={<ProtectedRoute><CommentsFormVVIYearSelection formLevel="FORM VI" moduleName="fees" /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-i/year/:year/streams" element={<ProtectedRoute><CommentsStreamSelection formLevel="FORM I" moduleName="fees" /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-ii/year/:year/streams" element={<ProtectedRoute><CommentsStreamSelection formLevel="FORM II" moduleName="fees" /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-iii/year/:year/streams" element={<ProtectedRoute><CommentsStreamSelection formLevel="FORM III" moduleName="fees" /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-iv/year/:year/streams" element={<ProtectedRoute><CommentsStreamSelection formLevel="FORM IV" moduleName="fees" /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-i/year/:year/stream/:stream/terms" element={<ProtectedRoute><CommentsTermSelection formLevel="form-i" moduleName="fees" /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-ii/year/:year/stream/:stream/terms" element={<ProtectedRoute><CommentsTermSelection formLevel="form-ii" moduleName="fees" /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-iii/year/:year/stream/:stream/terms" element={<ProtectedRoute><CommentsTermSelection formLevel="form-iii" moduleName="fees" /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-iv/year/:year/stream/:stream/terms" element={<ProtectedRoute><CommentsTermSelection formLevel="form-iv" moduleName="fees" /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-i/year/:year/stream/:stream/term/:term" element={<ProtectedRoute><FeesManagement formLevel="form-i" /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-ii/year/:year/stream/:stream/term/:term" element={<ProtectedRoute><FeesManagement formLevel="form-ii" /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-iii/year/:year/stream/:stream/term/:term" element={<ProtectedRoute><FeesManagement formLevel="form-iii" /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-iv/year/:year/stream/:stream/term/:term" element={<ProtectedRoute><FeesManagement formLevel="form-iv" /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-v/stream/:stream/year/:year/terms" element={<ProtectedRoute><CommentsTermSelection formLevel="form-v" moduleName="fees" /></ProtectedRoute>} />
-            <Route path="/admin/fees/form-vi/stream/:stream/year/:year/terms" element={<ProtectedRoute><CommentsTermSelection formLevel="form-vi" moduleName="fees" /></ProtectedRoute>} />
+            <Route path="/admin/fees" element={<ProtectedRoute requiredModule="fees_announcements"><Fees /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-i/years" element={<ProtectedRoute requiredModule="fees_announcements"><CommentsYearSelection formLevel="FORM I" moduleName="fees" /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-ii/years" element={<ProtectedRoute requiredModule="fees_announcements"><CommentsYearSelection formLevel="FORM II" moduleName="fees" /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-iii/years" element={<ProtectedRoute requiredModule="fees_announcements"><CommentsYearSelection formLevel="FORM III" moduleName="fees" /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-iv/years" element={<ProtectedRoute requiredModule="fees_announcements"><CommentsYearSelection formLevel="FORM IV" moduleName="fees" /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-v/streams" element={<ProtectedRoute requiredModule="fees_announcements"><CommentsStreamSelection formLevel="FORM V" moduleName="fees" isFormVOrVI={true} /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-vi/streams" element={<ProtectedRoute requiredModule="fees_announcements"><CommentsStreamSelection formLevel="FORM VI" moduleName="fees" isFormVOrVI={true} /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-v/stream/:stream/years" element={<ProtectedRoute requiredModule="fees_announcements"><CommentsFormVVIYearSelection formLevel="FORM V" moduleName="fees" /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-vi/stream/:stream/years" element={<ProtectedRoute requiredModule="fees_announcements"><CommentsFormVVIYearSelection formLevel="FORM VI" moduleName="fees" /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-i/year/:year/streams" element={<ProtectedRoute requiredModule="fees_announcements"><CommentsStreamSelection formLevel="FORM I" moduleName="fees" /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-ii/year/:year/streams" element={<ProtectedRoute requiredModule="fees_announcements"><CommentsStreamSelection formLevel="FORM II" moduleName="fees" /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-iii/year/:year/streams" element={<ProtectedRoute requiredModule="fees_announcements"><CommentsStreamSelection formLevel="FORM III" moduleName="fees" /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-iv/year/:year/streams" element={<ProtectedRoute requiredModule="fees_announcements"><CommentsStreamSelection formLevel="FORM IV" moduleName="fees" /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-i/year/:year/stream/:stream/terms" element={<ProtectedRoute requiredModule="fees_announcements"><CommentsTermSelection formLevel="form-i" moduleName="fees" /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-ii/year/:year/stream/:stream/terms" element={<ProtectedRoute requiredModule="fees_announcements"><CommentsTermSelection formLevel="form-ii" moduleName="fees" /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-iii/year/:year/stream/:stream/terms" element={<ProtectedRoute requiredModule="fees_announcements"><CommentsTermSelection formLevel="form-iii" moduleName="fees" /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-iv/year/:year/stream/:stream/terms" element={<ProtectedRoute requiredModule="fees_announcements"><CommentsTermSelection formLevel="form-iv" moduleName="fees" /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-i/year/:year/stream/:stream/term/:term" element={<ProtectedRoute requiredModule="fees_announcements"><FeesManagement formLevel="form-i" /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-ii/year/:year/stream/:stream/term/:term" element={<ProtectedRoute requiredModule="fees_announcements"><FeesManagement formLevel="form-ii" /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-iii/year/:year/stream/:stream/term/:term" element={<ProtectedRoute requiredModule="fees_announcements"><FeesManagement formLevel="form-iii" /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-iv/year/:year/stream/:stream/term/:term" element={<ProtectedRoute requiredModule="fees_announcements"><FeesManagement formLevel="form-iv" /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-v/stream/:stream/year/:year/terms" element={<ProtectedRoute requiredModule="fees_announcements"><CommentsTermSelection formLevel="form-v" moduleName="fees" /></ProtectedRoute>} />
+            <Route path="/admin/fees/form-vi/stream/:stream/year/:year/terms" element={<ProtectedRoute requiredModule="fees_announcements"><CommentsTermSelection formLevel="form-vi" moduleName="fees" /></ProtectedRoute>} />
             <Route path="/admin/fees/form-v/stream/:stream/year/:year/term/:term" element={<ProtectedRoute><FeesManagement formLevel="form-v" /></ProtectedRoute>} />
             <Route path="/admin/fees/form-vi/stream/:stream/year/:year/term/:term" element={<ProtectedRoute><FeesManagement formLevel="form-vi" /></ProtectedRoute>} />
 
             {/* Individual Debt */}
-            <Route path="/admin/debts" element={<ProtectedRoute><Debts /></ProtectedRoute>} />
-            <Route path="/admin/debts/form-i/years" element={<ProtectedRoute><CommentsYearSelection formLevel="FORM I" moduleName="debts" /></ProtectedRoute>} />
-            <Route path="/admin/debts/form-ii/years" element={<ProtectedRoute><CommentsYearSelection formLevel="FORM II" moduleName="debts" /></ProtectedRoute>} />
+            <Route path="/admin/debts" element={<ProtectedRoute requiredModule="individual_debt"><Debts /></ProtectedRoute>} />
+            <Route path="/admin/debts/form-i/years" element={<ProtectedRoute requiredModule="individual_debt"><CommentsYearSelection formLevel="FORM I" moduleName="debts" /></ProtectedRoute>} />
+            <Route path="/admin/debts/form-ii/years" element={<ProtectedRoute requiredModule="individual_debt"><CommentsYearSelection formLevel="FORM II" moduleName="debts" /></ProtectedRoute>} />
             <Route path="/admin/debts/form-iii/years" element={<ProtectedRoute><CommentsYearSelection formLevel="FORM III" moduleName="debts" /></ProtectedRoute>} />
-            <Route path="/admin/debts/form-iv/years" element={<ProtectedRoute><CommentsYearSelection formLevel="FORM IV" moduleName="debts" /></ProtectedRoute>} />
-            <Route path="/admin/debts/form-v/streams" element={<ProtectedRoute><CommentsStreamSelection formLevel="FORM V" moduleName="debts" isFormVOrVI={true} /></ProtectedRoute>} />
-            <Route path="/admin/debts/form-vi/streams" element={<ProtectedRoute><CommentsStreamSelection formLevel="FORM VI" moduleName="debts" isFormVOrVI={true} /></ProtectedRoute>} />
-            <Route path="/admin/debts/form-v/stream/:stream/years" element={<ProtectedRoute><CommentsFormVVIYearSelection formLevel="FORM V" moduleName="debts" /></ProtectedRoute>} />
-            <Route path="/admin/debts/form-vi/stream/:stream/years" element={<ProtectedRoute><CommentsFormVVIYearSelection formLevel="FORM VI" moduleName="debts" /></ProtectedRoute>} />
-            <Route path="/admin/debts/form-v/stream/:stream/year/:year/terms" element={<ProtectedRoute><CommentsTermSelection formLevel="form-v" moduleName="debts" /></ProtectedRoute>} />
-            <Route path="/admin/debts/form-vi/stream/:stream/year/:year/terms" element={<ProtectedRoute><CommentsTermSelection formLevel="form-vi" moduleName="debts" /></ProtectedRoute>} />
+            <Route path="/admin/debts/form-iv/years" element={<ProtectedRoute requiredModule="individual_debt"><CommentsYearSelection formLevel="FORM IV" moduleName="debts" /></ProtectedRoute>} />
+            <Route path="/admin/debts/form-v/streams" element={<ProtectedRoute requiredModule="individual_debt"><CommentsStreamSelection formLevel="FORM V" moduleName="debts" isFormVOrVI={true} /></ProtectedRoute>} />
+            <Route path="/admin/debts/form-vi/streams" element={<ProtectedRoute requiredModule="individual_debt"><CommentsStreamSelection formLevel="FORM VI" moduleName="debts" isFormVOrVI={true} /></ProtectedRoute>} />
+            <Route path="/admin/debts/form-v/stream/:stream/years" element={<ProtectedRoute requiredModule="individual_debt"><CommentsFormVVIYearSelection formLevel="FORM V" moduleName="debts" /></ProtectedRoute>} />
+            <Route path="/admin/debts/form-vi/stream/:stream/years" element={<ProtectedRoute requiredModule="individual_debt"><CommentsFormVVIYearSelection formLevel="FORM VI" moduleName="debts" /></ProtectedRoute>} />
+            <Route path="/admin/debts/form-v/stream/:stream/year/:year/terms" element={<ProtectedRoute requiredModule="individual_debt"><CommentsTermSelection formLevel="form-v" moduleName="debts" /></ProtectedRoute>} />
+            <Route path="/admin/debts/form-vi/stream/:stream/year/:year/terms" element={<ProtectedRoute requiredModule="individual_debt"><CommentsTermSelection formLevel="form-vi" moduleName="debts" /></ProtectedRoute>} />
             <Route path="/admin/debts/form-i/year/:year/streams" element={<ProtectedRoute><CommentsStreamSelection formLevel="FORM I" moduleName="debts" /></ProtectedRoute>} />
             <Route path="/admin/debts/form-ii/year/:year/streams" element={<ProtectedRoute><CommentsStreamSelection formLevel="FORM II" moduleName="debts" /></ProtectedRoute>} />
             <Route path="/admin/debts/form-iii/year/:year/streams" element={<ProtectedRoute><CommentsStreamSelection formLevel="FORM III" moduleName="debts" /></ProtectedRoute>} />
             <Route path="/admin/debts/form-iv/year/:year/streams" element={<ProtectedRoute><CommentsStreamSelection formLevel="FORM IV" moduleName="debts" /></ProtectedRoute>} />
-            <Route path="/admin/debts/form-i/year/:year/stream/:stream" element={<ProtectedRoute><DebtsManagement formLevel="form-i" /></ProtectedRoute>} />
-            <Route path="/admin/debts/form-ii/year/:year/stream/:stream" element={<ProtectedRoute><DebtsManagement formLevel="form-ii" /></ProtectedRoute>} />
-            <Route path="/admin/debts/form-iii/year/:year/stream/:stream" element={<ProtectedRoute><DebtsManagement formLevel="form-iii" /></ProtectedRoute>} />
-            <Route path="/admin/debts/form-iv/year/:year/stream/:stream" element={<ProtectedRoute><DebtsManagement formLevel="form-iv" /></ProtectedRoute>} />
-            <Route path="/admin/debts/form-v/stream/:stream/year/:year/term/:term" element={<ProtectedRoute><DebtsManagement formLevel="form-v" /></ProtectedRoute>} />
-            <Route path="/admin/debts/form-vi/stream/:stream/year/:year/term/:term" element={<ProtectedRoute><DebtsManagement formLevel="form-vi" /></ProtectedRoute>} />
+            <Route path="/admin/debts/form-i/year/:year/stream/:stream" element={<ProtectedRoute requiredModule="individual_debt"><DebtsManagement formLevel="form-i" /></ProtectedRoute>} />
+            <Route path="/admin/debts/form-ii/year/:year/stream/:stream" element={<ProtectedRoute requiredModule="individual_debt"><DebtsManagement formLevel="form-ii" /></ProtectedRoute>} />
+            <Route path="/admin/debts/form-iii/year/:year/stream/:stream" element={<ProtectedRoute requiredModule="individual_debt"><DebtsManagement formLevel="form-iii" /></ProtectedRoute>} />
+            <Route path="/admin/debts/form-iv/year/:year/stream/:stream" element={<ProtectedRoute requiredModule="individual_debt"><DebtsManagement formLevel="form-iv" /></ProtectedRoute>} />
+            <Route path="/admin/debts/form-v/stream/:stream/year/:year/term/:term" element={<ProtectedRoute requiredModule="individual_debt"><DebtsManagement formLevel="form-v" /></ProtectedRoute>} />
+            <Route path="/admin/debts/form-vi/stream/:stream/year/:year/term/:term" element={<ProtectedRoute requiredModule="individual_debt"><DebtsManagement formLevel="form-vi" /></ProtectedRoute>} />
 
             {/* School Branding Routes */}
-            <Route path="/admin/branding/logo" element={<ProtectedRoute><Logo /></ProtectedRoute>} />
+            <Route path="/admin/branding/logo" element={<ProtectedRoute requiredAdmin={true}><Logo /></ProtectedRoute>} />
             <Route path="/admin/branding/stamp" element={<ProtectedRoute><Stamp /></ProtectedRoute>} />
             <Route path="/admin/branding/authority" element={<ProtectedRoute><Authority /></ProtectedRoute>} />
             <Route path="/admin/pass-ids" element={<ProtectedRoute><PassIdManagement /></ProtectedRoute>} />
@@ -2157,18 +2160,19 @@ function App() {
             <Route path="/admin/promotion/form-vi/stream/:stream/year/:year/preview" element={<ProtectedRoute><PromotionPreview formLevel="form-vi" /></ProtectedRoute>} />
 
             {/* Pre-Form One */}
-            <Route path="/admin/pre-form-one" element={<ProtectedRoute><PreFormOne /></ProtectedRoute>} />
-            <Route path="/admin/pre-form-one/:year" element={<ProtectedRoute><PreFormOneYear /></ProtectedRoute>} />
-            <Route path="/admin/pre-form-one/:year/registration" element={<ProtectedRoute><PreFormOneRegistration /></ProtectedRoute>} />
-            <Route path="/admin/pre-form-one/:year/parishes" element={<ProtectedRoute><PreFormOneParishes /></ProtectedRoute>} />
-            <Route path="/admin/pre-form-one/:year/interview-subjects" element={<ProtectedRoute><PreFormOneInterviewSubjects /></ProtectedRoute>} />
-            <Route path="/admin/pre-form-one/:year/continuing-subjects" element={<ProtectedRoute><PreFormOneContinuingSubjects /></ProtectedRoute>} />
-            <Route path="/admin/pre-form-one/:year/score-entry" element={<ProtectedRoute><PreFormOneScoreEntry /></ProtectedRoute>} />
-            <Route path="/admin/pre-form-one/:year/score-entry/:subjectId" element={<ProtectedRoute><PreFormOneScoreEntry /></ProtectedRoute>} />
-            <Route path="/admin/pre-form-one/:year/interview-results" element={<ProtectedRoute><PreFormOneInterviewResults /></ProtectedRoute>} />
-            <Route path="/admin/pre-form-one/:year/continuing-results" element={<ProtectedRoute><PreFormOneContinuingResults /></ProtectedRoute>} />
-            <Route path="/admin/pre-form-one/:year/interview-reports" element={<ProtectedRoute><PreFormOneInterviewReports /></ProtectedRoute>} />
-            <Route path="/admin/pre-form-one/:year/continuing-reports" element={<ProtectedRoute><PreFormOneContinuingReports /></ProtectedRoute>} />
+            <Route path="/admin/pre-form-one" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOne /></ProtectedRoute>} />
+            <Route path="/admin/pre-form-one/:year" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneYear /></ProtectedRoute>} />
+            <Route path="/admin/pre-form-one/:year/registration" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneRegistration /></ProtectedRoute>} />
+            <Route path="/admin/pre-form-one/:year/parishes" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneParishes /></ProtectedRoute>} />
+            <Route path="/admin/pre-form-one/:year/interview-subjects" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneInterviewSubjects /></ProtectedRoute>} />
+            <Route path="/admin/pre-form-one/:year/continuing-subjects" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneContinuingSubjects /></ProtectedRoute>} />
+            <Route path="/admin/pre-form-one/:year/score-entry" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneScoreEntry /></ProtectedRoute>} />
+            <Route path="/admin/pre-form-one/:year/score-entry/:subjectId" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneScoreEntry /></ProtectedRoute>} />
+            <Route path="/admin/pre-form-one/:year/interview-results" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneInterviewResults /></ProtectedRoute>} />
+            <Route path="/admin/pre-form-one/:year/continuing-results" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneContinuingResults /></ProtectedRoute>} />
+            <Route path="/admin/pre-form-one/:year/interview-reports" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneInterviewReports /></ProtectedRoute>} />
+            <Route path="/admin/pre-form-one/:year/continuing-reports" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneContinuingReports /></ProtectedRoute>} />
+            <Route path="/admin/pre-form-one/:year/promotion" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOnePromotion /></ProtectedRoute>} />
 
             {/* Public Website Routes */}
             <Route path="/admin/gallery" element={<ProtectedRoute><AdminGallery /></ProtectedRoute>} />

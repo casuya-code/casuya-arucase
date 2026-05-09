@@ -1,0 +1,160 @@
+🔍 DATABASE DEBUG: Query initiated
+🔍 DATABASE DEBUG: Query text: 
+      CREATE TABLE IF NOT EXISTS preform_one_scores (
+        id SERIAL PRIMARY KEY,
+        student_id INTEGER NOT NULL REFERENCES preform_one_students(id),
+        subject_id INTEGER NOT NULL,
+        subject_type VARCHAR(20) NOT NULL CHECK (subject_type IN ('interview', 'continuing')),
+        score INTEGER NOT NULL CHECK (score >= 0 AND score <= 100),
+        grade VARCHAR(2) CHECK (grade IN ('A', 'B', 'C', 'D', 'F')),
+        remarks TEXT,
+        created_by INTEGER NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE(student_id, subject_id, subject_type)
+      )
+    
+🔍 DATABASE DEBUG: Query params: undefined
+🔍 DATABASE DEBUG: Active queries before: 0
+🔍 DATABASE DEBUG: Max concurrent queries: 0
+🔍 DATABASE DEBUG: Getting client from pool...
+🔍 DATABASE DEBUG: Query initiated
+🔍 DATABASE DEBUG: Query text: 
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_name = 'students'
+            AND column_name = 'com'
+        ) THEN
+          ALTER TABLE students ADD COLUMN com VARCHAR(50);
+        END IF;
+      END $$;
+    
+🔍 DATABASE DEBUG: Query params: undefined
+🔍 DATABASE DEBUG: Active queries before: 1
+🔍 DATABASE DEBUG: Max concurrent queries: 0
+🔍 DATABASE DEBUG: Getting client from pool...
+🔍 DATABASE DEBUG: Query initiated
+🔍 DATABASE DEBUG: Query text: 
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_name = 'student_photos'
+            AND column_name = 'cloudinary_public_id'
+        ) THEN
+          ALTER TABLE student_photos ADD COLUMN cloudinary_public_id VARCHAR(255);
+        END IF;
+      END $$;
+    
+🔍 DATABASE DEBUG: Query params: undefined
+🔍 DATABASE DEBUG: Active queries before: 2
+🔍 DATABASE DEBUG: Max concurrent queries: 0
+🔍 DATABASE DEBUG: Getting client from pool...
+🔍 DATABASE DEBUG: Query initiated
+🔍 DATABASE DEBUG: Query text: 
+      DO $$
+      BEGIN
+        IF NOT EXISTS (
+          SELECT 1
+          FROM information_schema.columns
+          WHERE table_name = 'staff_profiles'
+            AND column_name = 'cloudinary_public_id'
+        ) THEN
+          ALTER TABLE staff_profiles ADD COLUMN cloudinary_public_id VARCHAR(255);
+        END IF;
+      END $$;
+    
+🔍 DATABASE DEBUG: Query params: undefined
+🔍 DATABASE DEBUG: Active queries before: 3
+🔍 DATABASE DEBUG: Max concurrent queries: 0
+🔍 DATABASE DEBUG: Getting client from pool...
+🔍 DATABASE DEBUG: Query initiated
+🔍 DATABASE DEBUG: Query text: UPDATE individual_scores SET subject_code = 'A/DIV' WHERE subject_code = 'DIV'
+🔍 DATABASE DEBUG: Query params: undefined
+🔍 DATABASE DEBUG: Active queries before: 4
+🔍 DATABASE DEBUG: Max concurrent queries: 0
+🔍 DATABASE DEBUG: Getting client from pool...
+✅ PostgreSQL connected
+🔍 DATABASE DEBUG: Client connected, ensuring statement timeout...
+🔍 DATABASE DEBUG: Executing query...
+🔍 DATABASE DEBUG: Query completed successfully
+🔍 DATABASE DEBUG: Query duration: 97ms
+🔍 DATABASE DEBUG: Query result rows: null
+🔍 DATABASE DEBUG: Releasing client back to pool
+🔍 DATABASE DEBUG: Active queries after: 4
+🔍 DATABASE DEBUG: Query initiated
+🔍 DATABASE DEBUG: Query text: CREATE INDEX IF NOT EXISTS idx_preformone_scores_student ON preform_one_scores(student_id)
+🔍 DATABASE DEBUG: Query params: undefined
+🔍 DATABASE DEBUG: Active queries before: 4
+🔍 DATABASE DEBUG: Max concurrent queries: 0
+🔍 DATABASE DEBUG: Getting client from pool...
+🔍 DATABASE DEBUG: Client connected, ensuring statement timeout...
+🔍 DATABASE DEBUG: Executing query...
+🔍 DATABASE DEBUG: Query completed successfully
+🔍 DATABASE DEBUG: Query duration: 3ms
+🔍 DATABASE DEBUG: Query result rows: null
+🔍 DATABASE DEBUG: Releasing client back to pool
+🔍 DATABASE DEBUG: Active queries after: 4
+🔍 DATABASE DEBUG: Query initiated
+🔍 DATABASE DEBUG: Query text: CREATE INDEX IF NOT EXISTS idx_preformone_scores_subject ON preform_one_scores(subject_id)
+🔍 DATABASE DEBUG: Query params: undefined
+🔍 DATABASE DEBUG: Active queries before: 4
+🔍 DATABASE DEBUG: Max concurrent queries: 0
+🔍 DATABASE DEBUG: Getting client from pool...
+🔍 DATABASE DEBUG: Client connected, ensuring statement timeout...
+🔍 DATABASE DEBUG: Executing query...
+🔍 DATABASE DEBUG: Query completed successfully
+🔍 DATABASE DEBUG: Query duration: 2ms
+🔍 DATABASE DEBUG: Query result rows: null
+🔍 DATABASE DEBUG: Releasing client back to pool
+🔍 DATABASE DEBUG: Active queries after: 4
+🔍 DATABASE DEBUG: Query initiated
+🔍 DATABASE DEBUG: Query text: CREATE INDEX IF NOT EXISTS idx_preformone_scores_type ON preform_one_scores(subject_type)
+🔍 DATABASE DEBUG: Query params: undefined
+🔍 DATABASE DEBUG: Active queries before: 4
+🔍 DATABASE DEBUG: Max concurrent queries: 0
+🔍 DATABASE DEBUG: Getting client from pool...
+🔍 DATABASE DEBUG: Client connected, ensuring statement timeout...
+🔍 DATABASE DEBUG: Executing query...
+🔍 DATABASE DEBUG: Query completed successfully
+🔍 DATABASE DEBUG: Query duration: 3ms
+🔍 DATABASE DEBUG: Query result rows: null
+🔍 DATABASE DEBUG: Releasing client back to pool
+🔍 DATABASE DEBUG: Active queries after: 4
+✅ Pre-Form One scores table ensured
+✅ PostgreSQL connected
+🔍 DATABASE DEBUG: Client connected, ensuring statement timeout...
+🔍 DATABASE DEBUG: Executing query...
+✅ PostgreSQL connected
+🔍 DATABASE DEBUG: Client connected, ensuring statement timeout...
+🔍 DATABASE DEBUG: Executing query...
+✅ PostgreSQL connected
+🔍 DATABASE DEBUG: Client connected, ensuring statement timeout...
+✅ PostgreSQL connected
+🔍 DATABASE DEBUG: Client connected, ensuring statement timeout...
+🔍 DATABASE DEBUG: Executing query...
+🔍 DATABASE DEBUG: Executing query...
+🔍 DATABASE DEBUG: Query completed successfully
+🔍 DATABASE DEBUG: Query duration: 100ms
+🔍 DATABASE DEBUG: Query result rows: 0
+🔍 DATABASE DEBUG: Releasing client back to pool
+🔍 DATABASE DEBUG: Active queries after: 3
+🔍 DATABASE DEBUG: Query completed successfully
+🔍 DATABASE DEBUG: Query duration: 115ms
+🔍 DATABASE DEBUG: Query result rows: null
+🔍 DATABASE DEBUG: Releasing client back to pool
+🔍 DATABASE DEBUG: Active queries after: 2
+🔍 DATABASE DEBUG: Query completed successfully
+🔍 DATABASE DEBUG: Query duration: 116ms
+🔍 DATABASE DEBUG: Query result rows: null
+🔍 DATABASE DEBUG: Releasing client back to pool
+🔍 DATABASE DEBUG: Active queries after: 1
+🔍 DATABASE DEBUG: Query completed successfully
+🔍 DATABASE DEBUG: Query duration: 120ms
+🔍 DATABASE DEBUG: Query result rows: null
+🔍 DATABASE DEBUG: Releasing client back to pool
+🔍 DATABASE DEBUG: Active queries after: 0

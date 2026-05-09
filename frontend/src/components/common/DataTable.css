@@ -37,7 +37,7 @@
 .data-table-search {
   padding: clamp(0.75rem, 2.5vw, 1rem) clamp(1rem, 3vw, 1.5rem);
   border: 2px solid #d1d5db;
-  border-radius: 8px;
+  border-radius: 0;
   font-size: clamp(1rem, 3vw, 1.125rem);
   width: clamp(200px, 30vw, 250px);
   transition: all 0.2s;
@@ -166,7 +166,7 @@
 .btn {
   padding: clamp(0.75rem, 2.5vw, 1rem) clamp(1rem, 3vw, 1.5rem);
   border: none;
-  border-radius: 12px;
+  border-radius: 0;
   font-size: clamp(1rem, 3vw, 1.125rem);
   font-weight: 600;
   cursor: pointer;

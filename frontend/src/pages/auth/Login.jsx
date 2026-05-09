@@ -33,7 +33,14 @@ const Login = () => {
       }
     } catch (err) {
       console.error('Login error:', err);
-      toast.error(err?.message || 'Something went wrong. Please try again.');
+      // Handle different types of errors
+      if (err.name === 'TypeError' && err.message.includes('fetch')) {
+        toast.error('Network error. Please check your connection.');
+      } else if (err.code === 'ECONNABORTED') {
+        toast.error('Request timeout. Please try again.');
+      } else {
+        toast.error(err?.message || 'Something went wrong. Please try again.');
+      }
     } finally {
       setLoading(false);
     }

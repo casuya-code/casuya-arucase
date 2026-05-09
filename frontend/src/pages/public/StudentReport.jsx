@@ -7,6 +7,7 @@ import PublicLayout from '../../components/layout/PublicLayout';
 import Loading from '../../components/common/Loading';
 import { publicAPI } from '../../services/public';
 import './StudentReport.css';
+import DOMPurify from 'dompurify';
 
 const StudentReport = () => {
   const { data: pageData, isLoading, isError } = useQuery({
@@ -103,7 +104,7 @@ const StudentReport = () => {
           </Link>
           <div 
             className="content-card"
-            dangerouslySetInnerHTML={{ __html: page.html_content || page.content || '' }}
+            dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(page.html_content || page.content || '') }}
           />
         </div>
       ) : (

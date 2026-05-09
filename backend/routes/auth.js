@@ -45,8 +45,17 @@ const generateToken = (user) => {
   );
 };
 
-// Login
-router.post('/login', protectByUsername, validators.login, trackByUsername, async (req, res) => {
+// Enhanced Login with progressive rate limiting
+const { enhancedAuthRateLimit, trackAuthFailures, clearAuthSuccess } = require('../middleware/enhancedRateLimiting');
+
+router.post('/login', 
+  enhancedAuthRateLimit,
+  protectByUsername, 
+  validators.login, 
+  trackAuthFailures,
+  trackByUsername,
+  clearAuthSuccess,
+  async (req, res) => {
   try {
     const { username, password } = req.body;
     
@@ -144,9 +153,18 @@ router.post('/login', protectByUsername, validators.login, trackByUsername, asyn
     // Clear failed attempts on successful login
     clearFailedAttempts(req.body.username);
     
+    // Set HttpOnly cookie for JWT token (for server-side auth)
+    res.cookie('token', token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict',
+      maxAge: 24 * 60 * 60 * 1000 // 24 hours
+    });
+    
+    // Also return token in response body for client-side storage
     res.json({
-      token,
-      user: userData
+      user: userData,
+      token: token
     });
   } catch (error) {
     console.error('Login error:', error);
@@ -155,17 +173,12 @@ router.post('/login', protectByUsername, validators.login, trackByUsername, asyn
 });
 
 // Get current user
-router.get('/me', async (req, res) => {
+router.get('/me', 
+  require('../middleware/auth').requireAuth,
+  async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (!authHeader) {
-      return res.status(401).json({ message: 'No authorization header' });
-    }
-    
-    const token = authHeader.split(' ')[1] || authHeader;
-    
-    const decoded = jwt.verify(token, JWT_SECRET);
-    const username = decoded.user_id;
+    // User is already verified by requireAuth middleware
+    const username = req.user.user_id;
     
     // Get user from database (select only needed columns)
     const result = await query(
@@ -216,18 +229,18 @@ router.get('/me', async (req, res) => {
 // Logout
 router.post('/logout', async (req, res) => {
   try {
-    const authHeader = req.headers.authorization;
-    if (authHeader) {
-      const token = authHeader.split(' ')[1] || authHeader;
+    // Try to get token from cookie first, then from header for backward compatibility
+    const token = req.cookies?.token || req.headers.authorization?.split(' ')[1];
+    
+    if (token) {
       try {
         const decoded = jwt.verify(token, JWT_SECRET);
-        const username = decoded.user_id;
         
-        // Log logout
+        // Log successful logout
         try {
-          if (username && username !== 'SUPERADMIN') {
+          if (decoded.user_id !== 'SUPERADMIN') {
             await saveUserActivity({
-              username: username,
+              username: decoded.user_id,
               activity_type: 'logout',
               description: 'User logged out',
               details: {}
@@ -240,6 +253,13 @@ router.post('/logout', async (req, res) => {
         // Token invalid or expired, ignore
       }
     }
+    
+    // Clear HttpOnly cookie
+    res.clearCookie('token', {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === 'production',
+      sameSite: 'strict'
+    });
     
     res.json({ message: 'Logged out successfully' });
   } catch (error) {

@@ -36,15 +36,7 @@ export const AuthProvider = ({ children }) => {
     };
     window.addEventListener('auth:logout', handleLogout);
 
-    // Check if user is logged in on mount and verify token before rendering protected content
-    const token = localStorage.getItem('token');
-    const savedUser = localStorage.getItem('user');
     const isLoginPage = window.location.pathname === '/login';
-
-    if (!token || !savedUser) {
-      setLoading(false);
-      return () => window.removeEventListener('auth:logout', handleLogout);
-    }
 
     // Avoid noisy /auth/me checks on login screen (especially double-run in StrictMode).
     if (isLoginPage) {
@@ -59,24 +51,20 @@ export const AuthProvider = ({ children }) => {
         if (cancelled) return;
         // Handle 401 responses that are now resolved by the interceptor
         if (response.status === 401) {
+          // Clear invalid token
           localStorage.removeItem('token');
           localStorage.removeItem('user');
           setUser(null);
           return;
         }
         setUser(response.data.user);
-        localStorage.setItem('user', JSON.stringify(response.data.user));
       })
       .catch((error) => {
         if (cancelled) return;
-        // Network errors or other unexpected errors
-        try {
-          setUser(JSON.parse(savedUser));
-        } catch {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
-          setUser(null);
-        }
+        // Network errors or other unexpected errors - clear invalid token and set user to null
+        localStorage.removeItem('token');
+        localStorage.removeItem('user');
+        setUser(null);
       })
       .finally(() => {
         window.__verifyingToken = false;
@@ -98,22 +86,24 @@ export const AuthProvider = ({ children }) => {
       
       // Handle 401 responses that are now resolved by the interceptor
       if (response.status === 401) {
-        setUser(null);
+        // Clear invalid token
         localStorage.removeItem('token');
         localStorage.removeItem('user');
+        setUser(null);
         return false;
       }
       
       setUser(response.data.user);
-      localStorage.setItem('user', JSON.stringify(response.data.user));
       return true;
     } catch (error) {
       // Network errors or other unexpected errors
       window.__verifyingToken = false;
       console.error('Token verification failed:', error);
-      setUser(null);
+      
+      // Clear invalid token on any verification error
       localStorage.removeItem('token');
       localStorage.removeItem('user');
+      setUser(null);
       return false;
     }
   };
@@ -127,13 +117,20 @@ export const AuthProvider = ({ children }) => {
         const msg = data.message || data.error || data.msg || 'Access denied.';
         return { success: false, error: msg };
       }
-      const token = data?.token;
       const user = data?.user;
-      if (!token || !user) {
+      const token = data?.token;
+      if (!user) {
         return { success: false, error: data?.message || 'Invalid response from server.' };
       }
-      localStorage.setItem('token', token);
-      localStorage.setItem('user', JSON.stringify(user));
+      // Store token in localStorage for API calls
+      if (token) {
+        localStorage.setItem('token', token);
+        console.log('🔐 AUTH DEBUG: Token stored in localStorage', {
+          tokenLength: token.length,
+          tokenPrefix: token.substring(0, 20) + '...',
+          localStorageKeysAfter: Object.keys(localStorage)
+        });
+      }
       setUser(user);
       return { success: true };
     } catch (error) {
@@ -145,8 +142,15 @@ export const AuthProvider = ({ children }) => {
     }
   };
 
-  const logout = () => {
+  const logout = async () => {
     playLogoutSound();
+    try {
+      await api.post('/auth/logout');
+    } catch (error) {
+      // Even if logout API fails, continue with client-side logout
+      console.error('Logout API error:', error);
+    }
+    // Clear token from localStorage
     localStorage.removeItem('token');
     localStorage.removeItem('user');
     setUser(null);
@@ -155,7 +159,7 @@ export const AuthProvider = ({ children }) => {
 
   // Stable reference so SocketProvider (and others) don't re-run effects every AuthProvider render
   const isAuthenticated = useCallback(() => {
-    return !!user && !!localStorage.getItem('token');
+    return !!user;
   }, [user]);
 
   const hasRole = (role) => {

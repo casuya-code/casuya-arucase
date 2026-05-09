@@ -191,7 +191,7 @@
     padding: 1rem 1.125rem;
     font-size: clamp(0.9375rem, 3.5vw, 1rem);
     min-height: 48px;
-    border-radius: 10px;
+    border-radius: 0;
     border: 1px solid #e5e7eb;
   }
 
@@ -204,7 +204,7 @@
     padding: 1rem;
     font-size: clamp(1rem, 4vw, 1.125rem);
     min-height: 52px;
-    border-radius: 10px;
+    border-radius: 0;
   }
 }
 
@@ -254,7 +254,7 @@
 
   .login-card {
     padding: 2.5rem;
-    border-radius: 12px;
+    border-radius: 0;
     box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
   }
 }

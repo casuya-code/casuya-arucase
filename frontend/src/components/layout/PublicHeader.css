@@ -161,28 +161,28 @@
 .header-tropical-frame__leaf--tl {
   top: -8%;
   left: -10%;
-  border-radius: 2% 78% 12% 88% / 8% 22% 78% 88%;
+  border-radius: 0;
   transform: rotate(-16deg) scale(1.02);
 }
 
 .header-tropical-frame__leaf--br {
   bottom: 12%;
   right: -12%;
-  border-radius: 78% 8% 88% 12% / 22% 88% 8% 78%;
+  border-radius: 0;
   transform: rotate(20deg) scale(0.92);
 }
 
 .header-tropical-frame__leaf--tr {
   top: -6%;
   right: -12%;
-  border-radius: 12% 88% 78% 8% / 78% 12% 22% 88%;
+  border-radius: 0;
   transform: rotate(10deg) scale(0.98);
 }
 
 .header-tropical-frame__leaf--bl {
   bottom: 10%;
   left: -10%;
-  border-radius: 88% 12% 8% 78% / 12% 78% 88% 22%;
+  border-radius: 0;
   transform: rotate(-12deg) scale(0.95);
 }
 

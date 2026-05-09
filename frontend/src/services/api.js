@@ -5,9 +5,9 @@ import axios from 'axios';
 const getBaseURL = () => {
   if (import.meta.env.DEV) {
     // Use relative URL to leverage Vite proxy
-    return 'http://localhost:5000/api';
+    return 'http://localhost:3001/api';
   }
-  return import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+  return import.meta.env.VITE_API_URL || 'http://localhost:3001/api';
 };
 
 const api = axios.create({
@@ -44,6 +44,12 @@ function isProtectedApiRequest(config) {
 api.interceptors.request.use(
   (config) => {
     const token = localStorage.getItem('token');
+    
+    // Debug logging for token usage
+    if (isProtectedApiRequest(config)) {
+      // Debug logging disabled
+    }
+    
     // Short-circuit protected calls when session is already gone.
     // This avoids noisy browser 401 network errors during logout/session-expiry transitions.
     if (!token && isProtectedApiRequest(config) && !isAuthEndpoint(config)) {

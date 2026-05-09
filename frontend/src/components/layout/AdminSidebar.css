@@ -52,7 +52,7 @@
   color: #ffffff;
   width: 32px;
   height: 32px;
-  border-radius: 6px;
+  border-radius: 0;
   cursor: pointer;
   display: flex;
   align-items: center;
@@ -85,7 +85,7 @@
 
 .sidebar-nav::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.3);
-  border-radius: 3px;
+  border-radius: 0;
 }
 
 .sidebar-nav-desktop {
@@ -253,7 +253,7 @@
   background: rgba(239, 68, 68, 0.2);
   border: 1px solid rgba(239, 68, 68, 0.3);
   color: white;
-  border-radius: 6px;
+  border-radius: 0;
   cursor: pointer;
   transition: all 0.2s ease;
   font-size: 0.9rem;
@@ -289,7 +289,7 @@
   color: white;
   border: none;
   padding: 0.75rem 1rem;
-  border-radius: 8px;
+  border-radius: 0;
   cursor: pointer;
   font-size: 0.9rem;
   font-weight: 600;
@@ -491,12 +491,12 @@
 
   .admin-sidebar .sidebar-nav::-webkit-scrollbar-track {
     background: rgba(255, 255, 255, 0.2);
-    border-radius: 5px;
+    border-radius: 0;
   }
 
   .admin-sidebar .sidebar-nav::-webkit-scrollbar-thumb {
     background: rgba(255, 255, 255, 0.7);
-    border-radius: 5px;
+    border-radius: 0;
     border: 2px solid rgba(255, 255, 255, 0.2);
   }
 

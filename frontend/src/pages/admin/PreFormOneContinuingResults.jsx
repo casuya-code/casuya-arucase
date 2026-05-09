@@ -11,6 +11,7 @@ import preFormOneContinuingSubjectsService from '../../services/preFormOneContin
 import preFormOneStudentsService from '../../services/preFormOneStudentsService';
 import { adminAPI } from '../../services/admin';
 import { useAuth } from '../../context/AuthContext';
+import YearMonthFilter from '../../components/common/YearMonthFilter';
 import './PreFormOneResults.css';
 
 const PreFormOneContinuingResults = () => {
@@ -21,6 +22,7 @@ const PreFormOneContinuingResults = () => {
   const [editingIndex, setEditingIndex] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [subjectScores, setSubjectScores] = useState({});
+  const [filter, setFilter] = useState({ year: year || '', month: 'all' });
 
   // Scoring criteria and grading constants
   const GRADING_SCALE = [
@@ -66,15 +68,12 @@ const PreFormOneContinuingResults = () => {
   };
 
   const handleLogoError = (e) => {
-    console.error('Logo image load error:', e.target.src);
     e.target.style.display = 'none';
   };
 
   const fetchScoresForSubject = async (subject, students) => {
     try {
-      console.log('🔍 DEBUG: Fetching continuing scores for subject:', subject.subject_name, 'ID:', subject.id);
       const scoresResponse = await preFormOneStudentsService.getStudentScoresBySubject(subject.id, 'continuing');
-      console.log('🔍 DEBUG: Scores response for subject:', subject.subject_name, scoresResponse?.data?.length || 0, 'scores');
       
       if (scoresResponse?.data && Array.isArray(scoresResponse.data)) {
         const scores = {};
@@ -85,11 +84,10 @@ const PreFormOneContinuingResults = () => {
             scores[student.admission_number][subject.subject_code] = scoreData.score;
           }
         });
-        console.log('🔍 DEBUG: Processed scores for subject:', subject.subject_name, 'students:', Object.keys(scores).length);
         return scores;
       }
     } catch (error) {
-      console.error(`Error fetching scores for subject ${subject.subject_name}:`, error);
+      // Error fetching scores for subject
     }
     return {};
   };
@@ -105,37 +103,49 @@ const PreFormOneContinuingResults = () => {
     }
 
     try {
+      console.log('🔍 PDF DEBUG: Starting download process');
       const response = await downloadFn(year);
-      let blob;
-
-      if (response.data instanceof Blob) blob = response.data;
-      else if (response.data instanceof ArrayBuffer) blob = new Blob([response.data], { type: 'application/pdf' });
-      else if (response.data instanceof Uint8Array) blob = new Blob([response.data], { type: 'application/pdf' });
-      else throw new Error('Unexpected response data type');
-
-      if (blob.size === 0) throw new Error('PDF file is empty');
-
-      const arrayBuffer = await blob.arrayBuffer();
-      const uint8Array = new Uint8Array(arrayBuffer);
-      if (uint8Array.length >= 4 && (uint8Array[0] !== 0x25 || uint8Array[1] !== 0x50 || uint8Array[2] !== 0x44 || uint8Array[3] !== 0x46)) {
-        throw new Error('Downloaded file is not a valid PDF');
+      console.log('🔍 PDF DEBUG: Response received:', response);
+      
+      // Create blob from response
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      console.log('🔍 PDF DEBUG: Blob created, size:', blob.size);
+      
+      if (blob.size === 0) {
+        throw new Error('PDF file is empty');
       }
 
+      // Create download URL
       const url = window.URL.createObjectURL(blob);
+      console.log('🔍 PDF DEBUG: URL created:', url);
+      
+      // Create download link
       const link = document.createElement('a');
       link.href = url;
+      link.download = `PreFormOne_Continuing_Results_${year}.pdf`;
       link.style.display = 'none';
-      link.download = `${successMsg.replace(/\s+/g, '_')}_${year}.pdf`;
+      
+      // Trigger download
       document.body.appendChild(link);
+      console.log('🔍 PDF DEBUG: About to trigger download');
       link.click();
+      
+      // Cleanup
       setTimeout(() => {
         document.body.removeChild(link);
         window.URL.revokeObjectURL(url);
-      }, 100);
+        console.log('🔍 PDF DEBUG: Cleanup completed');
+      }, 1000);
 
       toast.success('PDF downloaded successfully!');
     } catch (error) {
-      console.error('Error generating PDF:', error);
+      console.error('🔍 PDF ERROR: Error generating PDF:', error);
+      console.error('🔍 PDF ERROR: Error details:', {
+        message: error.message,
+        response: error.response,
+        data: error.response?.data
+      });
+      
       if (error.response?.data instanceof Blob) {
         try {
           const text = await error.response.data.text();
@@ -163,10 +173,10 @@ const PreFormOneContinuingResults = () => {
 
   // Fetch Pre-Form One students
   const { data: students = [], isLoading: studentsLoading } = useQuery({
-    queryKey: ['preform-one-students', year],
+    queryKey: ['preform-one-students', filter.year],
     queryFn: async () => {
       try {
-        const res = await preFormOneService.getStudents(year);
+        const res = await preFormOneService.getStudents(filter.year);
         return Array.isArray(res.data) ? res.data : [];
       } catch (error) {
         console.error('Error fetching Pre-Form One students:', error);
@@ -176,7 +186,7 @@ const PreFormOneContinuingResults = () => {
         return [];
       }
     },
-    enabled: isAuthenticated && !!year,
+    enabled: isAuthenticated && !!filter.year,
     retry: false,
   });
 
@@ -261,15 +271,15 @@ const PreFormOneContinuingResults = () => {
         console.error('Unhandled error in fetchScores:', error);
       });
     }
-  }, [subjects, students, year]);
+  }, [subjects, students, filter.year]);
 
   // Fetch continuing results
   const { data: existingResults = {}, isLoading: resultsLoading, error: resultsError } = useQuery({
-    queryKey: ['preform-one-continuing-results', year],
+    queryKey: ['preform-one-continuing-results', filter.year, filter.month],
     queryFn: async () => {
       try {
-        console.log('🔍 DEBUG: Fetching continuing results, year:', year);
-        const res = await preFormOneService.getContinuingResults(year);
+        console.log('🔍 DEBUG: Fetching continuing results, year:', filter.year, 'month:', filter.month);
+        const res = await preFormOneService.getContinuingResults(filter.year, filter.month);
         console.log('🔍 DEBUG: Continuing results response:', res);
         const results = res.data?.results || {};
         console.log('🔍 DEBUG: Continuing results data:', results);
@@ -282,7 +292,7 @@ const PreFormOneContinuingResults = () => {
         return {};
       }
     },
-    enabled: isAuthenticated && !!year,
+    enabled: isAuthenticated && !!filter.year,
     retry: false,
   });
 
@@ -302,11 +312,11 @@ const PreFormOneContinuingResults = () => {
       }, {});
       setResults(assignPositions(autoCalculatedResults));
     }
-  }, [existingResults, subjectScores, students, results]);
+  }, [existingResults, subjectScores, students, filter.year, filter.month]);
 
   // Calculate results mutation
   const calculateResultsMutation = useMutation({
-    mutationFn: async () => preFormOneService.calculateContinuingResults(year),
+    mutationFn: async () => preFormOneService.calculateContinuingResults(filter.year, filter.month),
     onSuccess: (response) => {
       const calculatedResults = response.data?.results || {};
       const processedResults = Object.keys(calculatedResults).reduce((acc, admissionNumber) => {
@@ -320,7 +330,7 @@ const PreFormOneContinuingResults = () => {
       }, {});
       setResults(assignPositions(processedResults));
       toast.success(response.data?.message || 'Continuing results calculated and saved successfully!');
-      queryClient.invalidateQueries(['preform-one-continuing-results', year]);
+      queryClient.invalidateQueries(['preform-one-continuing-results', filter.year, filter.month]);
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Failed to calculate continuing results');
@@ -331,7 +341,7 @@ const PreFormOneContinuingResults = () => {
   const saveResultMutation = useMutation({
     mutationFn: async (data) => preFormOneService.saveContinuingResult(data),
     onSuccess: () => {
-      queryClient.invalidateQueries(['preform-one-continuing-results', year]);
+      queryClient.invalidateQueries(['preform-one-continuing-results', filter.year, filter.month]);
       toast.success('Continuing result saved successfully!');
       setEditingIndex(null);
       setEditForm({});
@@ -343,9 +353,9 @@ const PreFormOneContinuingResults = () => {
 
   // Delete result mutation
   const deleteResultMutation = useMutation({
-    mutationFn: async (studentId) => preFormOneService.deleteContinuingResult(studentId, year),
+    mutationFn: async (studentId) => preFormOneService.deleteContinuingResult(studentId, filter.year),
     onSuccess: () => {
-      queryClient.invalidateQueries(['preform-one-continuing-results', year]);
+      queryClient.invalidateQueries(['preform-one-continuing-results', filter.year, filter.month]);
       toast.success('Continuing result deleted successfully!');
     },
     onError: (error) => {
@@ -364,7 +374,7 @@ const PreFormOneContinuingResults = () => {
 
   const handleSave = (studentIndex) => {
     saveResultMutation.mutate({
-      year: parseInt(year),
+      year: parseInt(filter.year),
       student_index: studentIndex,
       ...editForm,
     });
@@ -385,6 +395,10 @@ const PreFormOneContinuingResults = () => {
   const handleCancel = () => {
     setEditingIndex(null);
     setEditForm({});
+  };
+
+  const handleFilterChange = (newFilter) => {
+    setFilter(newFilter);
   };
 
   const formatSubjectScore = (value) => {
@@ -425,7 +439,60 @@ const PreFormOneContinuingResults = () => {
     return a.surname.localeCompare(b.surname);
   });
 
-  const handlePrint = () => downloadPDF(preFormOneService.downloadContinuingResultsPDF, 'downloadResultsBtn', 'downloadBtnText', 'PreFormOne_Continuing_Results');
+  const handlePrint = async () => {
+    try {
+      // Try the download function first
+      await downloadPDF(preFormOneService.downloadContinuingResultsPDF, 'downloadResultsBtn', 'downloadBtnText', 'PreFormOne_Continuing_Results');
+    } catch (error) {
+      // Fallback: Open PDF in new window with authentication
+      try {
+        const token = localStorage.getItem('token');
+        const pdfUrl = `${process.env.VITE_API_URL || 'http://localhost:5000'}/api/pre-form-one/${year}/continuing-results/pdf`;
+        
+        // Create a temporary link with proper headers
+        const link = document.createElement('a');
+        link.href = pdfUrl;
+        link.target = '_blank';
+        link.rel = 'noopener noreferrer';
+        
+        // Add authorization header by creating a fetch request first
+        try {
+          const response = await fetch(pdfUrl, {
+            headers: {
+              'Authorization': `Bearer ${token}`,
+              'Accept': 'application/pdf'
+            }
+          });
+          
+          if (response.ok) {
+            const blob = await response.blob();
+            
+            // Create download link for the blob
+            const url = window.URL.createObjectURL(blob);
+            const downloadLink = document.createElement('a');
+            downloadLink.href = url;
+            downloadLink.download = `PreFormOne_Continuing_Results_${year}.pdf`;
+            downloadLink.style.display = 'none';
+            document.body.appendChild(downloadLink);
+            downloadLink.click();
+            
+            setTimeout(() => {
+              document.body.removeChild(downloadLink);
+              window.URL.revokeObjectURL(url);
+            }, 1000);
+            
+            toast.success('PDF downloaded successfully!');
+          } else {
+            throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+          }
+        } catch (fetchError) {
+          throw new Error('Failed to download PDF');
+        }
+      } catch (fallbackError) {
+        toast.error('Failed to download PDF. Please try again.');
+      }
+    }
+  };
 
   // CSV download function
   const handleDownloadCSV = () => {
@@ -524,11 +591,18 @@ const PreFormOneContinuingResults = () => {
             >
               <i className="fas fa-calculator"></i> {calculateResultsMutation.isLoading ? 'Calculating...' : 'Calculate Results'}
             </button>
-            <Link to={`/admin/pre-form-one/${year}`} className="excel-btn secondary small">
+            <Link to={`/admin/pre-form-one/${filter.year || year}`} className="excel-btn secondary small">
               <i className="fas fa-arrow-left"></i> Back
             </Link>
           </div>
         </div>
+        <YearMonthFilter
+          onFilterChange={handleFilterChange}
+          initialYear={filter.year || year}
+          initialMonth={filter.month}
+          usePreFormOneMonths={true}
+          disabled={studentsLoading || subjectsLoading}
+        />
         <div className="excel-card-body">
           {studentsLoading || subjectsLoading || resultsLoading ? (
             <div className="loading-state">Loading...</div>
@@ -542,7 +616,8 @@ const PreFormOneContinuingResults = () => {
             <>
               <div className="results-info">
                 <div className="info-item"><strong>Students:</strong> {students.length}</div>
-                <div className="info-item"><strong>Year:</strong> {year}</div>
+                <div className="info-item"><strong>Year:</strong> {filter.year}</div>
+                <div className="info-item"><strong>Month:</strong> {filter.month === 'all' ? 'All Months' : filter.month}</div>
                 <div className="info-item"><strong>Subjects:</strong> {subjects.length}</div>
               </div>
               <div className="print-spacer-bottom"></div>
@@ -555,11 +630,42 @@ const PreFormOneContinuingResults = () => {
         <>
           <div className="print-button-container">
             <button type="button" onClick={handlePrint} id="downloadResultsBtn" className="download-btn-monthly">
-              <i className="fas fa-file-pdf"></i> <span id="downloadBtnText">Download Result (PDF)</span>
+              <i className="fas fa-file-pdf"></i> <span id="downloadBtnText">Download Continuing Results (PDF)</span>
             </button>
             <button type="button" onClick={handleDownloadCSV} className="download-btn-monthly" style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)' }}>
               <i className="fas fa-file-csv"></i> Download CSV
             </button>
+          </div>
+
+          {/* Download Instructions */}
+          <div style={{ 
+            background: 'linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%)',
+            padding: '20px',
+            borderRadius: '8px',
+            marginTop: '20px',
+            border: '1px solid #e9ecef',
+            boxShadow: '0 2px 10px rgba(0,0,0,0.1)'
+          }}>
+            <h4 style={{ color: '#2c3e50', marginBottom: '10px' }}>
+              <i className="fas fa-info-circle"></i> How to Download PDF
+            </h4>
+            <ol style={{ color: '#495057', lineHeight: '1.6', paddingLeft: '20px' }}>
+              <li><strong>Step 1:</strong> Ensure you're logged in as admin with full permissions</li>
+              <li><strong>Step 2:</strong> Click the "Download Continuing Results (PDF)" button above</li>
+              <li><strong>Step 3:</strong> Wait for PDF generation (may take 10-30 seconds)</li>
+              <li><strong>Step 4:</strong> PDF will download automatically when ready</li>
+            </ol>
+            <div style={{ 
+              background: '#fff3cd', 
+              color: '#856404', 
+              padding: '10px 15px', 
+              borderRadius: '5px',
+              marginTop: '10px',
+              fontSize: '14px',
+              border: '1px solid #ffeaa7'
+            }}>
+              <i className="fas fa-lightbulb"></i> <strong>Tip:</strong> If download fails, refresh the page and try again. The system has been optimized for reliable PDF generation.
+            </div>
           </div>
 
           {/* Report Header */}
@@ -606,7 +712,7 @@ const PreFormOneContinuingResults = () => {
               </div>
             </div>
             <div className="test-info-bar">
-              PRE-FORM ONE CONTINUING RESULTS {year}
+              PRE-FORM ONE CONTINUING RESULTS {filter.year} {filter.month !== 'all' ? `- ${filter.month}` : ''}
             </div>
           </div>
 
@@ -675,7 +781,7 @@ const PreFormOneContinuingResults = () => {
           <div className="print-spacer-bottom"></div>
 
           <div className="back-margin">
-            <Link to={`/admin/pre-form-one/${year}`} className="excel-btn">
+            <Link to={`/admin/pre-form-one/${filter.year || year}`} className="excel-btn">
               <i className="fas fa-arrow-left"></i> Back
             </Link>
             <button type="button" onClick={handleDownloadCSV} className="excel-btn csv-btn">

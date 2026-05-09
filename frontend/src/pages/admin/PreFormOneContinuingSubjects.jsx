@@ -4,11 +4,13 @@
  */
 
 import React, { useState, useEffect } from 'react';
+import { useParams, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import preFormOneContinuingSubjectsService from '../../services/preFormOneContinuingSubjectsService';
 import './PreFormOneContinuingSubjects.css';
 
 const PreFormOneContinuingSubjects = () => {
+  const { year } = useParams();
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -392,6 +394,13 @@ const PreFormOneContinuingSubjects = () => {
             </table>
           </div>
         )}
+      </div>
+      
+      <div className="back-navigation-bottom">
+        <Link to={`/admin/pre-form-one/${year}`} className="back-button">
+          <i className="fas fa-arrow-left"></i>
+          Back to Modules
+        </Link>
       </div>
     </div>
   );

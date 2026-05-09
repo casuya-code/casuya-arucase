@@ -253,7 +253,7 @@ const PreFormOneParishes = () => {
         });
 
         // Validate serial number format (basic validation)
-        if (serialNumber && !/^[A-Za-z0-9\-_]+$/.test(serialNumber)) {
+        if (serialNumber && !/^[A-Za-z0-9\\-_]+$/.test(serialNumber)) {
           console.warn(`🔍 FRONTEND DEBUG: Invalid serial number format at line ${index + 2}: ${serialNumber}`);
           return;
         }

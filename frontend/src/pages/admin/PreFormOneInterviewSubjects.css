@@ -215,7 +215,7 @@
   background: #e0e7ff;
   color: #3730a3;
   padding: 4px 8px;
-  border-radius: 4px;
+  border-radius: 0;
   font-size: 12px;
   font-weight: 600;
   font-family: 'Courier New', monospace;
@@ -231,7 +231,7 @@
 
 .status-badge {
   padding: 4px 12px;
-  border-radius: 20px;
+  border-radius: 0;
   font-size: 12px;
   font-weight: 600;
   text-transform: uppercase;
@@ -260,7 +260,7 @@
 .form-btn {
   padding: 10px 20px;
   border: none;
-  border-radius: 8px;
+  border-radius: 0;
   font-size: 14px;
   font-weight: 500;
   cursor: pointer;

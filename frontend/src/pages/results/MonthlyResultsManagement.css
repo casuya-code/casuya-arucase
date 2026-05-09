@@ -593,7 +593,7 @@
   padding: clamp(8px, 2vw, 12px) clamp(12px, 3vw, 24px);
   font-size: clamp(10px, 2vw, 14px);
   font-weight: 600;
-  border-radius: 6px;
+  border-radius: 0;
   cursor: pointer;
   transition: all 0.3s ease;
   box-shadow: 0 4px 6px rgba(0,0,0,0.1);
@@ -622,7 +622,7 @@
   background: #f9fafb;
   color: #374151;
   text-decoration: none;
-  border-radius: 6px;
+  border-radius: 0;
   font-weight: 500;
   transition: all 0.2s ease;
   border: none;
@@ -764,7 +764,7 @@
     min-height: clamp(40px, 8vw, 100px);
     max-height: clamp(40px, 8vw, 100px);
     border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 4px;
+    border-radius: 0;
     padding: 2px;
   }
 
@@ -880,7 +880,7 @@
     background: linear-gradient(135deg, #87ceeb 0%, #b0e0e6 100%) !important;
     padding: 15px !important;
     margin-bottom: 5px !important;
-    border-radius: 6px !important;
+    border-radius: 0 !important;
     page-break-inside: avoid;
   }
 
@@ -912,7 +912,7 @@
     object-fit: contain !important;
     object-position: center !important;
     border: 2px solid rgba(0, 0, 0, 0.1) !important;
-    border-radius: 8px !important;
+    border-radius: 0 !important;
     background: white !important;
     padding: 4px !important;
     box-sizing: border-box !important;

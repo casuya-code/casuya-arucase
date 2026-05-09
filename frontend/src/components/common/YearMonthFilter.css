@@ -1,0 +1,99 @@
+/* Year Month Filter Component Styles */
+.year-month-filter {
+  display: flex;
+  gap: 1rem;
+  align-items: flex-end;
+  margin-bottom: 1.5rem;
+  padding: 1rem;
+  background: #f8f9fa;
+  border-radius: 0;
+  border: 1px solid #e9ecef;
+}
+
+.filter-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  min-width: 150px;
+}
+
+.filter-label {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #495057;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.filter-label i {
+  color: #6c757d;
+  font-size: 0.875rem;
+}
+
+.filter-select {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #ced4da;
+  border-radius: 0;
+  font-size: 0.875rem;
+  background: white;
+  transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+}
+
+.filter-select:disabled {
+  background: #e9ecef;
+  color: #6c757d;
+  cursor: not-allowed;
+}
+
+/* Responsive design */
+@media (max-width: 768px) {
+  .year-month-filter {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 1rem;
+  }
+  
+  .filter-group {
+    min-width: auto;
+  }
+}
+
+/* Integration with existing card styles */
+.excel-card .year-month-filter {
+  margin: 0 1rem 1.5rem 1rem;
+  background: white;
+  border: 1px solid #e9ecef;
+}
+
+.excel-card .filter-select {
+  font-family: inherit;
+}
+
+/* Dark theme support */
+@media (prefers-color-scheme: dark) {
+  .year-month-filter {
+    background: #2d3748;
+    border-color: #4a5568;
+  }
+  
+  .filter-label {
+    color: #e2e8f0;
+  }
+  
+  .filter-label i {
+    color: #a0aec0;
+  }
+  
+  .filter-select {
+    background: #1a202c;
+    border-color: #4a5568;
+    color: #e2e8f0;
+  }
+}

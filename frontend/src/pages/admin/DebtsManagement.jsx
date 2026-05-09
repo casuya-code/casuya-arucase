@@ -72,9 +72,9 @@ const DebtsManagement = ({ formLevel }) => {
         // For Form I-IV, don't filter by term - show all students for the year
         // For Form V/VI, filter by term
         ...(isFormVOrVI ? { term: normalizedTerm } : {}),
+        level: normalizedLevel,
         stream: normalizedStream,
         year: year,
-        term: term || 'First Term',
       });
       const students = res.data.students || [];
       // Sort students by name: first_name, then middle_name, then surname (A-Z)
@@ -88,12 +88,6 @@ const DebtsManagement = ({ formLevel }) => {
   const { data: existingDebt = {}, isLoading: debtLoading, error: debtError } = useQuery({
     queryKey: ['debt', normalizedLevel, normalizedStream, year, term],
     queryFn: async () => {
-      console.log('[DebtsManagement] Fetching debt:', {
-        level: normalizedLevel,
-        stream: normalizedStream,
-        year: year,
-        term: term || 'First Term',
-      });
       try {
         const res = await studentsAPI.getDebt({
           level: normalizedLevel,
@@ -101,13 +95,10 @@ const DebtsManagement = ({ formLevel }) => {
           year: year,
           term: term || 'First Term',
         });
-        console.log('[DebtsManagement] Received debt:', res.data.debt);
         return res.data.debt || {};
       } catch (error) {
         // Log error for debugging
-        console.error('[DebtsManagement] Error in queryFn:', error);
         // Re-throw to let React Query handle it properly
-        // React Query will catch this and set the error state
         throw error;
       }
     },
@@ -124,7 +115,7 @@ const DebtsManagement = ({ formLevel }) => {
       // Handle error gracefully - React Query will set error state
       // Only log non-404 errors (404 means no debt records exist, which is fine)
       if (error?.response?.status !== 404) {
-        console.error('[DebtsManagement] Query error:', error);
+        // Log non-404 errors
       }
     },
   });
@@ -134,7 +125,7 @@ const DebtsManagement = ({ formLevel }) => {
     if (debtError) {
       // Only log non-404 errors (404 is expected when no debt records exist)
       if (debtError?.response?.status !== 404) {
-        console.error('[DebtsManagement] Error fetching debt:', debtError);
+        // Log non-404 errors
       }
     }
   }, [debtError]);
@@ -412,10 +403,9 @@ const DebtsManagement = ({ formLevel }) => {
         }
 
         if (skipped > 0) {
-          console.log('[Debts CSV upload] skipped unknown adm_no rows:', skipped);
+          // Skipped unknown adm_no rows
         }
       } catch (err) {
-        console.error('[Debts CSV upload] Failure:', err?.response?.data || err?.message || err);
         toast.error(err?.response?.data?.message || err?.message || 'Upload failed');
       } finally {
         setUploading(false);

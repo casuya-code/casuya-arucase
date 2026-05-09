@@ -45,8 +45,11 @@ const MODULE_GROUPS = [
     modules: [
       { id: 'individual_scores', label: 'Individual Scores', icon: 'fa-graduation-cap' },
       { id: 'monthly_results', label: 'Monthly Results', icon: 'fa-clipboard-list' },
-      { id: 'student_registration', label: 'Student Registration (View)', icon: 'fa-user-plus' },
+      { id: 'student_registration_form_i_iv', label: 'Student Registration (Forms I-IV)', icon: 'fa-user-plus' },
+      { id: 'student_registration_form_v_vi', label: 'Student Registration (Forms V-VI)', icon: 'fa-user-plus' },
+      { id: 'student_registration_pre_form', label: 'Student Registration (Pre-Form)', icon: 'fa-user-plus' },
       { id: 'student_photo', label: 'Student Photo (View)', icon: 'fa-camera' },
+      { id: 'dta_monitor', label: 'DTA Monitor', icon: 'fa-history' },
     ],
   },
   {
@@ -75,7 +78,10 @@ const MODULE_GROUPS = [
     label: 'Analytics',
     groupKey: null,
     modules: [
-      { id: 'analytics', label: 'Analytics (all: form selection, student/class/subject track, who & when, solutions, all forms averages)', icon: 'fa-chart-line' },
+      { id: 'analytics_view', label: 'Analytics (Basic View)', icon: 'fa-chart-line' },
+      { id: 'analytics_student_tracking', label: 'Student Tracking', icon: 'fa-user-check' },
+      { id: 'analytics_solutions', label: 'Solutions Access', icon: 'fa-lightbulb' },
+      { id: 'analytics_form_averages', label: 'Form Averages', icon: 'fa-chart-bar' },
     ],
   },
   {
@@ -85,6 +91,7 @@ const MODULE_GROUPS = [
       { id: 'individual_debt', label: 'Individual Debt (View)', icon: 'fa-money-bill-wave' },
       { id: 'fees_announcements', label: 'Fees Announcements (View)', icon: 'fa-bullhorn' },
       { id: 'student_parishes', label: 'Student Parishes (View)', icon: 'fa-place-of-worship' },
+      { id: 'news_announcements', label: 'News & Announcements', icon: 'fa-newspaper' },
     ],
   },
 ];

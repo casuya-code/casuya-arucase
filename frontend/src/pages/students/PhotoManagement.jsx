@@ -797,15 +797,16 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
                       onError={(e) => {
                         e.target.style.display = 'none';
                         handleImageError(viewPhoto.filename, null);
-                        // Show error message
+                        // Show error message safely
                         const container = e.target.parentElement;
-                        container.innerHTML = `
-                          <div class="photo-error-message">
-                            <i class="fas fa-exclamation-triangle"></i>
-                            <p>Photo not found</p>
-                            <p class="text-muted">The photo file may have been deleted or moved.</p>
-                          </div>
+                        const errorDiv = document.createElement('div');
+                        errorDiv.className = 'photo-error-message';
+                        errorDiv.innerHTML = `
+                          <i class="fas fa-exclamation-triangle"></i>
+                          <p>Photo not found</p>
+                          <p class="text-muted">The photo file may have been deleted or moved.</p>
                         `;
+                        container.appendChild(errorDiv);
                       }}
                     />
                   )}

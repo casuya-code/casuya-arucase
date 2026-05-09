@@ -1,13 +1,14 @@
 /**
  * Privacy Policy Page - Content from server (public_pages) or static fallback
  */
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { useEffect } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import PublicLayout from '../../components/layout/PublicLayout';
 import Loading from '../../components/common/Loading';
 import { publicAPI } from '../../services/public';
 import './PrivacyPolicy.css';
+import DOMPurify from 'dompurify';
 
 const PrivacyPolicy = () => {
   const { data: pageData, isLoading, isError } = useQuery({
@@ -50,7 +51,7 @@ const PrivacyPolicy = () => {
             </div>
           </header>
           <div className="container policy-container">
-            <article className="policy-card policy-rich-content" dangerouslySetInnerHTML={{ __html: page.html_content || page.content || '' }} />
+            <article className="policy-card policy-rich-content" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(page.html_content || page.content || '') }} />
             <div className="back-button-container">
               <Link to="/" className="back-button">
                 <i className="fas fa-arrow-left"></i> Rudi Mwanzo

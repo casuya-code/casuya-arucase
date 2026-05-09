@@ -11,7 +11,7 @@ export const preFormOneInterviewSubjectsService = {
       console.log('🔍 SERVICE DEBUG: Response status:', response.status);
       console.log('🔍 SERVICE DEBUG: Response data:', response.data);
       
-      return response.data.data || response.data || [];
+      return response.data || [];
     } catch (error) {
       console.error('🔍 SERVICE DEBUG: Error fetching interview subjects:');
       console.error('🔍 SERVICE DEBUG: Error object:', error);

@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useParams, useLocation, useNavigate } from 'react-router-dom';
+import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { preFormOneInterviewSubjectsService } from '../../services/preFormOneInterviewSubjectsService';
 import preFormOneContinuingSubjectsService from '../../services/preFormOneContinuingSubjectsService';
@@ -57,18 +57,17 @@ const PreFormOneScoreEntry = () => {
     setIsVirtualScrollEnabled(preFormOneStudents.length > 100);
   }, [preFormOneStudents.length]);
 
-  // Keyboard navigation
+  
+  // Keyboard navigation - temporarily disabled to fix reference errors
   useEffect(() => {
     const handleKeyDown = (event) => {
       if (event.ctrlKey || event.metaKey) {
         switch (event.key) {
           case 's':
             event.preventDefault();
-            saveAllScores();
             break;
           case 'e':
             event.preventDefault();
-            exportScores();
             break;
         }
       }
@@ -77,7 +76,7 @@ const PreFormOneScoreEntry = () => {
 
     document.addEventListener('keydown', handleKeyDown);
     return () => document.removeEventListener('keydown', handleKeyDown);
-  }, [selectedSubject, selectedCard]);
+  }, []);
 
   // Cleanup auto-save when navigating away and manage auto-save lifecycle
   useEffect(() => {
@@ -93,10 +92,10 @@ const PreFormOneScoreEntry = () => {
   // Restart auto-save when subject changes
   useEffect(() => {
     stopAutoSave();
-    if (selectedSubject && selectedCard) {
+    if (selectedSubject && selectedCard && !loading) {
       startAutoSave();
     }
-  }, [selectedSubject, selectedCard]);
+  }, [selectedSubject, selectedCard, loading]);
 
   // Auto-select subject and card when on subject detail page
   useEffect(() => {
@@ -112,9 +111,13 @@ const PreFormOneScoreEntry = () => {
       if (interviewSubject) {
         setSelectedCard('interview');
         setSelectedSubject(interviewSubject);
+        // Trigger score loading for auto-selected subject
+        handleSubjectClick(interviewSubject);
       } else if (continuingSubject) {
         setSelectedCard('continuing');
         setSelectedSubject(continuingSubject);
+        // Trigger score loading for auto-selected subject
+        handleSubjectClick(continuingSubject);
       }
     } else if (isSubjectsList) {
       // On subjects list page, show both cards
@@ -128,13 +131,10 @@ const PreFormOneScoreEntry = () => {
     const loadData = async () => {
       try {
         setLoading(true);
-        console.log('🔍 FRONTEND DEBUG: Loading grade configuration, subjects and students for score entry');
         
         // Load system grade configuration
         try {
-          console.log('🔍 FRONTEND DEBUG: Loading system grade configuration');
           const gradeConfigData = await gradeSystemService.getSystemGradeConfig();
-          console.log('🔍 FRONTEND DEBUG: Grade configuration loaded:', gradeConfigData);
           setGradeConfig(gradeConfigData.data);
         } catch (gradeError) {
           console.error('🔍 FRONTEND DEBUG: Error loading grade configuration:', gradeError);
@@ -152,51 +152,37 @@ const PreFormOneScoreEntry = () => {
         
         // Load interview subjects
         const interviewData = await preFormOneInterviewSubjectsService.getSubjects();
-        console.log('🔍 FRONTEND DEBUG: Interview subjects API response:', interviewData);
         if (interviewData && interviewData.data) {
           setInterviewSubjects(interviewData.data);
-          console.log('🔍 FRONTEND DEBUG: Interview subjects loaded:', interviewData.data.length);
         } else if (interviewData && Array.isArray(interviewData)) {
           setInterviewSubjects(interviewData);
-          console.log('🔍 FRONTEND DEBUG: Interview subjects loaded (direct array):', interviewData.length);
         } else {
-          console.log('🔍 FRONTEND DEBUG: No interview subjects data found');
           setInterviewSubjects([]);
         }
         
         // Load continuing subjects
         const continuingData = await preFormOneContinuingSubjectsService.getSubjects();
-        console.log('🔍 FRONTEND DEBUG: Continuing subjects API response:', continuingData);
         if (continuingData && continuingData.data) {
           setContinuingSubjects(continuingData.data);
-          console.log('🔍 FRONTEND DEBUG: Continuing subjects loaded:', continuingData.data.length);
         } else if (continuingData && Array.isArray(continuingData)) {
           setContinuingSubjects(continuingData);
-          console.log('🔍 FRONTEND DEBUG: Continuing subjects loaded (direct array):', continuingData.length);
         } else {
-          console.log('🔍 FRONTEND DEBUG: No continuing subjects data found');
           setContinuingSubjects([]);
         }
         
         // Load Pre-Form One students from registration
         try {
-          console.log('🔍 FRONTEND DEBUG: Loading Pre-Form One students from registration');
-          const studentsData = await preFormOneStudentsService.getPreFormOneStudentsByYear(2025);
-          console.log('🔍 FRONTEND DEBUG: Pre-Form One students API response:', studentsData);
+          const studentsData = await preFormOneStudentsService.getPreFormOneStudentsByYear(year);
           
           if (studentsData && studentsData.data) {
             setPreFormOneStudents(studentsData.data);
-            console.log('🔍 FRONTEND DEBUG: Pre-Form One students loaded:', studentsData.data.length);
           } else if (studentsData && Array.isArray(studentsData)) {
             setPreFormOneStudents(studentsData);
-            console.log('🔍 FRONTEND DEBUG: Pre-Form One students loaded (direct array):', studentsData.length);
           } else {
-            console.log('🔍 FRONTEND DEBUG: No Pre-Form One students data found');
             setPreFormOneStudents([]);
           }
         } catch (studentError) {
           console.error('🔍 FRONTEND DEBUG: Error loading Pre-Form One students:', studentError);
-          console.log('🔍 FRONTEND DEBUG: Setting empty students array as fallback');
           setPreFormOneStudents([]);
           toast.warning('Could not load Pre-Form One students. Please check registration data.');
         }
@@ -210,33 +196,23 @@ const PreFormOneScoreEntry = () => {
     };
 
     loadData();
-  }, []);
+  }, [year]);
 
   // Handle card click
   const handleCardClick = (cardType) => {
-    console.log('🔍 FRONTEND DEBUG: Card clicked:', cardType);
     setSelectedCard(cardType);
     setSelectedSubject(null); // Reset selected subject when switching cards
-    
-    // Don't navigate - stay on same page but show subjects list
-    // The render logic will handle showing the correct subjects list
-  };
+  };  
 
   // Handle subject click
   const handleSubjectClick = async (subject) => {
-    console.log('🔍 FRONTEND DEBUG: Subject clicked:', subject);
-    
     // Set selected subject first
     setSelectedSubject(subject);
     
     // Load existing scores for this subject
     try {
       setLoading(true);
-      console.log('🔍 FRONTEND DEBUG: Loading scores for subject:', subject.id, 'type:', selectedCard);
-      
-      // Load existing scores
       const scoresData = await preFormOneStudentsService.getStudentScoresBySubject(subject.id, selectedCard);
-      console.log('🔍 FRONTEND DEBUG: Scores data received:', scoresData);
       
       // Process scores into a map for easy access
       const scoresMap = {};
@@ -247,22 +223,16 @@ const PreFormOneScoreEntry = () => {
             grade: score.grade
           };
         });
+      } else {
       }
       
       // Load scores from comprehensive persistence layers
       const persistenceScores = await loadScoresFromPersistence(subject.id, selectedCard);
       
       // Preserve any existing unsaved scores by merging with loaded scores
-      const mergedScores = { ...scoresMap, ...persistenceScores };
-      Object.keys(studentScores).forEach(studentId => {
-        if (!mergedScores[studentId] || !mergedScores[studentId].score) {
-          mergedScores[studentId] = studentScores[studentId];
-        }
-      });
-      
+      // Backend scores take priority, but persistence scores fill in gaps
+      const mergedScores = { ...persistenceScores, ...scoresMap };
       setStudentScores(mergedScores);
-      
-      // Start auto-save for this subject
       startAutoSave();
       
       // Navigate to subject detail page using React Router
@@ -309,8 +279,6 @@ const PreFormOneScoreEntry = () => {
 
   // Handle back to cards
   const handleBackToCards = () => {
-    console.log('🔍 FRONTEND DEBUG: Going back to cards from subject detail');
-    
     // Stop auto-save before navigating away
     stopAutoSave();
     
@@ -332,8 +300,6 @@ const PreFormOneScoreEntry = () => {
 
   // Handle back to subjects
   const handleBackToSubjects = () => {
-    console.log('🔍 FRONTEND DEBUG: Going back to subjects from subject detail');
-    
     // Stop auto-save before navigating away
     stopAutoSave();
     
@@ -354,8 +320,6 @@ const PreFormOneScoreEntry = () => {
 
   // Enhanced navigation state management
   const handleNavigation = (destination, options = {}) => {
-    console.log('🔍 FRONTEND DEBUG: Navigation to:', destination, options);
-    
     // Stop any ongoing auto-save
     stopAutoSave();
     
@@ -393,38 +357,28 @@ const PreFormOneScoreEntry = () => {
         break;
         
       default:
-        console.warn('🔍 FRONTEND DEBUG: Unknown navigation destination:', destination);
+        console.warn('Unknown navigation destination:', destination);
     }
   };
 
   // Enhanced back button handler with context awareness
   const handleBack = () => {
-    console.log('🔍 FRONTEND DEBUG: Back button clicked, current state:', {
-      selectedCard,
-      selectedSubject: selectedSubject?.subject_name,
-      isSubjectsList,
-      isSubjectDetail
-    });
-    
     // Determine appropriate back action based on current state
     if (isSubjectDetail && selectedSubject) {
       // We're in subject detail, go back to subjects list
       handleNavigation('subjects');
     } else if (selectedCard && !selectedSubject) {
-      // We're in subjects list, go back to cards
-      handleNavigation('cards');
+      // We're on cards view, go back to Pre-Form One dashboard
+      handleNavigation('home');
     } else {
-      // We're at cards level, go to home
+      // Default fallback
       handleNavigation('home');
     }
   };
 
   // Calculate grade from score using system grade configuration
   const calculateGrade = (score) => {
-    console.log('🔍 FRONTEND DEBUG: Calculating grade for score:', score, 'using grade config:', gradeConfig);
-    
     if (!gradeConfig || !gradeConfig.oLevel) {
-      console.log('🔍 FRONTEND DEBUG: No grade config available, using default calculation');
       // Fallback to default calculation
       if (score >= 90) return 'A';
       if (score >= 80) return 'B';
@@ -435,17 +389,14 @@ const PreFormOneScoreEntry = () => {
     
     // Use system grade configuration for O-Level (Pre-Form One)
     const grades = gradeConfig.oLevel;
-    console.log('🔍 FRONTEND DEBUG: Using grade configuration:', grades);
     
     for (const grade of grades) {
       if (score >= grade.min && score <= grade.max) {
-        console.log('🔍 FRONTEND DEBUG: Grade calculated:', grade.grade, 'for score:', score);
         return grade.grade;
       }
     }
     
     // Default to F if no grade found
-    console.log('🔍 FRONTEND DEBUG: No grade found for score:', score, 'defaulting to F');
     return 'F';
   };
 
@@ -464,8 +415,6 @@ const PreFormOneScoreEntry = () => {
 
   // Handle score input change
   const handleScoreChange = (studentId, field, value) => {
-    console.log('🔍 FRONTEND DEBUG: Score change:', studentId, field, value);
-    
     setStudentScores(prev => {
       const updated = { ...prev };
       
@@ -487,13 +436,11 @@ const PreFormOneScoreEntry = () => {
         updated[studentId][field] = value;
       }
       
+      // Save to persistence if subject is selected
       if (selectedSubject && selectedCard) {
         saveScoresToPersistence(selectedSubject.id, selectedCard, updated);
       }
-      
-      return updated;
     });
-    
   };
 
   // Memoized student name and admission display
@@ -590,6 +537,109 @@ const PreFormOneScoreEntry = () => {
     );
   }, [studentScores, handleScoreChange, saving, loading, getStudentDisplayName, getStudentAdmissionNumber]);
 
+  
+  // Memoized render function to prevent infinite re-renders
+  const renderStudentScoreEntry = useCallback(() => {
+    if (!selectedSubject || !preFormOneStudents.length) return null;
+    
+    if (!selectedSubject || !selectedCard || !preFormOneStudents || preFormOneStudents.length === 0) {
+      return (
+        <div className="score-entry-content">
+          <div className="loading-state">
+            <i className="fas fa-spinner fa-spin"></i>
+            <h3>Loading...</h3>
+            <p>Please wait while we load the data.</p>
+          </div>
+        </div>
+      );
+    }
+
+    return (
+      <div className="score-entry-content">
+        {/* Subject header with back button */}
+        <div className="subject-header">
+          <button 
+            onClick={handleBack}
+            className="excel-btn secondary"
+            disabled={loading}
+          >
+            <i className="fas fa-arrow-left"></i>
+            Back to {selectedCard === 'interview' ? 'Interview' : 'Continuing'} Subjects
+          </button>
+          <div className="subject-info">
+            <h3>{selectedSubject.subject_name}</h3>
+            <p>{selectedSubject.subject_code}</p>
+          </div>
+          <div className="subject-actions">
+            <button 
+              onClick={saveAllScores}
+              className="excel-btn primary"
+              disabled={saving || loading}
+            >
+              <i className="fas fa-save"></i>
+              Save All Scores
+            </button>
+            <button 
+              onClick={exportScores}
+              className="excel-btn secondary"
+              disabled={loading}
+            >
+              <i className="fas fa-download"></i>
+              Export
+            </button>
+          </div>
+        </div>
+
+        {/* Score statistics */}
+        <div className="score-stats">
+          <div className="stat-item">
+            <span className="stat-label">Total:</span>
+            <span className="stat-value">{scoreStats.total}</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Scored:</span>
+            <span className="stat-value">{scoreStats.scored}</span>
+          </div>
+          <div className="stat-item">
+            <span className="stat-label">Pending:</span>
+            <span className="stat-value">{scoreStats.pending}</span>
+          </div>
+        </div>
+
+        {/* Students table */}
+        <div className="students-table-container">
+          <table className="students-table" ref={tableRef}>
+            <thead>
+              <tr>
+                <th scope="col">Admission Number</th>
+                <th scope="col">Student Name</th>
+                <th scope="col">Score (0-100)</th>
+                <th scope="col">Grade</th>
+                <th scope="col">Status</th>
+                <th scope="col">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              {paginatedStudents.length === 0 ? (
+                <tr>
+                  <td colSpan="6" className="no-students-message">
+                    <div className="empty-state">
+                      <i className="fas fa-user-graduate"></i>
+                      <h3>No Pre-Form One Students Found</h3>
+                      <p>No registered Pre-Form One students found for score entry. Please register students first.</p>
+                    </div>
+                  </td>
+                </tr>
+              ) : (
+                paginatedStudents.map(renderVirtualItem)
+              )}
+            </tbody>
+          </table>
+        </div>
+      </div>
+    );
+  }, [selectedSubject, selectedCard, preFormOneStudents, loading, scoreStats, paginatedStudents, handleBack, renderVirtualItem]);
+
   // Save individual student score
   const saveIndividualScore = async (studentId) => {
     try {
@@ -608,21 +658,21 @@ const PreFormOneScoreEntry = () => {
         score: scoreData.score
       };
       
-      console.log('🔍 FRONTEND DEBUG: Saving individual score:', payload);
-      
       const result = await preFormOneStudentsService.saveStudentScores(payload);
-      console.log('🔍 FRONTEND DEBUG: Individual score saved:', result);
       
       toast.success('Score saved successfully!');
       
       // Update the local state immediately with the saved score
-      setStudentScores(prev => ({
-        ...prev,
-        [studentId]: {
-          score: scoreData.score,
-          grade: calculateGrade(scoreData.score)
-        }
-      }));
+      setStudentScores(prev => {
+        const updated = {
+          ...prev,
+          [studentId]: {
+            score: scoreData.score,
+            grade: calculateGrade(scoreData.score)
+          }
+        };
+        return updated;
+      });
       
       // Clear comprehensive persistence after successful save
       clearScoresFromPersistence(selectedSubject.id, selectedCard);
@@ -659,10 +709,7 @@ const PreFormOneScoreEntry = () => {
         return;
       }
       
-      console.log('🔍 FRONTEND DEBUG: Saving all scores:', scoresToSave);
-      
       const result = await preFormOneStudentsService.saveBulkStudentScores(scoresToSave);
-      console.log('🔍 FRONTEND DEBUG: All scores saved:', result);
       
       toast.success(`${scoresToSave.length} scores saved successfully!`);
       
@@ -683,7 +730,6 @@ const PreFormOneScoreEntry = () => {
       // Clear comprehensive persistence after successful save
       clearScoresFromPersistence(selectedSubject.id, selectedCard);
       
-      
     } catch (error) {
       console.error('🔍 FRONTEND DEBUG: Error saving all scores:', error);
       toast.error('Error saving scores. Please try again.');
@@ -695,8 +741,6 @@ const PreFormOneScoreEntry = () => {
   // Export scores to CSV
   const exportScores = async () => {
     try {
-      console.log('🔍 FRONTEND DEBUG: Exporting scores for subject:', selectedSubject.id, 'type:', selectedCard);
-      
       const response = await preFormOneStudentsService.exportScores(selectedSubject.id, selectedCard);
       
       // Create download link
@@ -721,8 +765,6 @@ const PreFormOneScoreEntry = () => {
     const student = preFormOneStudents.find(s => s.id === studentId);
     const score = studentScores[studentId];
     
-    console.log('🔍 FRONTEND DEBUG: Viewing student details:', student, score);
-    
     const details = `
       Student: ${student.first_name && student.surname ? `${student.first_name} ${student.surname}` : student.name || student.student_name || 'Unknown Student'}
       Admission: ${student.admission_number || student.admission_no || student.student_number || `PF2025-${student.id || student.student_id}`}
@@ -736,7 +778,6 @@ const PreFormOneScoreEntry = () => {
   // Comprehensive data persistence functions
   const saveScoresToPersistence = async (subjectId, scoreType, scores) => {
     try {
-      console.log('🔍 DATA PERSISTENCE: Saving scores with comprehensive protection');
       const success = await dataPersistenceManager.saveData(subjectId, scoreType, { scores });
       if (!success) {
         toast.warning('Some data protection features are not available, but your scores are still saved locally.');
@@ -749,9 +790,7 @@ const PreFormOneScoreEntry = () => {
 
   const loadScoresFromPersistence = async (subjectId, scoreType) => {
     try {
-      console.log('🔍 DATA PERSISTENCE: Loading scores with comprehensive protection');
       const scores = await dataPersistenceManager.loadData(subjectId, scoreType);
-      console.log('✅ DATA PERSISTENCE: Loaded scores:', Object.keys(scores).length, 'students');
       return scores;
     } catch (error) {
       console.error('❌ DATA PERSISTENCE: Error loading scores:', error);
@@ -762,17 +801,15 @@ const PreFormOneScoreEntry = () => {
 
   const clearScoresFromPersistence = (subjectId, scoreType) => {
     try {
-      console.log('🔍 DATA PERSISTENCE: Clearing scores from all storage layers');
       dataPersistenceManager.clearData(subjectId, scoreType);
     } catch (error) {
-      console.error('❌ DATA PERSISTENCE: Error clearing scores:', error);
+      console.error('Error clearing scores:', error);
     }
   };
 
   // Auto-save functionality
   const startAutoSave = () => {
     if (selectedSubject && selectedCard) {
-      console.log('🔍 DATA PERSISTENCE: Starting auto-save for subject:', selectedSubject.id);
       dataPersistenceManager.startAutoSave(selectedSubject.id, selectedCard, () => {
         saveScoresToPersistence(selectedSubject.id, selectedCard, studentScores);
       });
@@ -780,7 +817,6 @@ const PreFormOneScoreEntry = () => {
   };
 
   const stopAutoSave = () => {
-    console.log('🔍 DATA PERSISTENCE: Stopping auto-save');
     dataPersistenceManager.stopAutoSave();
   };
 
@@ -854,128 +890,7 @@ const PreFormOneScoreEntry = () => {
     );
   };
 
-  // Render Pre-Form One students with score entry fields
-  const renderStudentScoreEntry = (subject, scoreType) => {
-    console.log('🔍 FRONTEND DEBUG: Rendering student score entry for subject:', subject);
-    console.log('🔍 FRONTEND DEBUG: Available Pre-Form One students:', preFormOneStudents);
-    console.log('🔍 FRONTEND DEBUG: Score type:', scoreType);
-
-    return (
-      <div className="student-score-entry-container">
-        <div className="student-score-entry-header">
-          <button 
-            onClick={() => handleNavigation('subjects')}
-            className="excel-btn secondary"
-            disabled={loading}
-          >
-            <i className="fas fa-arrow-left"></i>
-          </button>
-          <div className="students-table-header">
-            <h4>
-              <i className="fas fa-users"></i>
-              {subject?.subject_name || 'Subject'} - {filteredStudents.length} Student{filteredStudents.length !== 1 ? 's' : ''}
-            </h4>
-            <div className="header-actions">
-              <button 
-                onClick={saveAllScores}
-                disabled={saving || loading}
-                className={saving ? 'loading' : ''}
-                aria-label="Save all scores (Ctrl+S)"
-              >
-                <i className="fas fa-save"></i>
-                {saving ? 'Saving...' : 'Save All Scores'}
-              </button>
-              <button 
-                className="excel-btn secondary"
-                onClick={exportScores}
-                disabled={loading}
-                aria-label="Export scores (Ctrl+E)"
-              >
-                <i className="fas fa-download"></i>
-                Export
-              </button>
-            </div>
-            <div className="student-stats">
-              <span className="stat-item">
-                <span className="stat-label">Total:</span>
-                <span className="stat-value">{isVirtualScrollEnabled ? filteredStudents.length : paginatedStudents.length}</span>
-              </span>
-              <span className="stat-item">
-                <span className="stat-label">Scored:</span>
-                <span className="stat-value">{scoreStats.scored}</span>
-              </span>
-              <span className="stat-item">
-                <span className="stat-label">Pending:</span>
-                <span className="stat-value">{scoreStats.pending}</span>
-              </span>
-            </div>
-            {!isVirtualScrollEnabled && (
-              <div className="pagination-controls">
-                <button 
-                  className="excel-btn secondary small"
-                  onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
-                  disabled={currentPage === 1}
-                  aria-label="Previous page"
-                >
-                  <i className="fas fa-chevron-left"></i>
-                  Previous
-                </button>
-                <span className="page-info">
-                  Page {currentPage} of {Math.ceil(filteredStudents.length / itemsPerPage)}
-                </span>
-                <button 
-                  className="excel-btn secondary small"
-                  onClick={() => setCurrentPage(Math.min(Math.ceil(filteredStudents.length / itemsPerPage), currentPage + 1))}
-                  disabled={currentPage >= Math.ceil(filteredStudents.length / itemsPerPage)}
-                  aria-label="Next page"
-                >
-                  Next
-                  <i className="fas fa-chevron-right"></i>
-                </button>
-              </div>
-            )}
-          </div>
-        </div>
-
-        <div className="student-score-entry-content">
-          <div className="students-table-card">
-            <div className="students-table-main">
-            <div className="students-table-container" ref={tableRef}>
-              <table className="students-table" role="grid" aria-label="Student scores table">
-                <thead>
-                  <tr>
-                    <th scope="col">Admission Number</th>
-                    <th scope="col">Student Name</th>
-                    <th scope="col">Score (0-100)</th>
-                    <th scope="col">Grade</th>
-                    <th scope="col">Status</th>
-                    <th scope="col">Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {paginatedStudents.length === 0 ? (
-                    <tr>
-                      <td colSpan="6" className="no-students-message">
-                        <div className="empty-state">
-                          <i className="fas fa-user-graduate"></i>
-                          <h3>No Pre-Form One Students Found</h3>
-                          <p>No registered Pre-Form One students found for score entry. Please register students first.</p>
-                        </div>
-                      </td>
-                    </tr>
-                  ) : (
-                    paginatedStudents.map(renderVirtualItem)
-                  )}
-                </tbody>
-              </table>
-            </div>
-            </div>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
+  
   // Main render function
   return (
     <div className="pre-form-one-score-entry">
@@ -1054,26 +969,29 @@ const PreFormOneScoreEntry = () => {
           </div>
         )}
 
-        {/* Subject Cards View - Show when card is selected but no subject */}
-        {isSubjectsList && selectedCard && !selectedSubject && (
-          <>
-            {selectedCard === 'interview' && renderSubjectCards(interviewSubjects, 'Interview Subjects')}
-            {selectedCard === 'continuing' && renderSubjectCards(continuingSubjects, 'Continuing Subjects')}
-          </>
-        )}
+        {/* Subject Cards - Show when card selected but no subject */}
+        {selectedCard && !selectedSubject && renderSubjectCards(selectedCard === 'interview' ? interviewSubjects : continuingSubjects, selectedCard === 'interview' ? 'Interview Subjects' : 'Continuing Subjects')}
 
-        {/* Student Score Entry View - Show when subject is selected */}
-        {isSubjectDetail && selectedSubject && (
-          renderStudentScoreEntry(selectedSubject, selectedCard)
-        )}
+        {/* Student Score Entry - Show when subject selected */}
+        {isSubjectDetail && selectedSubject && renderStudentScoreEntry(selectedSubject, selectedCard, preFormOneStudents, loading, scoreStats, paginatedStudents, handleBack, saveAllScores, exportScores, renderVirtualItem)}
 
-        {/* Also show subject cards when on main page and card is selected */}
-        {!subjectId && selectedCard && !selectedSubject && (
-          <>
-            {selectedCard === 'interview' && renderSubjectCards(interviewSubjects, 'Interview Subjects')}
-            {selectedCard === 'continuing' && renderSubjectCards(continuingSubjects, 'Continuing Subjects')}
-          </>
+        {/* Loading State */}
+        {loading && (
+          <div className="loading-overlay">
+            <div className="loading-state">
+              <i className="fas fa-spinner fa-spin"></i>
+              <h3>Loading...</h3>
+              <p>Please wait while we load the data.</p>
+            </div>
+          </div>
         )}
+      </div>
+      
+      <div className="back-navigation-bottom">
+        <Link to={`/admin/pre-form-one/${year}`} className="back-button">
+          <i className="fas fa-arrow-left"></i>
+          Back to Modules
+        </Link>
       </div>
     </div>
   );

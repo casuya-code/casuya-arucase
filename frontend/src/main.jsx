@@ -3,9 +3,11 @@ import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import './styles/index.css';
-import '@fortawesome/fontawesome-free/css/all.min.css';
+import '@fortawesome/fontawesome-free/css/fontawesome.css';
+import '@fortawesome/fontawesome-free/css/solid.css';
 // Initialize logger and log helper
 import logger from './utils/logger';
+import './utils/debugAuth.js'; // Import debug utility to make it available globally
 import './utils/logHelper'; // Initialize log helper (makes window.logHelper available)
 import './utils/tokenDecoder'; // Initialize token decoder (makes window.logTokenInfo available)
 

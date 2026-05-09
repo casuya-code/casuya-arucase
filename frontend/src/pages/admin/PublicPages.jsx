@@ -1,9 +1,12 @@
 /**
  * Public Pages Management - CRUD for all public website pages
  */
-import { useState, useMemo, useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
-import { toast } from '../../utils/toast';
+import React, { useState, useEffect } from 'react';
+import { useQuery, useQueryClient, useMutation } from '@tanstack/react-query';
+import axios from 'axios';
+import { toast } from 'react-toastify';
+import './PublicPages.css';
+import DOMPurify from 'dompurify';
 import MDEditor from '@uiw/react-md-editor';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { adminAPI } from '../../services/admin';
@@ -564,7 +567,7 @@ Kutuma ombi, wasiliana kupitia **arucase@gmail.com**.
                             <label>Hakiki</label>
                             <div 
                               className="content-preview"
-                              dangerouslySetInnerHTML={{ __html: formData.html_content }}
+                              dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(formData.html_content) }}
                             />
                           </div>
                         )}

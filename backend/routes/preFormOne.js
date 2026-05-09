@@ -1041,9 +1041,12 @@ router.get('/:year/interview-results/pdf', requireAuth, async (req, res) => {
       await browser.close();
       console.log('🔍 PDF DEBUG: Browser closed');
       
-      res.setHeader('Content-Type', 'application/pdf');
-      res.setHeader('Content-Disposition', `attachment; filename="preform-one-interview-results-${year}.pdf"`);
-      res.send(pdfBuffer);
+      res.writeHead(200, {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="preform-one-interview-results-${year}.pdf"`,
+        'Content-Length': pdfBuffer.length
+      });
+      res.end(pdfBuffer);
       console.log('🔍 PDF DEBUG: PDF response sent');
       
     } catch (error) {
@@ -1054,6 +1057,112 @@ router.get('/:year/interview-results/pdf', requireAuth, async (req, res) => {
     
   } catch (error) {
     console.error('Error generating interview results PDF:', error);
+    sendError(res, 500, 'Failed to generate PDF', error);
+  }
+});
+
+// Download individual interview results PDF for a specific student
+router.get('/:year/interview-results/:studentId/pdf', requireAuth, async (req, res) => {
+  try {
+    const { year, studentId } = req.params;
+    
+    if (!year || isNaN(parseInt(year))) {
+      return sendError(res, 400, 'Invalid year parameter');
+    }
+    
+    if (!studentId || isNaN(parseInt(studentId))) {
+      return sendError(res, 400, 'Invalid student ID parameter');
+    }
+    
+    // Get student information
+    const student = await query('SELECT * FROM preform_one_students WHERE id = $1 AND year = $2', [studentId, year]);
+    
+    if (student.rows.length === 0) {
+      return sendError(res, 404, 'Student not found');
+    }
+    
+    const studentData = student.rows[0];
+    
+    // Get interview results for this student
+    const results = await query('SELECT r.*, s.first_name, s.middle_name, s.surname, s.admission_number, s.parish FROM preform_one_interview_results r JOIN preform_one_students s ON r.student_id = s.id WHERE r.student_id = $1 AND r.year = $2', [studentId, year]);
+    
+    if (results.rows.length === 0) {
+      return sendError(res, 404, 'No interview results found for this student. Please enter scores and calculate results first.');
+    }
+    
+    const resultData = results.rows[0];
+    
+    // Get subjects for PDF generation
+    const subjects = await query('SELECT id, subject_code FROM preformone_interview_subjects WHERE is_active = true ORDER BY subject_code');
+    
+    // Get subject scores for this student
+    const scores = await query(`
+      SELECT sc.score, sc.student_id, sub.subject_code 
+        FROM preform_one_scores sc
+        JOIN preformone_interview_subjects sub ON sc.subject_id = sub.id
+        WHERE sc.subject_type = 'interview' AND sc.student_id = $1
+    `, [studentId]);
+    
+    // Create a map of subject_code -> score
+    const scoresMap = {};
+    scores.rows.forEach(scoreRow => {
+      const subjectCode = scoreRow.subject_code;
+      scoresMap[subjectCode] = scoreRow.score;
+    });
+    
+    console.log('🔍 PDF DEBUG: Starting individual student PDF generation');
+    console.log('🔍 PDF DEBUG: Student:', studentData);
+    console.log('🔍 PDF DEBUG: Results:', resultData);
+    console.log('🔍 PDF DEBUG: Subjects:', subjects.rows.length);
+    console.log('🔍 PDF DEBUG: Scores:', scoresMap);
+    
+    // Generate PDF using puppeteer
+    try {
+      const puppeteer = require('puppeteer');
+      
+      const browser = await puppeteer.launch({ 
+        headless: true,
+        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        timeout: 30000
+      });
+      
+      const page = await browser.newPage();
+      
+      // Generate HTML content for individual student PDF
+      const htmlContent = generateIndividualInterviewPDF(studentData, resultData, subjects.rows, scoresMap, year);
+      console.log('🔍 PDF DEBUG: Individual HTML content generated, length:', htmlContent.length);
+      
+      await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
+      
+      const pdfBuffer = await page.pdf({
+        format: 'A4',
+        printBackground: true,
+        margin: {
+          top: '20px',
+          right: '20px',
+          bottom: '20px',
+          left: '20px'
+        },
+        timeout: 15000
+      });
+      
+      await browser.close();
+      
+      res.writeHead(200, {
+        'Content-Type': 'application/pdf',
+        'Content-Disposition': `attachment; filename="PreFormOne_Interview_Report_${studentData.admission_number}_${year}.pdf"`,
+        'Content-Length': pdfBuffer.length
+      });
+      res.end(pdfBuffer);
+      
+    } catch (error) {
+      console.error('🔍 PDF ERROR: Individual PDF generation failed:', error);
+      console.error('🔍 PDF ERROR: Error stack:', error.stack);
+      sendError(res, 500, 'Failed to generate PDF', error);
+    }
+    
+  } catch (error) {
+    console.error('Error generating individual interview results PDF:', error);
     sendError(res, 500, 'Failed to generate PDF', error);
   }
 });
@@ -1115,8 +1224,8 @@ router.get('/:year/continuing-results/pdf', requireAuth, async (req, res) => {
       console.log('🔍 PDF DEBUG: Puppeteer module loaded');
       
       const browser = await puppeteer.launch({ 
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox'],
+        headless: 'new',
+        args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
         timeout: 30000
       });
       console.log('🔍 PDF DEBUG: Puppeteer browser launched');
@@ -1128,8 +1237,16 @@ router.get('/:year/continuing-results/pdf', requireAuth, async (req, res) => {
       const htmlContent = generateContinuingResultsPDF(resultsWithScores, subjects.rows, year);
       console.log('🔍 PDF DEBUG: HTML content generated, length:', htmlContent.length);
       
+      // Validate HTML content
+      if (!htmlContent || htmlContent.length === 0) {
+        throw new Error('HTML content is empty');
+      }
+      
       await page.setContent(htmlContent, { waitUntil: 'networkidle0' });
       console.log('🔍 PDF DEBUG: HTML content set to page');
+      
+      // Wait for page to render completely
+      await page.waitForTimeout(1000);
       
       const pdfBuffer = await page.pdf({
         format: 'A4',
@@ -1140,15 +1257,36 @@ router.get('/:year/continuing-results/pdf', requireAuth, async (req, res) => {
           bottom: '20px',
           left: '20px'
         },
-        timeout: 15000
+        timeout: 15000,
+        scale: 1.0,
+        displayHeaderFooter: false
       });
       console.log('🔍 PDF DEBUG: PDF generated, buffer size:', pdfBuffer.length);
       
       await browser.close();
       console.log('🔍 PDF DEBUG: Browser closed');
       
+      // Validate PDF buffer
+      if (!pdfBuffer || pdfBuffer.length === 0) {
+        throw new Error('PDF buffer is empty');
+      }
+      
+      // Check if it's a valid PDF (starts with %PDF)
+      const header = pdfBuffer.toString('utf8', 0, 4);
+      if (header !== '%PDF') {
+        console.error('🔍 PDF ERROR: Invalid PDF header:', header);
+        console.error('🔍 PDF ERROR: First 20 bytes:', pdfBuffer.slice(0, 20).toString('hex'));
+        console.error('🔍 PDF ERROR: First 50 bytes as text:', pdfBuffer.slice(0, 50).toString('utf8'));
+        console.error('🔍 PDF ERROR: HTML content length:', htmlContent.length);
+        console.error('🔍 PDF ERROR: HTML content preview:', htmlContent.substring(0, 200));
+        throw new Error('Generated file is not a valid PDF');
+      }
+      
+      console.log('🔍 PDF DEBUG: PDF validation passed');
+      
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader('Content-Disposition', `attachment; filename="preform-one-continuing-results-${year}.pdf"`);
+      res.setHeader('Content-Length', pdfBuffer.length);
       res.send(pdfBuffer);
       console.log('🔍 PDF DEBUG: PDF response sent');
       

@@ -41,6 +41,10 @@
 
 .back-button i {
   font-size: 1rem;
+  /* Debug: Ensure FontAwesome icon is visible */
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .login-container {
@@ -100,6 +104,10 @@
   color: #9ca3af;
   font-size: 1rem;
   pointer-events: none;
+  /* Debug: Ensure FontAwesome icons are visible */
+  display: inline-block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
 }
 
 .input-with-icon-field {

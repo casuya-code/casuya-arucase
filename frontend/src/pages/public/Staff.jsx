@@ -1,13 +1,14 @@
 /**
  * Staff Page - Full Content from Python Template
  */
-import { useQuery } from '@tanstack/react-query';
+import React, { useState, useEffect, useCallback, useMemo } from 'react';
 import { Link } from 'react-router-dom';
-import { useMemo, useCallback } from 'react';
+import { useQuery } from '@tanstack/react-query';
 import PublicLayout from '../../components/layout/PublicLayout';
 import Loading from '../../components/common/Loading';
 import { publicAPI } from '../../services/public';
 import './Staff.css';
+import DOMPurify from 'dompurify';
 
 const Staff = () => {
   const { data: pageData, isLoading, isError } = useQuery({
@@ -110,7 +111,7 @@ const Staff = () => {
         </Link>
 
         {hasCustomContent ? (
-          <div className="content-card" dangerouslySetInnerHTML={{ __html: page.html_content || page.content || '' }} />
+          <div className="content-card" dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(page.html_content || page.content || '') }} />
         ) : (
           fallbackContent
         )}

@@ -257,7 +257,7 @@
   .admissions-page .content-card {
     padding: 1.25rem;
     margin: 0 0.75rem;
-    border-radius: 12px;
+    border-radius: 0;
   }
 
   .admissions-page .content-card h1 {
