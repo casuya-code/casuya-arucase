@@ -195,24 +195,24 @@ if (typeof window !== 'undefined') {
   }
 }
 
-// Register Service Worker for offline support (PWA)
-if ('serviceWorker' in navigator && import.meta.env.PROD) {
-  window.addEventListener('load', () => {
-    navigator.serviceWorker
-      .register('/sw.js')
-      .then((registration) => {
-        console.log('[SW] Service Worker registered successfully:', registration.scope);
-        
-        // Check for updates periodically
-        setInterval(() => {
-          registration.update();
-        }, 60 * 60 * 1000); // Check every hour
-      })
-      .catch((error) => {
-        console.warn('[SW] Service Worker registration failed:', error);
-      });
-  });
-}
+// Service Worker disabled temporarily for deployment
+// if ('serviceWorker' in navigator && import.meta.env.PROD) {
+//   window.addEventListener('load', () => {
+//     navigator.serviceWorker
+//       .register('/sw.js')
+//       .then((registration) => {
+//         console.log('[SW] Service Worker registered successfully:', registration.scope);
+//         
+//         // Check for updates periodically
+//         setInterval(() => {
+//           registration.update();
+//         }, 60 * 60 * 1000); // Check every hour
+//       })
+//       .catch((error) => {
+//         console.warn('[SW] Service Worker registration failed:', error);
+//       });
+//   });
+// }
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
