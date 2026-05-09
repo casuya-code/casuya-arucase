@@ -5,6 +5,8 @@ import App from './App';
 import './styles/index.css';
 import '@fortawesome/fontawesome-free/css/fontawesome.css';
 import '@fortawesome/fontawesome-free/css/solid.css';
+import '@fortawesome/fontawesome-free/css/regular.css';
+import '@fortawesome/fontawesome-free/css/brands.css';
 // Initialize utilities
 import './utils/debugAuth.js'; // Import debug utility to make it available globally
 import './utils/logHelper'; // Initialize log helper (makes window.logHelper available)
