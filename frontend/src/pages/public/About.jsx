@@ -49,7 +49,7 @@ const About = () => {
           na wenye maadili mema ili wawe viongozi wa baadaye katika Kanisa Katoliki na jamii kwa ujumla.
         </p>
 
-        <!-- Related Pages for SEO -->
+        {/* Related Pages for SEO */}
         <div className="related-pages">
           <h3>Pages Zinazohusiana</h3>
           <div className="related-links">
