@@ -32,6 +32,153 @@ async function fileExists(filePath) {
   }
 }
 
+/** Load student photo bytes from Cloudinary URL or local uploads/photos file. */
+async function loadStudentPhotoBuffer(photoRef) {
+  if (!photoRef) return null;
+  const ref = String(photoRef).trim();
+
+  if (/^https?:\/\//i.test(ref)) {
+    const axios = require('axios');
+    const response = await axios.get(ref, { responseType: 'arraybuffer', timeout: 10000 });
+    return Buffer.from(response.data);
+  }
+
+  const basename = path.basename(ref);
+  const photoPath = path.join(__dirname, '../static/uploads/photos', basename);
+  if (await fileExists(photoPath)) {
+    return await fs.readFile(photoPath);
+  }
+
+  const altPath = path.join(__dirname, '../static', ref.replace(/^\/+/, ''));
+  if (await fileExists(altPath)) {
+    return await fs.readFile(altPath);
+  }
+
+  return null;
+}
+
+/** Photo Entry Form PDF — layout constants (passport 35×45 mm ≈ 413×531 px). */
+const PHOTO_ENTRY_MARGIN = 28;
+const PHOTO_ENTRY_LOGO_SIZE = 52;
+const PHOTO_ENTRY_PHOTO_ASPECT = 531 / 413;
+const PHOTO_ENTRY_COLS = 4;
+
+async function loadSchoolLogoBuffer(logoRow) {
+  if (!logoRow?.logo_image_path) return null;
+  const logoPath = String(logoRow.logo_image_path).trim();
+  if (/^https?:\/\//i.test(logoPath)) {
+    return loadStudentPhotoBuffer(logoPath);
+  }
+  const candidates = [
+    logoPath,
+    path.join(__dirname, '../static', logoPath.replace(/^\/+/, '')),
+    path.join(__dirname, '../static/uploads', logoPath.replace(/^\/+/, '')),
+  ];
+  for (const candidate of candidates) {
+    if (await fileExists(candidate)) {
+      return fs.readFile(candidate);
+    }
+  }
+  return null;
+}
+
+function drawPhotoEntryLogos(doc, marginX, contentWidth, y, logoBuffer, logoSize) {
+  if (!logoBuffer) return;
+  doc.image(logoBuffer, marginX, y, { width: logoSize, height: logoSize });
+  doc.image(logoBuffer, marginX + contentWidth - logoSize, y, { width: logoSize, height: logoSize });
+}
+
+function drawPhotoEntryInfoTable(doc, x, y, width, level, stream, year, month, term) {
+  const cols = term ? 4 : 3;
+  const colWidth = width / cols;
+  const rowHeight = 18;
+  const labels = term
+    ? [`CLASS: ${level} ${stream}`, `TERM: ${term}`, `MONTH: ${month}`, `YEAR: ${year}`]
+    : [`CLASS: ${level} ${stream}`, `MONTH: ${month}`, `YEAR: ${year}`];
+
+  doc.lineWidth(0.75);
+  doc.rect(x, y, width, rowHeight).stroke();
+  labels.forEach((label, i) => {
+    if (i > 0) {
+      doc.moveTo(x + colWidth * i, y).lineTo(x + colWidth * i, y + rowHeight).stroke();
+    }
+    doc.fontSize(9).font('Helvetica-Bold').text(label, x + colWidth * i + 4, y + 5, {
+      width: colWidth - 8,
+      align: 'center',
+    });
+  });
+  doc.lineWidth(1);
+}
+
+function drawPhotoEntryFullHeader(doc, marginX, contentWidth, logoBuffer, level, stream, year, month, term) {
+  const y = PHOTO_ENTRY_MARGIN;
+  const sideGap = 8;
+  const centerX = marginX + PHOTO_ENTRY_LOGO_SIZE + sideGap;
+  const centerWidth = contentWidth - (PHOTO_ENTRY_LOGO_SIZE + sideGap) * 2;
+
+  drawPhotoEntryLogos(doc, marginX, contentWidth, y, logoBuffer, PHOTO_ENTRY_LOGO_SIZE);
+
+  doc.fontSize(11).font('Helvetica-Bold');
+  doc.text('CATHOLIC ARCHDIOCESE OF ARUSHA', centerX, y + 2, { width: centerWidth, align: 'center' });
+  doc.fontSize(12);
+  doc.text('ARUSHA CATHOLIC SEMINARY-OLDONYOSAMBU', centerX, y + 16, { width: centerWidth, align: 'center' });
+  doc.fontSize(8).font('Helvetica');
+  doc.text('P.O BOX 3102 Arusha, Tanzania', centerX, y + 32, { width: centerWidth, align: 'center' });
+  doc.text('+255 754 92 60 22 / +255 765 394 802 (Office)', centerX, y + 42, { width: centerWidth, align: 'center' });
+  doc.text('Email: arucase@gmail.com', centerX, y + 52, { width: centerWidth, align: 'center' });
+
+  const titleY = y + PHOTO_ENTRY_LOGO_SIZE + 10;
+  doc.fontSize(16).font('Helvetica-Bold').text('PHOTO ENTRY FORM', marginX, titleY, {
+    width: contentWidth,
+    align: 'center',
+  });
+
+  const infoY = titleY + 24;
+  drawPhotoEntryInfoTable(doc, marginX, infoY, contentWidth, level, stream, year, month, term);
+
+  const separatorY = infoY + 24;
+  doc.moveTo(marginX, separatorY).lineTo(marginX + contentWidth, separatorY).lineWidth(1).stroke();
+
+  return separatorY + 8;
+}
+
+function drawPhotoEntryContinuationHeader(doc, marginX, contentWidth, logoBuffer, level, stream, year, month, term) {
+  const y = PHOTO_ENTRY_MARGIN;
+  const logoSize = 36;
+  const sideGap = 8;
+  const textX = marginX + logoSize + sideGap;
+  const textWidth = contentWidth - (logoSize + sideGap) * 2;
+
+  drawPhotoEntryLogos(doc, marginX, contentWidth, y, logoBuffer, logoSize);
+
+  doc.fontSize(11).font('Helvetica-Bold').text('ARUSHA CATHOLIC SEMINARY', textX, y + 2, {
+    width: textWidth,
+    align: 'center',
+  });
+  doc.fontSize(10).text('PHOTO ENTRY FORM (continued)', textX, y + 16, {
+    width: textWidth,
+    align: 'center',
+  });
+
+  const infoY = y + logoSize + 6;
+  drawPhotoEntryInfoTable(doc, marginX, infoY, contentWidth, level, stream, year, month, term);
+
+  const separatorY = infoY + 24;
+  doc.moveTo(marginX, separatorY).lineTo(marginX + contentWidth, separatorY).lineWidth(1).stroke();
+
+  return separatorY + 8;
+}
+
+async function renderPhotoEntryImage(doc, imageBuffer, x, y, width, height) {
+  // PDFKit ignores EXIF orientation tags; normalise to upright JPEG before embedding.
+  const finalImageBuffer = await sharp(imageBuffer)
+    .rotate()
+    .jpeg({ quality: 90 })
+    .toBuffer();
+
+  doc.image(finalImageBuffer, x, y, { fit: [width, height] });
+}
+
 async function generateIndividualReportPDF(form, stream, year, term, admNo) {
   return new Promise(async (resolve, reject) => {
     try {
@@ -1115,20 +1262,14 @@ async function generateBulkReportPDF(form, year, term, stream = null) {
 async function generatePhotoEntryFormPDF(level, stream, year, month = null, term = null) {
   return new Promise(async (resolve, reject) => {
     try {
-      // Normalize stream for FORM I-IV: NA -> A
-      const { normalizeStream } = require('../utils/streamNormalizer');
       const normalizedStream = normalizeStream(stream);
-
-      // For FORM I-IV, check both stream 'A' and 'NA' (students may have either)
       const isFormIV = level && /^FORM\s+(I|II|III|IV)$/.test(level);
 
-      let studentsQuery = `SELECT * FROM students
-         WHERE level = $1`;
+      let studentsQuery = `SELECT * FROM students WHERE level = $1`;
       const studentsParams = [level];
       let paramCount = 2;
 
       if (isFormIV && (normalizedStream === 'A' || stream === 'NA')) {
-        // Check both 'A' and 'NA' for FORM I-IV
         studentsQuery += ` AND (stream = $${paramCount} OR stream = $${paramCount + 1})`;
         studentsParams.push('A', 'NA');
         paramCount += 2;
@@ -1142,7 +1283,6 @@ async function generatePhotoEntryFormPDF(level, stream, year, month = null, term
       studentsParams.push(parseInt(year));
       paramCount++;
 
-      // Add term filtering for Form V/VI
       if (term && term.trim()) {
         studentsQuery += ` AND term = $${paramCount}`;
         studentsParams.push(term.trim());
@@ -1150,23 +1290,17 @@ async function generatePhotoEntryFormPDF(level, stream, year, month = null, term
       }
 
       studentsQuery += ` ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC`;
-      
-      // Get all students for the class, sorted by name: first_name, then middle_name, then surname
+
       const studentsResult = await query(studentsQuery, studentsParams);
-      
       if (studentsResult.rows.length === 0) {
         throw new Error('No students found for this class');
       }
-      
-      // Get all photos for the class
-      // For FORM I-IV, check both stream 'A' and 'NA'
-      let photosQuery = `SELECT * FROM student_photos
-         WHERE level = $1`;
+
+      let photosQuery = `SELECT * FROM student_photos WHERE level = $1`;
       const photosParams = [level];
       paramCount = 2;
 
       if (isFormIV && (normalizedStream === 'A' || stream === 'NA')) {
-        // Check both 'A' and 'NA' for FORM I-IV
         photosQuery += ` AND (stream = $${paramCount} OR stream = $${paramCount + 1})`;
         photosParams.push('A', 'NA');
         paramCount += 2;
@@ -1178,298 +1312,173 @@ async function generatePhotoEntryFormPDF(level, stream, year, month = null, term
 
       photosQuery += ` AND year = $${paramCount}`;
       photosParams.push(parseInt(year));
-      // Note: Not filtering photos by term because student_index is position-based
-      // and changes when students are filtered. Students are already filtered by term.
-      
-      const photosResult = await query(photosQuery, photosParams);
 
-      // Create photo lookup map: adm_no -> photo_filename
-      // Use adm_no instead of student_index for reliable matching
+      const photosResult = await query(photosQuery, photosParams);
       const photoMap = {};
       photosResult.rows.forEach(photo => {
-        if (photo.adm_no) {
-          photoMap[photo.adm_no] = photo.photo_filename;
+        if (photo.student_index != null && photo.photo_filename) {
+          photoMap[photo.student_index] = photo.photo_filename;
         }
       });
-      
-      // Get school logo if available
+
       const logoResult = await query('SELECT * FROM school_logo WHERE id = 1');
-      
-      // Create PDF document with A4 size
-      const doc = new PDFDocument({ 
-        margin: 30, 
-        size: 'A4',
-        layout: 'portrait'
-      });
+      const logoBuffer = await loadSchoolLogoBuffer(logoResult.rows[0]);
+      const currentMonth = (month || new Date().toLocaleString('en-US', { month: 'long' })).toUpperCase();
+      const displayTerm = term && String(term).trim() ? String(term).trim() : null;
+      const students = studentsResult.rows;
+
+      const doc = new PDFDocument({ margin: 0, size: 'A4', layout: 'portrait' });
       const buffers = [];
-      
       doc.on('data', buffers.push.bind(buffers));
-      doc.on('end', () => {
-        const pdfBuffer = Buffer.concat(buffers);
-        resolve(pdfBuffer);
-      });
-      
-      // Set default font
-      doc.font('Helvetica');
-      
-      // Header Section - ARUSHA CATHOLIC SEMINARY
-      const headerY = 30;
-      doc.fontSize(20).font('Helvetica-Bold').text('ARUSHA CATHOLIC SEMINARY', { align: 'center', y: headerY });
-      
-      // School logo (if available) - positioned at top right
-      if (logoResult.rows[0] && logoResult.rows[0].logo_image_path) {
-        try {
-          const logoPath = logoResult.rows[0].logo_image_path;
-          
-          // Check if it's a URL (Cloudinary) or local file
-          if (logoPath.startsWith('http')) {
-            // For Cloudinary URLs, we need to fetch the image and convert to buffer
-            try {
-              const axios = require('axios');
-              const response = await axios.get(logoPath, { 
-                responseType: 'arraybuffer',
-                timeout: 10000 
-              });
-              const imageBuffer = Buffer.from(response.data);
-              doc.image(imageBuffer, doc.page.width - 100, headerY, { width: 60, height: 60 });
-            } catch (fetchError) {
-              console.error('Error fetching logo from URL:', fetchError.message);
-            }
-          } else {
-            // Local file path
-            if (await fileExists(logoPath)) {
-              doc.image(logoPath, doc.page.width - 100, headerY, { width: 60, height: 60 });
-            }
-          }
-        } catch (err) {
-          console.error('Error loading logo:', err);
-        }
+      doc.on('end', () => resolve(Buffer.concat(buffers)));
+
+      const marginX = PHOTO_ENTRY_MARGIN;
+      const pageWidth = doc.page.width;
+      const pageHeight = doc.page.height;
+      const contentWidth = pageWidth - marginX * 2;
+      const cellWidth = contentWidth / PHOTO_ENTRY_COLS;
+      const photoWidth = Math.floor(cellWidth * 0.86);
+      const photoHeight = Math.floor(photoWidth * PHOTO_ENTRY_PHOTO_ASPECT);
+      const photoTopPad = 14;
+      const detailsHeight = 62;
+      const cellHeight = photoTopPad + photoHeight + detailsHeight;
+      const footerY = pageHeight - 18;
+
+      const rowsOnFirstPage = Math.max(1, Math.floor((pageHeight - 132 - 24) / cellHeight));
+      const rowsOnContPage = Math.max(1, Math.floor((pageHeight - 112 - 24) / cellHeight));
+
+      let totalPages = 1;
+      let remaining = students.length;
+      remaining -= Math.min(remaining, rowsOnFirstPage * PHOTO_ENTRY_COLS);
+      while (remaining > 0) {
+        totalPages += 1;
+        remaining -= Math.min(remaining, rowsOnContPage * PHOTO_ENTRY_COLS);
       }
-      
-      // Title - PHOTO ENTRY FORM
-      doc.fontSize(18).font('Helvetica-Bold').text('PHOTO ENTRY FORM', { align: 'center', y: headerY + 40 });
-      
-      // Class, Month, Year information
-      const currentMonth = month || new Date().toLocaleString('en-US', { month: 'long' }).toUpperCase();
-      // Keep CLASS/MONTH/YEAR in one row to match the printable template.
-      const classMonthYearLine = `CLASS: ${level} ${stream}    MONTH: ${currentMonth}    YEAR: ${year}`;
-      doc
-        .fontSize(12)
-        .font('Helvetica')
-        .text(classMonthYearLine, {
-          align: 'left',
-          y: headerY + 80,
-          // Provide a width so it can wrap naturally if the text is too long.
-          width: doc.page.width - 60,
+
+      const drawPageFooter = (pageNum) => {
+        doc.fontSize(7).font('Helvetica');
+        const generated = new Date().toLocaleDateString('en-US', {
+          year: 'numeric',
+          month: 'short',
+          day: 'numeric',
+          hour: '2-digit',
+          minute: '2-digit',
         });
-      
-      // Draw a line separator
-      doc.moveTo(30, headerY + 140).lineTo(doc.page.width - 30, headerY + 140).stroke();
-      
-      // Grid layout: 4 photos per row
-      const gridStartY = headerY + 160;
-      const photosPerRow = 4;
-      const pageWidth = doc.page.width - 60; // Total usable width (30px margin on each side)
-      const cellWidth = pageWidth / photosPerRow;
-      // Photos are stored as 132x185 portrait; using a square (50x50) box scales them down too much.
-      // Render them in a portrait bounding box instead.
-      const photoWidth = Math.max(55, Math.floor(cellWidth * 0.5)); // keep some minimum
-      const photoHeight = Math.floor((photoWidth * 185) / 132); // preserve 132x185 aspect ratio
-      const cellHeight = photoHeight + 70; // Height for photo + text below + signature line
-      const photoMargin = 5; // Margin around photo in cell
-      
-      let currentY = gridStartY;
-      let currentX = 30; // Start from left margin
-      
-      // Helper function to draw a student card
-      const drawStudentCard = async (student, index, x, y) => {
-        // Get photo filename by adm_no
-        const photoFilename = photoMap[student.adm_no];
-        
-        // Draw cell border
+        doc.text(`Generated: ${generated}`, marginX, footerY);
+        doc.text(`Page ${pageNum} of ${totalPages}`, marginX, footerY, { width: contentWidth, align: 'center' });
+        doc.text(`Students: ${students.length}`, marginX, footerY, { width: contentWidth, align: 'right' });
+      };
+
+      const drawStudentCell = async (student, index, col, row, gridStartY) => {
+        const x = marginX + col * cellWidth;
+        const y = gridStartY + row * cellHeight;
+        const photoFilename = photoMap[index];
+        const innerPad = 5;
+        const innerX = x + innerPad;
+        const innerW = cellWidth - innerPad * 2;
+
+        doc.lineWidth(0.75);
         doc.rect(x, y, cellWidth, cellHeight).stroke();
-        
-        // Photo area (centered in cell)
+
+        doc.fontSize(8).font('Helvetica-Bold').text(String(index + 1), x + 4, y + 4);
+
         const photoX = x + (cellWidth - photoWidth) / 2;
-        const photoY = y + photoMargin;
-        
-        // Draw photo placeholder border
+        const photoY = y + photoTopPad;
+
+        doc.lineWidth(1);
         doc.rect(photoX, photoY, photoWidth, photoHeight).stroke();
-        
+        doc.lineWidth(0.5);
+        doc.rect(photoX + 1.5, photoY + 1.5, photoWidth - 3, photoHeight - 3).stroke();
+
         if (photoFilename) {
           try {
-            const photoPath = path.join(__dirname, '../static/uploads/photos', photoFilename);
-            if (await fileExists(photoPath)) {
-              // Read file as buffer and validate format
-              const imageBuffer = await fs.readFile(photoPath);
-              
-              // Validate buffer is not empty
-              if (!imageBuffer || imageBuffer.length === 0) {
-                throw new Error('Image file is empty');
-              }
-              
-              // Detect image format from magic bytes to validate
-              const isJPEG = imageBuffer[0] === 0xFF && imageBuffer[1] === 0xD8 && imageBuffer[2] === 0xFF;
-              const isPNG = imageBuffer[0] === 0x89 && imageBuffer[1] === 0x50 && imageBuffer[2] === 0x4E && imageBuffer[3] === 0x47;
-              const isGIF = imageBuffer[0] === 0x47 && imageBuffer[1] === 0x49 && imageBuffer[2] === 0x46;
-              const isWebP = imageBuffer[0] === 0x52 && imageBuffer[1] === 0x49 && imageBuffer[2] === 0x46 && imageBuffer[3] === 0x46 && 
-                             imageBuffer[8] === 0x57 && imageBuffer[9] === 0x45 && imageBuffer[10] === 0x42 && imageBuffer[11] === 0x50;
-              
-              let finalImageBuffer = imageBuffer;
-              
-              // Convert WebP to JPEG if needed (PDFKit doesn't support WebP)
-              if (isWebP) {
-                try {
-                  // Convert WebP to JPEG using Sharp
-                  finalImageBuffer = await sharp(imageBuffer)
-                    .jpeg({ quality: 90 })
-                    .toBuffer();
-                } catch (convertError) {
-                  console.error('Error converting WebP to JPEG:', convertError);
-                  throw new Error('Failed to convert WebP image to JPEG format');
-                }
-              } else if (isJPEG || isPNG || isGIF) {
-                // Already in supported format, use as-is
-                finalImageBuffer = imageBuffer;
-              } else {
-                // Unknown format - try file path as fallback (PDFKit might handle it)
-                const ext = path.extname(photoFilename).toLowerCase();
-                if (ext === '.jpg' || ext === '.jpeg' || ext === '.png' || ext === '.gif') {
-                  // Try using file path - PDFKit will attempt to read and detect format
-                doc.image(photoPath, photoX, photoY, { 
-                    fit: [photoWidth, photoHeight]
-                  });
-                  return; // Exit early if using file path
-                } else {
-                  throw new Error(`Unsupported image format: ${ext || 'unknown'}. Only JPEG, PNG, GIF, and WebP are supported.`);
-                }
-              }
-              
-              // Use the (possibly converted) buffer with PDFKit
-              doc.image(finalImageBuffer, photoX, photoY, { 
-                fit: [photoWidth, photoHeight]
-              });
+            const imageBuffer = await loadStudentPhotoBuffer(photoFilename);
+            if (imageBuffer?.length) {
+              await renderPhotoEntryImage(doc, imageBuffer, photoX + 2, photoY + 2, photoWidth - 4, photoHeight - 4);
             } else {
-              // Placeholder if photo not found
-              doc.fontSize(7).text('No Photo', photoX + 5, photoY + photoHeight / 2 - 3, {
-                width: photoWidth - 10,
-                align: 'center'
-              });
+              doc.fontSize(7).font('Helvetica').fillColor('#555555')
+                .text('No Photo', photoX, photoY + photoHeight / 2 - 4, { width: photoWidth, align: 'center' });
+              doc.fillColor('#000000');
             }
           } catch (err) {
-            console.error('Error loading photo:', err);
-            console.error('Photo filename:', photoFilename);
-            console.error('Photo path:', path.join(__dirname, '../static/uploads/photos', photoFilename));
-            // Show placeholder instead of error text
-            doc.fontSize(7).text('No Photo', photoX + 5, photoY + photoHeight / 2 - 3, {
-              width: photoWidth - 10,
-              align: 'center'
-            });
+            console.error('Photo Entry Form — photo load error:', err.message);
+            doc.fontSize(7).font('Helvetica').fillColor('#555555')
+              .text('No Photo', photoX, photoY + photoHeight / 2 - 4, { width: photoWidth, align: 'center' });
+            doc.fillColor('#000000');
           }
         } else {
-          // Placeholder if no photo
-          doc.fontSize(7).text('No Photo', photoX + 5, photoY + photoHeight / 2 - 3, {
-            width: photoWidth - 10,
-            align: 'center'
-          });
+          doc.fontSize(7).font('Helvetica').fillColor('#555555')
+            .text('No Photo', photoX, photoY + photoHeight / 2 - 4, { width: photoWidth, align: 'center' });
+          doc.fillColor('#000000');
         }
-        
-        // Serial number (top left corner)
-        doc.fontSize(8).font('Helvetica-Bold').text((index + 1).toString(), x + 3, y + 3);
-        
-        // Admission number (below photo, centered)
-        const textY = photoY + photoHeight + 5;
-        doc.fontSize(8).font('Helvetica-Bold');
-        const admNoText = student.adm_no || '';
-        doc.text(admNoText, x + 3, textY, { width: cellWidth - 6, align: 'center' });
-        
-        // Full name (below admission number)
+
+        let textY = photoY + photoHeight + 5;
+        const miniRowH = 11;
+        doc.lineWidth(0.5);
+        doc.rect(innerX, textY, innerW, miniRowH * 2).stroke();
+        doc.moveTo(innerX, textY + miniRowH).lineTo(innerX + innerW, textY + miniRowH).stroke();
+        doc.moveTo(innerX + innerW * 0.62, textY).lineTo(innerX + innerW * 0.62, textY + miniRowH * 2).stroke();
+
+        doc.fontSize(6).font('Helvetica-Bold').text('ADM NO.', innerX + 2, textY + 1);
+        doc.fontSize(7).font('Helvetica-Bold').text(student.adm_no || '-', innerX + 2, textY + miniRowH + 1, {
+          width: innerW * 0.62 - 4,
+          align: 'center',
+        });
+        doc.fontSize(6).font('Helvetica-Bold').text('SEX', innerX + innerW * 0.62 + 2, textY + 1);
+        doc.fontSize(7).font('Helvetica').text(student.sex || '-', innerX + innerW * 0.62 + 2, textY + miniRowH + 1, {
+          width: innerW * 0.38 - 4,
+          align: 'center',
+        });
+
+        textY += miniRowH * 2 + 2;
         const fullName = `${student.first_name || ''} ${student.middle_name || ''} ${student.surname || ''}`.trim();
-        doc.fontSize(7).font('Helvetica');
-        const nameY = textY + 10;
-        // Split name if too long - check width
-        const maxNameWidth = cellWidth - 6;
-        const nameWidth = doc.widthOfString(fullName);
-        
-        if (nameWidth > maxNameWidth) {
-          // Try to fit name in two lines
-          const words = fullName.split(' ');
-          let line1 = '';
-          let line2 = '';
-          for (const word of words) {
-            const testLine = line1 ? `${line1} ${word}` : word;
-            if (doc.widthOfString(testLine) <= maxNameWidth) {
-              line1 = testLine;
-            } else {
-              line2 = line2 ? `${line2} ${word}` : word;
-            }
-          }
-          doc.text(line1 || fullName.substring(0, 25), x + 3, nameY, { width: cellWidth - 6, align: 'center' });
-          if (line2) {
-            doc.text(line2, x + 3, nameY + 8, { width: cellWidth - 6, align: 'center' });
-          }
-        } else {
-          doc.text(fullName, x + 3, nameY, { width: cellWidth - 6, align: 'center' });
-        }
-        
-        // Sex (below name)
-        const sexY = nameY + (nameWidth > maxNameWidth ? 18 : 10);
-        doc.fontSize(7);
-        doc.text(student.sex || '', x + 3, sexY, { width: cellWidth - 6, align: 'center' });
-        
-        // Signature line (bottom of cell)
-        const signatureY = sexY + 10;
-        doc.moveTo(x + 5, signatureY).lineTo(x + cellWidth - 5, signatureY).stroke();
-        doc.fontSize(6).font('Helvetica-Oblique');
-        doc.text('Signature', x + 3, signatureY + 2, { width: cellWidth - 6, align: 'center' });
+        doc.fontSize(6).font('Helvetica-Bold').text('FULL NAME', innerX, textY, { width: innerW, align: 'center' });
+        doc.fontSize(7).font('Helvetica').text(fullName, innerX, textY + 8, {
+          width: innerW,
+          align: 'center',
+          lineGap: 0,
+        });
+
+        const signY = y + cellHeight - 13;
+        doc.moveTo(innerX, signY).lineTo(innerX + innerW, signY).stroke();
+        doc.fontSize(6).font('Helvetica-Oblique').text('Signature', innerX, signY + 2, { width: innerW, align: 'center' });
+        doc.lineWidth(0.75);
       };
-      
-      // Draw students in grid format (4 per row)
-      for (let i = 0; i < studentsResult.rows.length; i++) {
-        const student = studentsResult.rows[i];
-        const colIndex = i % photosPerRow;
-        
-        // Check if we need a new page
-        if (currentY + cellHeight > doc.page.height - 50) {
+
+      let pageNum = 0;
+      let gridStartY = 0;
+      let rowOnPage = 0;
+      let maxRowsOnPage = rowsOnFirstPage;
+
+      const beginPage = (isFirst) => {
+        if (!isFirst) {
+          drawPageFooter(pageNum);
           doc.addPage();
-          currentY = 50;
-          
-          // Redraw header on new page
-          doc.fontSize(20).font('Helvetica-Bold').text('ARUSHA CATHOLIC SEMINARY', { align: 'center', y: 30 });
-          doc.fontSize(18).font('Helvetica-Bold').text('PHOTO ENTRY FORM', { align: 'center', y: 70 });
-          doc.fontSize(12).font('Helvetica').text(`CLASS: ${level} ${stream}`, { align: 'left', y: 110 });
-          doc.text(`MONTH: ${currentMonth}`, { align: 'left', y: 130 });
-          doc.text(`YEAR: ${year}`, { align: 'left', y: 150 });
-          doc.moveTo(30, 170).lineTo(doc.page.width - 30, 170).stroke();
-          
-          currentY = 180;
         }
-        
-        // Calculate X position for this column
-        currentX = 30 + (colIndex * cellWidth);
-        
-        // Draw student card (await async function)
-        await drawStudentCard(student, i, currentX, currentY);
-        
-        // Move to next row if we've filled 4 columns
-        if ((i + 1) % photosPerRow === 0) {
-          currentY += cellHeight;
-          currentX = 30; // Reset to first column
+        pageNum += 1;
+        gridStartY = isFirst
+          ? drawPhotoEntryFullHeader(doc, marginX, contentWidth, logoBuffer, level, stream, year, currentMonth, displayTerm)
+          : drawPhotoEntryContinuationHeader(doc, marginX, contentWidth, logoBuffer, level, stream, year, currentMonth, displayTerm);
+        maxRowsOnPage = isFirst ? rowsOnFirstPage : rowsOnContPage;
+        rowOnPage = 0;
+      };
+
+      beginPage(true);
+
+      for (let i = 0; i < students.length; i++) {
+        const col = i % PHOTO_ENTRY_COLS;
+        if (col === 0 && rowOnPage >= maxRowsOnPage) {
+          beginPage(false);
+        }
+
+        await drawStudentCell(students[i], i, col, rowOnPage, gridStartY);
+
+        if (col === PHOTO_ENTRY_COLS - 1) {
+          rowOnPage += 1;
         }
       }
-      
-      // Footer
-      const footerY = doc.page.height - 30;
-      doc.fontSize(8).font('Helvetica');
-      doc.text(`Generated on: ${new Date().toLocaleDateString('en-US', { 
-        year: 'numeric', 
-        month: 'long', 
-        day: 'numeric',
-        hour: '2-digit',
-        minute: '2-digit'
-      })}`, 30, footerY, { align: 'left' });
-      doc.text(`Total Students: ${studentsResult.rows.length}`, doc.page.width - 30, footerY, { align: 'right' });
-      
+
+      drawPageFooter(pageNum);
       doc.end();
     } catch (error) {
       reject(error);

@@ -203,6 +203,7 @@ async function enforceStudentPhotoSpec(reqFile) {
   // JPEG quality levels to try (higher first, then reduce).
   for (let quality = 85; quality >= 10; quality -= 5) {
     const buf = await sharp(inputBuffer)
+      .rotate()
       .resize(resizeBase)
       .jpeg({ quality })
       .toBuffer();
@@ -957,6 +958,7 @@ router.get('/class-grades', async (req, res) => {
 
     const form = level;
     const grades = {};
+    const averages = {};
     studentsResult.rows.forEach((row) => {
       const admNo = row.adm_no;
       const studentScores = scoresByAdm[admNo] || {};
@@ -981,9 +983,10 @@ router.get('/class-grades', async (req, res) => {
       const average = calculateOverallAverage(subjectsData);
       const overallGrade = calculateGrade(average, form);
       grades[admNo] = overallGrade;
+      averages[admNo] = average;
     });
 
-    res.json({ grades });
+    res.json({ grades, averages });
   } catch (error) {
     console.error('Error fetching class grades:', error);
     return sendError(res, error, 500);

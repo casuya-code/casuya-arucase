@@ -21,6 +21,7 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
   const [uploading, setUploading] = useState(false);
   const scrollPositionRef = useRef(0);
   const fileInputRef = useRef(null);
+  const taalumaAutoFillDoneRef = useRef(false);
 
   // Normalize form level
   const normalizedLevel = formLevel
@@ -46,8 +47,41 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
 
   const normalizedTerm = normalizeTerm(term);
 
-  // Grade to comment mapping for Mkuu comments
-  const getGradeComment = (grade) => {
+  const isFormIToIV = /^FORM\s+(I|II|III|IV)$/i.test(normalizedLevel);
+
+  const TAALUMA_GRADE_COMMENTS = {
+    'A': 'Hongera kwa mafanikio haya; amepata wastani mzuri sana. Tunahitaji aendelee na nidhamu na bidii ili kudumisha kiwango hiki.',
+    'B': 'Mwanafunzi mahiri; akizingatia zaidi usahihi na kina cha majibu, kiwango cha juu kipo karibu. Tunasisitiza usimamizi mzuri nyumbani na ufuatiliaji wa karibu. Ahimizwe kusoma.',
+    'C': 'Ana msingi mzuri; anahitaji kufanya mazoezi zaidi na kudhibiti muda wake wa kusoma ili kuboresha matokeo. Tunasisitiza usimamizi mzuri nyumbani na ufuatiliaji wa karibu. Ahimizwe kusoma.',
+    'D': 'Anahitaji msaada wa ziada; inashauriwa afuate masomo kwa makini, aulizie mwalimu pale anapokwama, na afanye marudio ya masomo nyumbani. Mabadiliko ya haraka yanahitajika. Asipofikisha wastani, atashauriwa kutafuta shule nyingine.',
+    'E': 'Anahitaji msaada wa ziada; inashauriwa afuate masomo kwa makini, aulizie mwalimu pale anapokwama, na afanye marudio ya masomo nyumbani. Mabadiliko ya haraka yanahitajika. Asipofikisha wastani, atashauriwa kutafuta shule nyingine.',
+    'F': 'Matokeo yanalazimu mabadiliko ya haraka; mzazi/mlezi ashirikiane na uongozi wa Seminari ili kupanga mkakati wa kusaidia mwanafunzi huyu kwa pamoja. Asipofikisha wastani, atashauriwa kutafuta shule nyingine.',
+    'S': 'Matokeo yanalazimu mabadiliko ya haraka; mzazi/mlezi ashirikiane na uongozi wa Seminari ili kupanga mkakati wa kusaidia mwanafunzi huyu kwa pamoja. Asipofikisha wastani, atashauriwa kutafuta shule nyingine.',
+  };
+
+  const supportsGradeAutoFill = commentType === 'taaluma' || commentType === 'mkuu_shule' || commentType === 'mwalimu_taaluma';
+
+  const isOLevelCInDCommentRange = (grade, average) => {
+    const normalizedGrade = grade?.toUpperCase();
+    return (
+      isFormIToIV &&
+      normalizedGrade === 'C' &&
+      average != null &&
+      !Number.isNaN(Number(average)) &&
+      Number(average) >= 50 &&
+      Number(average) <= 55.4
+    );
+  };
+
+  // Grade to comment mapping for Taaluma, Mkuu, and Mwalimu comments
+  const getGradeComment = (grade, average) => {
+    const normalizedGrade = grade?.toUpperCase();
+    if (commentType === 'taaluma') {
+      if (isOLevelCInDCommentRange(normalizedGrade, average)) {
+        return TAALUMA_GRADE_COMMENTS['D'];
+      }
+      return TAALUMA_GRADE_COMMENTS[normalizedGrade] || '';
+    }
     if (commentType === 'mwalimu_taaluma') {
       const mwalimuGradeMap = {
         'A': 'Amefanya vizuri',
@@ -58,25 +92,24 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
         'F': 'Amefeli',
         'S': 'Kidogo. Anahitaji kuongeza juhudi'
       };
-      return mwalimuGradeMap[grade?.toUpperCase()] || '';
-    } else {
-      const mkuuGradeMap = {
-        'A': 'Pongezi kwa matokeo haya mazuri; dumu katika kiwango hiki.',
-        'B': 'Amefanya vizuri,akazane kufikia kiwango cha juu zaidi.',
-        'C': 'Uwezo upo, ongeza umakini ili kupata matokeo bora zaidi.',
-        'D': 'Asikate tamaa; akiongeza juhudi atafanya vyema zaidi.',
-        'E': 'Masomo yanahitaji muda na bidii yake zaidi.',
-        'F': 'Ni lazima azingatie maelekezo ya walimu ili kufaulu.',
-        'S': 'Jitihada zake bado hazitoshi; azingatie masomo sasa hivi.'
-      };
-      return mkuuGradeMap[grade?.toUpperCase()] || '';
+      return mwalimuGradeMap[normalizedGrade] || '';
     }
+    const mkuuGradeMap = {
+      'A': 'Pongezi kwa matokeo haya mazuri; dumu katika kiwango hiki.',
+      'B': 'Amefanya vizuri,akazane kufikia kiwango cha juu zaidi.',
+      'C': 'Uwezo upo, ongeza umakini ili kupata matokeo bora zaidi.',
+      'D': 'Asikate tamaa; akiongeza juhudi atafanya vyema zaidi.',
+      'E': 'Masomo yanahitaji muda na bidii yake zaidi.',
+      'F': 'Ni lazima azingatie maelekezo ya walimu ili kufaulu.',
+      'S': 'Jitihada zake bado hazitoshi; azingatie masomo sasa hivi.'
+    };
+    return mkuuGradeMap[normalizedGrade] || '';
   };
 
-  // Auto-fill comments based on grades (for Mkuu and Mwalimu comments)
+  // Auto-fill comments based on grades (for Taaluma, Mkuu, and Mwalimu comments)
   const handleAutoFillComments = () => {
-    if (commentType !== 'mkuu_shule' && commentType !== 'mwalimu_taaluma') {
-      toast.warning('Auto-fill is only available for Mkuu and Mwalimu comments');
+    if (!supportsGradeAutoFill) {
+      toast.warning('Auto-fill is only available for Taaluma, Mkuu, and Mwalimu comments');
       return;
     }
 
@@ -90,7 +123,7 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
       const studentIndex = getStudentIndex(student);
       const grade = classGrades[student.adm_no];
       if (grade) {
-        newComments[studentIndex] = getGradeComment(grade);
+        newComments[studentIndex] = getGradeComment(grade, classAverages[student.adm_no]);
       }
     });
 
@@ -109,7 +142,6 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
 
   // Fetch students for this class 
   // For FORM I-IV with stream 'A', fetch from BOTH streams to match report generation student_index calculation
-  const isFormIToIV = /^FORM\s+(I|II|III|IV)$/i.test(normalizedLevel);
   const { data: studentsData = [], isLoading: studentsLoading } = useQuery({
     queryKey: ['students', normalizedLevel, normalizedStream, year, ...(isFormVOrVI ? [normalizedTerm] : [])],
     queryFn: async () => {
@@ -155,12 +187,16 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
         year: year,
         term: normalizedTerm,
       });
-      return res.data.grades || {};
+      return {
+        grades: res.data.grades || {},
+        averages: res.data.averages || {},
+      };
     },
     enabled: students.length > 0,
     retry: false,
   });
-  const classGrades = classGradesData;
+  const classGrades = classGradesData.grades || {};
+  const classAverages = classGradesData.averages || {};
 
   // Initialize comments from existing comments
   useEffect(() => {
@@ -168,6 +204,10 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
       setComments(existingComments);
     }
   }, [existingComments]);
+
+  useEffect(() => {
+    taalumaAutoFillDoneRef.current = false;
+  }, [commentType, normalizedLevel, normalizedStream, year, normalizedTerm]);
 
   // Save comment mutation
   const saveCommentMutation = useMutation({
@@ -288,6 +328,49 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
     ).toString();
     return studentIndex;
   };
+
+  // Auto-fill Taaluma comments on load when grades exist but comments are empty
+  useEffect(() => {
+    if (commentType !== 'taaluma') return;
+    if (taalumaAutoFillDoneRef.current) return;
+    if (studentsLoading || commentsLoading || gradesLoading) return;
+    if (students.length === 0 || Object.keys(classGrades).length === 0) return;
+
+    const newComments = { ...existingComments };
+    const toSave = [];
+
+    students.forEach((student) => {
+      const studentIndex = getStudentIndex(student);
+      const grade = classGrades[student.adm_no];
+      const existingComment = existingComments[studentIndex]?.trim();
+      if (grade && !existingComment) {
+        const commentText = getGradeComment(grade, classAverages[student.adm_no]);
+        if (commentText) {
+          newComments[studentIndex] = commentText;
+          toSave.push({ studentIndex, commentText });
+        }
+      }
+    });
+
+    taalumaAutoFillDoneRef.current = true;
+
+    if (toSave.length > 0) {
+      setComments(newComments);
+      toSave.forEach(({ studentIndex, commentText }) => {
+        saveCommentMutation.mutate({ studentIndex, commentText });
+      });
+    }
+  }, [
+    commentType,
+    students,
+    existingComments,
+    classGrades,
+    classAverages,
+    studentsLoading,
+    commentsLoading,
+    gradesLoading,
+    saveCommentMutation,
+  ]);
 
   // CSV: escape cell for CSV (quote if contains comma, newline, or quote)
   const csvEscape = (val) => {
@@ -477,7 +560,7 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
                 {uploading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-upload"></i>}
                 {uploading ? ' Uploading...' : ' Upload filled template'}
               </label>
-              {(commentType === 'mkuu_shule' || commentType === 'mwalimu_taaluma') && (
+              {supportsGradeAutoFill && (
                 <button
                   type="button"
                   className="excel-btn small secondary"
