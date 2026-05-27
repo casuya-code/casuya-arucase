@@ -335,11 +335,14 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
     ${cssContent}
-    /* Ice blue accent typography for PDF (color only) */
+    /* Header and section titles: black bold (no blue accent) */
     .report-container .school-info h1,
-    .report-container .school-info h2 { color: #0c4a6e !important; }
-    .report-container .contact-info p { color: #0369a1 !important; }
-    .report-container .report-section h3 { color: #0369a1 !important; }
+    .report-container .school-info h2,
+    .report-container .contact-info p,
+    .report-container .report-section h3 {
+      color: #000000 !important;
+      font-weight: bold !important;
+    }
     @media print {
       .download-section, .breadcrumb { display: none !important; }
       .report-container .school-info h1,

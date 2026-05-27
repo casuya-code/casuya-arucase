@@ -2261,18 +2261,13 @@ table.academic-table thead tr:first-child th:nth-child(8).rotate-header.table-he
     color: #475569 !important;
 }
 
-/* Ice blue accent typography (color only — sizes unchanged) */
+/* Header and section titles: black bold (no blue accent) */
 .report-container .school-info h1,
-.report-container .school-info h2 {
-    color: #0c4a6e !important;
-}
-
-.report-container .contact-info p {
-    color: #0369a1 !important;
-}
-
+.report-container .school-info h2,
+.report-container .contact-info p,
 .report-container .report-section h3 {
-    color: #0369a1 !important;
+    color: #000000 !important;
+    font-weight: bold !important;
 }
 
 .comments-table tr:last-child td:nth-child(3),

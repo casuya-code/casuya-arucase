@@ -728,9 +728,12 @@ async function generateBulkReportPDFWithBatches(
   <style>
     ${cssContent}
     .report-container .school-info h1,
-    .report-container .school-info h2 { color: #0c4a6e !important; }
-    .report-container .contact-info p { color: #0369a1 !important; }
-    .report-container .report-section h3 { color: #0369a1 !important; }
+    .report-container .school-info h2,
+    .report-container .contact-info p,
+    .report-container .report-section h3 {
+      color: #000000 !important;
+      font-weight: bold !important;
+    }
     @media print {
       .download-section, .breadcrumb { display: none !important; }
       .report-container .school-info h1,
