@@ -2,7 +2,7 @@
  * Fees Announcements Management Page
  * Manage up to 10 announcements per class
  */
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '../../utils/toast';
@@ -15,6 +15,8 @@ const FeesManagement = ({ formLevel }) => {
   const queryClient = useQueryClient();
   
   const [announcements, setAnnouncements] = useState({});
+  const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef(null);
 
   // Normalize form level
   const normalizedLevel = useMemo(() => {
@@ -105,6 +107,144 @@ const FeesManagement = ({ formLevel }) => {
     saveMutation.mutate(announcements);
   }, [announcements, saveMutation]);
 
+  const csvEscape = (val) => {
+    const s = String(val ?? '').trim();
+    if (/[",\r\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+    return s;
+  };
+
+  const parseLine = (line, delimiter = ',') => {
+    if (delimiter === '\t') {
+      return line.split('\t').map((cell) => String(cell).trim().replace(/^\uFEFF/, ''));
+    }
+    const out = [];
+    let cur = '';
+    let inQuotes = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (c === '"') {
+        if (inQuotes && line[i + 1] === '"') {
+          cur += '"';
+          i++;
+        } else {
+          inQuotes = !inQuotes;
+        }
+      } else if (inQuotes) {
+        cur += c;
+      } else if (c === delimiter) {
+        out.push(cur.trim().replace(/^\uFEFF/, ''));
+        cur = '';
+      } else {
+        cur += c;
+      }
+    }
+    out.push(cur.trim().replace(/^\uFEFF/, ''));
+    return out;
+  };
+
+  const normalizeHeader = (h) =>
+    String(h ?? '')
+      .trim()
+      .replace(/\uFEFF/g, '')
+      .replace(/\s/g, '')
+      .toLowerCase();
+
+  const buildAnnouncementsCsv = (data) => {
+    const headerRow = ['S/N', 'MATANGAZO'].join(',');
+    const rows = Array.from({ length: 10 }, (_, i) => {
+      const index = String(i + 1);
+      return [csvEscape(index), csvEscape(data[index] || '')].join(',');
+    });
+    return [headerRow, ...rows].join('\r\n');
+  };
+
+  const downloadCsv = (csv, filename) => {
+    const blob = new Blob(['\uFEFF' + csv], { type: 'text/csv;charset=utf-8' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = filename;
+    a.click();
+    URL.revokeObjectURL(url);
+  };
+
+  const csvFilename = useMemo(() => {
+    const termPart = (normalizedTerm || '').replace(/\s+/g, '_');
+    return `fees_announcements_${normalizedLevel}_${normalizedStream}_${year}_${termPart}.csv`.replace(/\s+/g, '_');
+  }, [normalizedLevel, normalizedStream, year, normalizedTerm]);
+
+  const handleDownloadTemplate = useCallback(() => {
+    downloadCsv(buildAnnouncementsCsv({}), csvFilename.replace('.csv', '_template.csv'));
+    toast.success('CSV template downloaded');
+  }, [csvFilename]);
+
+  const handleDownloadFilledCSV = useCallback(() => {
+    downloadCsv(buildAnnouncementsCsv(announcements), csvFilename.replace('.csv', '_filled.csv'));
+    toast.success('Filled fees CSV downloaded');
+  }, [announcements, csvFilename]);
+
+  const handleUploadCsv = useCallback((e) => {
+    const file = e.target?.files?.[0];
+    if (!file) return;
+    e.target.value = '';
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      toast.error('Please select a CSV file');
+      return;
+    }
+    setUploading(true);
+
+    const run = async () => {
+      try {
+        let text = await file.text();
+        text = text.replace(/^\uFEFF/, '');
+        const lines = text.split(/\r?\n/).filter((l) => l.trim());
+        if (lines.length < 2) {
+          toast.error('CSV must have a header row and at least one data row');
+          return;
+        }
+
+        const firstLine = lines[0];
+        const delimiter = firstLine.includes('\t') && firstLine.split('\t').length >= 2 ? '\t' : ',';
+        const rawHeaderCells = parseLine(firstLine, delimiter);
+        const header = rawHeaderCells.map(normalizeHeader);
+
+        const snIdx = header.findIndex((h) => h === 'sn' || h === 's/n' || h === 'serial' || h === 'index' || h === 'no');
+        const textIdx = header.findIndex(
+          (h) => h === 'matangazo' || h === 'announcement' || h === 'matangazo_text' || h === 'text' || h === 'message'
+        );
+
+        if (textIdx === -1) {
+          toast.error('CSV must include a "MATANGAZO" column (announcement text)');
+          return;
+        }
+
+        const parsed = {};
+        for (let i = 1; i < lines.length; i++) {
+          const cells = parseLine(lines[i], delimiter);
+          const rawIndex = snIdx >= 0 ? String(cells[snIdx] ?? '').trim() : String(i);
+          const indexNum = parseInt(rawIndex, 10);
+          if (Number.isNaN(indexNum) || indexNum < 1 || indexNum > 10) continue;
+          parsed[String(indexNum)] = String(cells[textIdx] ?? '').trim();
+        }
+
+        if (Object.keys(parsed).length === 0) {
+          toast.warning('No valid announcement rows found. Use S/N 1–10 and a MATANGAZO column.');
+          return;
+        }
+
+        const merged = { ...announcements, ...parsed };
+        setAnnouncements(merged);
+        await saveMutation.mutateAsync(merged);
+      } catch (err) {
+        toast.error(err?.response?.data?.message || err?.message || 'CSV upload failed');
+      } finally {
+        setUploading(false);
+      }
+    };
+
+    setTimeout(run, 0);
+  }, [announcements, saveMutation]);
+
   const getBackPath = useCallback(() => {
     const isFormVOrVI = normalizedLevel.toUpperCase() === 'FORM V' || normalizedLevel.toUpperCase() === 'FORM VI';
     return isFormVOrVI
@@ -182,8 +322,45 @@ const FeesManagement = ({ formLevel }) => {
                     </table>
                   </div>
                   
+                  <div className="csv-section">
+                    <h3><i className="fas fa-file-csv"></i> CSV Bulk Operations</h3>
+                    <p className="csv-hint">Download the template, fill rows 1–10 under MATANGAZO, then upload to replace announcements for this class and term.</p>
+                    <div className="csv-actions">
+                      <button
+                        type="button"
+                        className="excel-btn primary"
+                        onClick={handleDownloadTemplate}
+                        disabled={uploading || saveMutation.isLoading}
+                      >
+                        <i className="fas fa-download"></i> Download Template CSV
+                      </button>
+                      <label
+                        className="excel-btn success"
+                        style={{ cursor: uploading ? 'not-allowed' : 'pointer', opacity: uploading ? 0.6 : 1 }}
+                      >
+                        <input
+                          ref={fileInputRef}
+                          type="file"
+                          accept=".csv"
+                          onChange={handleUploadCsv}
+                          disabled={uploading || saveMutation.isLoading}
+                          style={{ display: 'none' }}
+                        />
+                        <i className="fas fa-upload"></i> {uploading ? 'Uploading...' : 'Upload CSV'}
+                      </label>
+                      <button
+                        type="button"
+                        className="excel-btn secondary"
+                        onClick={handleDownloadFilledCSV}
+                        disabled={uploading || saveMutation.isLoading}
+                      >
+                        <i className="fas fa-download"></i> Download Filled CSV
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="fees-actions">
-                    <button type="submit" className="excel-btn primary" disabled={saveMutation.isLoading}>
+                    <button type="submit" className="excel-btn primary" disabled={saveMutation.isLoading || uploading}>
                       <i className="fas fa-save"></i> {saveMutation.isLoading ? 'Saving...' : 'Save Announcements'}
                     </button>
                   </div>

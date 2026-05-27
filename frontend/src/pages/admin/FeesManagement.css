@@ -121,6 +121,61 @@
   box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
 }
 
+.csv-section {
+  margin-top: 1.5rem;
+  padding: clamp(0.875rem, 2.5vw, 1.25rem);
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+}
+
+.csv-section h3 {
+  margin: 0 0 0.4rem 0;
+  color: #111827;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: clamp(0.95rem, 2.4vw, 1.1rem);
+  font-weight: 600;
+}
+
+.csv-hint {
+  margin: 0 0 0.75rem 0;
+  color: #6b7280;
+  font-size: 0.75rem;
+  line-height: 1.4;
+}
+
+.csv-actions {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.65rem;
+  align-items: stretch;
+}
+
+@media (min-width: 640px) {
+  .csv-actions {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.75rem;
+  }
+}
+
+.csv-section .csv-actions .excel-btn,
+.csv-section .csv-actions label.excel-btn {
+  width: 100%;
+  justify-content: center;
+  min-height: 44px;
+  padding: 0.5rem 0.75rem;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  line-height: 1.35;
+  box-sizing: border-box;
+}
+
+.csv-section .csv-actions label.excel-btn {
+  display: inline-flex;
+  align-items: center;
+}
+
 .fees-actions {
   display: flex;
   gap: 0.5rem;
@@ -167,6 +222,14 @@
   background: #4b5563;
   color: white;
   text-decoration: none;
+}
+
+.excel-btn.success {
+  background: #059669;
+}
+
+.excel-btn.success:hover {
+  background: #047857;
 }
 
 .excel-btn.small {
