@@ -6,6 +6,7 @@ const { acquirePage, releasePage } = require('./puppeteerPool');
 const axios = require('axios');
 const { normalizeStream } = require('./streamNormalizer');
 const { FONT_STACK } = require('./reportPdfFontSnippets');
+const { publicOriginFromApiUrl, inlineReportImages } = require('./inlineReportImages');
 
 /**
  * Generate PDF from the individual report page using Puppeteer
@@ -89,12 +90,15 @@ async function generateIndividualReportPDFWithPuppeteer(
     
     // Generate HTML from report data
     const { generateReportHTML } = require('./htmlReportRenderer');
-    const html = await generateReportHTML({
+    let html = await generateReportHTML({
       ...reportData,
       form,
       term,
       year
     }, apiUrl);
+
+    const staticOrigin = publicOriginFromApiUrl(apiUrl);
+    html = await inlineReportImages(html, staticOrigin, authToken, 'INDIVIDUAL PDF');
     
     // Validate HTML
     if (!html || typeof html !== 'string' || html.trim().length === 0) {
@@ -175,11 +179,21 @@ async function generateIndividualReportPDFWithPuppeteer(
     try {
       await page.waitForFunction(() => {
         const img = document.querySelector('.student-photo img.photo');
-        if (!img) return true; // No photo element rendered
+        if (!img) return true;
         return img.complete && img.naturalWidth > 0;
       }, { timeout: 10000 });
     } catch {
       // If it times out, still generate the PDF with whatever is rendered.
+    }
+
+    try {
+      await page.waitForFunction(() => {
+        const imgs = document.querySelectorAll('.authority-signature img.signature-image, .signature-stamp-section img.signature-image');
+        if (!imgs.length) return true;
+        return [...imgs].every((img) => img.complete && img.naturalWidth > 0);
+      }, { timeout: 10000 });
+    } catch {
+      // Signature may be text-only; continue.
     }
 
     // Log final image state for debugging.
@@ -332,7 +346,7 @@ async function generateIndividualReportPDFWithPuppeteer(
         });
       }
 
-      // CRITICAL: Force grade key to be visible before PDF generation
+      // Force grade key to be visible before PDF generation
       const gradeKeyLegend = document.querySelector('.grade-key-legend');
       if (gradeKeyLegend) {
         gradeKeyLegend.style.setProperty('display', 'block', 'important');
@@ -359,6 +373,17 @@ async function generateIndividualReportPDFWithPuppeteer(
           strong.style.setProperty('font-weight', 'bold', 'important');
         });
       }
+
+      document.querySelectorAll('.authority-signature, .signature-stamp-section .signature-image').forEach((el) => {
+        el.style.setProperty('overflow', 'visible', 'important');
+        el.style.setProperty('visibility', 'visible', 'important');
+        el.style.setProperty('opacity', '1', 'important');
+      });
+      document.querySelectorAll('.signature-image').forEach((img) => {
+        img.style.setProperty('display', 'inline-block', 'important');
+        img.style.setProperty('visibility', 'visible', 'important');
+        img.style.setProperty('opacity', '1', 'important');
+      });
     }, FONT_STACK);
     
     // Another grace period after JavaScript execution

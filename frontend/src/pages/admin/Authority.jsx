@@ -7,7 +7,10 @@ import { toast } from '../../utils/toast';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { useAuth } from '../../context/AuthContext';
 import { adminAPI } from '../../services/admin';
-import { resolveStaticUrl } from '../../utils/backendUrl';
+import {
+  getAuthoritySignatureImageUrl,
+  getAuthoritySignatureText,
+} from '../../utils/authoritySignature';
 import './Authority.css';
 
 const Authority = () => {
@@ -144,10 +147,8 @@ const Authority = () => {
     }
   };
 
-  const getSignatureUrl = () =>
-    authorityData?.signature_image_path
-      ? resolveStaticUrl(authorityData.signature_image_path)
-      : null;
+  const authoritySignatureImageUrl = getAuthoritySignatureImageUrl(authorityData);
+  const authoritySignatureText = getAuthoritySignatureText(authorityData);
 
   return (
     <AdminLayout>
@@ -228,11 +229,21 @@ const Authority = () => {
 
                 <div className="signature-section">
                   <h3>Signature Image</h3>
+                  <p className="signature-section-hint">
+                    Upload a signature image <strong>or</strong> enter a text signature above.
+                    Reports use the image when a valid signature file is uploaded; otherwise the text signature is shown.
+                  </p>
+                  {authoritySignatureText && !authoritySignatureImageUrl ? (
+                    <div className="signature-text-preview">
+                      <span className="signature-text-preview-label">Text signature on reports:</span>
+                      <span className="signature-text-preview-value">{authoritySignatureText}</span>
+                    </div>
+                  ) : null}
                   <div className="signature-row">
-                    {getSignatureUrl() && authorityData?.signature_image_path ? (
+                    {authoritySignatureImageUrl ? (
                       <div className="signature-preview-compact">
                         <img
-                          src={getSignatureUrl()}
+                          src={authoritySignatureImageUrl}
                           alt="Authority Signature"
                           className="signature-image-small"
                           onError={(e) => {

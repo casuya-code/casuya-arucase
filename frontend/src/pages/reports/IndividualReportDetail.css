@@ -730,9 +730,16 @@ table {
         height: auto !important;
         width: auto !important;
         display: inline-block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
         vertical-align: bottom !important;
         object-fit: contain !important;
         background: transparent !important;
+    }
+
+    .comments-table .authority-signature {
+        overflow: visible !important;
+        min-height: 64px !important;
     }
     
     .signature-text,
@@ -1369,6 +1376,20 @@ table {
     writing-mode: horizontal-tb !important;
     text-orientation: mixed !important;
     transform: none !important;
+}
+
+.comments-table .authority-signature {
+    overflow: visible !important;
+    min-height: 64px !important;
+    vertical-align: middle !important;
+}
+
+.comments-table .authority-signature .signature-image,
+.signature-stamp-section .signature-image {
+    display: inline-block !important;
+    visibility: visible !important;
+    opacity: 1 !important;
+    max-width: 100% !important;
 }
 
 /* SIGNATURE TABLE - SEPARATE TABLE FOR SIGNATURE ROW */

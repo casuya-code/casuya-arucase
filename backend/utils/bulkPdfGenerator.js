@@ -25,78 +25,19 @@ const {
   studentIndexForAdmNo,
   loadReportStudentExtras,
 } = require('./reportStudentExtras');
+const {
+  publicOriginFromApiUrl,
+  inlineReportImages,
+} = require('./inlineReportImages');
+const { sanitizeAuthorityDataRow } = require('./authoritySignature');
 
 /** Must match htmlReportRenderer.js (single-report HTML slice for bulk merge). */
 const REPORT_INNER_START = '<!-- __ARUCASE_REPORT_INNER_START__ -->';
 const REPORT_INNER_END = '<!-- __ARUCASE_REPORT_INNER_END__ -->';
 
-function publicOriginFromApiUrl(apiUrl) {
-  const u = (apiUrl || '').trim().replace(/\/api\/?$/i, '').replace(/\/$/, '');
-  return u || 'http://localhost:5000';
-}
-
-function toAbsoluteAssetUrl(src, origin) {
-  if (!src || /^data:/i.test(String(src).trim())) return null;
-  const t = String(src).trim();
-  if (/^https?:\/\//i.test(t)) return t;
-  if (/^\/\//.test(t)) return `https:${t}`;
-  const o = origin.replace(/\/$/, '');
-  if (t.startsWith('/')) return `${o}${t}`;
-  return `${o}/${t}`;
-}
-
-/**
- * Fetch every <img src="..."> (except data:) and replace with data: URIs so Chromium
- * paints logo/photo/stamp on every sheet (large print docs often drop repeated remote images).
- */
+/** @deprecated use inlineReportImages from ./inlineReportImages */
 async function inlineBulkReportImages(html, origin, authToken) {
-  const srcSet = new Set();
-  const re = /<img\b[^>]*?\bsrc="([^"]+)"/gi;
-  let m;
-  while ((m = re.exec(html)) !== null) {
-    if (!m[1].startsWith('data:')) srcSet.add(m[1]);
-  }
-  if (srcSet.size === 0) return html;
-
-  const headers = { Accept: 'image/*,*/*' };
-  if (authToken) headers.Authorization = `Bearer ${authToken}`;
-
-  const srcToData = new Map();
-  const urls = [...srcSet];
-  const batchSize = 10;
-  for (let i = 0; i < urls.length; i += batchSize) {
-    const batch = urls.slice(i, i + batchSize);
-    await Promise.all(
-      batch.map(async (srcAttr) => {
-        const absolute = toAbsoluteAssetUrl(srcAttr, origin);
-        if (!absolute) return;
-        try {
-          const res = await axios.get(absolute, {
-            responseType: 'arraybuffer',
-            headers,
-            timeout: 60000,
-            maxContentLength: 10 * 1024 * 1024,
-            maxBodyLength: 10 * 1024 * 1024,
-            validateStatus: (s) => s === 200
-          });
-          const ct = (res.headers['content-type'] || 'application/octet-stream').split(';')[0].trim();
-          const mime = /^image\//i.test(ct) ? ct : 'image/jpeg';
-          const b64 = Buffer.from(res.data).toString('base64');
-          srcToData.set(srcAttr, `data:${mime};base64,${b64}`);
-        } catch (e) {
-          console.warn('[BULK PDF] Could not inline image:', absolute, e.message);
-        }
-      })
-    );
-  }
-
-  let out = html;
-  for (const [orig, dataUri] of srcToData) {
-    const safe = orig.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
-    out = out.replace(new RegExp(`src="${safe}"`, 'g'), () => `src="${dataUri}"`);
-  }
-  console.log(`[BULK PDF] Inlined ${srcToData.size}/${srcSet.size} distinct image src values into HTML`);
-  return out;
+  return inlineReportImages(html, origin, authToken, 'BULK PDF');
 }
 
 /**
@@ -227,10 +168,13 @@ async function fetchSchoolBranding() {
     query('SELECT * FROM school_stamp WHERE id = 1'),
     query('SELECT * FROM authority_data WHERE id = 1')
   ]);
+  const authorityRow = authorityResult.rows.length > 0
+    ? await sanitizeAuthorityDataRow(authorityResult.rows[0], query)
+    : null;
   return {
     school_logo: logoResult.rows.length > 0 ? logoResult.rows[0] : null,
     school_stamp: stampResult.rows.length > 0 ? stampResult.rows[0] : null,
-    authority_data: authorityResult.rows.length > 0 ? authorityResult.rows[0] : null
+    authority_data: authorityRow,
   };
 }
 
@@ -880,6 +824,16 @@ async function generateBulkReportPDFWithBatches(
         });
         container.querySelectorAll('.school-logo, .photo').forEach((img) => {
           img.style.setProperty('display', 'block', 'important');
+          img.style.setProperty('visibility', 'visible', 'important');
+          img.style.setProperty('opacity', '1', 'important');
+        });
+        container.querySelectorAll('.authority-signature, .signature-stamp-section .signature-image').forEach((el) => {
+          el.style.setProperty('overflow', 'visible', 'important');
+          el.style.setProperty('visibility', 'visible', 'important');
+          el.style.setProperty('opacity', '1', 'important');
+        });
+        container.querySelectorAll('.signature-image').forEach((img) => {
+          img.style.setProperty('display', 'inline-block', 'important');
           img.style.setProperty('visibility', 'visible', 'important');
           img.style.setProperty('opacity', '1', 'important');
         });

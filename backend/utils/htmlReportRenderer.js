@@ -5,6 +5,10 @@
 const fs = require('fs').promises;
 const path = require('path');
 const { HEAD_FONT_LINKS, FONT_STACK } = require('./reportPdfFontSnippets');
+const {
+  getAuthoritySignatureImageUrl,
+  getAuthoritySignatureText,
+} = require('./authoritySignature');
 
 /**
  * Read CSS for the PDF HTML. Prefer a copy shipped with the backend so Railway/backend-only
@@ -92,8 +96,22 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
       return imagePath;
     }
     const cleanPath = imagePath.startsWith('/') ? imagePath.substring(1) : imagePath;
+    if (cleanPath.startsWith('static/')) {
+      return `${staticOrigin}/${cleanPath}`;
+    }
     return `${staticOrigin}/static/${cleanPath}`;
   };
+
+  const authoritySignatureImageUrl = getAuthoritySignatureImageUrl(authority_data, staticOrigin);
+  const authoritySignatureText = getAuthoritySignatureText(authority_data);
+  const authoritySignatureCellHtml = authoritySignatureImageUrl
+    ? `<img src="${authoritySignatureImageUrl}" alt="Signature" class="signature-image" style="max-width: 300px; max-height: 60px;" />`
+    : (authoritySignatureText || '');
+  const authoritySignatureBlockHtml = authoritySignatureImageUrl
+    ? `<div class="signature-image-container" style="text-align: left; margin-bottom: 5px;"><img src="${authoritySignatureImageUrl}" alt="Signature" class="signature-image" style="max-width: 300px; max-height: 60px; display: inline-block; vertical-align: bottom;" /></div>`
+    : (authoritySignatureText
+      ? `<div class="signature-text authority-signature">${authoritySignatureText}</div>`
+      : '');
 
   /** Student photos: DB may store Cloudinary https URL (prod) or bare filename (local disk). */
   const getStudentPortraitUrl = (photoPath) => {
@@ -530,9 +548,7 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
           <tr>
             <td><strong>SAHIHI YA MKUU WA SHULE:</strong></td>
             <td class="authority-signature">
-              ${authority_data?.signature_image_path 
-                ? `<img src="${getImageUrl(authority_data.signature_image_path)}" alt="Signature" class="signature-image" style="max-width: 300px; max-height: 60px;" />` 
-                : (authority_data?.signature || '')}
+              ${authoritySignatureCellHtml}
             </td>
             <td><strong>TAREHE:</strong></td>
             <td class="authority-date">${formatAuthorityDate()}</td>
@@ -583,12 +599,10 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
 
     <div class="signature-stamp-section">
       <div class="signature-block">
-        ${authority_data?.signature_image_path 
-          ? `<div class="signature-image-container" style="text-align: left; margin-bottom: 5px;"><img src="${getImageUrl(authority_data.signature_image_path)}" alt="Signature" class="signature-image" style="max-width: 300px; max-height: 60px; display: inline-block; vertical-align: bottom;" /></div>` 
-          : (authority_data?.signature ? `<div class="signature-text authority-signature">${authority_data.signature}</div>` : '')}
+        ${authoritySignatureBlockHtml}
         <div class="signature-line">_________________________</div>
-        <div class="signature-name">${authority_data?.name || 'Father Moses Assey'}</div>
-        <div class="signature-title">${authority_data?.title || 'Baba Gombera'}</div>
+        <div class="signature-name">${authority_data?.name || ''}</div>
+        <div class="signature-title">${authority_data?.title || ''}</div>
         <div class="signature-date">Tarehe ${formatAuthorityDate()}</div>
       </div>
       <div class="stamp-block">

@@ -184,6 +184,37 @@
   padding-top: 0.25rem;
 }
 
+.authority-admin-page .signature-section-hint {
+  margin: 0 0 0.75rem;
+  font-size: 0.875rem;
+  color: var(--a-muted, #555);
+  line-height: 1.45;
+}
+
+.authority-admin-page .signature-text-preview {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+  padding: 0.65rem 0.85rem;
+  border: 1px dashed var(--a-line);
+  background: #fafafa;
+}
+
+.authority-admin-page .signature-text-preview-label {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: var(--a-muted, #555);
+}
+
+.authority-admin-page .signature-text-preview-value {
+  font-family: 'Monotype Corsiva', 'Segoe Script', cursive;
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: #111;
+}
+
 .authority-admin-page .signature-row {
   display: flex;
   flex-wrap: wrap;

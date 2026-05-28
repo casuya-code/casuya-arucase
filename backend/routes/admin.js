@@ -25,6 +25,7 @@ const {
   pullUserPhotoIntoStaffProfile,
 } = require('../utils/staffUserPhotoSync');
 const { PUBLIC_PAGE_SLUG_ALIASES } = require('../utils/publicPageSlugs');
+const { sanitizeAuthorityDataRow } = require('../utils/authoritySignature');
 // createCloudinaryStorage uses cloudinary.uploader.upload_stream() directly,
 // bypassing multer-storage-cloudinary whose upload() callback was never invoked
 // with the cloudinary v2 SDK (causing 60 s upload timeouts).
@@ -103,15 +104,32 @@ function getSchoolStampStorage() {
 let _authoritySignatureStorage = null;
 function getAuthoritySignatureStorage() {
   if (!_authoritySignatureStorage) {
-    assertCloudinaryConfigured();
-    console.log('[cloudinary] Creating authoritySignatureStorage instance');
-    _authoritySignatureStorage = createCloudinaryStorage({
-      folder: 'authority-signatures',
-      allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
-      transformation: [{ quality: 'auto:good', fetch_format: 'auto' }],
-      publicId: () => `authority-signature-${Date.now()}`,
-      label: 'AUTHORITY SIGNATURE storage',
-    });
+    if (cloudinary.isCloudinaryConfigured()) {
+      console.log('[cloudinary] Creating authoritySignatureStorage instance');
+      _authoritySignatureStorage = createCloudinaryStorage({
+        folder: 'authority-signatures',
+        allowed_formats: ['jpg', 'jpeg', 'png', 'webp', 'gif'],
+        transformation: [{ quality: 'auto:good', fetch_format: 'auto' }],
+        publicId: () => `authority-signature-${Date.now()}`,
+        label: 'AUTHORITY SIGNATURE storage',
+      });
+    } else {
+      console.log('[authority] Cloudinary not configured — using local disk storage for signatures');
+      _authoritySignatureStorage = multer.diskStorage({
+        destination: async (req, file, cb) => {
+          try {
+            const uploadPath = path.join(__dirname, '../static/uploads/authority-signatures');
+            await fs.mkdir(uploadPath, { recursive: true });
+            cb(null, uploadPath);
+          } catch (err) {
+            cb(err, null);
+          }
+        },
+        filename: (req, file, cb) => {
+          cb(null, `authority-signature-${Date.now()}${path.extname(file.originalname).toLowerCase()}`);
+        },
+      });
+    }
   }
   return _authoritySignatureStorage;
 }
@@ -506,8 +524,10 @@ const schoolStampUpload = {
 const authoritySignatureUpload = {
   single: (field) => (req, res, next) => {
     let storage;
-    try { storage = getAuthoritySignatureStorage(); } catch (err) {
-      console.error('[cloudinary] authoritySignatureStorage init failed:', err.message);
+    try {
+      storage = getAuthoritySignatureStorage();
+    } catch (err) {
+      console.error('[authority] authoritySignatureStorage init failed:', err.message);
       return res.status(500).json({ message: err.message });
     }
     const imageFilter = (req, file, cb) => {
@@ -1094,18 +1114,18 @@ router.get('/authority-data', async (req, res) => {
   try {
     const result = await query('SELECT * FROM authority_data WHERE id = 1');
     if (result.rows.length === 0) {
-      // Return default values
       return res.json({
         authority: {
-          name: 'Fr.Moses Assey',
-          title: 'Rector',
+          name: '',
+          title: '',
           signature: '',
           signature_image_path: '',
           date: '',
         },
       });
     }
-    res.json({ authority: result.rows[0] });
+    const authority = await sanitizeAuthorityDataRow(result.rows[0], query);
+    res.json({ authority });
   } catch (error) {
     return sendError(res, error, 500);
   }
@@ -1174,32 +1194,39 @@ router.post('/authority-data/upload-signature', requireRole('admin', 'superadmin
       }
     }
 
-    // CloudinaryStorage sets req.file.path to the secure URL and req.file.filename to the public_id
-    const signatureUrl = req.file.path;
-    const cloudinaryPublicId = req.file.filename;
-    console.log(`✅ Authority signature uploaded to Cloudinary: ${cloudinaryPublicId}`);
+    const isCloudinaryUpload = /^https?:\/\//i.test(String(req.file.path || ''));
+    const signaturePath = isCloudinaryUpload
+      ? req.file.path
+      : `uploads/authority-signatures/${req.file.filename}`;
+    const cloudinaryPublicId = isCloudinaryUpload ? req.file.filename : null;
+    console.log(
+      `✅ Authority signature uploaded (${isCloudinaryUpload ? 'Cloudinary' : 'local disk'}):`,
+      signaturePath
+    );
 
-    // Check if authority data exists
     const existingDataResult = await query('SELECT name, title FROM authority_data WHERE id = 1');
-    
+
     if (existingDataResult.rows.length === 0) {
-      // No existing data, insert with default values
       await query(
-        `INSERT INTO authority_data (id, name, title, signature_image_path, cloudinary_public_id)
-         VALUES (1, $1, $2, $3, $4)`,
-        ['Fr.Moses Assey', 'Rector', signatureUrl, cloudinaryPublicId]
+        `INSERT INTO authority_data (id, name, title, signature, signature_image_path, cloudinary_public_id)
+         VALUES (1, $1, $2, $3, $4, $5)`,
+        ['', '', '', signaturePath, cloudinaryPublicId]
       );
     } else {
-      // Existing data, update only signature_image_path and cloudinary_public_id
       await query(
-        `UPDATE authority_data 
-         SET signature_image_path = $1, cloudinary_public_id = $2, updated_at = NOW() 
+        `UPDATE authority_data
+         SET signature_image_path = $1, cloudinary_public_id = $2, updated_at = NOW()
          WHERE id = 1`,
-        [signatureUrl, cloudinaryPublicId]
+        [signaturePath, cloudinaryPublicId]
       );
     }
 
-    res.json({ message: 'Signature image uploaded successfully', url: signatureUrl, public_id: cloudinaryPublicId, signature_path: signatureUrl });
+    res.json({
+      message: 'Signature image uploaded successfully',
+      url: signaturePath,
+      public_id: cloudinaryPublicId,
+      signature_path: signaturePath,
+    });
   } catch (error) {
     return sendError(res, error, 500);
   }

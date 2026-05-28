@@ -12,6 +12,7 @@ const {
   loadReportStudentExtras,
   buildAdmNoToStudentIndexMap,
 } = require('../utils/reportStudentExtras');
+const { sanitizeAuthorityDataRow } = require('../utils/authoritySignature');
 const { sendError } = require('../utils/safeError');
 const {
   calculateGrade,
@@ -378,6 +379,9 @@ router.get('/individual/:form/:stream/:year/:term/:admNo', requireModule('indivi
     const logoResult = await query('SELECT * FROM school_logo WHERE id = 1');
     const stampResult = await query('SELECT * FROM school_stamp WHERE id = 1');
     const authorityResult = await query('SELECT * FROM authority_data WHERE id = 1');
+    const authorityRow = authorityResult.rows.length > 0
+      ? await sanitizeAuthorityDataRow(authorityResult.rows[0], query)
+      : null;
 
     // Get student photo
     // IMPORTANT: student_index must match photo management sorting (by name, not adm_no)
@@ -484,7 +488,7 @@ router.get('/individual/:form/:stream/:year/:term/:admNo', requireModule('indivi
       },
       school_logo: logoResult.rows.length > 0 ? logoResult.rows[0] : null,
       school_stamp: stampResult.rows.length > 0 ? stampResult.rows[0] : null,
-      authority_data: authorityResult.rows.length > 0 ? authorityResult.rows[0] : null,
+      authority_data: authorityRow,
       student_parish: studentParish,
       student_fees_debt: studentFeesDebt,
       class_fees_announcements: classFeesAnnouncements

@@ -8,6 +8,10 @@ import AdminLayout from '../../components/layout/AdminLayout';
 import api from '../../services/api';
 import { toast } from '../../utils/toast';
 import { resolveStaticUrl } from '../../utils/backendUrl';
+import {
+  getAuthoritySignatureImageUrl,
+  getAuthoritySignatureText,
+} from '../../utils/authoritySignature';
 import './IndividualReport.css';
 import './IndividualReportDetail.css';
 
@@ -724,6 +728,11 @@ const IndividualReportDetail = () => {
     return new Date().toLocaleDateString('en-GB');
   };
 
+  const authoritySignatureImageUrl = getAuthoritySignatureImageUrl(authority_data);
+  const authoritySignatureText = getAuthoritySignatureText(authority_data);
+  const showAuthoritySignatureImage =
+    Boolean(authoritySignatureImageUrl) && !imageErrors.signatureImage;
+
   // Get student huduma (service assignment) - match copy implementation
   // Copy uses student_comments.get('huduma_comments', '')
   const studentHuduma = studentComments['huduma_comments'] || studentComments['huduma'] || '';
@@ -1147,12 +1156,11 @@ const IndividualReportDetail = () => {
                   <strong>SAHIHI YA MKUU WA SHULE:</strong>
                 </td>
                 <td className="authority-signature">
-                  {authority_data?.signature_image_path && !imageErrors.signatureImage ? (
+                  {showAuthoritySignatureImage ? (
                     <img
-                      src={resolveStaticUrl(authority_data.signature_image_path || '')}
+                      src={authoritySignatureImageUrl}
                       alt="Signature"
                       className="signature-image"
-                      crossOrigin="anonymous"
                       style={{ maxWidth: '300px', maxHeight: '60px' }}
                       onError={(e) => {
                         if (import.meta.env.DEV) {
@@ -1163,7 +1171,7 @@ const IndividualReportDetail = () => {
                       }}
                     />
                   ) : (
-                    authority_data?.signature || ''
+                    authoritySignatureText || ''
                   )}
                 </td>
                 <td style={{ writingMode: 'horizontal-tb', textOrientation: 'mixed', transform: 'none', whiteSpace: 'normal', direction: 'ltr', textAlign: 'left', verticalAlign: 'middle' }}>
@@ -1308,13 +1316,12 @@ const IndividualReportDetail = () => {
         {/* Signature and Stamp Section */}
         <div className="signature-stamp-section">
           <div className="signature-block">
-            {authority_data?.signature_image_path ? (
+            {showAuthoritySignatureImage ? (
               <div className="signature-image-container" style={{ textAlign: 'left', marginBottom: '5px' }}>
                 <img
-                  src={resolveStaticUrl(authority_data.signature_image_path || '')}
+                  src={authoritySignatureImageUrl}
                   alt="Signature"
                   className="signature-image"
-                  crossOrigin="anonymous"
                   style={{ maxWidth: '300px', maxHeight: '60px', display: 'inline-block', verticalAlign: 'bottom' }}
                   onError={(e) => {
                     if (import.meta.env.DEV) {
@@ -1325,15 +1332,15 @@ const IndividualReportDetail = () => {
                   }}
                 />
               </div>
-            ) : authority_data?.signature ? (
-              <div className="signature-text authority-signature">{authority_data.signature}</div>
+            ) : authoritySignatureText ? (
+              <div className="signature-text authority-signature">{authoritySignatureText}</div>
             ) : null}
             <div className="signature-line">_________________________</div>
             <div className="signature-name">
-              {authority_data?.name || 'Father Moses Assey'}
+              {authority_data?.name || ''}
             </div>
             <div className="signature-title">
-              {authority_data?.title || 'Baba Gombera'}
+              {authority_data?.title || ''}
             </div>
             <div className="signature-date">
               Tarehe {formatAuthorityDate()}
