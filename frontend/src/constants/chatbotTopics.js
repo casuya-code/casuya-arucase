@@ -2,7 +2,8 @@
 export const CHATBOT_TOPICS = [
   { id: 'fees', label: 'Ada', prompt: 'Ada za shule na malipo?' },
   { id: 'admissions', label: 'Udahili', prompt: 'Jinsi ya kuomba udahili?' },
+  { id: 'staff', label: 'Wafanyakazi', prompt: 'Wafanyakazi na walimu wa seminari?' },
   { id: 'necta', label: 'NECTA', prompt: 'Matokeo ya NECTA?' },
-  { id: 'contact', label: 'Mawasiliano', prompt: 'Mawasiliano ya seminari?' },
+  { id: 'contact', label: 'Mawasiliano', prompt: 'Mawasiliano na saa za ofisi?' },
   { id: 'about', label: 'Kuhusu', prompt: 'Kuhusu Seminari ya Kikatoliki Arusha?' },
 ];

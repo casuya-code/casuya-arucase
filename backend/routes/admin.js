@@ -15,7 +15,7 @@ const { saveUserActivity } = require('../utils/activityLogger');
 const bcrypt = require('bcryptjs');
 const { createBackup, listBackups, pruneBackups, backupsDir } = require('../scripts/backupDatabase');
 const { extractText } = require('../utils/documentParser');
-const { getClient, callClaude } = require('../utils/anthropic');
+const { getClient, callMistral } = require('../utils/mistral');
 const { getNectaSummaryForAI } = require('../utils/nectaAnalyticsForAI');
 const { sendError } = require('../utils/safeError');
 const cloudinary = require('../config/cloudinary');
@@ -3617,23 +3617,14 @@ router.delete(
 
 // ========== AI MATTERS (admin-only: upload PDF/CSV/DOCX, chat over content) ==========
 
-async function ensureAiMattersTable() {
-  await query(`
-    CREATE TABLE IF NOT EXISTS ai_matters_documents (
-      id SERIAL PRIMARY KEY,
-      name VARCHAR(255) NOT NULL,
-      file_path VARCHAR(500) NOT NULL,
-      extracted_text TEXT,
-      mime_type VARCHAR(100),
-      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-      created_by INTEGER
-    )
-  `);
-}
+const {
+  ensureAiMattersTable,
+  buildAiMattersDocumentsSection,
+} = require('../utils/aiMattersDocuments');
 
 router.get('/ai-matters/documents', async (req, res) => {
   try {
-    await ensureAiMattersTable();
+    await ensureAiMattersTable(query);
     const result = await query(
       'SELECT id, name, file_path, mime_type, created_at FROM ai_matters_documents ORDER BY created_at DESC'
     );
@@ -3649,7 +3640,7 @@ router.post('/ai-matters/upload', documentUpload.single('file'), async (req, res
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
     }
-    await ensureAiMattersTable();
+    await ensureAiMattersTable(query);
     const buffer = await fs.readFile(req.file.path);
     const extracted = await extractText(buffer, req.file.originalname || req.file.filename);
     const userId = req.user?.id || null;
@@ -3697,14 +3688,13 @@ router.post('/ai-matters/chat', async (req, res) => {
     if (!userMessage) return res.status(400).json({ message: 'Message cannot be empty' });
     if (!getClient()) {
       return res.status(503).json({
-        reply: 'AI is not configured. Please set ANTHROPIC_API_KEY in the server environment.'
+        reply: 'AI is not configured. Please set MISTRAL_API_KEY in the server environment.'
       });
     }
-    await ensureAiMattersTable();
-    const docs = await query(
-      'SELECT name, extracted_text FROM ai_matters_documents WHERE extracted_text IS NOT NULL AND extracted_text != \'\' ORDER BY created_at DESC'
-    );
-    const context = (docs.rows || []).map(d => `--- Document: ${d.name} ---\n${(d.extracted_text || '').slice(0, 150000)}`).join('\n\n');
+    await ensureAiMattersTable(query);
+    const context = await buildAiMattersDocumentsSection(query, {
+      heading: 'Document content (AI Matters uploads)',
+    });
     let faqList = '';
     try {
       const faqsResult = await query(
@@ -3734,12 +3724,11 @@ Rules:
 FAQs:
 ${faqSection}
 
-Document content (AI Matters uploads):
 ${context || '(No documents uploaded yet. Upload PDF, CSV, or Word files in AI Matters.)'}
 
 NECTA data:
 ${nectaSummary}`;
-    const reply = await callClaude(systemPrompt, userMessage, 4096);
+    const reply = await callMistral(systemPrompt, userMessage, 4096);
     res.json({ reply: (reply || '').trim() || 'I could not generate an answer. Please try again.' });
   } catch (error) {
     console.error('AI Matters chat error:', error);

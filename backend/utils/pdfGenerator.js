@@ -11,6 +11,7 @@ const {
   dedupeCommentRowsByTypePreferA,
   dedupeTabiaRowsByCriterionPreferA
 } = require('./reportCommentDedupe');
+const { formatStudentFeesDebt } = require('./reportStudentExtras');
 const {
   calculateGrade,
   getSwahiliRemarks,
@@ -424,7 +425,7 @@ async function generateIndividualReportPDF(form, stream, year, term, admNo) {
       }
       
       // Get student fees debt
-      let studentFeesDebt = '0.00';
+      let studentFeesDebt = '0.0';
       try {
         const debtResult = (isFormIToIV && normalizedStream === 'A')
           ? await query(
@@ -438,14 +439,10 @@ async function generateIndividualReportPDF(form, stream, year, term, admNo) {
             );
         if (debtResult.rows.length > 0) {
           const debt = debtResult.rows[0];
-          if (debt.amount && debt.description) {
-            studentFeesDebt = `${parseFloat(debt.amount).toFixed(0)} - ${debt.description}`;
-          } else if (debt.amount) {
-            studentFeesDebt = parseFloat(debt.amount).toFixed(0);
-          }
+          studentFeesDebt = formatStudentFeesDebt(debt.amount, debt.description);
         }
       } catch (e) {
-        studentFeesDebt = student.fees_debt || '0.00';
+        studentFeesDebt = student.fees_debt || '0.0';
       }
       
       // Get student photo

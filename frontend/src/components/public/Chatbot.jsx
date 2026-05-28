@@ -16,23 +16,44 @@ import {
   clampFabPosition,
   panelPositionForCorner,
 } from '../../utils/chatbotAnchor';
+import { stripMarkdownForChat } from '../../utils/chatbotReplyFormat';
 import './Chatbot.css';
 
-function purifyChatPlainText(raw) {
+function purifyChatPlainText(raw, { stripMarkdown = false } = {}) {
   if (raw == null) return '';
   let s = String(raw).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
   s = DOMPurify.sanitize(s, { ALLOWED_TAGS: [], KEEP_CONTENT: true });
+  if (stripMarkdown) s = stripMarkdownForChat(s);
   return s.trim();
 }
 
-const WELCOME_TEXT = 'Habari! Uliza kuhusu seminari.';
+/** Greeting by time of day (Tanzania — Africa/Dar_es_Salaam). */
+function getChatbotWelcomeText() {
+  const hour = parseInt(
+    new Intl.DateTimeFormat('en-GB', {
+      timeZone: 'Africa/Dar_es_Salaam',
+      hour: 'numeric',
+      hour12: false,
+    })
+      .formatToParts(new Date())
+      .find((p) => p.type === 'hour')?.value ?? '12',
+    10
+  );
+  let timeGreeting = 'Habari ya usiku';
+  if (hour >= 5 && hour < 12) timeGreeting = 'Habari ya asubuhi';
+  else if (hour >= 12 && hour < 18) timeGreeting = 'Habari ya mchana';
+  else if (hour >= 18 && hour < 22) timeGreeting = 'Habari ya jioni';
+  return `${timeGreeting}! Karibu, Uliza tukusaidie.`;
+}
 const PANEL_W = 352;
 const PANEL_H_EST = 420;
 const DRAG_THRESHOLD = 6;
 
 export default function Chatbot() {
   const [open, setOpen] = useState(false);
-  const [messages, setMessages] = useState([{ id: 0, role: 'bot', text: WELCOME_TEXT }]);
+  const [messages, setMessages] = useState(() => [
+    { id: 0, role: 'bot', text: getChatbotWelcomeText() },
+  ]);
   const messageIdRef = useRef(1);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
@@ -95,7 +116,9 @@ export default function Chatbot() {
         const res = await publicAPI.chat(text);
         const rawReply =
           res.data?.reply ?? 'Samahani, sijapata jibu. Jaribu tena au wasiliana na ofisi ya shule.';
-        const reply = purifyChatPlainText(rawReply) || 'Wasiliana na shule kwa msaada zaidi.';
+        const reply =
+          purifyChatPlainText(rawReply, { stripMarkdown: true }) ||
+          'Wasiliana na shule kwa msaada zaidi.';
         const botId = messageIdRef.current++;
         setMessages((prev) => [...prev, { id: botId, role: 'bot', text: reply }]);
       } catch (err) {

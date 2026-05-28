@@ -12,6 +12,34 @@ const {
 const FORM_I_TO_IV = /^FORM\s+(I|II|III|IV)$/i;
 
 /**
+ * Format individual debt for reports (individual + bulk).
+ * - Amount empty/zero, description present → description only
+ * - Amount present (non-zero), description empty → amount only
+ * - Both present and amount non-zero → "amount - description"
+ * - Both empty → "0.0"
+ * @param {number|string|null|undefined} amount
+ * @param {string|null|undefined} description
+ * @returns {string}
+ */
+function formatStudentFeesDebt(amount, description) {
+  const desc = String(description ?? '').trim();
+  const parsed = amount != null && amount !== '' ? parseFloat(amount) : NaN;
+  const hasAmount = !Number.isNaN(parsed) && parsed !== 0;
+  const hasDescription = desc.length > 0;
+
+  if (hasAmount && hasDescription) {
+    return `${parsed.toFixed(0)} - ${desc}`;
+  }
+  if (hasAmount) {
+    return parsed.toFixed(0);
+  }
+  if (hasDescription) {
+    return desc;
+  }
+  return '0.0';
+}
+
+/**
  * SQL + params for name-ordered class list (same as PhotoManagement / Comments UI).
  * @returns {{ sql: string, params: unknown[] }}
  */
@@ -144,7 +172,7 @@ async function loadReportStudentExtras({
     student_parish = student.parish || student.parish_name || 'Not specified';
   }
 
-  let student_fees_debt = '0.00';
+  let student_fees_debt = '0.0';
   try {
     if (!invalidIndex) {
       const debtResult = (isFormIToIV && normalizedStream === 'A')
@@ -159,15 +187,11 @@ async function loadReportStudentExtras({
         );
       const debt = debtResult.rows[0] || null;
       if (debt) {
-        if (debt.amount && debt.description) {
-          student_fees_debt = `${parseFloat(debt.amount).toFixed(0)} - ${debt.description}`;
-        } else if (debt.amount) {
-          student_fees_debt = parseFloat(debt.amount).toFixed(0);
-        }
+        student_fees_debt = formatStudentFeesDebt(debt.amount, debt.description);
       }
     }
   } catch {
-    student_fees_debt = student.fees_debt || student.debt || '0.00';
+    student_fees_debt = student.fees_debt || student.debt || '0.0';
   }
 
   let class_fees_announcements = {};
@@ -213,6 +237,7 @@ async function loadReportStudentExtras({
 
 module.exports = {
   FORM_I_TO_IV,
+  formatStudentFeesDebt,
   getStudentIndexListQuery,
   studentIndexForAdmNo,
   buildAdmNoToStudentIndexMap,

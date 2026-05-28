@@ -491,7 +491,7 @@ router.get('/faqs', async (req, res) => {
 });
 
 // Public chatbot – replaces FAQ for common questions. No student/admission/credentials data.
-const { getClient, callClaude } = require('../utils/anthropic');
+const { getClient, callMistral } = require('../utils/mistral');
 const { getNectaSummaryForAI } = require('../utils/nectaAnalyticsForAI');
 router.post('/chat', async (req, res) => {
   try {
@@ -510,6 +510,9 @@ router.post('/chat', async (req, res) => {
       });
     }
     const { buildPublicChatContext } = require('../utils/publicChatContext');
+    const { ensureAiMattersTable } = require('../utils/aiMattersDocuments');
+
+    await ensureAiMattersTable(query);
 
     let nectaSummary = '';
     try {
@@ -520,22 +523,34 @@ router.post('/chat', async (req, res) => {
 
     const knowledgeBase = await buildPublicChatContext(query, { nectaSummary });
 
-    const systemPrompt = `You are the assistant for Arusha Catholic Seminary (ARUCASE), Arusha, Tanzania.
+    const systemPrompt = `You are the friendly assistant for Arusha Catholic Seminary (ARUCASE), Arusha, Tanzania — the same information visitors see on the public website.
 
-Answer ONLY using the knowledge base below (public pages, FAQs, uploaded documents, contacts, staff, announcements, NECTA). Do not invent facts.
+Answer ONLY using the knowledge base below. Do not invent facts.
 
-Rules:
+You know everything published on the public site, including:
+- AI Matters documents (official PDF/CSV/Word uploads)
+- Every Public Pages CMS page (/, /about, /admissions, /staff, /school-fee, /contact, etc.)
+- School branding, tagline, banner, social links, office hours, department emails
+- Leadership / administrators, full staff directory, announcements, gallery captions, alumni, FAQs, NECTA summary
+
+How to help visitors:
 - Match the user's language (Swahili or English).
-- Keep answers short: 2–4 sentences or a few bullets.
-- When relevant, mention the page path (e.g. /school-fee, /admissions, /contact).
-- Never reveal private student records, admission numbers, or passwords.
-- If unsure, say so and suggest arucase@gmail.com or /contact.
+- Give clear, helpful answers: 2–5 sentences or short bullets.
+- Use plain text only: no Markdown, no asterisks for bold, no [link](url) syntax. Write paths as /school-fee (not **/school-fee**).
+- For ada, malipo, fees, or TZS: always read the "SCHOOL FEES" section and AI Matters documents first. Give exact amounts when listed (e.g. Form One = TZS 1,800,000 per year, Pre-Form One = TZS 250,000). Do not say you lack fee information if those sections contain amounts.
+- Point them to the best page path when useful (e.g. /school-fee for fees, /admissions/apply to apply, /student-report for results lookup, /contact for phone/email).
+- Cite sources briefly when helpful ("According to [document name]...", "On the About page...", "From FAQs...").
+- Never invent phone numbers, emails, or fees. Use only contacts and amounts from the knowledge base.
+- Never reveal private student records, grades for named students, admission numbers, or passwords.
+- If the answer is truly not in the knowledge base, say so politely and suggest /contact using the real email/phone from the contact section only.
 
 Knowledge base:
 ${knowledgeBase || 'No published content available yet.'}`;
 
-    const reply = await callClaude(systemPrompt, userMessage, 2048);
-    res.json({ reply: (reply || '').trim() || "I couldn't find an answer. Please contact the school directly." });
+    const { toPlainTextReply } = require('../utils/plainTextReply');
+    const rawReply = await callMistral(systemPrompt, userMessage, 2048);
+    const reply = toPlainTextReply((rawReply || '').trim()) || "I couldn't find an answer. Please contact the school directly.";
+    res.json({ reply });
   } catch (error) {
     console.error('Public chat error:', error);
     return sendError(res, { message: 'Something went wrong. Please try again or contact the school directly.' }, 500);
