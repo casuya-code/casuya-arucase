@@ -47,6 +47,7 @@ const PublicPages = lazy(() => import('./pages/admin/PublicPages'));
 const NECTAUrls = lazy(() => import('./pages/admin/NECTAUrls'));
 const AdminDepartmentContacts = lazy(() => import('./pages/admin/DepartmentContacts'));
 const AIMatters = lazy(() => import('./pages/admin/AIMatters'));
+const UserCommands = lazy(() => import('./pages/admin/UserCommands'));
 const AdmissionApplications = lazy(() => import('./pages/admin/AdmissionApplications'));
 const StaffProfiles = lazy(() => import('./pages/admin/StaffProfiles'));
 const DatabaseBackups = lazy(() => import('./pages/admin/DatabaseBackups'));
@@ -325,6 +326,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <AIMatters />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/user-commands"
+              element={
+                <ProtectedRoute>
+                  <UserCommands />
                 </ProtectedRoute>
               }
             />

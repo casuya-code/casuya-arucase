@@ -204,7 +204,8 @@ const AdminSidebar = () => {
     {
       category: 'AI Matters',
       items: [
-        { path: '/admin/ai-matters', label: 'AI Matters', icon: 'fa-robot' }
+        { path: '/admin/ai-matters', label: 'AI Matters', icon: 'fa-robot' },
+        { path: '/admin/user-commands', label: 'User Commands', icon: 'fa-comments' },
       ]
     },
     {

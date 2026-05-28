@@ -550,6 +550,17 @@ ${knowledgeBase || 'No published content available yet.'}`;
     const { toPlainTextReply } = require('../utils/plainTextReply');
     const rawReply = await callMistral(systemPrompt, userMessage, 2048);
     const reply = toPlainTextReply((rawReply || '').trim()) || "I couldn't find an answer. Please contact the school directly.";
+
+    const pagePath =
+      typeof req.body?.pagePath === 'string' ? req.body.pagePath.trim().slice(0, 500) : null;
+    const { logUserCommandSafe } = require('../utils/userCommands');
+    logUserCommandSafe(query, {
+      message: userMessage,
+      aiReply: reply,
+      source: 'public_chatbot',
+      pagePath: pagePath || null,
+    });
+
     res.json({ reply });
   } catch (error) {
     console.error('Public chat error:', error);

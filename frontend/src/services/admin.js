@@ -173,6 +173,14 @@ export const adminAPI = {
   deleteAIMattersDocument: (id) => api.delete(`/admin/ai-matters/documents/${id}`),
   chatAIMatters: (message) => api.post('/admin/ai-matters/chat', { message }),
 
+  // User Commands (public chatbot questions logged for review)
+  getUserCommands: (params = {}) => {
+    const qs = new URLSearchParams(params).toString();
+    return api.get(`/admin/ai-matters/user-commands${qs ? `?${qs}` : ''}`);
+  },
+  deleteUserCommand: (id) => api.delete(`/admin/ai-matters/user-commands/${id}`),
+  clearUserCommands: () => api.delete('/admin/ai-matters/user-commands'),
+
   // Admissions applications (public applicants)
   getAdmissionApplications: (params = {}) => {
     const qs = new URLSearchParams(params).toString();

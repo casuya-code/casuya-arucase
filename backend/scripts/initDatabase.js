@@ -988,6 +988,23 @@ async function initDatabase() {
     `);
     console.log('✅ AI Matters documents table created');
 
+    // Public chatbot user commands (Admin → AI Matters → User Commands)
+    await query(`
+      CREATE TABLE IF NOT EXISTS ai_user_commands (
+        id SERIAL PRIMARY KEY,
+        message TEXT NOT NULL,
+        ai_reply TEXT,
+        source VARCHAR(50) NOT NULL DEFAULT 'public_chatbot',
+        page_path VARCHAR(500),
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await query(`
+      CREATE INDEX IF NOT EXISTS idx_ai_user_commands_created_at
+      ON ai_user_commands (created_at DESC)
+    `);
+    console.log('✅ AI user commands table created');
+
     // Pre-Form One Interview Subjects table
     await query(`
       CREATE TABLE IF NOT EXISTS preformone_interview_subjects (

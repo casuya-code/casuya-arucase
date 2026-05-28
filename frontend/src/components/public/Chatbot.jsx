@@ -113,7 +113,7 @@ export default function Chatbot() {
       setMessages((prev) => [...prev, { id: userId, role: 'user', text }]);
       setLoading(true);
       try {
-        const res = await publicAPI.chat(text);
+        const res = await publicAPI.chat(text, window.location.pathname);
         const rawReply =
           res.data?.reply ?? 'Samahani, sijapata jibu. Jaribu tena au wasiliana na ofisi ya shule.';
         const reply =

@@ -3763,4 +3763,91 @@ ${nectaSummary}`;
   }
 });
 
+// ========== USER COMMANDS (public chatbot questions — review & improve AI) ==========
+
+const { ensureUserCommandsTable } = require('../utils/userCommands');
+
+router.get('/ai-matters/user-commands', async (req, res) => {
+  try {
+    await ensureUserCommandsTable(query);
+    const page = Math.max(1, parseInt(req.query.page, 10) || 1);
+    const limit = Math.min(100, Math.max(1, parseInt(req.query.limit, 10) || 50));
+    const offset = (page - 1) * limit;
+    const search = typeof req.query.search === 'string' ? req.query.search.trim().slice(0, 200) : '';
+
+    let whereSql = '';
+    const params = [];
+    if (search) {
+      params.push(`%${search}%`);
+      whereSql = `WHERE message ILIKE $1 OR COALESCE(ai_reply, '') ILIKE $1 OR COALESCE(page_path, '') ILIKE $1`;
+    }
+
+    const countResult = await query(
+      `SELECT COUNT(*)::int AS total FROM ai_user_commands ${whereSql}`,
+      params
+    );
+    const listParams = [...params, limit, offset];
+    const limitIdx = params.length + 1;
+    const offsetIdx = params.length + 2;
+    const listResult = await query(
+      `SELECT id, message, ai_reply, source, page_path, created_at
+       FROM ai_user_commands
+       ${whereSql}
+       ORDER BY created_at DESC
+       LIMIT $${limitIdx} OFFSET $${offsetIdx}`,
+      listParams
+    );
+
+    const todayResult = await query(
+      `SELECT COUNT(*)::int AS today FROM ai_user_commands
+       WHERE created_at >= CURRENT_DATE`
+    );
+
+    res.json({
+      commands: listResult.rows,
+      pagination: {
+        page,
+        limit,
+        total: countResult.rows[0]?.total ?? 0,
+        totalPages: Math.ceil((countResult.rows[0]?.total ?? 0) / limit) || 1,
+      },
+      stats: {
+        today: todayResult.rows[0]?.today ?? 0,
+      },
+    });
+  } catch (error) {
+    console.error('User commands list error:', error);
+    return sendError(res, error, 500);
+  }
+});
+
+router.delete('/ai-matters/user-commands/:id', requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    await ensureUserCommandsTable(query);
+    const id = parseInt(req.params.id, 10);
+    if (!Number.isFinite(id)) {
+      return res.status(400).json({ message: 'Invalid command id' });
+    }
+    const result = await query('DELETE FROM ai_user_commands WHERE id = $1 RETURNING id', [id]);
+    if (result.rowCount === 0) {
+      return res.status(404).json({ message: 'Command not found' });
+    }
+    res.json({ message: 'Command deleted' });
+  } catch (error) {
+    console.error('User commands delete error:', error);
+    return sendError(res, error, 500);
+  }
+});
+
+router.delete('/ai-matters/user-commands', requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    await ensureUserCommandsTable(query);
+    const result = await query('DELETE FROM ai_user_commands RETURNING id');
+    res.json({ message: 'All user commands cleared', deleted: result.rowCount });
+  } catch (error) {
+    console.error('User commands clear error:', error);
+    return sendError(res, error, 500);
+  }
+});
+
 module.exports = router;

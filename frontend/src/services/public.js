@@ -20,7 +20,7 @@ export const publicAPI = {
   getFAQs: () => api.get('/public/faqs'),
 
   // Chatbot (replaces FAQ for common questions; no protected data)
-  chat: (message) => api.post('/public/chat', { message }),
+  chat: (message, pagePath) => api.post('/public/chat', { message, pagePath }),
 
   // Get administrators
   getAdministrators: () => api.get('/public/administrators'),
