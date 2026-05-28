@@ -1,203 +1,438 @@
+/* User Commands – card-optimized admin page (AI Matters) */
+
 .user-commands-page {
-  max-width: 1200px;
+  --uc-line: #e5e7eb;
+  --uc-muted: #64748b;
+  --uc-text: #0f172a;
+  --uc-accent: #1e3a5f;
+  --uc-accent-soft: #eff6ff;
+  --uc-ai-bg: #f8fafc;
+  --uc-user-bg: #ffffff;
+  max-width: 1100px;
   margin: 0 auto;
-  padding: 1rem 1.25rem 2rem;
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+  box-sizing: border-box;
 }
 
-.user-commands-header {
+.user-commands-root-card {
+  border: 1px solid var(--uc-line) !important;
+  box-shadow: none !important;
+  border-radius: 0;
+  overflow: hidden;
+  background: #fff;
+}
+
+.user-commands-root-card .excel-card-header {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
 }
 
-.user-commands-header h1 {
-  margin: 0 0 0.35rem;
-  font-size: 1.5rem;
-  font-weight: 700;
-  color: #111;
+.user-commands-root-card .excel-card-header i {
+  color: var(--uc-accent);
 }
 
-.user-commands-header h1 i {
-  margin-right: 0.5rem;
-  color: var(--primary, #1a5276);
+.user-commands-root-card .excel-card-body {
+  padding: clamp(1rem, 2.5vw, 1.35rem);
 }
 
-.user-commands-header p {
-  margin: 0;
-  color: #555;
+.user-commands-intro {
+  margin: 0 0 1.15rem;
+  color: var(--uc-muted);
   font-size: 0.9375rem;
-  max-width: 42rem;
-  line-height: 1.45;
+  line-height: 1.5;
+  max-width: 52rem;
 }
 
-.user-commands-stats {
-  display: flex;
+/* Stats row */
+.user-commands-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
   gap: 0.75rem;
+  margin-bottom: 1rem;
 }
 
-.user-commands-stat {
+.user-commands-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--uc-line);
+  background: var(--uc-user-bg);
+  min-height: 72px;
+  box-sizing: border-box;
+}
+
+.user-commands-stat-card--accent {
+  border-color: #bfdbfe;
+  background: var(--uc-accent-soft);
+}
+
+.user-commands-stat-icon {
+  flex-shrink: 0;
+  width: 2.25rem;
+  height: 2.25rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f1f5f9;
+  color: var(--uc-accent);
+  font-size: 0.95rem;
+}
+
+.user-commands-stat-card--accent .user-commands-stat-icon {
+  background: #dbeafe;
+}
+
+.user-commands-stat-body {
   display: flex;
   flex-direction: column;
-  align-items: center;
-  min-width: 88px;
-  padding: 0.65rem 1rem;
-  border: 1px solid #d0d7de;
-  background: #fff;
+  min-width: 0;
 }
 
 .user-commands-stat-value {
   font-size: 1.375rem;
   font-weight: 700;
-  color: #111;
-  line-height: 1.2;
+  color: var(--uc-text);
+  line-height: 1.15;
 }
 
 .user-commands-stat-label {
   font-size: 0.75rem;
-  color: #666;
+  color: var(--uc-muted);
   margin-top: 0.15rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
 }
 
-.user-commands-toolbar {
+/* Toolbar */
+.user-commands-toolbar-card {
   display: flex;
   flex-wrap: wrap;
-  align-items: center;
+  align-items: flex-end;
   justify-content: space-between;
   gap: 0.75rem;
+  padding: 0.85rem 1rem;
   margin-bottom: 1rem;
+  border: 1px solid var(--uc-line);
+  background: #fafbfc;
 }
 
 .user-commands-search {
   display: flex;
   flex-wrap: wrap;
+  align-items: stretch;
   gap: 0.5rem;
   flex: 1 1 280px;
-}
-
-.user-commands-search .excel-input {
-  flex: 1 1 200px;
   min-width: 0;
 }
 
-.user-commands-loading,
-.user-commands-error,
-.user-commands-fetching {
-  padding: 1rem;
-  color: #555;
+.user-commands-search-field {
+  position: relative;
+  flex: 1 1 200px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
 }
 
-.user-commands-error {
-  color: #b42318;
-}
-
-.user-commands-empty {
-  text-align: center;
-  padding: 3rem 1.5rem;
-  border: 1px dashed #ccc;
-  background: #fafafa;
-  color: #555;
-}
-
-.user-commands-empty i {
-  font-size: 2rem;
-  margin-bottom: 0.75rem;
-  opacity: 0.45;
-}
-
-.user-commands-empty p {
-  margin: 0.25rem 0;
-}
-
-.user-commands-empty-hint {
+.user-commands-search-field > i {
+  position: absolute;
+  left: 0.65rem;
+  color: #94a3b8;
   font-size: 0.875rem;
-  color: #777;
+  pointer-events: none;
 }
 
-.user-commands-table-wrap {
-  overflow-x: auto;
-  border: 1px solid #d0d7de;
-  background: #fff;
-}
-
-.user-commands-table {
+.user-commands-search-field .excel-input {
   width: 100%;
-  min-width: 720px;
-  border-collapse: collapse;
+  padding-left: 2rem;
+  min-height: 40px;
 }
 
-.user-commands-table th,
-.user-commands-table td {
-  padding: 0.65rem 0.75rem;
-  border-bottom: 1px solid #e8ecef;
-  vertical-align: top;
-  text-align: left;
+.user-commands-search-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
 }
 
-.user-commands-table th {
-  background: #f6f8fa;
-  font-weight: 600;
+.user-commands-clear-btn {
+  flex-shrink: 0;
+  min-height: 40px;
+}
+
+.user-commands-filter-note {
+  margin: -0.35rem 0 0.85rem;
   font-size: 0.8125rem;
-  white-space: nowrap;
+  color: var(--uc-muted);
 }
 
-.user-commands-when {
-  white-space: nowrap;
-  font-size: 0.8125rem;
-  color: #444;
-  width: 1%;
-}
-
-.user-commands-message {
+.user-commands-filter-note strong {
+  color: var(--uc-text);
   font-weight: 600;
-  color: #111;
-  min-width: 180px;
-  max-width: 280px;
-  word-break: break-word;
 }
 
-.user-commands-reply {
-  color: #333;
+/* States */
+.user-commands-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: 0.65rem;
+  padding: 2.5rem 1.25rem;
+  border: 1px dashed var(--uc-line);
+  background: #fafbfc;
+  color: var(--uc-muted);
+}
+
+.user-commands-state > i {
+  font-size: 1.75rem;
+  opacity: 0.5;
+}
+
+.user-commands-state--error {
+  color: #b42318;
+  border-color: #fecaca;
+  background: #fef2f2;
+}
+
+.user-commands-state--error > i {
+  opacity: 0.85;
+}
+
+.user-commands-state-title {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--uc-text);
+}
+
+.user-commands-state-hint {
+  margin: 0;
   font-size: 0.875rem;
-  max-width: 360px;
-  word-break: break-word;
-  line-height: 1.4;
+  max-width: 28rem;
+  line-height: 1.45;
 }
 
-.user-commands-page-path {
-  font-size: 0.8125rem;
-  color: #666;
-  white-space: nowrap;
-  max-width: 120px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.user-commands-actions {
-  width: 1%;
-  white-space: nowrap;
-}
-
-.user-commands-pagination {
+.user-commands-fetching {
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: 1rem;
-  margin-top: 1rem;
-  font-size: 0.875rem;
+  gap: 0.5rem;
+  margin: 0.75rem 0 0;
+  font-size: 0.8125rem;
+  color: var(--uc-muted);
 }
 
-@media (max-width: 640px) {
-  .user-commands-header {
+/* Command cards */
+.user-commands-card-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  gap: 0.75rem;
+}
+
+@media (min-width: 768px) {
+  .user-commands-card-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (min-width: 1100px) {
+  .user-commands-card-list {
+    grid-template-columns: 1fr;
+  }
+}
+
+.user-commands-card {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--uc-line);
+  background: #fff;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.user-commands-card:hover {
+  border-color: #cbd5e1;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.06);
+}
+
+.user-commands-card-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.user-commands-card-meta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.4rem 0.55rem;
+  min-width: 0;
+}
+
+.user-commands-card-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.75rem;
+  color: var(--uc-muted);
+  white-space: nowrap;
+}
+
+.user-commands-card-date i {
+  font-size: 0.7rem;
+  opacity: 0.85;
+}
+
+.user-commands-page-badge {
+  display: inline-block;
+  max-width: 100%;
+  padding: 0.15rem 0.45rem;
+  font-size: 0.6875rem;
+  font-family: ui-monospace, 'Cascadia Code', Consolas, monospace;
+  color: #334155;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.user-commands-card-delete {
+  flex-shrink: 0;
+  width: 2rem;
+  height: 2rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 1px solid #fecaca;
+  background: #fff;
+  color: #b42318;
+  cursor: pointer;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.user-commands-card-delete:hover:not(:disabled) {
+  background: #fef2f2;
+  border-color: #f87171;
+}
+
+.user-commands-card-delete:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.user-commands-card-section {
+  padding: 0.65rem 0.75rem;
+  border: 1px solid var(--uc-line);
+}
+
+.user-commands-card-section--user {
+  background: var(--uc-user-bg);
+}
+
+.user-commands-card-section--ai {
+  background: var(--uc-ai-bg);
+  border-style: dashed;
+}
+
+.user-commands-card-label {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  margin-bottom: 0.35rem;
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--uc-muted);
+}
+
+.user-commands-card-label i {
+  font-size: 0.65rem;
+  opacity: 0.9;
+}
+
+.user-commands-card-section--user .user-commands-card-label {
+  color: var(--uc-accent);
+}
+
+.user-commands-card-message {
+  margin: 0;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--uc-text);
+  line-height: 1.45;
+  word-break: break-word;
+}
+
+.user-commands-card-reply {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #334155;
+  line-height: 1.5;
+  word-break: break-word;
+}
+
+/* Pagination */
+.user-commands-pagination {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem 1rem;
+  margin-top: 1.15rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--uc-line);
+}
+
+.user-commands-pagination-label {
+  font-size: 0.875rem;
+  color: var(--uc-muted);
+}
+
+.user-commands-pagination-label strong {
+  color: var(--uc-text);
+}
+
+/* Responsive */
+@media (max-width: 720px) {
+  .user-commands-stats-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .user-commands-toolbar-card {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .user-commands-search {
     flex-direction: column;
   }
 
-  .user-commands-stats {
+  .user-commands-search-actions {
     width: 100%;
   }
 
-  .user-commands-stat {
-    flex: 1;
+  .user-commands-search-actions .excel-btn,
+  .user-commands-clear-btn {
+    flex: 1 1 auto;
+  }
+}
+
+@media (max-width: 480px) {
+  .user-commands-card-list {
+    grid-template-columns: 1fr;
+  }
+
+  .user-commands-pagination .excel-btn {
+    flex: 1 1 calc(50% - 0.5rem);
   }
 }
