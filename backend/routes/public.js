@@ -537,7 +537,9 @@ How to help visitors:
 - Match the user's language (Swahili or English).
 - Give clear, helpful answers: 2–5 sentences or short bullets.
 - Use plain text only: no Markdown, no asterisks for bold, no [link](url) syntax. Write paths as /school-fee (not **/school-fee**).
-- For ada, malipo, fees, or TZS: always read the "SCHOOL FEES" section and AI Matters documents first. Give exact amounts when listed (e.g. Form One = TZS 1,800,000 per year, Pre-Form One = TZS 250,000). Do not say you lack fee information if those sections contain amounts.
+- For ada, malipo, fees, deadlines, payment methods, or TZS: read the "SCHOOL FEES" section first — especially Admin Fees Announcements (per class/term from Admin → Fees), the public /school-fee page, and AI Matters documents. Give exact amounts and deadlines when listed. Do not say you lack fee information if those sections contain amounts.
+- For udahili, darasa la saba, Form One, Pre-Form One, nafasi, or tarehe: read the "ADMISSIONS" section and announcements first. Point to /admissions, /admissions/apply, and /announcements. Explain that places depend on published requirements and dates; do not guarantee admission.
+- For tovuti, URL, website, or link: give the full official website URL from the CONTACT & WEBSITE section.
 - Point them to the best page path when useful (e.g. /school-fee for fees, /admissions/apply to apply, /student-report for results lookup, /contact for phone/email).
 - Cite sources briefly when helpful ("According to [document name]...", "On the About page...", "From FAQs...").
 - Never invent phone numbers, emails, or fees. Use only contacts and amounts from the knowledge base.
@@ -548,8 +550,15 @@ Knowledge base:
 ${knowledgeBase || 'No published content available yet.'}`;
 
     const { toPlainTextReply } = require('../utils/plainTextReply');
-    const rawReply = await callMistral(systemPrompt, userMessage, 2048);
-    const reply = toPlainTextReply((rawReply || '').trim()) || "I couldn't find an answer. Please contact the school directly.";
+    const { buildChatFallbackReply } = require('../utils/chatFallback');
+    let rawReply = '';
+    try {
+      rawReply = await callMistral(systemPrompt, userMessage, 2048);
+    } catch (mistralErr) {
+      console.error('Public chat Mistral error:', mistralErr?.message || mistralErr);
+      rawReply = buildChatFallbackReply(userMessage, knowledgeBase);
+    }
+    const reply = toPlainTextReply((rawReply || '').trim()) || buildChatFallbackReply(userMessage, knowledgeBase);
 
     const pagePath =
       typeof req.body?.pagePath === 'string' ? req.body.pagePath.trim().slice(0, 500) : null;
@@ -564,7 +573,19 @@ ${knowledgeBase || 'No published content available yet.'}`;
     res.json({ reply });
   } catch (error) {
     console.error('Public chat error:', error);
-    return sendError(res, { message: 'Something went wrong. Please try again or contact the school directly.' }, 500);
+    const userMessage = typeof req.body?.message === 'string' ? req.body.message.trim().slice(0, 2000) : '';
+    const pagePath =
+      typeof req.body?.pagePath === 'string' ? req.body.pagePath.trim().slice(0, 500) : null;
+    const { buildChatFallbackReply } = require('../utils/chatFallback');
+    const { logUserCommandSafe } = require('../utils/userCommands');
+    const reply = buildChatFallbackReply(userMessage, '');
+    logUserCommandSafe(query, {
+      message: userMessage,
+      aiReply: reply,
+      source: 'public_chatbot',
+      pagePath: pagePath || null,
+    });
+    return res.json({ reply });
   }
 });
 

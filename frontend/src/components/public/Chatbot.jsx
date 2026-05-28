@@ -124,7 +124,7 @@ export default function Chatbot() {
       } catch (err) {
         const data = err.response?.data;
         const raw =
-          (data && (data.reply ?? data.error)) ||
+          (data && (data.reply ?? data.error ?? data.message)) ||
           'Msaidizi haupatikani kwa sasa. Tafadhali wasiliana na shule moja kwa moja.';
         const fallback = purifyChatPlainText(raw) || 'Msaidizi haupatikani kwa sasa.';
         const botId = messageIdRef.current++;

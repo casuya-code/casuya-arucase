@@ -23,14 +23,16 @@ async function ensureAiMattersTable(query) {
  */
 async function buildAiMattersDocumentsSection(query, opts = {}) {
   const maxPerDoc = opts.maxPerDoc ?? 150000;
+  const docLimit = opts.docLimit ?? 0;
   const heading = opts.heading ?? 'School documents (Admin → AI Matters uploads)';
 
   try {
     await ensureAiMattersTable(query);
+    const limitClause = docLimit > 0 ? ` LIMIT ${Math.min(docLimit, 25)}` : '';
     const docsResult = await query(
       `SELECT name, extracted_text FROM ai_matters_documents
        WHERE extracted_text IS NOT NULL AND TRIM(extracted_text) != ''
-       ORDER BY created_at DESC`
+       ORDER BY created_at DESC${limitClause}`
     );
     const rows = docsResult.rows || [];
     if (!rows.length) return '';

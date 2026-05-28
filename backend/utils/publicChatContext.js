@@ -1,5 +1,6 @@
 const cheerio = require('cheerio');
 const { resolvePublicPageSlug } = require('./publicPageSlugs');
+const { getPublicSiteUrl } = require('./chatFallback');
 
 /** Canonical slug → public URL path */
 const PAGE_PATHS = {
@@ -28,9 +29,18 @@ const PUBLIC_SITE_GUIDE = `Public website — pages visitors can use (suggest th
 - /gallery — Photo gallery
 - /announcements — News and announcements
 - /necta-results — NECTA exam results
-- /privacy-policy — Privacy policy`;
+- /privacy-policy — Privacy policy
+Official website URL: ${getPublicSiteUrl()}`;
 
-function htmlToPlain(html, maxLen = 80000) {
+const CONTEXT_CACHE_TTL_MS = 5 * 60 * 1000;
+const MAX_KNOWLEDGE_BASE_CHARS = 100000;
+const PAGE_TEXT_MAX = 6000;
+const DOC_TEXT_MAX = 8000;
+const DOC_LIMIT = 10;
+
+let contextCache = { text: '', expiresAt: 0 };
+
+function htmlToPlain(html, maxLen = PAGE_TEXT_MAX) {
   const $ = cheerio.load(html || '');
   const text = ($('body').length ? $('body').text() : $.root().text()).replace(/\s+/g, ' ').trim();
   return text.slice(0, maxLen);
@@ -58,9 +68,95 @@ function extractFeeRelatedLines(text, maxLines = 150) {
   return out;
 }
 
+/** Admin → Fees announcements (per class/term; also printed on student reports). */
+async function buildFeesAnnouncementsSection(query) {
+  try {
+    const yearResult = await query(
+      `SELECT MAX(year) AS max_year FROM fees_announcements
+       WHERE announcement_text IS NOT NULL AND TRIM(announcement_text) != ''`
+    );
+    const maxYear = Number(yearResult.rows[0]?.max_year) || 0;
+    if (!maxYear) return '';
+
+    const minYear = maxYear - 1;
+    const result = await query(
+      `SELECT level, stream, year, term, announcement_index, announcement_text
+       FROM fees_announcements
+       WHERE year >= $1
+         AND announcement_text IS NOT NULL AND TRIM(announcement_text) != ''
+       ORDER BY year DESC, level, stream, term,
+         CASE WHEN announcement_index ~ '^[0-9]+$' THEN announcement_index::int ELSE 999 END`,
+      [minYear]
+    );
+
+    const rows = result.rows || [];
+    if (!rows.length) return '';
+
+    const groups = new Map();
+    for (const row of rows) {
+      const key = `${row.level}|${row.stream}|${row.year}|${row.term || 'Term I'}`;
+      if (!groups.has(key)) {
+        groups.set(key, {
+          level: row.level,
+          stream: row.stream,
+          year: row.year,
+          term: row.term || 'Term I',
+          items: [],
+        });
+      }
+      const text = String(row.announcement_text || '').trim();
+      if (!text) continue;
+      groups.get(key).items.push({
+        index: row.announcement_index,
+        text: text.slice(0, 600),
+      });
+    }
+
+    const blocks = [];
+    let totalChars = 0;
+    const maxChars = 14000;
+
+    for (const group of groups.values()) {
+      const seen = new Set();
+      const lines = [];
+      for (const item of group.items) {
+        if (seen.has(item.text)) continue;
+        seen.add(item.text);
+        const n = item.index ? `${item.index}. ` : '- ';
+        lines.push(`${n}${item.text}`);
+      }
+      if (!lines.length) continue;
+
+      const header = `${group.level} / Stream ${group.stream} / ${group.year} / ${group.term}:`;
+      const block = `${header}\n${lines.join('\n')}`;
+      if (totalChars + block.length > maxChars) break;
+      blocks.push(block);
+      totalChars += block.length;
+    }
+
+    if (!blocks.length) return '';
+
+    return (
+      '=== FEES ANNOUNCEMENTS (Admin → Fees — official class fee/payment instructions) ===\n' +
+      'Use for ada, malipo, deadlines, bank accounts, and term-specific fee notes. Prefer the latest year/term.\n' +
+      blocks.join('\n\n')
+    );
+  } catch (e) {
+    console.error('Fees announcements context error:', e.message);
+    return '';
+  }
+}
+
 /** Compact fees block so ada/malipo questions hit exact TZS amounts (from /school-fee + AI Matters). */
 async function buildFeesHighlightSection(query) {
   const parts = [];
+
+  try {
+    const feesAnnouncements = await buildFeesAnnouncementsSection(query);
+    if (feesAnnouncements) parts.push(feesAnnouncements);
+  } catch (e) {
+    console.error('Fees highlight: announcements error:', e.message);
+  }
 
   try {
     const page = await query(
@@ -102,14 +198,136 @@ async function buildFeesHighlightSection(query) {
 
   return (
     '=== SCHOOL FEES — use this first for ada, malipo, TZS, Form One/Five, Pre-Form One ===\n' +
+    'Sources: Admin Fees Announcements (per class/term), public page /school-fee, and AI Matters documents.\n' +
     'Example from official data: Form One tuition TZS 1,800,000 per year; Pre-Form One TZS 250,000.\n' +
     parts.join('\n\n')
-  ).slice(0, 28000);
+  ).slice(0, 32000);
+}
+
+const ADMISSION_LINE_RE =
+  /udahili|admission|apply|pre-?form|form\s*one|darasa la saba|kidato|nafasi|mahitaji|tarehe|interview|usajili|omba/i;
+
+function extractAdmissionRelatedLines(text, maxLines = 80) {
+  const seen = new Set();
+  const out = [];
+  for (const raw of String(text || '').split(/\r?\n/)) {
+    const line = raw.trim();
+    if (!line || !ADMISSION_LINE_RE.test(line)) continue;
+    if (seen.has(line)) continue;
+    seen.add(line);
+    out.push(line);
+    if (out.length >= maxLines) break;
+  }
+  return out;
+}
+
+async function buildSiteContactHighlightSection(query) {
+  const siteUrl = getPublicSiteUrl();
+  const parts = [`Official public website: ${siteUrl}`];
+
+  try {
+    const result = await query('SELECT * FROM website_settings WHERE id = 1');
+    const row = result.rows[0];
+    if (row) {
+      const fields = [
+        ['contact_address', 'Address'],
+        ['contact_phone', 'Phone'],
+        ['contact_whatsapp', 'WhatsApp'],
+        ['contact_email', 'Email'],
+        ['admissions_email', 'Admissions email'],
+        ['office_weekdays', 'Office hours (weekdays)'],
+        ['office_saturday', 'Office hours (Saturday)'],
+      ];
+      for (const [key, label] of fields) {
+        const val = row[key];
+        if (val != null && String(val).trim()) parts.push(`${label}: ${String(val).trim()}`);
+      }
+    }
+  } catch (e) {
+    console.error('Contact highlight error:', e.message);
+  }
+
+  return `=== CONTACT & WEBSITE — use for URL, simu, barua pepe, mawasiliano ===\n${parts.join('\n')}`;
+}
+
+async function buildAdmissionsHighlightSection(query) {
+  const parts = [];
+  const siteUrl = getPublicSiteUrl();
+
+  try {
+    const page = await query(
+      `SELECT title, html_content FROM public_pages
+       WHERE page_name IN ('admissions', 'homepage', 'about')
+         AND html_content IS NOT NULL AND TRIM(html_content) != ''
+       ORDER BY CASE page_name WHEN 'admissions' THEN 0 WHEN 'homepage' THEN 1 ELSE 2 END
+       LIMIT 3`
+    );
+    for (const row of page.rows || []) {
+      const text = htmlToPlain(row.html_content, 10000);
+      if (text.length >= 40) {
+        parts.push(`${row.title || 'Admissions'} (${siteUrl}/admissions):\n${text}`);
+      }
+    }
+  } catch (e) {
+    console.error('Admissions highlight: page error:', e.message);
+  }
+
+  try {
+    const ann = await query(
+      `SELECT title, content, created_at FROM public_announcements
+       WHERE active = TRUE
+       ORDER BY created_at DESC LIMIT 20`
+    );
+    for (const a of ann.rows || []) {
+      const body = htmlToPlain(a.content, 1200);
+      const combined = `${a.title || ''}\n${body}`;
+      const lines = extractAdmissionRelatedLines(combined, 12);
+      if (!lines.length) continue;
+      const date = a.created_at ? new Date(a.created_at).toISOString().slice(0, 10) : '';
+      parts.push(`Announcement [${date}] ${a.title}:\n${lines.join('\n')}`);
+    }
+  } catch (e) {
+    console.error('Admissions highlight: announcements error:', e.message);
+  }
+
+  try {
+    const { ensureAiMattersTable } = require('./aiMattersDocuments');
+    await ensureAiMattersTable(query);
+    const docs = await query(
+      `SELECT name, extracted_text FROM ai_matters_documents
+       WHERE extracted_text IS NOT NULL AND TRIM(extracted_text) != ''
+       ORDER BY created_at DESC LIMIT ${DOC_LIMIT}`
+    );
+    for (const d of docs.rows || []) {
+      const lines = extractAdmissionRelatedLines(d.extracted_text);
+      if (!lines.length) continue;
+      parts.push(`AI Matters "${d.name}" (admissions-related):\n${lines.join('\n')}`);
+    }
+  } catch (e) {
+    console.error('Admissions highlight: documents error:', e.message);
+  }
+
+  if (!parts.length) {
+    return (
+      '=== ADMISSIONS — darasa la saba, Form One, Pre-Form One ===\n' +
+      `Online application: ${siteUrl}/admissions/apply\n` +
+      `Requirements and process: ${siteUrl}/admissions\n` +
+      `Announcements (dates): ${siteUrl}/announcements`
+    );
+  }
+
+  return (
+    '=== ADMISSIONS — use for darasa la saba, Form One, Pre-Form One, nafasi, tarehe ===\n' +
+    `Apply online: ${siteUrl}/admissions/apply\n` +
+    parts.join('\n\n')
+  ).slice(0, 22000);
 }
 
 async function buildDocumentsSection(query) {
   const { buildAiMattersDocumentsSection } = require('./aiMattersDocuments');
   return buildAiMattersDocumentsSection(query, {
+    maxPerDoc: DOC_TEXT_MAX,
+    docLimit: DOC_LIMIT,
     heading:
       'School documents (uploaded in Admin → AI Matters — fees, policies, letters, schedules)',
   });
@@ -254,8 +472,52 @@ async function buildAlumniSection(query) {
   return lines.length ? `Featured alumni (approved profiles):\n${lines.join('\n')}` : '';
 }
 
-async function buildPublicChatContext(query, { nectaSummary = '' } = {}) {
+function capKnowledgeBase(sections) {
+  const priority = [];
+  const secondary = [];
+  for (const section of sections) {
+    if (!section) continue;
+    if (
+      section.startsWith('Public website —') ||
+      section.startsWith('=== CONTACT & WEBSITE') ||
+      section.startsWith('=== ADMISSIONS') ||
+      section.startsWith('=== SCHOOL FEES') ||
+      section.startsWith('=== FEES ANNOUNCEMENTS') ||
+      section.startsWith('FAQs') ||
+      section.startsWith('School branding') ||
+      section.startsWith('Leadership / administrators')
+    ) {
+      priority.push(section);
+    } else {
+      secondary.push(section);
+    }
+  }
+
+  let result = priority.join('\n\n');
+  for (const section of secondary) {
+    const next = result ? `${result}\n\n${section}` : section;
+    if (next.length > MAX_KNOWLEDGE_BASE_CHARS) {
+      const remaining = MAX_KNOWLEDGE_BASE_CHARS - result.length - 80;
+      if (remaining > 500) {
+        result += `\n\n${section.slice(0, remaining)}\n[... section trimmed ...]`;
+      }
+      break;
+    }
+    result = next;
+  }
+  return result;
+}
+
+async function buildPublicChatContext(query, { nectaSummary = '', bypassCache = false } = {}) {
+  const now = Date.now();
+  if (!bypassCache && !nectaSummary && contextCache.text && contextCache.expiresAt > now) {
+    return contextCache.text;
+  }
+
   const feesHighlight = await buildFeesHighlightSection(query);
+  const contactHighlight = await buildSiteContactHighlightSection(query);
+  const admissionsHighlight = await buildAdmissionsHighlightSection(query);
+
   const sections = await Promise.all([
     buildDocumentsSection(query),
     buildPublicPagesSection(query),
@@ -268,19 +530,29 @@ async function buildPublicChatContext(query, { nectaSummary = '' } = {}) {
     buildAlumniSection(query),
   ]);
 
-  sections.unshift(PUBLIC_SITE_GUIDE);
-  if (feesHighlight) sections.splice(1, 0, feesHighlight);
+  const ordered = [PUBLIC_SITE_GUIDE, contactHighlight, admissionsHighlight];
+  if (feesHighlight) ordered.push(feesHighlight);
+  ordered.push(...sections.filter(Boolean));
 
   if (nectaSummary) {
-    sections.push(`NECTA results summary (/necta-results):\n${nectaSummary}`);
+    ordered.push(`NECTA results summary (/necta-results):\n${nectaSummary.slice(0, 8000)}`);
   }
 
-  return sections.filter(Boolean).join('\n\n');
+  const knowledgeBase = capKnowledgeBase(ordered);
+
+  if (!nectaSummary) {
+    contextCache = { text: knowledgeBase, expiresAt: now + CONTEXT_CACHE_TTL_MS };
+  }
+
+  return knowledgeBase;
 }
 
 module.exports = {
   buildPublicChatContext,
   buildFeesHighlightSection,
+  buildFeesAnnouncementsSection,
+  buildAdmissionsHighlightSection,
+  buildSiteContactHighlightSection,
   PAGE_PATHS,
   PUBLIC_SITE_GUIDE,
 };
