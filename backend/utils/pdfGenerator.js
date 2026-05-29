@@ -1927,9 +1927,8 @@ async function generateMonthlyResultsPDF(level, stream, year, month) {
       const abbrev = isALevel ? formatALevelSubjectHeader(rawAbbrev) : rawAbbrev;
       html += `<th>${escapeHtml(abbrev)}</th>`;
     });
-    // Always show COM column between POS and REMARKS.
-    // O-Level uses Sc/Ss/Ui; A-Level uses combination shortforms like PCM/HGE/HGL.
-    const shouldShowCom = true;
+    // COM between POS and REMARKS (hidden for Form I — track not assigned yet).
+    const shouldShowCom = normalizedLevel !== 'FORM I';
 
     html += `
         <th>TOT</th>

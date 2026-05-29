@@ -400,15 +400,18 @@ const MonthlyResultsManagement = ({ formLevel }) => {
       .replace(/\.0+$/, '');
   };
 
-  // Render COM display text (database stores Sc/Ss/Ui, UI shows requested labels)
+  // Render COM display text (DB may store Sc/Ss/Ui or SC/SS/UI)
   const formatComDisplay = (value) => {
     const code = String(value || '').trim();
     if (!code) return '-';
-    if (code === 'Sc') return 'Science';
-    if (code === 'Ss') return 'Art';
-    if (code === 'Ui') return 'Under investigation';
-    return code; // fallback: show raw stored code
+    const upper = code.toUpperCase();
+    if (upper === 'SC' || code === 'Sc') return 'Science';
+    if (upper === 'SS' || code === 'Ss') return 'Art';
+    if (upper === 'UI' || code === 'Ui') return 'Under investigation';
+    return code;
   };
+
+  const SCIENCE_SUBJECT_CODES = new Set(['CHE', 'PHY', 'BIO', 'CHEMISTRY', 'PHYSICS', 'BIOLOGY']);
 
   // A-Level (FORM V/VI): DB stores the registered combination as a shortform like PCM/HGE/HGL.
   const formatComCombination = (value) => {
@@ -459,6 +462,32 @@ const MonthlyResultsManagement = ({ formLevel }) => {
   const testType = getTestType(month, normalizedLevel);
   const className = `${normalizedLevel} ${normalizedStream} ${year}`;
   const isALevel = normalizedLevel.includes('FORM V') || normalizedLevel.includes('FORM VI');
+  const showComColumn = normalizedLevel !== 'FORM I';
+
+  // O-Level COM when students.com is missing (bulk upload / promotion did not set it)
+  const resolveComDisplay = (student, studentScores) => {
+    if (isALevel) {
+      return formatComCombination(student.com || student.stream);
+    }
+    if (student.com) {
+      return formatComDisplay(student.com);
+    }
+    let hasScienceScore = false;
+    for (const subject of subjects) {
+      const code = String(subject.subject_code || '').toUpperCase();
+      const abbr = String(subject.subject_abbreviation || '').toUpperCase();
+      if (!SCIENCE_SUBJECT_CODES.has(code) && !SCIENCE_SUBJECT_CODES.has(abbr)) continue;
+      const key = subject.subject_abbreviation || subject.subject_code;
+      const score = studentScores[key] ?? studentScores[subject.subject_code];
+      if (score !== undefined && score !== null && score !== '') {
+        hasScienceScore = true;
+        break;
+      }
+    }
+    if (hasScienceScore) return formatComDisplay('SC');
+    if (Object.keys(studentScores).length > 0) return formatComDisplay('SS');
+    return '-';
+  };
 
   const formatALevelSubjectHeader = (label) => {
     const s = String(label || '').trim();
@@ -821,7 +850,7 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                       <th className="result-col">AVR</th>
                       <th className="result-col">GRD</th>
                       <th className="result-col">POS</th>
-                      <th className="comb-col">COM</th>
+                      {showComColumn && <th className="comb-col">COM</th>}
                       <th className="remarks-col">REMARKS</th>
                     </tr>
                   </thead>
@@ -864,11 +893,11 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                           </td>
                           <td className="result-col grd-col">{result.grade || '-'}</td>
                           <td className="result-col">{result.position || '-'}</td>
-                          <td className="comb-col">
-                            {isALevel
-                              ? formatComCombination(student.com || student.stream)
-                              : formatComDisplay(student.com)}
-                          </td>
+                          {showComColumn && (
+                            <td className="comb-col">
+                              {resolveComDisplay(student, studentScores)}
+                            </td>
+                          )}
                           <td className="remarks-col">{result.remarks || '-'}</td>
                         </tr>
                       );

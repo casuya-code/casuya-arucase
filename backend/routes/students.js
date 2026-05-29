@@ -3700,6 +3700,25 @@ router.post('/monthly-results/calculate', async (req, res) => {
     if (studentsResult.rows.length === 0) {
       return res.json({ results: {}, message: 'No students found for this class' });
     }
+
+    // Backfill missing COM (Science/Arts track) for O-Level classes
+    if (isFormIV) {
+      for (const student of studentsResult.rows) {
+        if (student.com) continue;
+        const calculatedCom = await calculateComForStudent(
+          student.adm_no,
+          level,
+          normalizedStreamForQuery,
+          year
+        );
+        await query(
+          `UPDATE students SET com = $1
+           WHERE adm_no = $2 AND level = $3 AND year = $4 AND com IS NULL`,
+          [calculatedCom, student.adm_no, level, parseInt(year)]
+        );
+        student.com = calculatedCom;
+      }
+    }
     
     // Get all individual scores for the month (check both normalized stream and NA for backward compatibility)
     // For Form V/VI, filter by term by joining with students table
@@ -4512,17 +4531,24 @@ router.post('/bulk-upload', csvUpload.single('file'), async (req, res) => {
       
       for (const student of students) {
         try {
+          const calculatedCom = await calculateComForStudent(
+            student.adm_no,
+            student.level,
+            student.stream,
+            student.year
+          );
           try {
             await query(
-              `INSERT INTO students (adm_no, first_name, middle_name, surname, sex, level, stream, year, term, status)
-               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+              `INSERT INTO students (adm_no, first_name, middle_name, surname, sex, level, stream, year, term, com, status)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                ON CONFLICT (adm_no, level, stream, year, term)
                DO UPDATE SET
                  first_name = EXCLUDED.first_name,
                  middle_name = EXCLUDED.middle_name,
                  surname = EXCLUDED.surname,
                  sex = EXCLUDED.sex,
-                 status = EXCLUDED.status`,
+                 status = EXCLUDED.status,
+                 com = COALESCE(students.com, EXCLUDED.com)`,
               [
                 student.adm_no,
                 student.first_name,
@@ -4533,6 +4559,7 @@ router.post('/bulk-upload', csvUpload.single('file'), async (req, res) => {
                 student.stream,
                 student.year,
                 student.term,
+                calculatedCom || null,
                 student.status,
               ]
             );
@@ -4543,8 +4570,8 @@ router.post('/bulk-upload', csvUpload.single('file'), async (req, res) => {
               (msg.includes('conflict') && msg.includes('term'));
             if (!noTermConstraint) throw termConflictErr;
             await query(
-              `INSERT INTO students (adm_no, first_name, middle_name, surname, sex, level, stream, year, term, status)
-               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+              `INSERT INTO students (adm_no, first_name, middle_name, surname, sex, level, stream, year, term, com, status)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
                ON CONFLICT (adm_no, level, stream, year)
                DO UPDATE SET
                  first_name = EXCLUDED.first_name,
@@ -4552,7 +4579,8 @@ router.post('/bulk-upload', csvUpload.single('file'), async (req, res) => {
                  surname = EXCLUDED.surname,
                  sex = EXCLUDED.sex,
                  term = EXCLUDED.term,
-                 status = EXCLUDED.status`,
+                 status = EXCLUDED.status,
+                 com = COALESCE(students.com, EXCLUDED.com)`,
               [
                 student.adm_no,
                 student.first_name,
@@ -4563,6 +4591,7 @@ router.post('/bulk-upload', csvUpload.single('file'), async (req, res) => {
                 student.stream,
                 student.year,
                 student.term,
+                calculatedCom || null,
                 student.status,
               ]
             );

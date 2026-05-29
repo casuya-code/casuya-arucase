@@ -523,7 +523,30 @@ router.post('/chat', async (req, res) => {
 
     const knowledgeBase = await buildPublicChatContext(query, { nectaSummary });
 
+    const {
+      getCurrentDateContextBlock,
+      isTodayDateQuestion,
+      buildTodayDateReply,
+    } = require('../utils/chatCurrentDate');
+
+    if (isTodayDateQuestion(userMessage)) {
+      const { toPlainTextReply } = require('../utils/plainTextReply');
+      const reply = toPlainTextReply(buildTodayDateReply(userMessage));
+      const pagePath =
+        typeof req.body?.pagePath === 'string' ? req.body.pagePath.trim().slice(0, 500) : null;
+      const { logUserCommandSafe } = require('../utils/userCommands');
+      logUserCommandSafe(query, {
+        message: userMessage,
+        aiReply: reply,
+        source: 'public_chatbot',
+        pagePath: pagePath || null,
+      });
+      return res.json({ reply });
+    }
+
     const systemPrompt = `You are the friendly assistant for Arusha Catholic Seminary (ARUCASE), Arusha, Tanzania — the same information visitors see on the public website.
+
+${getCurrentDateContextBlock()}
 
 Answer ONLY using the knowledge base below. Do not invent facts.
 
@@ -545,6 +568,7 @@ How to help visitors:
 - Never invent phone numbers, emails, or fees. Use only contacts and amounts from the knowledge base.
 - Never reveal private student records, grades for named students, admission numbers, or passwords.
 - If the answer is truly not in the knowledge base, say so politely and suggest /contact using the real email/phone from the contact section only.
+- For "what is today's date", "leo ni tarehe ngapi", or current day/year: use ONLY the CURRENT DATE AND TIME block above — never use dates from documents or your training data as "today".
 
 Knowledge base:
 ${knowledgeBase || 'No published content available yet.'}`;

@@ -41,11 +41,17 @@ function contactLines(contacts) {
  * @param {string} [knowledgeBase]
  * @returns {string}
  */
+const { isTodayDateQuestion, buildTodayDateReply } = require('./chatCurrentDate');
+
 function buildChatFallbackReply(userMessage, knowledgeBase = '') {
   const msg = String(userMessage || '').toLowerCase();
   const siteUrl = getPublicSiteUrl();
   const contacts = extractContactsFromKnowledge(knowledgeBase);
   const contactBlock = contactLines(contacts);
+
+  if (isTodayDateQuestion(userMessage)) {
+    return buildTodayDateReply(userMessage);
+  }
 
   if (/url|tovuti|website|link|anwani ya tovuti|nipe url/.test(msg)) {
     return `Tovuti rasmi ya Seminari ya Kikatoliki Arusha:\n${siteUrl}\n\nMawasiliano: ${siteUrl}/contact\nUdahili: ${siteUrl}/admissions`;
