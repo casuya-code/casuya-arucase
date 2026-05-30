@@ -4155,39 +4155,86 @@ router.post('/fees-announcements', async (req, res) => {
   }
 });
 
+function normalizeDebtQueryParams(level, stream, year) {
+  const normalizedLevel = decodeURIComponent(String(level).replace(/\+/g, ' ')).trim().toUpperCase();
+  const normalizedStream = normalizeStream(stream);
+  const yearInt = parseInt(year, 10);
+  return { normalizedLevel, normalizedStream, yearInt };
+}
+
+function mapDebtRow(row) {
+  return {
+    amount: parseFloat(row.amount),
+    description: row.description || '',
+    due_date: row.due_date || '',
+    status: row.status || 'Outstanding',
+  };
+}
+
+async function fetchClassDebtMap(normalizedLevel, normalizedStream, yearInt) {
+  const result = await query(
+    `SELECT student_index, amount, description, due_date, status
+     FROM individual_debt
+     WHERE UPPER(TRIM(level)) = UPPER(TRIM($1)) AND stream IN ($2, $3) AND year = $4`,
+    [normalizedLevel, normalizedStream, 'NA', yearInt]
+  );
+
+  const debtMap = {};
+  result.rows.forEach((row) => {
+    debtMap[row.student_index] = mapDebtRow(row);
+  });
+  return debtMap;
+}
+
+// GET /debt — single student (student_index) or full class map (legacy + current clients)
+router.get('/debt', async (req, res) => {
+  try {
+    let { level, stream, year, student_index: studentIndex } = req.query;
+
+    if (!level || !stream || !year) {
+      return res.status(400).json({ message: 'level, stream, and year are required' });
+    }
+
+    const { normalizedLevel, normalizedStream, yearInt } = normalizeDebtQueryParams(level, stream, year);
+
+    if (studentIndex !== undefined && studentIndex !== null && String(studentIndex).trim() !== '') {
+      const idx = parseInt(studentIndex, 10);
+      if (!Number.isFinite(idx)) {
+        return res.status(400).json({ message: 'student_index must be a number' });
+      }
+
+      const result = await query(
+        `SELECT amount, description, due_date, status
+         FROM individual_debt
+         WHERE UPPER(TRIM(level)) = UPPER(TRIM($1)) AND stream IN ($2, $3) AND year = $4 AND student_index = $5
+         LIMIT 1`,
+        [normalizedLevel, normalizedStream, 'NA', yearInt, idx]
+      );
+
+      return res.json({
+        debt: result.rows.length > 0 ? mapDebtRow(result.rows[0]) : null,
+      });
+    }
+
+    const debtMap = await fetchClassDebtMap(normalizedLevel, normalizedStream, yearInt);
+    res.json({ debt: debtMap });
+  } catch (error) {
+    console.error('[DEBT GET] Error:', error);
+    return sendError(res, error, 500);
+  }
+});
+
 // Get individual debt for a class
 router.get('/debt/list', async (req, res) => {
   try {
     let { level, stream, year } = req.query;
-    
+
     if (!level || !stream || !year) {
       return res.status(400).json({ message: 'level, stream, and year are required' });
     }
-    
-    // Normalize level to uppercase
-    level = decodeURIComponent(String(level).replace(/\+/g, ' ')).trim().toUpperCase();
-    
-    // Normalize stream: NA -> A (for FORM I-IV)
-    const normalizedStream = normalizeStream(stream);
-    
-    const result = await query(
-      `SELECT student_index, amount, description, due_date, status 
-       FROM individual_debt 
-       WHERE UPPER(TRIM(level)) = UPPER(TRIM($1)) AND stream IN ($2, $3) AND year = $4`,
-      [level, normalizedStream, 'NA', parseInt(year)]
-    );
-    
-    // Convert to object mapping student_index to debt data
-    const debtMap = {};
-    result.rows.forEach(row => {
-      debtMap[row.student_index] = {
-        amount: parseFloat(row.amount),
-        description: row.description || '',
-        due_date: row.due_date || '',
-        status: row.status || 'Outstanding',
-      };
-    });
-    
+
+    const { normalizedLevel, normalizedStream, yearInt } = normalizeDebtQueryParams(level, stream, year);
+    const debtMap = await fetchClassDebtMap(normalizedLevel, normalizedStream, yearInt);
     res.json({ debt: debtMap });
   } catch (error) {
     console.error('[DEBT LIST] Error:', error);

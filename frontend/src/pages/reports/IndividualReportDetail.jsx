@@ -124,16 +124,6 @@ const IndividualReportDetail = () => {
         signatureImage: false,
         stampImage: false
       });
-      
-      // Debug logging only in development to avoid noisy production console
-      if (import.meta.env.DEV) {
-        if (reportData.student?.photo_path) {
-          console.log('[IndividualReport] Student photo_path:', reportData.student.photo_path);
-          console.log('[IndividualReport] Constructed photo URL:', getStudentPhotoUrl(reportData.student.photo_path));
-        } else {
-          console.log('[IndividualReport] No photo_path found for student:', reportData.student?.adm_no);
-        }
-      }
     }
   }, [reportData]);
 
@@ -888,9 +878,6 @@ const IndividualReportDetail = () => {
                       }
                     }
                   }
-                  if (import.meta.env.DEV) {
-                    console.log('[Report] Student photo loaded successfully:', e.target.src);
-                  }
                 }}
               />
             ) : null}
@@ -1162,6 +1149,7 @@ const IndividualReportDetail = () => {
                       src={authoritySignatureImageUrl}
                       alt="Signature"
                       className="signature-image"
+                      loading="eager"
                       style={{ maxWidth: '300px', maxHeight: '30px' }}
                       onError={(e) => {
                         if (import.meta.env.DEV) {
@@ -1323,6 +1311,7 @@ const IndividualReportDetail = () => {
                   src={authoritySignatureImageUrl}
                   alt="Signature"
                   className="signature-image"
+                  loading="eager"
                   style={{ maxWidth: '300px', maxHeight: '30px', display: 'inline-block', verticalAlign: 'bottom' }}
                   onError={(e) => {
                     if (import.meta.env.DEV) {
@@ -1359,7 +1348,7 @@ const IndividualReportDetail = () => {
                   alt="Arusha Catholic Seminary official school stamp"
                   className="stamp-img"
                   crossOrigin="anonymous"
-                  loading="lazy"
+                  loading="eager"
                   style={{ display: 'block', visibility: 'visible', opacity: 1 }}
                   onError={(e) => {
                     if (import.meta.env.DEV) {

@@ -86,7 +86,7 @@ const DebtsManagement = ({ formLevel }) => {
 
   // Fetch existing debt records
   const { data: existingDebt = {}, isLoading: debtLoading, error: debtError } = useQuery({
-    queryKey: ['debt', normalizedLevel, normalizedStream, year, term],
+    queryKey: ['debt-list', normalizedLevel, normalizedStream, year, term],
     queryFn: async () => {
       try {
         const res = await studentsAPI.getDebt({
@@ -141,7 +141,7 @@ const DebtsManagement = ({ formLevel }) => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['debt', normalizedLevel, normalizedStream, year]);
+      queryClient.invalidateQueries(['debt-list', normalizedLevel, normalizedStream, year]);
       toast.success('Debt record updated successfully!');
       setEditingIndex(null);
       setEditForm({});
@@ -162,7 +162,7 @@ const DebtsManagement = ({ formLevel }) => {
       });
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['debt', normalizedLevel, normalizedStream, year]);
+      queryClient.invalidateQueries(['debt-list', normalizedLevel, normalizedStream, year]);
       toast.success('Debt record deleted successfully!');
     },
     onError: (error) => {
@@ -392,7 +392,7 @@ const DebtsManagement = ({ formLevel }) => {
           debts: payload,
         });
 
-        queryClient.invalidateQueries(['debt', normalizedLevel, normalizedStream, year]);
+        queryClient.invalidateQueries(['debt-list', normalizedLevel, normalizedStream, year]);
 
         const failed = res.data?.failed ?? 0;
         const saved = res.data?.saved ?? 0;

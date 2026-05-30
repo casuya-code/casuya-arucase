@@ -180,10 +180,16 @@ export const studentsAPI = {
   // Save fees announcements
   saveFeesAnnouncements: (data) => api.post('/students/fees-announcements', data),
 
-  // Get individual debt
+  // Get individual debt (full class map)
   getDebt: (params) => {
     const queryString = new URLSearchParams(params).toString();
     return api.get(`/students/debt/list?${queryString}`);
+  },
+
+  // Get one student's debt (legacy clients used GET /students/debt?student_index=…)
+  getStudentDebt: (params) => {
+    const queryString = new URLSearchParams(params).toString();
+    return api.get(`/students/debt?${queryString}`);
   },
 
   // Save individual debt

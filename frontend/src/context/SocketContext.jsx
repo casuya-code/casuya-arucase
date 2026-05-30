@@ -43,7 +43,8 @@ export const SocketProvider = ({ children }) => {
 
       const token = localStorage.getItem('token');
       newSocket = io(wsUrl, {
-        transports: ['websocket'],
+        // Polling first — more reliable on Railway / proxies; upgrades to websocket when available
+        transports: ['polling', 'websocket'],
         reconnection: true,
         reconnectionDelay: 1000,
         reconnectionAttempts: 3,
@@ -60,7 +61,9 @@ export const SocketProvider = ({ children }) => {
       });
 
       newSocket.on('connect_error', (error) => {
-        console.error('Socket connection error:', error);
+        if (import.meta.env.DEV) {
+          console.warn('Socket connection error:', error?.message || error);
+        }
         if (!cancelled) setConnected(false);
         if (
           error?.message?.toLowerCase?.().includes('unauthorized') ||

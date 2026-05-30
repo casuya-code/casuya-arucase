@@ -25,6 +25,7 @@ export function useOnlineStaffCount() {
   const location = useLocation();
   const [count, setCount] = useState(0);
   const mountedRef = useRef(true);
+  const heartbeatInFlightRef = useRef(false);
 
   useEffect(() => {
     mountedRef.current = true;
@@ -36,6 +37,10 @@ export function useOnlineStaffCount() {
   useEffect(() => {
     if (!user || !isAuthenticated?.() || !isStaffAppRoute(location.pathname)) {
       setCount(0);
+      return undefined;
+    }
+
+    if (window.__verifyingToken) {
       return undefined;
     }
 
@@ -71,7 +76,8 @@ export function useOnlineStaffCount() {
     };
 
     const sendHeartbeat = async () => {
-      if (stopped) return;
+      if (stopped || heartbeatInFlightRef.current || window.__verifyingToken) return;
+      heartbeatInFlightRef.current = true;
       try {
         const res = await api.post('/auth/presence/heartbeat');
         if (res?.status === 401 || res?.status === 403) {
@@ -90,14 +96,17 @@ export function useOnlineStaffCount() {
         } catch {
           /* offline or unauthenticated — keep last count */
         }
+      } finally {
+        heartbeatInFlightRef.current = false;
       }
     };
 
-    sendHeartbeat();
+    const initialTimer = setTimeout(sendHeartbeat, 1500);
     intervalId = setInterval(sendHeartbeat, HEARTBEAT_MS);
 
     return () => {
       socket?.off('presence:online-count', onPresence);
+      clearTimeout(initialTimer);
       stopHeartbeat();
     };
   }, [socket, user, isAuthenticated, location.pathname]);
