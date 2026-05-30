@@ -12,6 +12,7 @@ import {
   getAuthoritySignatureImageUrl,
   getAuthoritySignatureText,
 } from '../../utils/authoritySignature';
+import { formatReportScore, formatReportWeightPercent } from '../../utils/reportScoreFormat';
 import './IndividualReport.css';
 import './IndividualReportDetail.css';
 
@@ -1002,7 +1003,7 @@ const IndividualReportDetail = () => {
                     <th key={idx} className="table-header-white" style={{ width: '7%', lineHeight: '1.2' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                         <div>{getMonthLabel(month)}</div>
-                        <div style={{ fontSize: '0.85em', marginTop: '2px' }}>({weight.toFixed(1)}%)</div>
+                        <div style={{ fontSize: '0.85em', marginTop: '2px' }}>({formatReportWeightPercent(weight)}%)</div>
                       </div>
                     </th>
                   );
@@ -1054,12 +1055,12 @@ const IndividualReportDetail = () => {
                 return (
                   <tr key={subject.id || subject.subject_code}>
                     <td>{subject.subject_name}</td>
-                    <td>{test1.toFixed(1)}</td>
-                    <td>{midterm.toFixed(1)}</td>
-                    <td>{test2.toFixed(1)}</td>
-                    <td>{exam.toFixed(1)}</td>
+                    <td>{formatReportScore(test1)}</td>
+                    <td>{formatReportScore(midterm)}</td>
+                    <td>{formatReportScore(test2)}</td>
+                    <td>{formatReportScore(exam)}</td>
                     <td>
-                      <strong>{total.toFixed(1)}</strong>
+                      <strong>{formatReportScore(total)}</strong>
                     </td>
                     <td>
                       <strong>{grade}</strong>
@@ -1089,11 +1090,11 @@ const IndividualReportDetail = () => {
                 <td>
                   <strong>JUMLA KUU KATIKA MASOMO NI:</strong>
                 </td>
-                <td>{summary.total_marks}</td>
+                <td>{formatReportScore(summary.total_marks)}</td>
                 <td>
                   <strong>WASTANI</strong>
                 </td>
-                <td>{summary.average}</td>
+                <td>{formatReportScore(summary.average)}</td>
                 <td>
                   <strong>DARAJA</strong>
                 </td>

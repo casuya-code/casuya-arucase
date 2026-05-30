@@ -22,6 +22,7 @@ const {
   calculateWeightedTotal,
   calculateOverallAverage
 } = require('../utils/calculations');
+const { formatReportScore, formatReportWeightPercent } = require('./reportScoreFormat');
 
 // Helper function to check if file exists
 async function fileExists(filePath) {
@@ -889,7 +890,7 @@ async function generateIndividualReportPDF(form, stream, year, term, admNo) {
       });
       const weightLabels = months.map(m => {
         const weight = marksConfig.month_weights[m] || 0;
-        return weight > 0 ? `(${weight.toFixed(1)}%)` : '(0.0%)';
+        return weight > 0 ? `(${formatReportWeightPercent(weight)}%)` : '(0%)';
       });
       
       // Draw month column headers (second row only)
@@ -920,11 +921,11 @@ async function generateIndividualReportPDF(form, stream, year, term, admNo) {
         for (let i = 0; i < 4; i++) {
           const month = months[i];
           const score = monthScores[month] || 0;
-          drawCell(acadX, currentY, acadColWidths[i + 1], rowHeight, score.toFixed(1), { fontSize: 7, align: 'center' });
+          drawCell(acadX, currentY, acadColWidths[i + 1], rowHeight, formatReportScore(score), { fontSize: 7, align: 'center' });
           acadX += acadColWidths[i + 1];
         }
         
-        drawCell(acadX, currentY, acadColWidths[5], rowHeight, weightedTotal.toFixed(1), { fontSize: 7, align: 'center' });
+        drawCell(acadX, currentY, acadColWidths[5], rowHeight, formatReportScore(weightedTotal), { fontSize: 7, align: 'center' });
         acadX += acadColWidths[5];
         drawCell(acadX, currentY, acadColWidths[6], rowHeight, grade, { fontSize: 7, align: 'center' });
         acadX += acadColWidths[6];
@@ -972,11 +973,11 @@ async function generateIndividualReportPDF(form, stream, year, term, admNo) {
       
       drawCell(summaryX, currentY, summaryColWidths[0], summaryRowHeight, 'JUMLA KUU KATIKA MASOMO NI:', { bold: true, fontSize: 7 });
       summaryX += summaryColWidths[0];
-      drawCell(summaryX, currentY, summaryColWidths[1], summaryRowHeight, totalMarks.toFixed(1), { fontSize: 7, align: 'center' });
+      drawCell(summaryX, currentY, summaryColWidths[1], summaryRowHeight, formatReportScore(totalMarks), { fontSize: 7, align: 'center' });
       summaryX += summaryColWidths[1];
       drawCell(summaryX, currentY, summaryColWidths[2], summaryRowHeight, 'WASTANI', { bold: true, fontSize: 7 });
       summaryX += summaryColWidths[2];
-      drawCell(summaryX, currentY, summaryColWidths[3], summaryRowHeight, average.toFixed(1), { fontSize: 7, align: 'center' });
+      drawCell(summaryX, currentY, summaryColWidths[3], summaryRowHeight, formatReportScore(average), { fontSize: 7, align: 'center' });
       summaryX += summaryColWidths[3];
       drawCell(summaryX, currentY, summaryColWidths[4], summaryRowHeight, 'DARAJA', { bold: true, fontSize: 7 });
       summaryX += summaryColWidths[4];

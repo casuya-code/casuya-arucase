@@ -13,6 +13,7 @@ const {
   buildAdmNoToStudentIndexMap,
 } = require('../utils/reportStudentExtras');
 const { sanitizeAuthorityDataRow } = require('../utils/authoritySignature');
+const { formatReportScore } = require('../utils/reportScoreFormat');
 const { sendError } = require('../utils/safeError');
 const {
   calculateGrade,
@@ -478,8 +479,8 @@ router.get('/individual/:form/:stream/:year/:term/:admNo', requireModule('indivi
       marks_config: marksConfig,
       months: months,
       summary_data: {
-        total_marks: totalMarks.toFixed(1),
-        average: average.toFixed(1),
+        total_marks: formatReportScore(totalMarks),
+        average: formatReportScore(average),
         grade: grade,
         division: division || '0',
         division_point: divisionPoint !== null ? divisionPoint.toString() : '0',
@@ -914,8 +915,8 @@ router.get('/bulk/:form/:year/:term', requireModule('bulk_report'), async (req, 
         ),
         comments: studentComments,
         summary_data: {
-          total_marks: totalMarks.toFixed(1),
-          average: average.toFixed(1),
+          total_marks: formatReportScore(totalMarks),
+          average: formatReportScore(average),
           grade: overallGrade
         }
       });

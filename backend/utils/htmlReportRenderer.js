@@ -9,6 +9,7 @@ const {
   getAuthoritySignatureImageUrl,
   getAuthoritySignatureText,
 } = require('./authoritySignature');
+const { formatReportScore, formatReportWeightPercent } = require('./reportScoreFormat');
 
 /**
  * Read CSS for the PDF HTML. Prefer a copy shipped with the backend so Railway/backend-only
@@ -273,11 +274,11 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
     return `
       <tr>
         <td>${subject.subject_name}</td>
-        <td>${test1.toFixed(1)}</td>
-        <td>${midterm.toFixed(1)}</td>
-        <td>${test2.toFixed(1)}</td>
-        <td>${exam.toFixed(1)}</td>
-        <td><strong>${total.toFixed(1)}</strong></td>
+        <td>${formatReportScore(test1)}</td>
+        <td>${formatReportScore(midterm)}</td>
+        <td>${formatReportScore(test2)}</td>
+        <td>${formatReportScore(exam)}</td>
+        <td><strong>${formatReportScore(total)}</strong></td>
         <td><strong>${grade}</strong></td>
         <td>${rank}</td>
         <td>${comment}</td>
@@ -292,7 +293,7 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
     return `<th class="table-header-white" style="width: 7%; line-height: 1.2;">
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
         <div>${getMonthLabel(month)}</div>
-        <div style="font-size: 0.85em; margin-top: 2px;">(${weight.toFixed(1)}%)</div>
+        <div style="font-size: 0.85em; margin-top: 2px;">(${formatReportWeightPercent(weight)}%)</div>
       </div>
     </th>`;
   }).join('');
@@ -471,9 +472,9 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
         <tbody>
           <tr>
             <td><strong>JUMLA KUU KATIKA MASOMO NI:</strong></td>
-            <td>${summary.total_marks}</td>
+            <td>${formatReportScore(summary.total_marks)}</td>
             <td><strong>WASTANI</strong></td>
-            <td>${summary.average}</td>
+            <td>${formatReportScore(summary.average)}</td>
             <td><strong>DARAJA</strong></td>
             <td class="grade-cell grade-${summary.grade.toLowerCase()}">${summary.grade}</td>
           </tr>

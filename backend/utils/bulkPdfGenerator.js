@@ -6,6 +6,7 @@
 const { acquirePage, releasePage, PAGE_TIMEOUT_MS } = require('./puppeteerPool');
 const axios = require('axios');
 const { generateReportHTML } = require('./htmlReportRenderer');
+const { formatReportScore } = require('./reportScoreFormat');
 const fs = require('fs').promises;
 const path = require('path');
 const { query } = require('../config/database');
@@ -508,8 +509,8 @@ async function getReportDataInternal(form, stream, year, term, admNo, branding) 
     overall_rank: overallRank,
     total_students: allStudentsResult.rows.length,
     summary_data: {
-      total_marks: totalMarks.toFixed(1),
-      average: average.toFixed(1),
+      total_marks: formatReportScore(totalMarks),
+      average: formatReportScore(average),
       grade: overallGrade,
       division: division || '0',
       division_point: divisionPoint !== null ? divisionPoint.toString() : '0',
