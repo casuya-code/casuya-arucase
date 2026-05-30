@@ -239,6 +239,112 @@
   border-color: #fca5a5 !important;
 }
 
+.db-backups-btn-restore:not(:disabled) {
+  background: #fff7ed !important;
+  color: #c2410c !important;
+  border-color: #fdba74 !important;
+}
+
+.db-backups-btn-restore:hover:not(:disabled) {
+  background: #ffedd5 !important;
+  border-color: #fb923c !important;
+}
+
+.db-backups-restore-banner {
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+  padding: 0.875rem 1rem;
+  border: 1px solid #fed7aa;
+  background: #fff7ed;
+  color: #9a3412;
+}
+
+.db-backups-restore-banner i {
+  margin-top: 0.15rem;
+}
+
+.db-backups-restore-banner p {
+  margin: 0;
+  font-size: 0.9375rem;
+  line-height: 1.5;
+}
+
+/* —— Restore from device —— */
+.db-backups-restore-panel {
+  border: 1px solid #fdba74;
+  background: #fffbeb;
+}
+
+.db-backups-restore-panel-header {
+  padding: 0.875rem 1.125rem;
+  background: #ffffff;
+  border-bottom: 1px solid #fed7aa;
+}
+
+.db-backups-restore-panel-desc {
+  margin: 0.35rem 0 0;
+  font-size: 0.875rem;
+  color: #6b7280;
+  line-height: 1.5;
+}
+
+.db-backups-restore-panel-body {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
+  padding: 1rem 1.125rem;
+}
+
+.db-backups-file-input {
+  display: none;
+}
+
+.db-backups-selected-file {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex: 1;
+  min-width: 12rem;
+  padding: 0.45rem 0.65rem;
+  background: #ffffff;
+  border: 1px solid #d1d5db;
+}
+
+.db-backups-selected-file-name {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  min-width: 0;
+  font-family: ui-monospace, 'Cascadia Code', 'Segoe UI Mono', monospace;
+  font-size: 0.8125rem;
+  color: #1f2937;
+  word-break: break-all;
+}
+
+.db-backups-selected-file-size {
+  flex-shrink: 0;
+  font-size: 0.8125rem;
+  color: #6b7280;
+}
+
+.db-backups-btn-clear-file {
+  flex-shrink: 0;
+  background: #ffffff !important;
+  color: #6b7280 !important;
+  border: 1px solid #d1d5db !important;
+  padding: 0.25rem 0.45rem !important;
+}
+
+.db-backups-no-file {
+  flex: 1;
+  min-width: 8rem;
+  font-size: 0.875rem;
+  color: #9ca3af;
+  font-style: italic;
+}
+
 /* —— States —— */
 .db-backups-error {
   display: flex;
@@ -340,6 +446,16 @@
   }
 
   .db-backups-row-actions .excel-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .db-backups-restore-panel-body {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .db-backups-restore-panel-body .excel-btn {
     width: 100%;
     justify-content: center;
   }

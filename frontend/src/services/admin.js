@@ -67,6 +67,14 @@ export const adminAPI = {
   // ========== DATABASE BACKUPS ==========
   getDatabaseBackups: () => api.get('/admin/database-backups'),
   runDatabaseBackup: () => api.post('/admin/database-backups/run'),
+  restoreDatabaseBackup: (filename, options = {}) =>
+    api.post('/admin/database-backups/restore', { filename, ...options }, { timeout: 600000 }),
+  restoreDatabaseBackupFromFile: (file, options = {}) => {
+    const formData = new FormData();
+    formData.append('backup_file', file);
+    if (options.clean === false) formData.append('clean', 'false');
+    return api.post('/admin/database-backups/restore-upload', formData, { timeout: 600000 });
+  },
   deleteDatabaseBackup: (filename) => api.delete(`/admin/database-backups/${encodeURIComponent(filename)}`),
   downloadDatabaseBackup: (filename) =>
     api.get('/admin/database-backups/download', {

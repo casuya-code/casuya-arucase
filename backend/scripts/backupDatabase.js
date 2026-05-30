@@ -357,6 +357,44 @@ async function createBackup({ verify = true } = {}) {
   return toBackupRecord(outFile, stat);
 }
 
+async function restoreBackup(dumpPath, { clean = true } = {}) {
+  if (!dumpPath || !fs.existsSync(dumpPath)) {
+    throw new Error('Backup file not found');
+  }
+
+  const { pgRestoreCmd } = await resolvePgTools();
+  if (!pgRestoreCmd) {
+    throw new Error(
+      'pg_restore is not available in PATH. Install PostgreSQL client tools and restart the server.'
+    );
+  }
+
+  const env = pgToolEnv({ ...process.env });
+  const args = [];
+  if (clean) {
+    args.push('--clean', '--if-exists');
+  }
+  const jobs = parseInt(process.env.PG_RESTORE_JOBS, 10);
+  if (Number.isFinite(jobs) && jobs > 1) {
+    args.push('--jobs', String(Math.min(jobs, 8)));
+  }
+  args.push('-d');
+
+  const normalizedDatabaseUrl = env.DATABASE_URL
+    ? normalizeDatabaseUrlForPgTools(env.DATABASE_URL)
+    : null;
+  if (normalizedDatabaseUrl) {
+    args.push(normalizedDatabaseUrl);
+  } else {
+    const db = env.PGDATABASE || env.POSTGRES_DB || 'railway';
+    args.push(db);
+  }
+  args.push(dumpPath);
+
+  await runCmd(pgRestoreCmd, args, env);
+  return { restoredFrom: path.basename(dumpPath) };
+}
+
 async function main() {
   const verify =
     process.env.BACKUP_VERIFY === undefined ||
@@ -378,6 +416,7 @@ if (require.main === module) {
 module.exports = {
   backupsDir,
   createBackup,
+  restoreBackup,
   listBackups,
   pruneBackups,
 };

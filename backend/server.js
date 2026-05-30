@@ -37,6 +37,13 @@ async function validateCloudinaryCredentials() {
     console.error('❌ CLOUDINARY ERROR: Missing required environment variables:');
     missing.forEach(v => console.error(`   - ${v}`));
     console.error('⚠️  Photo uploads will fail. Set these variables in Railway or your .env file.');
+    console.error('   Authority signatures will use local disk storage until Cloudinary is configured.');
+    return false;
+  }
+
+  if (!cloudinary.isCloudinaryConfigured()) {
+    console.warn('⚠️  Cloudinary env vars look like placeholders — using local disk for authority signatures.');
+    console.warn('   Set real CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET for cloud uploads.');
     return false;
   }
 

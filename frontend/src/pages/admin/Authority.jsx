@@ -304,7 +304,7 @@ const Authority = () => {
                           {dragActive ? 'Drop here' : 'Click or drag to upload'}
                         </p>
                         <p className="upload-hint-small">
-                          200-400px × 40-80px
+                          200-400px × 20-40px
                         </p>
                       </div>
 

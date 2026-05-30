@@ -105,10 +105,10 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
   const authoritySignatureImageUrl = getAuthoritySignatureImageUrl(authority_data, staticOrigin);
   const authoritySignatureText = getAuthoritySignatureText(authority_data);
   const authoritySignatureCellHtml = authoritySignatureImageUrl
-    ? `<img src="${authoritySignatureImageUrl}" alt="Signature" class="signature-image" style="max-width: 300px; max-height: 60px;" />`
+    ? `<img src="${authoritySignatureImageUrl}" alt="Signature" class="signature-image" style="max-width: 300px; max-height: 30px;" />`
     : (authoritySignatureText || '');
   const authoritySignatureBlockHtml = authoritySignatureImageUrl
-    ? `<div class="signature-image-container" style="text-align: left; margin-bottom: 5px;"><img src="${authoritySignatureImageUrl}" alt="Signature" class="signature-image" style="max-width: 300px; max-height: 60px; display: inline-block; vertical-align: bottom;" /></div>`
+    ? `<div class="signature-image-container" style="text-align: left; margin-bottom: 5px;"><img src="${authoritySignatureImageUrl}" alt="Signature" class="signature-image" style="max-width: 300px; max-height: 30px; display: inline-block; vertical-align: bottom;" /></div>`
     : (authoritySignatureText
       ? `<div class="signature-text authority-signature">${authoritySignatureText}</div>`
       : '');

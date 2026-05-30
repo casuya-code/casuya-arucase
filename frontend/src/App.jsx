@@ -340,7 +340,7 @@ function App() {
             <Route
               path="/admin/department-contacts"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredAdmin>
                   <AdminDepartmentContacts />
                 </ProtectedRoute>
               }

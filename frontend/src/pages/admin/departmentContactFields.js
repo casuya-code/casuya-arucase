@@ -72,3 +72,10 @@ export const EMPTY_SITE_CONTACT_FORM = SITE_CONTACT_FIELD_GROUPS.reduce((acc, gr
   return acc;
 }, {});
 EMPTY_SITE_CONTACT_FORM.footer_copyright = 'Arusha Catholic Seminary';
+
+/** Flat field list — use for validation; keep SITE_CONTACT_FIELDS in admin.js in sync */
+export const SITE_CONTACT_FIELDS_FLAT = SITE_CONTACT_FIELD_GROUPS.flatMap((group) => group.fields);
+
+export function siteContactFieldLabel(key) {
+  return SITE_CONTACT_FIELDS_FLAT.find((f) => f.key === key)?.label || key;
+}

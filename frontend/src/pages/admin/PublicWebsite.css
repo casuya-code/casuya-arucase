@@ -865,8 +865,57 @@
 }
 
 /* Department Contacts Styles */
-.department-contacts-form {
+.department-contacts-card .admin-page-description.department-contacts-intro {
+  margin: 0 0 1rem;
+  padding: 0 1.5rem;
+  max-width: 52rem;
+  color: #4b5563;
+  font-size: 0.9375rem;
+  line-height: 1.55;
+}
+
+.department-contacts-loading {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
   padding: 1.5rem;
+}
+
+.department-contacts-form {
+  padding: 0 1.5rem 1.5rem;
+}
+
+.department-contacts-form-actions {
+  position: sticky;
+  bottom: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 0.75rem;
+  margin-top: 1rem;
+  padding: 0.875rem 0;
+  background: linear-gradient(to top, #ffffff 75%, rgba(255, 255, 255, 0));
+  border-top: 1px solid #e5e7eb;
+}
+
+.department-contacts-unsaved {
+  margin-right: auto;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #b45309;
+}
+
+.field-error {
+  display: block;
+  margin-top: 0.35rem;
+  color: #dc2626;
+  font-size: 0.8125rem;
+}
+
+.excel-input.excel-input--invalid {
+  border-color: #fca5a5;
+  background: #fef2f2;
 }
 
 .form-section {

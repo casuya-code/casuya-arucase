@@ -1161,7 +1161,7 @@ const IndividualReportDetail = () => {
                       src={authoritySignatureImageUrl}
                       alt="Signature"
                       className="signature-image"
-                      style={{ maxWidth: '300px', maxHeight: '60px' }}
+                      style={{ maxWidth: '300px', maxHeight: '30px' }}
                       onError={(e) => {
                         if (import.meta.env.DEV) {
                           console.warn('[Report] Signature image load error:', e.target.src);
@@ -1322,7 +1322,7 @@ const IndividualReportDetail = () => {
                   src={authoritySignatureImageUrl}
                   alt="Signature"
                   className="signature-image"
-                  style={{ maxWidth: '300px', maxHeight: '60px', display: 'inline-block', verticalAlign: 'bottom' }}
+                  style={{ maxWidth: '300px', maxHeight: '30px', display: 'inline-block', verticalAlign: 'bottom' }}
                   onError={(e) => {
                     if (import.meta.env.DEV) {
                       console.warn('[Report] Signature image load error:', e.target.src);

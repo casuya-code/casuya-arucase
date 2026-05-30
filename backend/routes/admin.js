@@ -13,7 +13,13 @@ const { query, withTransaction } = require('../config/database');
 const { cacheRoutes, clearCachePattern } = require('../middleware/cache');
 const { saveUserActivity } = require('../utils/activityLogger');
 const bcrypt = require('bcryptjs');
-const { createBackup, listBackups, pruneBackups, backupsDir } = require('../scripts/backupDatabase');
+const {
+  createBackup,
+  restoreBackup,
+  listBackups,
+  pruneBackups,
+  backupsDir,
+} = require('../scripts/backupDatabase');
 const { extractText } = require('../utils/documentParser');
 const { getClient, callMistral } = require('../utils/mistral');
 const { getNectaSummaryForAI } = require('../utils/nectaAnalyticsForAI');
@@ -461,7 +467,12 @@ function runCloudinaryUpload(label, multerFn, req, res, next) {
       if (err instanceof multer.MulterError) {
         return res.status(400).json({ message: `Upload error: ${err.message}` });
       }
-      return res.status(500).json({ message: `Upload failed: ${err.message}` });
+      const errMsg = String(err.message || err);
+      const cloudinaryHint =
+        /cloudinary|cloud_name|invalid api key|401|403|disabled/i.test(errMsg)
+          ? ' Check CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, and CLOUDINARY_API_SECRET in backend/.env.'
+          : '';
+      return res.status(500).json({ message: `Upload failed: ${errMsg}${cloudinaryHint}` });
     }
 
     // Log what Cloudinary returned so we can see exactly where things stand
@@ -1186,7 +1197,7 @@ router.post('/authority-data/upload-signature', requireRole('admin', 'superadmin
     }
 
     // Delete old signature from Cloudinary if it exists
-    if (oldCloudinaryPublicId) {
+    if (oldCloudinaryPublicId && cloudinary.isCloudinaryConfigured()) {
       try {
         await cloudinary.uploader.destroy(oldCloudinaryPublicId);
       } catch (err) {
@@ -1194,7 +1205,24 @@ router.post('/authority-data/upload-signature', requireRole('admin', 'superadmin
       }
     }
 
+    // Delete previous local signature file when replacing with a new local upload
     const isCloudinaryUpload = /^https?:\/\//i.test(String(req.file.path || ''));
+    if (!isCloudinaryUpload) {
+      try {
+        const oldPathResult = await query(
+          'SELECT signature_image_path FROM authority_data WHERE id = 1'
+        );
+        const oldPath = oldPathResult.rows[0]?.signature_image_path;
+        if (oldPath && !/^https?:\/\//i.test(oldPath)) {
+          const relative = String(oldPath).replace(/^\/+/, '').replace(/^static\//, '');
+          const absolute = path.join(__dirname, '../static', relative);
+          await fs.unlink(absolute).catch(() => {});
+        }
+      } catch (err) {
+        console.warn('[AUTHORITY SIGNATURE] Failed to delete old local signature file:', err.message);
+      }
+    }
+
     const signaturePath = isCloudinaryUpload
       ? req.file.path
       : `uploads/authority-signatures/${req.file.filename}`;
@@ -2677,8 +2705,49 @@ const SITE_CONTACT_FIELDS = [
   'social_heading',
 ];
 
+// Keep in sync with departmentContactFields.js (type: email | url)
+const SITE_CONTACT_EMAIL_FIELDS = [
+  'contact_email',
+  'admissions_email',
+  'academics_email',
+  'bursar_email',
+  'alumni_email',
+  'parents_email',
+];
+
+const SITE_CONTACT_URL_FIELDS = [
+  'social_location',
+  'social_youtube',
+  'social_facebook',
+  'social_instagram',
+  'social_twitter',
+];
+
+function validateSiteContactPayload(body) {
+  const errors = [];
+  for (const key of SITE_CONTACT_EMAIL_FIELDS) {
+    const value = String(body?.[key] ?? '').trim();
+    if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) {
+      errors.push(`Invalid email for ${key.replace(/_/g, ' ')}`);
+    }
+  }
+  for (const key of SITE_CONTACT_URL_FIELDS) {
+    const value = String(body?.[key] ?? '').trim();
+    if (!value) continue;
+    try {
+      const parsed = new URL(value);
+      if (!['http:', 'https:'].includes(parsed.protocol)) {
+        errors.push(`URL must start with http:// or https:// (${key.replace(/_/g, ' ')})`);
+      }
+    } catch {
+      errors.push(`Invalid URL for ${key.replace(/_/g, ' ')}`);
+    }
+  }
+  return errors;
+}
+
 // Get department contacts (from website settings)
-router.get('/department-contacts', async (req, res) => {
+router.get('/department-contacts', requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     await ensureDepartmentContactColumns();
     const cols = SITE_CONTACT_FIELDS.join(', ');
@@ -2699,9 +2768,14 @@ router.get('/department-contacts', async (req, res) => {
 });
 
 // Update department + site contact fields (website_settings row id=1)
-router.post('/department-contacts', async (req, res) => {
+router.post('/department-contacts', requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     await ensureDepartmentContactColumns();
+    const validationErrors = validateSiteContactPayload(req.body);
+    if (validationErrors.length > 0) {
+      return res.status(400).json({ message: validationErrors[0] });
+    }
+
     const values = SITE_CONTACT_FIELDS.map((key) => req.body[key] ?? '');
     
     const existing = await query('SELECT id FROM website_settings WHERE id = 1');
@@ -3507,6 +3581,36 @@ router.post('/pass-ids/regenerate', async (req, res) => {
   }
 });
 
+const backupRestoreUploadDir = path.join(backupsDir, 'restore-uploads');
+const backupRestoreUploadMaxBytes =
+  Math.max(1, parseInt(process.env.BACKUP_UPLOAD_MAX_MB, 10) || 512) * 1024 * 1024;
+
+const backupRestoreUpload = multer({
+  storage: multer.diskStorage({
+    destination: (req, file, cb) => {
+      try {
+        fsSync.mkdirSync(backupRestoreUploadDir, { recursive: true });
+        cb(null, backupRestoreUploadDir);
+      } catch (err) {
+        cb(err);
+      }
+    },
+    filename: (req, file, cb) => {
+      const safeBase = path.basename(file.originalname).replace(/[^\w.-]/g, '_');
+      cb(null, `upload_${Date.now()}_${safeBase}`);
+    },
+  }),
+  limits: { fileSize: backupRestoreUploadMaxBytes },
+  fileFilter: (req, file, cb) => {
+    const ext = path.extname(file.originalname).toLowerCase();
+    if (ext === '.dump') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PostgreSQL .dump backup files are allowed'));
+    }
+  },
+});
+
 router.get('/database-backups', requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     pruneBackups();
@@ -3549,19 +3653,94 @@ router.post('/database-backups/run', requireRole('admin', 'superadmin'), async (
   } catch (error) {
     console.error('Failed to create database backup:', error);
     const message = error?.message || 'Failed to create backup';
-    const isOperationalBackupIssue =
-      /pg_dump is not available/i.test(message) ||
-      /pg_dump \d+\+ is not available/i.test(message) ||
-      /server version mismatch/i.test(message) ||
-      /pg_restore/i.test(message) ||
-      /exited with code/i.test(message) ||
-      /not recognized as an internal or external command/i.test(message) ||
-      /spawn .*ENOENT/i.test(message);
+    const isOperationalBackupIssue = isOperationalPgBackupError(message);
     return res.status(isOperationalBackupIssue ? 400 : 500).json({
       message: isOperationalBackupIssue ? message : `Failed to create backup. ${message}`,
     });
   }
 });
+
+router.post('/database-backups/restore', requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    const filename = req.body?.filename;
+    const resolved = resolveSafeBackupPath(filename);
+    if (resolved.error) {
+      return res.status(resolved.status || 400).json({ message: resolved.error });
+    }
+
+    const clean = req.body?.clean !== false;
+    const result = await restoreBackup(resolved.fullPath, { clean });
+    return res.json({
+      message: 'Database restored successfully',
+      restoredFrom: result.restoredFrom,
+    });
+  } catch (error) {
+    console.error('Failed to restore database backup:', error);
+    const message = error?.message || 'Failed to restore backup';
+    const isOperationalBackupIssue = isOperationalPgBackupError(message);
+    return res.status(isOperationalBackupIssue ? 400 : 500).json({
+      message: isOperationalBackupIssue ? message : `Failed to restore backup. ${message}`,
+    });
+  }
+});
+
+router.post('/database-backups/restore-upload', requireRole('admin', 'superadmin'), (req, res, next) => {
+  backupRestoreUpload.single('backup_file')(req, res, (err) => {
+    if (err) {
+      const maxMb = Math.round(backupRestoreUploadMaxBytes / 1024 / 1024);
+      const message =
+        err.code === 'LIMIT_FILE_SIZE'
+          ? `Backup file is too large (max ${maxMb} MB)`
+          : err.message || 'Invalid backup file upload';
+      return res.status(400).json({ message });
+    }
+    next();
+  });
+}, async (req, res) => {
+  let uploadedPath = null;
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'No backup file uploaded' });
+    }
+
+    uploadedPath = req.file.path;
+    const clean = req.body?.clean !== 'false';
+    const result = await restoreBackup(uploadedPath, { clean });
+    return res.json({
+      message: 'Database restored successfully',
+      restoredFrom: result.restoredFrom,
+    });
+  } catch (error) {
+    console.error('Failed to restore uploaded database backup:', error);
+    const message = error?.message || 'Failed to restore backup';
+    const isOperationalBackupIssue = isOperationalPgBackupError(message);
+    return res.status(isOperationalBackupIssue ? 400 : 500).json({
+      message: isOperationalBackupIssue ? message : `Failed to restore backup. ${message}`,
+    });
+  } finally {
+    if (uploadedPath) {
+      try {
+        await fs.unlink(uploadedPath);
+      } catch {
+        /* ignore cleanup errors */
+      }
+    }
+  }
+});
+
+function isOperationalPgBackupError(message) {
+  return (
+    /pg_dump is not available/i.test(message) ||
+    /pg_dump \d+\+ is not available/i.test(message) ||
+    /pg_restore is not available/i.test(message) ||
+    /server version mismatch/i.test(message) ||
+    /pg_restore/i.test(message) ||
+    /exited with code/i.test(message) ||
+    /not recognized as an internal or external command/i.test(message) ||
+    /spawn .*ENOENT/i.test(message) ||
+    /Backup file not found/i.test(message)
+  );
+}
 
 function resolveSafeBackupPath(filename) {
   let decoded = String(filename || '').trim();

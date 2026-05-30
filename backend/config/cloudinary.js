@@ -36,12 +36,37 @@ cloudinary.config({
   secure: true,
 });
 
+const PLACEHOLDER_CREDENTIALS = new Set([
+  'your-cloud-name',
+  'your-api-key',
+  'your-api-secret',
+  'xxx',
+  'changeme',
+  'replace-me',
+]);
+
+function isPlaceholderCredential(value) {
+  if (value == null) return true;
+  const normalized = String(value).trim().toLowerCase();
+  if (!normalized) return true;
+  return PLACEHOLDER_CREDENTIALS.has(normalized);
+}
+
 /**
- * Returns true when all required Cloudinary env vars are present and the
- * v2 uploader object is available.
+ * Returns true when all required Cloudinary env vars are present, non-placeholder,
+ * and the v2 uploader object is available.
  */
 function isCloudinaryConfigured() {
-  return missingVars.length === 0 && typeof cloudinary.uploader !== 'undefined';
+  if (missingVars.length > 0 || typeof cloudinary.uploader === 'undefined') {
+    return false;
+  }
+
+  const hasRealCredentials =
+    !isPlaceholderCredential(process.env.CLOUDINARY_CLOUD_NAME) &&
+    !isPlaceholderCredential(process.env.CLOUDINARY_API_KEY) &&
+    !isPlaceholderCredential(process.env.CLOUDINARY_API_SECRET);
+
+  return hasRealCredentials;
 }
 
 /**
@@ -142,6 +167,7 @@ function createCloudinaryStorage({
 // The full module and the helper are available as named properties.
 cloudinary.cloudinaryModule = cloudinaryModule;
 cloudinary.isCloudinaryConfigured = isCloudinaryConfigured;
+cloudinary.isPlaceholderCredential = isPlaceholderCredential;
 cloudinary.createCloudinaryStorage = createCloudinaryStorage;
 
 module.exports = cloudinary;
