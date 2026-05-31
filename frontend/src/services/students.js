@@ -258,6 +258,25 @@ export const studentsAPI = {
     });
   },
 
+  // Download Photo Entry Form PDF for all Form V/VI streams combined
+  downloadAllStreamsPhotoEntryFormPDF: (level, year, month = null, term = null, streams = null) => {
+    const params = new URLSearchParams();
+    params.append('level', level);
+    params.append('year', year.toString());
+    if (month) {
+      params.append('month', month);
+    }
+    if (term) {
+      params.append('term', term);
+    }
+    if (streams?.length) {
+      params.append('streams', streams.join(','));
+    }
+    return api.get(`/students/photo-entry-form/all-streams/pdf?${params.toString()}`, {
+      responseType: 'blob',
+    });
+  },
+
   // Clear scores for specific students
   clearScores: (params) => {
     const queryString = new URLSearchParams(params).toString();

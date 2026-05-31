@@ -185,3 +185,71 @@
   margin: 0;
 }
 
+.photo-stream-selection-download-section {
+  margin-bottom: 20px;
+  padding: 16px;
+  background: #f8fafc;
+  border: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.photo-stream-selection-download-section h3 {
+  margin: 0 0 8px 0;
+  color: #1e293b;
+  font-size: 1rem;
+}
+
+.photo-stream-selection-download-section p {
+  margin: 0 0 12px 0;
+  color: #64748b;
+  font-size: 0.875rem;
+}
+
+.photo-stream-selection-download-controls {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.photo-stream-selection-download-field {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  font-size: 0.875rem;
+  color: #334155;
+}
+
+.photo-stream-selection-download-field select {
+  padding: 6px 10px;
+  border: 1px solid #e5e7eb;
+  background: #ffffff;
+  font-size: 0.875rem;
+  min-width: 180px;
+}
+
+.photo-stream-selection-download-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 16px;
+  background: #01a72b;
+  color: #000000;
+  border: none;
+  font-weight: 600;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.photo-stream-selection-download-btn:hover:not(:disabled) {
+  background: #028a23;
+}
+
+.photo-stream-selection-download-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+

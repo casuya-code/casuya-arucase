@@ -15,7 +15,7 @@ const {
 const { buildBulkDeleteConfirmPhrase } = require('../utils/classScope');
 const { query, withTransaction } = require('../config/database');
 const { saveUserActivity } = require('../utils/activityLogger');
-const { generatePhotoEntryFormPDF, generateMonthlyResultsPDF } = require('../utils/pdfGenerator');
+const { generatePhotoEntryFormPDF, generateAllStreamsPhotoEntryFormPDF, generateMonthlyResultsPDF } = require('../utils/pdfGenerator');
 const { normalizeStream } = require('../utils/streamNormalizer');
 const { sendError } = require('../utils/safeError');
 const { cacheRoutes } = require('../middleware/cache');
@@ -1871,6 +1871,51 @@ router.get('/photo-entry-form/pdf', async (req, res) => {
     res.send(pdfBuffer);
   } catch (error) {
     console.error('Error generating Photo Entry Form PDF:', error);
+    return sendError(res, error, 500);
+  }
+});
+
+// Download Photo Entry Form PDF for all Form V/VI streams combined
+router.get('/photo-entry-form/all-streams/pdf', async (req, res) => {
+  try {
+    const { level, year, month, term, streams } = req.query;
+
+    if (!level || !year) {
+      return res.status(400).json({ message: 'level and year are required' });
+    }
+
+    const normalizedLevel = level.trim().toUpperCase();
+    if (normalizedLevel !== 'FORM V' && normalizedLevel !== 'FORM VI') {
+      return res.status(400).json({ message: 'All-streams download is only available for FORM V and FORM VI' });
+    }
+
+    const yearNum = parseInt(year);
+    if (isNaN(yearNum) || yearNum <= 0) {
+      return res.status(400).json({ message: 'Invalid year' });
+    }
+
+    const streamCodes = streams
+      ? streams.split(',').map((s) => s.trim().toUpperCase()).filter(Boolean)
+      : null;
+
+    const pdfBuffer = await generateAllStreamsPhotoEntryFormPDF(
+      normalizedLevel,
+      yearNum,
+      month || null,
+      term || null,
+      streamCodes
+    );
+
+    const termSuffix = term ? `_${term.replace(/\s+/g, '_')}` : '';
+    const monthSuffix = month ? `_${month}` : '';
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="photo_entry_form_${normalizedLevel.replace(/\s+/g, '_')}_ALL_STREAMS_${yearNum}${monthSuffix}${termSuffix}.pdf"`
+    );
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('Error generating all-streams Photo Entry Form PDF:', error);
     return sendError(res, error, 500);
   }
 });

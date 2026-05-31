@@ -2,6 +2,7 @@
  * PDF Generation Utilities
  */
 const PDFDocument = require('pdfkit');
+const { PDFDocument: PDFLibDocument } = require('pdf-lib');
 const { query } = require('../config/database');
 const fs = require('fs').promises;
 const path = require('path');
@@ -1484,6 +1485,37 @@ async function generatePhotoEntryFormPDF(level, stream, year, month = null, term
   });
 }
 
+const FORM_VVI_STREAM_CODES = ['PCB', 'PCM', 'EGM', 'HGE', 'HGL', 'PGM'];
+
+async function generateAllStreamsPhotoEntryFormPDF(level, year, month = null, term = null, streamCodes = null) {
+  const streams = Array.isArray(streamCodes) && streamCodes.length > 0
+    ? streamCodes
+    : FORM_VVI_STREAM_CODES;
+
+  const mergedPdf = await PDFLibDocument.create();
+  let includedCount = 0;
+
+  for (const stream of streams) {
+    try {
+      const pdfBuffer = await generatePhotoEntryFormPDF(level, stream, year, month, term);
+      const streamPdf = await PDFLibDocument.load(pdfBuffer);
+      const pages = await mergedPdf.copyPages(streamPdf, streamPdf.getPageIndices());
+      pages.forEach((page) => mergedPdf.addPage(page));
+      includedCount += 1;
+    } catch (err) {
+      if (err.message !== 'No students found for this class') {
+        console.warn(`Photo Entry Form (all streams) — skipping ${stream}:`, err.message);
+      }
+    }
+  }
+
+  if (includedCount === 0) {
+    throw new Error('No students found for any stream');
+  }
+
+  return Buffer.from(await mergedPdf.save());
+}
+
 /**
  * Generate Monthly Results PDF using Puppeteer
  * Generates PDF directly from database data (no frontend scraping)
@@ -2185,6 +2217,7 @@ module.exports = {
   generateIndividualReportPDF,
   generateBulkReportPDF,
   generatePhotoEntryFormPDF,
+  generateAllStreamsPhotoEntryFormPDF,
   generateMonthlyResultsPDF
 };
 
