@@ -370,7 +370,16 @@ app.use(customSecurityHeaders);
 app.use(securityMonitor);
 app.use(globalApiRateLimit);
 
-app.use(compression());
+app.use(
+  compression({
+    filter: (req, res) => {
+      const p = req.path || '';
+      if (p.includes('/database-backups/download')) return false;
+      if (/\/database-backups\/arucase_.*\.dump/i.test(p)) return false;
+      return compression.filter(req, res);
+    },
+  })
+);
 app.use(cookieParser());
 app.use(
   cors({

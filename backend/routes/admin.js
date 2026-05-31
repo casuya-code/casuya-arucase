@@ -3770,7 +3770,25 @@ function sendBackupDownload(req, res) {
     if (resolved.error) {
       return res.status(resolved.status || 400).json({ message: resolved.error });
     }
-    return res.download(resolved.fullPath, resolved.safeName);
+
+    const stat = fsSync.statSync(resolved.fullPath);
+    res.setHeader('Content-Type', 'application/octet-stream');
+    res.setHeader('Content-Disposition', `attachment; filename="${resolved.safeName}"`);
+    res.setHeader('Content-Length', stat.size);
+    res.setHeader('Cache-Control', 'private, no-cache');
+    res.setHeader('Cross-Origin-Resource-Policy', 'cross-origin');
+    res.setHeader('X-Accel-Buffering', 'no');
+
+    const stream = fsSync.createReadStream(resolved.fullPath);
+    stream.on('error', (err) => {
+      console.error('Backup download stream error:', err);
+      if (!res.headersSent) {
+        res.status(500).json({ message: 'Failed to stream backup file' });
+      } else {
+        res.destroy(err);
+      }
+    });
+    stream.pipe(res);
   } catch (error) {
     console.error('Failed to download database backup:', error);
     return res.status(500).json({ message: 'Failed to download backup file' });

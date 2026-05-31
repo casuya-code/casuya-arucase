@@ -8,29 +8,21 @@ import { getAxiosBaseURL } from '../../utils/backendUrl';
 import { toast } from '../../utils/toast';
 import './DatabaseBackups.css';
 
-/** Download via query param (works with cookies + optional Bearer token). */
-async function fetchBackupBlob(filename) {
+function buildBackupDownloadUrl(filename) {
   const base = getAxiosBaseURL().replace(/\/$/, '');
-  const url = `${base}/admin/database-backups/download?${new URLSearchParams({ filename })}`;
-  const headers = {};
-  const token = localStorage.getItem('token');
-  if (token) headers.Authorization = `Bearer ${token}`;
+  return `${base}/admin/database-backups/download?${new URLSearchParams({ filename })}`;
+}
 
-  const res = await fetch(url, { credentials: 'include', headers });
-  if (!res.ok) {
-    let message = `Download failed (${res.status})`;
-    const contentType = res.headers.get('content-type') || '';
-    if (contentType.includes('application/json')) {
-      try {
-        const body = await res.json();
-        if (body?.message) message = body.message;
-      } catch {
-        /* ignore */
-      }
-    }
-    throw new Error(message);
-  }
-  return res.blob();
+/** Open download URL in a new tab (streams file; avoids buffering large .dump in memory). */
+function startBackupDownload(filename) {
+  const url = buildBackupDownloadUrl(filename);
+  const link = document.createElement('a');
+  link.href = url;
+  link.target = '_blank';
+  link.rel = 'noopener noreferrer';
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
 }
 
 function formatBytes(bytes) {
@@ -49,17 +41,6 @@ function formatBytes(bytes) {
 function formatDate(isoDate) {
   if (!isoDate) return '—';
   return new Date(isoDate).toLocaleString();
-}
-
-function triggerBrowserDownload(blob, filename) {
-  const blobUrl = window.URL.createObjectURL(blob);
-  const link = document.createElement('a');
-  link.href = blobUrl;
-  link.download = filename;
-  document.body.appendChild(link);
-  link.click();
-  link.remove();
-  window.URL.revokeObjectURL(blobUrl);
 }
 
 const DatabaseBackups = () => {
@@ -105,11 +86,10 @@ const DatabaseBackups = () => {
   const downloadBackupMutation = useMutation({
     retry: false,
     mutationFn: async (filename) => {
-      const blob = await fetchBackupBlob(filename);
-      return { filename, blob };
+      startBackupDownload(filename);
+      return filename;
     },
-    onSuccess: ({ filename, blob }) => {
-      triggerBrowserDownload(blob, filename);
+    onSuccess: (filename) => {
       toast.success(`Download started: ${filename}`);
     },
     onError: (err) => {
