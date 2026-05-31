@@ -688,6 +688,17 @@ table {
         page-break-inside: avoid !important;
         break-inside: avoid !important;
     }
+
+    /* Keep MAMBO + signature/stamp on the same page (avoid orphan stamp on page 3) */
+    .report-closing-block {
+        page-break-inside: avoid !important;
+        break-inside: avoid-page !important;
+    }
+
+    .report-closing-block .signature-stamp-section {
+        page-break-before: avoid !important;
+        break-before: avoid-page !important;
+    }
     
     .instructions {
         font-size: 13.5px !important;

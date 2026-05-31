@@ -68,56 +68,85 @@ function uniquifyBulkReportImageSrc(html) {
 
 /** Bulk multi-page PDF: grid header so logo/photo stay on every student (flex+absolute breaks after page 1). */
 const BULK_MULTI_PAGE_HEADER_CSS = `
-    .report-container {
-      min-height: 0 !important;
-      overflow: visible !important;
-      overflow-x: visible !important;
-      page-break-after: always;
-    }
-    .report-container:last-child {
-      page-break-after: auto;
-    }
-    .report-container .report-header {
-      display: grid !important;
-      grid-template-columns: 90px minmax(0, 1fr) 90px !important;
-      align-items: center !important;
-      gap: 8px !important;
-      min-height: 104px !important;
-      position: relative !important;
-      overflow: visible !important;
-      box-sizing: border-box !important;
-      margin-bottom: 0 !important;
-      padding: 5px 4px 8px 4px !important;
-    }
-    .report-container .report-header .school-info {
-      grid-column: 2 !important;
-      min-width: 0 !important;
-    }
-    .report-container .logo-section {
-      grid-column: 1 !important;
-      position: relative !important;
-      left: auto !important;
-      right: auto !important;
-      top: auto !important;
-    }
-    .report-container .student-photo {
-      grid-column: 3 !important;
-      position: relative !important;
-      left: auto !important;
-      right: auto !important;
-      top: auto !important;
-    }
-    .report-container .logo-section,
-    .report-container .student-photo {
-      display: flex !important;
-      visibility: visible !important;
-      opacity: 1 !important;
-    }
-    .report-container .school-logo,
-    .report-container .photo {
-      display: block !important;
-      visibility: visible !important;
-      opacity: 1 !important;
+    @media print {
+      .bulk-pdf-document .report-container {
+        min-height: 0 !important;
+        overflow: visible !important;
+        overflow-x: visible !important;
+        page-break-after: always;
+        break-after: page;
+      }
+      .bulk-pdf-document .report-container:last-child {
+        page-break-after: auto;
+        break-after: auto;
+      }
+      .bulk-pdf-document .report-container .report-header {
+        display: grid !important;
+        grid-template-columns: 90px minmax(0, 1fr) 90px !important;
+        align-items: center !important;
+        gap: 8px !important;
+        min-height: 104px !important;
+        position: relative !important;
+        overflow: visible !important;
+        box-sizing: border-box !important;
+        margin-bottom: 4px !important;
+        padding: 10px 4px 8px 4px !important;
+      }
+      .bulk-pdf-document .report-container .report-header .school-info {
+        grid-column: 2 !important;
+        min-width: 0 !important;
+      }
+      .bulk-pdf-document .report-container .logo-section {
+        grid-column: 1 !important;
+        position: relative !important;
+        left: auto !important;
+        right: auto !important;
+        top: auto !important;
+      }
+      .bulk-pdf-document .report-container .student-photo {
+        grid-column: 3 !important;
+        position: relative !important;
+        left: auto !important;
+        right: auto !important;
+        top: auto !important;
+      }
+      .bulk-pdf-document .report-container .logo-section,
+      .bulk-pdf-document .report-container .student-photo {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+      .bulk-pdf-document .report-container .school-logo,
+      .bulk-pdf-document .report-container .photo {
+        display: block !important;
+        visibility: visible !important;
+        opacity: 1 !important;
+      }
+      /* Keep MAMBO + signature/stamp on page 2 (match individual 2-page layout) */
+      .bulk-pdf-document .report-closing-block {
+        page-break-inside: avoid !important;
+        break-inside: avoid-page !important;
+      }
+      .bulk-pdf-document .report-closing-block .signature-stamp-section {
+        page-break-before: avoid !important;
+        break-before: avoid-page !important;
+        margin-top: 4px !important;
+        min-height: 0 !important;
+        padding: 2px 0 !important;
+      }
+      .bulk-pdf-document .report-section.section-mambo {
+        padding-bottom: 2px !important;
+        margin-bottom: 0 !important;
+      }
+      .bulk-pdf-document .report-section.section-maoni-taaluma,
+      .bulk-pdf-document .report-section.section-maoni {
+        margin-bottom: 1px !important;
+        padding-bottom: 2px !important;
+      }
+      .bulk-pdf-document .stamp-img {
+        max-width: 100px !important;
+        max-height: 100px !important;
+      }
     }
 `;
 
@@ -405,7 +434,7 @@ async function getReportDataInternal(form, stream, year, term, admNo, branding) 
 
   const subjectTeachersResult = await query(
     'SELECT subject_code, teacher_signature FROM subject_teachers WHERE level = $1 AND stream = $2 AND year = $3',
-    [form, normalizedStream, yearNum]
+    [form, actualStream, yearNum]
   );
   const subjectTeacherSignatures = {};
   subjectTeachersResult.rows.forEach((row) => {
@@ -449,10 +478,62 @@ async function getReportDataInternal(form, stream, year, term, admNo, branding) 
 }
 
 /**
- * Generate HTML for a single report (extract just the report-container content)
+ * Extract the full <div class="report-container">…</div> from generated report HTML
+ * so bulk PDF markup matches the individual report exactly (no double-wrapping).
  */
-async function generateSingleReportHTML(reportData, apiUrl = 'http://localhost:5000') {
-  const fullHTML = await generateReportHTML(reportData, apiUrl);
+function extractReportContainerHTML(fullHTML) {
+  const openNeedle = '<div class="report-container">';
+  const start = fullHTML.indexOf(openNeedle);
+  if (start === -1) {
+    const bodyMatch = fullHTML.match(/<body>([\s\S]*?)<\/body>/);
+    if (bodyMatch && bodyMatch[1]) {
+      return bodyMatch[1].trim();
+    }
+    return fullHTML;
+  }
+
+  let pos = start + openNeedle.length;
+  let depth = 1;
+  while (pos < fullHTML.length && depth > 0) {
+    const rest = fullHTML.slice(pos);
+    const closeRel = rest.indexOf('</div>');
+    if (closeRel === -1) break;
+    const beforeClose = rest.slice(0, closeRel);
+    const divOpen = /<div\b/i.exec(beforeClose);
+    if (divOpen) {
+      depth += 1;
+      const tagStartPos = pos + divOpen.index;
+      const gt = fullHTML.indexOf('>', tagStartPos);
+      if (gt === -1) break;
+      pos = gt + 1;
+      continue;
+    }
+    depth -= 1;
+    if (depth === 0) {
+      return fullHTML.slice(start, pos + closeRel + 6).trim();
+    }
+    pos += closeRel + 6;
+  }
+
+  console.warn('[BULK PDF] Could not extract report-container, using inner markup fallback');
+  return wrapReportInnerAsContainer(generateSingleReportInnerHTML(fullHTML));
+}
+
+function withBulkPageBreak(reportContainerHtml, applyBreak) {
+  if (!applyBreak) return reportContainerHtml;
+  if (/^<div class="report-container"\s/.test(reportContainerHtml)) {
+    return reportContainerHtml.replace(
+      /^<div class="report-container"/,
+      '<div class="report-container" style="page-break-before: always;"'
+    );
+  }
+  return `<div class="report-container" style="page-break-before: always;">${reportContainerHtml}</div>`;
+}
+
+/**
+ * Generate inner report HTML (legacy fallback when container extraction fails).
+ */
+function generateSingleReportInnerHTML(fullHTML) {
   const s = fullHTML.indexOf(REPORT_INNER_START);
   const e = fullHTML.indexOf(REPORT_INNER_END);
   if (s !== -1 && e !== -1 && e > s) {
@@ -491,6 +572,26 @@ async function generateSingleReportHTML(reportData, apiUrl = 'http://localhost:5
   }
   console.warn('[BULK PDF] Could not extract report inner markup, using full HTML');
   return fullHTML;
+}
+
+/** Wrap inner fallback markup in a report-container when full extraction fails. */
+function wrapReportInnerAsContainer(innerHtml) {
+  if (/^<div class="report-container"/.test(innerHtml)) {
+    return innerHtml;
+  }
+  return `<div class="report-container">${innerHtml}</div>`;
+}
+
+/**
+ * Generate HTML for a single report (full report-container, same structure as individual PDF).
+ */
+async function generateSingleReportHTML(reportData, apiUrl = 'http://localhost:5000') {
+  const fullHTML = await generateReportHTML(reportData, apiUrl);
+  const container = extractReportContainerHTML(fullHTML);
+  if (/^<div class="report-container"/.test(container)) {
+    return container;
+  }
+  return wrapReportInnerAsContainer(container);
 }
 
 /**
@@ -613,12 +714,8 @@ async function generateBulkReportPDFWithBatches(
     ${BULK_MULTI_PAGE_HEADER_CSS}
   </style>
 </head>
-<body>
-  ${reportHTMLs.map((html, index) => `
-  <div class="report-container" style="${index > 0 ? 'page-break-before: always;' : ''}">
-    ${html}
-  </div>
-  `).join('\n')}
+<body class="bulk-pdf-document">
+  ${reportHTMLs.map((html, index) => withBulkPageBreak(html, index > 0)).join('\n')}
 </body>
 </html>`;
 
@@ -758,6 +855,20 @@ async function generateBulkReportPDFWithBatches(
           img.style.setProperty('display', 'inline-block', 'important');
           img.style.setProperty('visibility', 'visible', 'important');
           img.style.setProperty('opacity', '1', 'important');
+        });
+        container.querySelectorAll('.report-closing-block .signature-stamp-section').forEach((el) => {
+          el.style.setProperty('margin-top', '4px', 'important');
+          el.style.setProperty('min-height', '0', 'important');
+          el.style.setProperty('padding', '2px 0', 'important');
+          el.style.setProperty('page-break-before', 'avoid', 'important');
+        });
+        container.querySelectorAll('.report-section.section-mambo').forEach((el) => {
+          el.style.setProperty('padding-bottom', '2px', 'important');
+          el.style.setProperty('margin-bottom', '0', 'important');
+        });
+        container.querySelectorAll('.stamp-img').forEach((img) => {
+          img.style.setProperty('max-width', '100px', 'important');
+          img.style.setProperty('max-height', '100px', 'important');
         });
 
         // Force MAONI column visibility within each report

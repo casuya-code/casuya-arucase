@@ -591,23 +591,25 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
     </div>
     <div class="section-spacer-4px"></div>
 
-    <div class="report-section section-mambo">
-      <h3>MAMBO YA KUFAHAMU</h3>
-      <div class="instructions">
-        ${instructions}
+    <div class="report-closing-block">
+      <div class="report-section section-mambo">
+        <h3>MAMBO YA KUFAHAMU</h3>
+        <div class="instructions">
+          ${instructions}
+        </div>
       </div>
-    </div>
 
-    <div class="signature-stamp-section">
-      <div class="signature-block">
-        ${authoritySignatureBlockHtml}
-        <div class="signature-line">_________________________</div>
-        <div class="signature-name">${authority_data?.name || ''}</div>
-        <div class="signature-title">${authority_data?.title || ''}</div>
-        <div class="signature-date">Tarehe ${formatAuthorityDate()}</div>
-      </div>
-      <div class="stamp-block">
-        ${school_stamp?.stamp_image_path ? `<img src="${getImageUrl(school_stamp.stamp_image_path)}" alt="School Stamp" class="stamp-img" />` : '<div class="school-stamp"><div class="stamp-border"><div class="stamp-content"><div class="stamp-text-top">ARUSHA CATHOLIC</div><div class="stamp-motto">SEMINARY</div><div class="stamp-text-bottom">OLDONYOSAMBU</div></div></div></div>'}
+      <div class="signature-stamp-section">
+        <div class="signature-block">
+          ${authoritySignatureBlockHtml}
+          <div class="signature-line">_________________________</div>
+          <div class="signature-name">${authority_data?.name || ''}</div>
+          <div class="signature-title">${authority_data?.title || ''}</div>
+          <div class="signature-date">Tarehe ${formatAuthorityDate()}</div>
+        </div>
+        <div class="stamp-block">
+          ${school_stamp?.stamp_image_path ? `<img src="${getImageUrl(school_stamp.stamp_image_path)}" alt="School Stamp" class="stamp-img" />` : '<div class="school-stamp"><div class="stamp-border"><div class="stamp-content"><div class="stamp-text-top">ARUSHA CATHOLIC</div><div class="stamp-motto">SEMINARY</div><div class="stamp-text-bottom">OLDONYOSAMBU</div></div></div></div>'}
+        </div>
       </div>
     </div>
     <!-- __ARUCASE_REPORT_INNER_END__ -->
