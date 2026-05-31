@@ -527,7 +527,7 @@ async function generateIndividualReportPDF(form, stream, year, term, admNo) {
       let divisionPoint = null;
       let division = null;
       if (isForm5Or6) {
-        divisionPoint = calculateALevelDivisionPoint(subjectsData, stream);
+        divisionPoint = calculateALevelDivisionPoint(subjectsData, student.stream || stream);
         division = getALevelDivision(divisionPoint);
       } else {
         divisionPoint = calculateOLevelDivisionPoint(subjectsData);

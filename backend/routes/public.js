@@ -13,6 +13,7 @@ const {
   calculateOverallAverage
 } = require('../utils/calculations');
 const { normalizeStream } = require('../utils/streamNormalizer');
+const { getReportRankings } = require('../utils/reportRankings');
 const { sendError } = require('../utils/safeError');
 const { resolvePublicPageSlug } = require('../utils/publicPageSlugs');
 const { cacheRoutes } = require('../middleware/cache');
@@ -1310,90 +1311,18 @@ router.get('/student/:admNo/report-scores', async (req, res) => {
       [admNo, form, actualStream, normalizedStream, yearNum, months]
     );
 
-    const allStudentsResult = await query(
-      'SELECT adm_no FROM students WHERE level = $1 AND stream IN ($2, $3) AND year = $4',
-      [form, actualStream, normalizedStream, yearNum]
-    );
-
-    const allMonthlyResults = await query(
-      'SELECT * FROM individual_scores WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND month = ANY($5::text[])',
-      [form, actualStream, normalizedStream, yearNum, months]
-    );
-
-    const subjectRankings = {};
-    subjectsResult.rows.forEach((subject) => {
-      const subjectTotals = {};
-      const subjectCodesToMatch = [subject.subject_code, subject.subject_abbreviation].filter(Boolean);
-
-      allStudentsResult.rows.forEach((s) => {
-        let total = 0;
-        let validMonths = 0;
-        months.forEach((month) => {
-          const result = allMonthlyResults.rows.find(
-            (r) => r.adm_no === s.adm_no && subjectCodesToMatch.includes(r.subject_code) && r.month === month
-          );
-          if (result) {
-            // Skip NULL/not registered scores
-            if (result.score === null || result.score === undefined || result.score === '' || result.score === '-') {
-              return;
-            }
-            const weight = marksConfig.month_weights[month] || 0;
-            total += parseFloat(result.score) * (weight / 100);
-            validMonths++;
-          }
-        });
-        // Use average per valid month for fair ranking
-        subjectTotals[s.adm_no] = validMonths > 0 ? total / validMonths : 0;
-      });
-
-      const sorted = Object.entries(subjectTotals)
-        .sort((a, b) => b[1] - a[1])
-        .map((entry, index) => ({ adm_no: entry[0], rank: index + 1 }));
-
-      subjectRankings[subject.subject_code] = {};
-      sorted.forEach((item) => {
-        subjectRankings[subject.subject_code][item.adm_no] = item.rank;
-      });
+    const { subjectRankings, overallRank: overallRankValue, totalStudents } = await getReportRankings(query, {
+      form,
+      yearNum,
+      months,
+      normalizedTerm: termNormalized,
+      actualStream,
+      normalizedStream,
+      admNo,
+      reportSubjects: subjectsResult.rows,
+      monthWeights: marksConfig.month_weights || {},
     });
-
-    const overallTotals = {};
-    allStudentsResult.rows.forEach((s) => {
-      let grandTotal = 0;
-      let validSubjects = 0;
-      subjectsResult.rows.forEach((subject) => {
-        const subjectCodesToMatch = [subject.subject_code, subject.subject_abbreviation].filter(Boolean);
-        let subjectTotal = 0;
-        let validMonths = 0;
-        months.forEach((month) => {
-          const result = allMonthlyResults.rows.find(
-            (r) => r.adm_no === s.adm_no && subjectCodesToMatch.includes(r.subject_code) && r.month === month
-          );
-          if (result) {
-            // Skip NULL/not registered scores
-            if (result.score === null || result.score === undefined || result.score === '' || result.score === '-') {
-              return;
-            }
-            const weight = marksConfig.month_weights[month] || 0;
-            subjectTotal += parseFloat(result.score) * (weight / 100);
-            validMonths++;
-          }
-        });
-        // Only count subjects with valid scores
-        if (validMonths > 0) {
-          grandTotal += subjectTotal / validMonths;
-          validSubjects++;
-        }
-      });
-      // Use average per subject for fair ranking
-      overallTotals[s.adm_no] = validSubjects > 0 ? grandTotal / validSubjects : 0;
-    });
-
-    const sortedOverall = Object.entries(overallTotals)
-      .sort((a, b) => b[1] - a[1])
-      .map((entry, index) => ({ adm_no: entry[0], rank: index + 1 }));
-
-    const overallRank = sortedOverall.find((item) => item.adm_no === admNo)?.rank ?? null;
-    const totalStudents = allStudentsResult.rows.length;
+    const overallRank = overallRankValue === '-' ? null : overallRankValue;
 
     const subjectsOut = [];
     let totalMarks = 0;

@@ -4,7 +4,7 @@
   "description": "Arusha Catholic Seminary - Node.js/Express Backend API",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
+    "start": "node scripts/start-server.js",
     "dev": "nodemon server.js",
     "test": "jest",
     "init-db": "node scripts/initDatabase.js",
@@ -21,7 +21,8 @@
     "setup-photos": "node scripts/setup-admin-photos-volume.js",
     "upload-admin-photos": "node upload_admin_photos_to_cloudinary_production.js",
     "sync-report-pdf-css": "node scripts/syncReportPdfCss.js",
-    "db:migrate": "node-pg-migrate up --envPath .env",
+    "db:migrate": "node scripts/runMigrations.js",
+    "db:migrate:cli": "node-pg-migrate up --envPath .env",
     "db:migrate:dry-run": "node-pg-migrate up --dry-run --envPath .env",
     "db:migrate:down": "node-pg-migrate down --envPath .env",
     "db:migrate:create": "node-pg-migrate create --migration-file-language sql",

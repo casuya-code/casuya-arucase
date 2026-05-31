@@ -107,19 +107,22 @@ function calculateALevelDivisionPoint(subjectsData, stream) {
     'F': 7
   };
   
-  // Combination subject codes
+  // Combination subject codes (keep in sync with combinationSubjects in routes/students.js)
   const combinations = {
     'PCM': ['PHY', 'CHE', 'ADV'],
     'PCB': ['PHY', 'CHE', 'BIO'],
+    'PGM': ['PHY', 'GEO', 'ADV'],
+    'CBG': ['CHE', 'BIO', 'GEO'],
     'EGM': ['ECO', 'GEO', 'ADV'],
     'HGE': ['HIS', 'GEO', 'ECO'],
-    'HGL': ['HIS', 'GEO', 'ENG'], // History, Geography, Literature/English
-    'HKL': ['HIS', 'KIS', 'ENG']  // History, Kiswahili, Literature/English
+    'HGL': ['HIS', 'GEO', 'ENG'],
+    'HGK': ['HIS', 'GEO', 'KIS'],
+    'HKL': ['HIS', 'KIS', 'ENG'],
   };
   
-  // Auto-detect combination if stream not provided
-  let detectedStream = stream;
-  if (!detectedStream) {
+  // Auto-detect combination if stream not provided or unknown
+  let detectedStream = stream ? String(stream).trim().toUpperCase() : null;
+  if (!detectedStream || !combinations[detectedStream]) {
     detectedStream = detectCombinationFromSubjects(subjectsData);
   }
   
@@ -189,6 +192,26 @@ function detectCombinationFromSubjects(subjectsData) {
   ) {
     return 'PCB';
   }
+
+  // Check for PGM (Physics, Geography, Advanced Math)
+  if (
+    (subjectCodes.some(c => c.includes('PHY')) || subjectNames.some(n => n.includes('PHYSICS'))) &&
+    (subjectCodes.some(c => c.includes('GEO')) || subjectNames.some(n => n.includes('GEOGRAPHY'))) &&
+    (subjectCodes.some(c => c.includes('ADV') || c.includes('MATH') || c.includes('MAT')) ||
+      subjectNames.some(n => (n.includes('ADVANCED') && n.includes('MATH')) || n.includes('MATHEMATICS'))) &&
+    !(subjectCodes.some(c => c.includes('BASIC')) || subjectNames.some(n => n.includes('BASIC')))
+  ) {
+    return 'PGM';
+  }
+
+  // Check for CBG (Chemistry, Biology, Geography)
+  if (
+    (subjectCodes.some(c => c.includes('CHE')) || subjectNames.some(n => n.includes('CHEMISTRY'))) &&
+    (subjectCodes.some(c => c.includes('BIO')) || subjectNames.some(n => n.includes('BIOLOGY'))) &&
+    (subjectCodes.some(c => c.includes('GEO')) || subjectNames.some(n => n.includes('GEOGRAPHY')))
+  ) {
+    return 'CBG';
+  }
   
   // Check for EGM (Economics, Geography, Advanced Math)
   if (
@@ -214,12 +237,23 @@ function detectCombinationFromSubjects(subjectsData) {
   // HGL can use either English or Literature
   if (
     (subjectCodes.some(c => c.includes('HIS')) || subjectNames.some(n => n.includes('HISTORY'))) &&
-    !(subjectCodes.some(c => c.includes('TANZANIA')) || subjectNames.some(n => n.includes('TANZANIA'))) && // Exclude Tanzania History
+    !(subjectCodes.some(c => c.includes('TANZANIA')) || subjectNames.some(n => n.includes('TANZANIA'))) &&
     (subjectCodes.some(c => c.includes('GEO')) || subjectNames.some(n => n.includes('GEOGRAPHY'))) &&
-    (subjectCodes.some(c => c.includes('ENG') || c.includes('LIT')) || 
+    (subjectCodes.some(c => c.includes('ENG') || c.includes('LIT')) ||
      subjectNames.some(n => n.includes('ENGLISH') || n.includes('LITERATURE')))
   ) {
     return 'HGL';
+  }
+
+  // Check for HGK (History, Geography, Kiswahili)
+  if (
+    (subjectCodes.some(c => c.includes('HIS')) || subjectNames.some(n => n.includes('HISTORY'))) &&
+    !(subjectCodes.some(c => c.includes('TANZANIA')) || subjectNames.some(n => n.includes('TANZANIA'))) &&
+    (subjectCodes.some(c => c.includes('GEO')) || subjectNames.some(n => n.includes('GEOGRAPHY'))) &&
+    (subjectCodes.some(c => c.includes('KIS') || c.includes('SWA')) ||
+     subjectNames.some(n => n.includes('KISWAHILI') || n.includes('SWAHILI')))
+  ) {
+    return 'HGK';
   }
   
   // Check for HKL (History, Kiswahili, Literature/English)
@@ -253,7 +287,7 @@ function matchesSubject(subjectCode, subjectName, comboCode) {
     'PHY': ['PHY', 'PHYSICS', 'A/PHY', 'A_PHY'],
     'CHE': ['CHE', 'CHEMISTRY', 'A/CHE', 'A_CHE'],
     'BIO': ['BIO', 'BIOLOGY', 'A/BIO', 'A_BIO'],
-    'ADV': ['ADV', 'ADVANCED', 'A/MATH', 'A_MATH', 'ADVANCED MATH'],
+    'ADV': ['ADV', 'ADVANCED', 'A/MATH', 'A/MAT', 'A_MATH', 'ADVANCED MATH', 'MATHEMATICS'],
     'ECO': ['ECO', 'ECONOMICS', 'A/ECO', 'A_ECO'],
     'GEO': ['GEO', 'GEOGRAPHY', 'A/GEO', 'A_GEO'],
     'HIS': ['HIS', 'HISTORY', 'A/HIS', 'A_HIS'],
@@ -266,11 +300,28 @@ function matchesSubject(subjectCode, subjectName, comboCode) {
   // Check code match
   for (const pattern of patternsForCode) {
     if (codeUpper.includes(pattern) || nameUpper.includes(pattern)) {
-      // Exclude Basic Math for PCM/EGM (only Advanced Math)
-      if ((comboCode === 'ADV') && (codeUpper.includes('BASIC') || nameUpper.includes('BASIC'))) {
+      // GEOGRAPHY contains the substring "PHY" — do not treat it as Physics
+      if (comboCode === 'PHY' && (codeUpper.includes('GEO') || nameUpper.includes('GEOGRAPHY'))) {
         continue;
       }
-      // Exclude Tanzania History for HGE/HGL (only general History)
+      // Exclude Basic Math for PCM/EGM/PGM (only Advanced Math)
+      if (comboCode === 'ADV') {
+        if (codeUpper.includes('BASIC') || nameUpper.includes('BASIC')) {
+          continue;
+        }
+        // Many A-Level subjects start with "Advanced" (e.g. Divinity) — require math markers
+        if (pattern === 'ADVANCED' || pattern === 'ADV') {
+          const isMathSubject =
+            nameUpper.includes('MATH') ||
+            nameUpper.includes('MATHEMATICS') ||
+            codeUpper.includes('/MAT') ||
+            codeUpper.includes('_MAT');
+          if (!isMathSubject) {
+            continue;
+          }
+        }
+      }
+      // Exclude Tanzania History for HGE/HGL/HGK (only general History)
       if ((comboCode === 'HIS') && (codeUpper.includes('TANZANIA') || nameUpper.includes('TANZANIA'))) {
         continue;
       }

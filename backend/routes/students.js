@@ -66,6 +66,23 @@ function getTermMatchValues(term) {
   return [...new Set(variants)];
 }
 
+// Derive canonical term label from assessment month (matches score-entry template logic).
+function getTermFromMonth(month, level) {
+  const monthStr = String(month).trim();
+  const normalizedLevel = String(level).trim().toUpperCase();
+  const isFormVOrVI = normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI';
+  const firstTermMonths = isFormVOrVI
+    ? ['August', 'September', 'October', 'November']
+    : ['February', 'March', 'April', 'May'];
+  const secondTermMonths = isFormVOrVI
+    ? ['February', 'March', 'April', 'May']
+    : ['August', 'September', 'October', 'November'];
+
+  if (firstTermMonths.includes(monthStr)) return 'First Term';
+  if (secondTermMonths.includes(monthStr)) return 'Second Term';
+  return 'First Term';
+}
+
 // Level variants so DELETE matches "FORM III" and "FORM 3" (and Form III, etc.) in DB
 function getLevelMatchValues(level) {
   const L = level != null ? String(level).trim().toUpperCase() : '';
@@ -552,22 +569,7 @@ router.get('/scores/template', async (req, res) => {
     const isFormIV = /^FORM\s+(I|II|III|IV)$/i.test(normalizedLevel);
     const isFormVOrVI = normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI';
     
-    // Determine term from month for Form V/VI
-    // First Term: Jul-Dec (August, September, October, November)
-    // Second Term: Jan-Jun (February, March, April, May)
-    const getTermFromMonth = (month) => {
-      const firstTermMonths = ['August', 'September', 'October', 'November'];
-      const secondTermMonths = ['February', 'March', 'April', 'May'];
-      
-      if (firstTermMonths.includes(month)) {
-        return 'First Term';
-      } else if (secondTermMonths.includes(month)) {
-        return 'Second Term';
-      }
-      return 'First Term'; // Default fallback
-    };
-    
-    const currentTerm = isFormVOrVI ? getTermFromMonth(month) : null;
+    const currentTerm = isFormVOrVI ? getTermFromMonth(month, normalizedLevel) : null;
     const termMatchValues = isFormVOrVI && currentTerm ? getTermMatchValues(currentTerm) : [];
     
     let studentsResult;
@@ -817,12 +819,14 @@ router.post('/scores/bulk-upload', csvUpload.single('file'), async (req, res) =>
           }
         }
 
+        const scoreTerm = getTermFromMonth(month, level);
+
         await query(
-          `INSERT INTO individual_scores (level, stream, year, month, subject_code, adm_no, score)
-           VALUES ($1, $2, $3, $4, $5, $6, $7)
+          `INSERT INTO individual_scores (level, stream, year, month, subject_code, adm_no, score, term)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
            ON CONFLICT (level, stream, year, month, subject_code, adm_no)
-           DO UPDATE SET score = EXCLUDED.score, updated_at = NOW()`,
-          [level, actualStream, yearNum, String(month).trim(), scoreSubjectCode, admNo, scoreNum]
+           DO UPDATE SET score = EXCLUDED.score, term = EXCLUDED.term, updated_at = NOW()`,
+          [level, actualStream, yearNum, String(month).trim(), scoreSubjectCode, admNo, scoreNum, scoreTerm]
         );
         saved++;
       } catch (err) {
@@ -2482,12 +2486,14 @@ router.post('/:admNo/scores', async (req, res) => {
       // If subject lookup fails, use subject_code
     }
 
+    const scoreTerm = getTermFromMonth(month, level);
+
     const insertScore = () => query(
-      `INSERT INTO individual_scores (level, stream, year, month, subject_code, adm_no, score)
-       VALUES ($1, $2, $3, $4, $5, $6, $7)
+      `INSERT INTO individual_scores (level, stream, year, month, subject_code, adm_no, score, term)
+       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
        ON CONFLICT (level, stream, year, month, subject_code, adm_no)
-       DO UPDATE SET score = EXCLUDED.score, updated_at = NOW()`,
-      [level, actualStream, yearNum, String(month).trim(), scoreSubjectCode, admNo, scoreNum]
+       DO UPDATE SET score = EXCLUDED.score, term = EXCLUDED.term, updated_at = NOW()`,
+      [level, actualStream, yearNum, String(month).trim(), scoreSubjectCode, admNo, scoreNum, scoreTerm]
     );
 
     // DTA Monitor: Log score change to audit table
@@ -2556,11 +2562,11 @@ router.post('/:admNo/scores', async (req, res) => {
     // Use transaction for atomic score update and audit logging
     await withTransaction(async (client) => {
       await client.query(
-        `INSERT INTO individual_scores (level, stream, year, month, subject_code, adm_no, score)
-         VALUES ($1, $2, $3, $4, $5, $6, $7)
+        `INSERT INTO individual_scores (level, stream, year, month, subject_code, adm_no, score, term)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
          ON CONFLICT (level, stream, year, month, subject_code, adm_no)
-         DO UPDATE SET score = EXCLUDED.score, updated_at = NOW()`,
-        [level, actualStream, yearNum, String(month).trim(), scoreSubjectCode, admNo, scoreNum]
+         DO UPDATE SET score = EXCLUDED.score, term = EXCLUDED.term, updated_at = NOW()`,
+        [level, actualStream, yearNum, String(month).trim(), scoreSubjectCode, admNo, scoreNum, scoreTerm]
       );
       await logScoreChange(client);
     });

@@ -14,6 +14,7 @@ const {
 } = require('../utils/reportStudentExtras');
 const { sanitizeAuthorityDataRow } = require('../utils/authoritySignature');
 const { formatReportScore } = require('../utils/reportScoreFormat');
+const { getReportRankings } = require('../utils/reportRankings');
 const { sendError } = require('../utils/safeError');
 const {
   calculateGrade,
@@ -192,129 +193,18 @@ router.get('/individual/:form/:stream/:year/:term/:admNo', requireModule('indivi
       return true;
     });
     
-    // Get all students in the same class for ranking (check both streams)
-    // For Form V/VI, filter by term. For Form I-IV, include all students for the year.
-    let allStudentsQuery = 'SELECT adm_no FROM students WHERE level = $1 AND stream IN ($2, $3) AND year = $4';
-    let allStudentsParams = [form, actualStream, normalizedStream, parseInt(year)];
-
-    if (isFormVOrVI) {
-      allStudentsQuery += ' AND term = $5';
-      allStudentsParams.push(normalizedTerm);
-    }
-
-    const allStudentsResult = await query(allStudentsQuery, allStudentsParams);
-
-    // Get all individual scores for ranking calculation (check both streams)
-    // For Form V/VI, filter by term. For Form I-IV, include all students for the year.
-    let allMonthlyResultsQuery = 'SELECT * FROM individual_scores WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND month = ANY($5::text[])';
-    let allMonthlyResultsParams = [form, actualStream, normalizedStream, parseInt(year), months];
-
-    if (isFormVOrVI) {
-      // For Form V/VI, we need to join with students table to filter by term
-      allMonthlyResultsQuery = `
-        SELECT i.* FROM individual_scores i
-        INNER JOIN students s ON i.adm_no = s.adm_no
-        WHERE i.level = $1 AND i.stream IN ($2, $3) AND i.year = $4 AND i.month = ANY($5::text[])
-        AND s.term = $6
-      `;
-      allMonthlyResultsParams.push(normalizedTerm);
-    }
-
-    const allMonthlyResults = await query(allMonthlyResultsQuery, allMonthlyResultsParams);
-    
-    // Calculate rankings per subject
-    const subjectRankings = {};
-    
-    subjectsResult.rows.forEach((subject) => {
-      const subjectTotals = {};
-      // Scores may be stored with either subject_code or subject_abbreviation
-      const subjectCodesToMatch = [
-        subject.subject_code,
-        subject.subject_abbreviation
-      ].filter(Boolean); // Remove null/undefined values
-      
-      // Calculate total for each student in this subject with weights
-      allStudentsResult.rows.forEach((s) => {
-        let total = 0;
-        let validMonths = 0;
-        months.forEach((month) => {
-          const result = allMonthlyResults.rows.find(
-            (r) => r.adm_no === s.adm_no && subjectCodesToMatch.includes(r.subject_code) && r.month === month
-          );
-          if (result) {
-            // Skip NULL/not registered scores
-            if (result.score === null || result.score === undefined || result.score === '' || result.score === '-') {
-              return;
-            }
-            const weight = marksConfig.month_weights[month] || 0;
-            total += parseFloat(result.score) * (weight / 100);
-            validMonths++;
-          }
-        });
-        // Use average per valid month for fair ranking
-        subjectTotals[s.adm_no] = validMonths > 0 ? total / validMonths : 0;
-      });
-      
-      // Sort and rank
-      const sorted = Object.entries(subjectTotals)
-        .sort((a, b) => b[1] - a[1])
-        .map((entry, index) => ({ adm_no: entry[0], rank: index + 1 }));
-      
-      subjectRankings[subject.subject_code] = {};
-      sorted.forEach((item) => {
-        subjectRankings[subject.subject_code][item.adm_no] = item.rank;
-      });
+    // Get all students in the same class for ranking (Form V/VI: entire form level + term)
+    const { subjectRankings, overallRank, totalStudents } = await getReportRankings(query, {
+      form,
+      yearNum: parseInt(year, 10),
+      months,
+      normalizedTerm,
+      actualStream,
+      normalizedStream,
+      admNo,
+      reportSubjects: subjectsResult.rows,
+      monthWeights: marksConfig.month_weights || {},
     });
-    
-    // Calculate overall ranking with weights
-    const overallTotals = {};
-    allStudentsResult.rows.forEach((s) => {
-      let grandTotal = 0;
-      let validSubjects = 0;
-      subjectsResult.rows.forEach((subject) => {
-        let subjectTotal = 0;
-        let validMonths = 0;
-        // Scores may be stored with either subject_code or subject_abbreviation
-        const subjectCodesToMatch = [
-          subject.subject_code,
-          subject.subject_abbreviation
-        ].filter(Boolean); // Remove null/undefined values
-
-        months.forEach((month) => {
-          const result = allMonthlyResults.rows.find(
-            (r) => r.adm_no === s.adm_no && subjectCodesToMatch.includes(r.subject_code) && r.month === month
-          );
-          if (result) {
-            // Skip NULL/not registered scores
-            if (result.score === null || result.score === undefined || result.score === '' || result.score === '-') {
-              return;
-            }
-            const weight = marksConfig.month_weights[month] || 0;
-            subjectTotal += parseFloat(result.score) * (weight / 100);
-            validMonths++;
-          }
-        });
-        // Only count subjects with valid scores
-        if (validMonths > 0) {
-          grandTotal += subjectTotal / validMonths;
-          validSubjects++;
-        }
-      });
-      // Use average per subject for fair ranking
-      overallTotals[s.adm_no] = validSubjects > 0 ? grandTotal / validSubjects : 0;
-    });
-    
-    const sortedOverall = Object.entries(overallTotals)
-      .sort((a, b) => {
-        // Primary sort by total score (descending)
-        const scoreDiff = b[1] - a[1];
-        if (scoreDiff !== 0) return scoreDiff;
-        // Tie-breaker: sort by admission number (ascending) for consistent ordering
-        return String(a[0]).localeCompare(String(b[0]));
-      })
-      .map((entry, index) => ({ adm_no: entry[0], rank: index + 1 }));
-
-    const overallRank = sortedOverall.find((item) => item.adm_no === admNo)?.rank || '-';
     
     // Get student index for comments and photos (find position in sorted list by name)
     // Use database sorting to match /students API exactly (ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC)
@@ -454,7 +344,7 @@ router.get('/individual/:form/:stream/:year/:term/:admNo', requireModule('indivi
     
     if (isForm5Or6) {
       // A-Level: Use 3 combination subjects
-      divisionPoint = calculateALevelDivisionPoint(subjectsData, stream);
+      divisionPoint = calculateALevelDivisionPoint(subjectsData, student.stream || stream);
       division = getALevelDivision(divisionPoint);
     } else {
       // O-Level: Use 7 best subjects
@@ -475,7 +365,7 @@ router.get('/individual/:form/:stream/:year/:term/:admNo', requireModule('indivi
       subject_rankings: subjectRankings,
       subject_teacher_signatures: subjectTeacherSignatures,
       overall_rank: overallRank,
-      total_students: allStudentsResult.rows.length,
+      total_students: totalStudents,
       marks_config: marksConfig,
       months: months,
       summary_data: {
@@ -485,7 +375,7 @@ router.get('/individual/:form/:stream/:year/:term/:admNo', requireModule('indivi
         division: division || '0',
         division_point: divisionPoint !== null ? divisionPoint.toString() : '0',
         position: overallRank.toString(),
-        total_students: allStudentsResult.rows.length.toString()
+        total_students: totalStudents.toString()
       },
       school_logo: logoResult.rows.length > 0 ? logoResult.rows[0] : null,
       school_stamp: stampResult.rows.length > 0 ? stampResult.rows[0] : null,
@@ -712,29 +602,31 @@ router.get('/bulk/:form/:year/:term', requireModule('bulk_report'), async (req, 
     const allScoresLookup = {}; // {adm_no: {subject_code: {month: score}}}
     const batchStart = Date.now();
     
+    // Match /reports/individual: filter by assessment months only, not individual_scores.term.
+    // Months already encode the term; score rows may have stale term labels from older saves.
     let scoresResult;
     if (stream) {
       if (oLevelStreamAOrNA) {
         scoresResult = await query(
           `SELECT adm_no, subject_code, month, score FROM individual_scores 
-           WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND term = $5 AND month = ANY($6::text[])
+           WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND month = ANY($5::text[])
            ORDER BY adm_no, subject_code, month`,
-          [decodedForm, 'A', 'NA', parseInt(year), normalizedTerm, months]
+          [decodedForm, 'A', 'NA', parseInt(year), months]
         );
       } else {
         scoresResult = await query(
           `SELECT adm_no, subject_code, month, score FROM individual_scores 
-           WHERE level = $1 AND stream = $2 AND year = $3 AND term = $4 AND month = ANY($5::text[])
+           WHERE level = $1 AND stream = $2 AND year = $3 AND month = ANY($4::text[])
            ORDER BY adm_no, subject_code, month`,
-          [decodedForm, stream, parseInt(year), normalizedTerm, months]
+          [decodedForm, stream, parseInt(year), months]
         );
       }
     } else {
       scoresResult = await query(
         `SELECT adm_no, subject_code, month, score FROM individual_scores 
-         WHERE level = $1 AND year = $2 AND term = $3 AND month = ANY($4::text[])
+         WHERE level = $1 AND year = $2 AND month = ANY($3::text[])
          ORDER BY adm_no, subject_code, month`,
-        [decodedForm, parseInt(year), normalizedTerm, months]
+        [decodedForm, parseInt(year), months]
       );
     }
     

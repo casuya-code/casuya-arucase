@@ -7,6 +7,7 @@ const { acquirePage, releasePage, PAGE_TIMEOUT_MS } = require('./puppeteerPool')
 const axios = require('axios');
 const { generateReportHTML } = require('./htmlReportRenderer');
 const { formatReportScore } = require('./reportScoreFormat');
+const { getReportRankings } = require('./reportRankings');
 const fs = require('fs').promises;
 const path = require('path');
 const { query } = require('../config/database');
@@ -312,97 +313,17 @@ async function getReportDataInternal(form, stream, year, term, admNo, branding) 
     return true;
   });
 
-  let allStudentsQuery = 'SELECT adm_no FROM students WHERE level = $1 AND stream IN ($2, $3) AND year = $4';
-  let allStudentsParams = [form, actualStream, normalizedStream, yearNum];
-  if (isFormVOrVI) {
-    allStudentsQuery += ' AND term = $5';
-    allStudentsParams.push(normalizedTerm);
-  }
-  const allStudentsResult = await query(allStudentsQuery, allStudentsParams);
-
-  let allMonthlyResultsQuery =
-    'SELECT * FROM individual_scores WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND month = ANY($5::text[])';
-  let allMonthlyResultsParams = [form, actualStream, normalizedStream, yearNum, months];
-  if (isFormVOrVI) {
-    allMonthlyResultsQuery = `
-      SELECT i.* FROM individual_scores i
-      INNER JOIN students s ON i.adm_no = s.adm_no
-      WHERE i.level = $1 AND i.stream IN ($2, $3) AND i.year = $4 AND i.month = ANY($5::text[])
-      AND s.term = $6
-    `;
-    allMonthlyResultsParams.push(normalizedTerm);
-  }
-  const allMonthlyResults = await query(allMonthlyResultsQuery, allMonthlyResultsParams);
-
-  const subjectRankings = {};
-  subjectsResult.rows.forEach((subject) => {
-    const subjectTotals = {};
-    const subjectCodesToMatch = [subject.subject_code, subject.subject_abbreviation].filter(Boolean);
-    allStudentsResult.rows.forEach((srow) => {
-      let total = 0;
-      let validMonths = 0;
-      months.forEach((month) => {
-        const result = allMonthlyResults.rows.find(
-          (r) => r.adm_no === srow.adm_no && subjectCodesToMatch.includes(r.subject_code) && r.month === month
-        );
-        if (result) {
-          if (result.score === null || result.score === undefined || result.score === '' || result.score === '-') {
-            return;
-          }
-          const weight = marksConfig.month_weights[month] || 0;
-          total += parseFloat(result.score) * (weight / 100);
-          validMonths++;
-        }
-      });
-      subjectTotals[srow.adm_no] = validMonths > 0 ? total / validMonths : 0;
-    });
-    const sorted = Object.entries(subjectTotals)
-      .sort((a, b) => b[1] - a[1])
-      .map((entry, index) => ({ adm_no: entry[0], rank: index + 1 }));
-    subjectRankings[subject.subject_code] = {};
-    sorted.forEach((item) => {
-      subjectRankings[subject.subject_code][item.adm_no] = item.rank;
-    });
+  const { subjectRankings, overallRank, totalStudents } = await getReportRankings(query, {
+    form,
+    yearNum,
+    months,
+    normalizedTerm,
+    actualStream,
+    normalizedStream,
+    admNo,
+    reportSubjects: subjectsResult.rows,
+    monthWeights: marksConfig.month_weights || {},
   });
-
-  const overallTotals = {};
-  allStudentsResult.rows.forEach((srow) => {
-    let grandTotal = 0;
-    let validSubjects = 0;
-    subjectsResult.rows.forEach((subject) => {
-      const subjectCodesToMatch = [subject.subject_code, subject.subject_abbreviation].filter(Boolean);
-      let subjectTotal = 0;
-      let validMonths = 0;
-      months.forEach((month) => {
-        const result = allMonthlyResults.rows.find(
-          (r) => r.adm_no === srow.adm_no && subjectCodesToMatch.includes(r.subject_code) && r.month === month
-        );
-        if (result) {
-          if (result.score === null || result.score === undefined || result.score === '' || result.score === '-') {
-            return;
-          }
-          const weight = marksConfig.month_weights[month] || 0;
-          subjectTotal += parseFloat(result.score) * (weight / 100);
-          validMonths++;
-        }
-      });
-      if (validMonths > 0) {
-        grandTotal += subjectTotal / validMonths;
-        validSubjects++;
-      }
-    });
-    overallTotals[srow.adm_no] = validSubjects > 0 ? grandTotal / validSubjects : 0;
-  });
-
-  const sortedOverall = Object.entries(overallTotals)
-    .sort((a, b) => {
-      const scoreDiff = b[1] - a[1];
-      if (scoreDiff !== 0) return scoreDiff;
-      return String(a[0]).localeCompare(String(b[0]));
-    })
-    .map((entry, index) => ({ adm_no: entry[0], rank: index + 1 }));
-
-  const overallRank = sortedOverall.find((item) => item.adm_no === admNo)?.rank || '-';
 
   const subjectsData = {};
   let totalMarks = 0;
@@ -431,7 +352,7 @@ async function getReportDataInternal(form, stream, year, term, admNo, branding) 
   let divisionPoint = null;
   let division = null;
   if (isForm5Or6) {
-    divisionPoint = calculateALevelDivisionPoint(subjectsData, stream);
+    divisionPoint = calculateALevelDivisionPoint(subjectsData, student.stream || actualStream || stream);
     division = getALevelDivision(divisionPoint);
   } else {
     divisionPoint = calculateOLevelDivisionPoint(subjectsData);
@@ -507,7 +428,7 @@ async function getReportDataInternal(form, stream, year, term, admNo, branding) 
     marks_config: marksConfig,
     subject_rankings: subjectRankings,
     overall_rank: overallRank,
-    total_students: allStudentsResult.rows.length,
+    total_students: totalStudents,
     summary_data: {
       total_marks: formatReportScore(totalMarks),
       average: formatReportScore(average),
@@ -515,7 +436,7 @@ async function getReportDataInternal(form, stream, year, term, admNo, branding) 
       division: division || '0',
       division_point: divisionPoint !== null ? divisionPoint.toString() : '0',
       position: overallRank.toString(),
-      total_students: allStudentsResult.rows.length.toString()
+      total_students: totalStudents.toString()
     },
     school_logo: branding.school_logo,
     school_stamp: branding.school_stamp,
