@@ -9,7 +9,7 @@ import DOMPurify from 'dompurify';
 import SkeletonLoader from '../../components/common/SkeletonLoader';
 import PublicLayout from '../../components/layout/PublicLayout';
 import { publicAPI } from '../../services/public';
-import { resolveStaticUrl } from '../../utils/backendUrl';
+import { getAdmissionFormDownloadUrl, resolveStaticUrl } from '../../utils/backendUrl';
 import { heroImageSources, galleryThumbUrl } from '../../utils/cloudinaryImage';
 import './HomePage.css';
 import { PublicCmsHtml, usePublicPage } from '../../components/public/PublicCmsPage';
@@ -116,8 +116,8 @@ const HomePage = () => {
     admission_application_form: admissionForm = null,
   } = actualData;
 
-  const admissionFormUrl = admissionForm?.file_path
-    ? resolveStaticUrl(admissionForm.file_path)
+  const admissionFormUrl = admissionForm?.download_url
+    ? getAdmissionFormDownloadUrl()
     : null;
   const admissionFormDownloadName =
     admissionForm?.original_filename || 'fomu-ya-maombi.pdf';
@@ -493,8 +493,6 @@ const HomePage = () => {
                   href={admissionFormUrl}
                   className="home-admissions-btn home-admissions-btn--download"
                   download={admissionFormDownloadName}
-                  target="_blank"
-                  rel="noopener noreferrer"
                 >
                   <i className="fas fa-file-pdf" aria-hidden />
                   Pakua Fomu ya Maombi / Download Application Form

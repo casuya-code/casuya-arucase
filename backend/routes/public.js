@@ -16,6 +16,7 @@ const { normalizeStream } = require('../utils/streamNormalizer');
 const { getReportRankings } = require('../utils/reportRankings');
 const { sendError } = require('../utils/safeError');
 const { resolvePublicPageSlug } = require('../utils/publicPageSlugs');
+const { getAdmissionApplicationFormRow, streamAdmissionApplicationPdf } = require('../utils/admissionApplicationForm');
 const { cacheRoutes } = require('../middleware/cache');
 const { JWT_SECRET } = require('../middleware/auth');
 const bcrypt = require('bcryptjs');
@@ -236,12 +237,13 @@ router.get('/homepage', async (req, res) => {
       academic_year: currentYear,
     };
 
-    const admissionFormRow = await safeSingle(
-      'SELECT file_path, original_filename FROM admission_letters WHERE id = 1 AND file_path IS NOT NULL',
-      [],
-      null
-    );
-    const admission_application_form = admissionFormRow?.file_path ? admissionFormRow : null;
+    const admissionFormRow = await getAdmissionApplicationFormRow();
+    const admission_application_form = admissionFormRow?.file_path
+      ? {
+          original_filename: admissionFormRow.original_filename,
+          download_url: '/public/admission-application-form/download',
+        }
+      : null;
     
     res.setHeader('Cache-Control', 'public, max-age=60'); // 1 min cache for fast repeat loads on slow/mobile
     res.json({
@@ -256,6 +258,22 @@ router.get('/homepage', async (req, res) => {
   } catch (error) {
     console.error('Homepage error:', error);
     return sendError(res, error, 500);
+  }
+});
+
+/** Stream admission PDF as application/pdf (attachment or inline preview). Never serves image placeholder. */
+router.get('/admission-application-form/download', async (req, res) => {
+  try {
+    const inline =
+      req.query.inline === '1' ||
+      req.query.inline === 'true' ||
+      req.query.disposition === 'inline';
+    await streamAdmissionApplicationPdf(res, { inline });
+  } catch (error) {
+    console.error('[admission-form] download error:', error);
+    if (!res.headersSent) {
+      return sendError(res, error, 500);
+    }
   }
 });
 

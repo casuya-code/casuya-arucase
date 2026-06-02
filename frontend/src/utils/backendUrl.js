@@ -84,6 +84,16 @@ export function buildFetchUrl(pathAfterApiPrefix) {
   return `${base}${p}`;
 }
 
+/** Same-origin API URL that streams the admission PDF with Content-Disposition: attachment. */
+export function getAdmissionFormDownloadUrl() {
+  return buildFetchUrl('/public/admission-application-form/download');
+}
+
+/** Opens PDF inline in browser (admin preview). */
+export function getAdmissionFormPreviewUrl() {
+  return buildFetchUrl('/public/admission-application-form/download?inline=1');
+}
+
 /** Socket.IO server URL (no path). */
 export function getWebSocketUrl() {
   const explicit = import.meta.env.VITE_WS_URL?.trim();

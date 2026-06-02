@@ -6,7 +6,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '../../utils/toast';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { adminAPI } from '../../services/admin';
-import { resolveStaticUrl } from '../../utils/backendUrl';
+import { getAdmissionFormDownloadUrl, getAdmissionFormPreviewUrl } from '../../utils/backendUrl';
 import './PublicWebsite.css';
 import './AdmissionLetters.css';
 
@@ -74,8 +74,9 @@ const AdmissionLetters = () => {
     handleFileSelect(e.dataTransfer?.files?.[0]);
   };
 
-  const pdfUrl = formData?.file_path ? resolveStaticUrl(formData.file_path) : null;
   const hasForm = Boolean(formData?.file_path);
+  const pdfPreviewUrl = hasForm ? getAdmissionFormPreviewUrl() : null;
+  const pdfDownloadUrl = hasForm ? getAdmissionFormDownloadUrl() : null;
 
   return (
     <AdminLayout>
@@ -113,13 +114,21 @@ const AdmissionLetters = () => {
                     </p>
                     <div className="admission-letters-file__actions">
                       <a
-                        href={pdfUrl}
+                        href={pdfPreviewUrl}
                         className="admin-btn admin-btn-blue admission-letters-action-btn"
                         target="_blank"
                         rel="noopener noreferrer"
                       >
                         <i className="fas fa-external-link-alt" aria-hidden />
                         Preview
+                      </a>
+                      <a
+                        href={pdfDownloadUrl}
+                        className="admin-btn admin-btn-secondary admission-letters-action-btn"
+                        download={formData.original_filename || 'application-form.pdf'}
+                      >
+                        <i className="fas fa-download" aria-hidden />
+                        Download
                       </a>
                       <button
                         type="button"
