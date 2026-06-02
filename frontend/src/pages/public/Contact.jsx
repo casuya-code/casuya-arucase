@@ -64,8 +64,8 @@ const Contact = () => {
 
   return (
     <PublicLayout>
-      <div className="contact-page">
-        <div className="contact-page-inner">
+      <div className="contact-page contact-page--immersive">
+        <div className="contact-page__inner">
           <PublicPageHero
             page={contactPage}
             fallbackTitle="Mawasiliano"
@@ -93,50 +93,68 @@ const Contact = () => {
                   {settingValue(settings, 'contact_info_heading') || 'Mawasiliano'}
                 </h2>
               </div>
-              <div className="contact-info-box">
+              <div className="contact-detail-grid">
                 {contactAddress ? (
-                  <p>
-                    <i className="fas fa-map-marker-alt" />
-                    <span className="contact-info-block">
-                      <strong>Anwani:</strong>
-                      <br />
-                      {contactAddress.split('\n').map((line, idx) => (
-                        <span key={idx}>
-                          {line}
-                          <br />
-                        </span>
-                      ))}
+                  <div className="contact-detail-item">
+                    <span className="contact-detail-item__icon" aria-hidden>
+                      <i className="fas fa-map-marker-alt" />
                     </span>
-                  </p>
+                    <div className="contact-detail-item__content">
+                      <span className="contact-detail-item__key">Anwani</span>
+                      <span className="contact-detail-item__value">
+                        {contactAddress.split('\n').map((line, idx, arr) => (
+                          <span key={idx}>
+                            {line}
+                            {idx < arr.length - 1 ? <br /> : null}
+                          </span>
+                        ))}
+                      </span>
+                    </div>
+                  </div>
                 ) : null}
                 {contactPhone ? (
-                  <p>
-                    <i className="fas fa-phone" />
-                    <span className="contact-info-block">
-                      <strong>Simu:</strong>{' '}
-                      <a href={`tel:${contactPhone}`}>{contactPhone}</a>
+                  <div className="contact-detail-item">
+                    <span className="contact-detail-item__icon" aria-hidden>
+                      <i className="fas fa-phone" />
                     </span>
-                  </p>
+                    <div className="contact-detail-item__content">
+                      <span className="contact-detail-item__key">Simu</span>
+                      <a className="contact-detail-item__link" href={`tel:${contactPhone.replace(/\s/g, '')}`}>
+                        {contactPhone}
+                      </a>
+                    </div>
+                  </div>
                 ) : null}
                 {contactEmail ? (
-                  <p>
-                    <i className="fas fa-envelope" />
-                    <span className="contact-info-block">
-                      <strong>Barua pepe:</strong>{' '}
-                      <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
+                  <div className="contact-detail-item">
+                    <span className="contact-detail-item__icon" aria-hidden>
+                      <i className="fas fa-envelope" />
                     </span>
-                  </p>
+                    <div className="contact-detail-item__content">
+                      <span className="contact-detail-item__key">Barua pepe</span>
+                      <a className="contact-detail-item__link" href={`mailto:${contactEmail}`}>
+                        {contactEmail}
+                      </a>
+                    </div>
+                  </div>
                 ) : null}
                 {whatsappUrl ? (
-                  <p>
-                    <i className="fab fa-whatsapp contact-whatsapp-icon" />
-                    <span className="contact-info-block">
-                      <strong>WhatsApp:</strong>{' '}
-                      <a href={whatsappUrl} target="_blank" rel="noopener noreferrer">
+                  <div className="contact-detail-item">
+                    <span className="contact-detail-item__icon contact-detail-item__icon--whatsapp" aria-hidden>
+                      <i className="fab fa-whatsapp" />
+                    </span>
+                    <div className="contact-detail-item__content">
+                      <span className="contact-detail-item__key">WhatsApp</span>
+                      <a
+                        className="contact-detail-item__link"
+                        href={whatsappUrl}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                      >
                         {contactWhatsapp}
                       </a>
-                    </span>
-                  </p>
+                    </div>
+                  </div>
                 ) : null}
               </div>
             </section>
@@ -154,32 +172,32 @@ const Contact = () => {
                       {settingValue(settings, 'office_hours_heading') || 'Saa za ofisi'}
                     </h2>
                   </div>
-                  <ul className="contact-list">
+                  <div className="contact-hours-grid">
                     {officeWeekdays ? (
-                      <li>
-                        <strong>Jumatatu–Ijumaa:</strong>{' '}
-                        {officeWeekdays}
-                      </li>
+                      <div className="contact-hours__item">
+                        <span className="contact-hours__label">Jumatatu–Ijumaa</span>
+                        <span className="contact-hours__value">{officeWeekdays}</span>
+                      </div>
                     ) : null}
                     {officeSaturday ? (
-                      <li>
-                        <strong>Jumamosi:</strong>{' '}
-                        {officeSaturday}
-                      </li>
+                      <div className="contact-hours__item">
+                        <span className="contact-hours__label">Jumamosi</span>
+                        <span className="contact-hours__value">{officeSaturday}</span>
+                      </div>
                     ) : null}
                     {officeSunday ? (
-                      <li>
-                        <strong>Jumapili:</strong>{' '}
-                        {officeSunday}
-                      </li>
+                      <div className="contact-hours__item">
+                        <span className="contact-hours__label">Jumapili</span>
+                        <span className="contact-hours__value">{officeSunday}</span>
+                      </div>
                     ) : null}
                     {officeHolidays ? (
-                      <li>
-                        <strong>Sikukuu:</strong>{' '}
-                        {officeHolidays}
-                      </li>
+                      <div className="contact-hours__item">
+                        <span className="contact-hours__label">Sikukuu</span>
+                        <span className="contact-hours__value">{officeHolidays}</span>
+                      </div>
                     ) : null}
-                  </ul>
+                  </div>
                 </section>
               ) : null}
 
@@ -193,35 +211,45 @@ const Contact = () => {
                       {settingValue(settings, 'department_contacts_heading') || 'Mawasiliano ya idara'}
                     </h2>
                   </div>
-                  <ul className="contact-list">
+                  <ul className="contact-dept-list">
                     {admissionsEmail ? (
                       <li>
-                        <strong>Udahili:</strong>{' '}
-                        <a href={`mailto:${admissionsEmail}`}>{admissionsEmail}</a>
+                        <span className="contact-dept-list__key">Udahili</span>
+                        <a className="contact-dept-list__link" href={`mailto:${admissionsEmail}`}>
+                          {admissionsEmail}
+                        </a>
                       </li>
                     ) : null}
                     {academicsEmail ? (
                       <li>
-                        <strong>Masomo:</strong>{' '}
-                        <a href={`mailto:${academicsEmail}`}>{academicsEmail}</a>
+                        <span className="contact-dept-list__key">Masomo</span>
+                        <a className="contact-dept-list__link" href={`mailto:${academicsEmail}`}>
+                          {academicsEmail}
+                        </a>
                       </li>
                     ) : null}
                     {bursarEmail ? (
                       <li>
-                        <strong>Fedha:</strong>{' '}
-                        <a href={`mailto:${bursarEmail}`}>{bursarEmail}</a>
+                        <span className="contact-dept-list__key">Fedha</span>
+                        <a className="contact-dept-list__link" href={`mailto:${bursarEmail}`}>
+                          {bursarEmail}
+                        </a>
                       </li>
                     ) : null}
                     {alumniEmail ? (
                       <li>
-                        <strong>Wahitimu:</strong>{' '}
-                        <a href={`mailto:${alumniEmail}`}>{alumniEmail}</a>
+                        <span className="contact-dept-list__key">Wahitimu</span>
+                        <a className="contact-dept-list__link" href={`mailto:${alumniEmail}`}>
+                          {alumniEmail}
+                        </a>
                       </li>
                     ) : null}
                     {parentsEmail ? (
                       <li>
-                        <strong>Wazazi:</strong>{' '}
-                        <a href={`mailto:${parentsEmail}`}>{parentsEmail}</a>
+                        <span className="contact-dept-list__key">Wazazi</span>
+                        <a className="contact-dept-list__link" href={`mailto:${parentsEmail}`}>
+                          {parentsEmail}
+                        </a>
                       </li>
                     ) : null}
                   </ul>
@@ -272,25 +300,25 @@ const Contact = () => {
                   {settingValue(settings, 'social_heading') || 'Mitandao ya kijamii'}
                 </h2>
               </div>
-              <div className="social-links">
+              <div className="social-links-grid">
                 {socialYoutube ? (
-                  <a href={socialYoutube} target="_blank" rel="noopener noreferrer" className="social-link-youtube">
-                    <i className="fab fa-youtube" /> YouTube
+                  <a href={socialYoutube} target="_blank" rel="noopener noreferrer" className="social-link social-link--youtube">
+                    <i className="fab fa-youtube" aria-hidden /> YouTube
                   </a>
                 ) : null}
                 {socialFacebook ? (
-                  <a href={socialFacebook} target="_blank" rel="noopener noreferrer">
-                    <i className="fab fa-facebook" /> Facebook
+                  <a href={socialFacebook} target="_blank" rel="noopener noreferrer" className="social-link social-link--facebook">
+                    <i className="fab fa-facebook" aria-hidden /> Facebook
                   </a>
                 ) : null}
                 {socialInstagram ? (
-                  <a href={socialInstagram} target="_blank" rel="noopener noreferrer">
-                    <i className="fab fa-instagram" /> Instagram
+                  <a href={socialInstagram} target="_blank" rel="noopener noreferrer" className="social-link social-link--instagram">
+                    <i className="fab fa-instagram" aria-hidden /> Instagram
                   </a>
                 ) : null}
                 {socialTwitter ? (
-                  <a href={socialTwitter} target="_blank" rel="noopener noreferrer">
-                    <i className="fab fa-x-twitter" /> X
+                  <a href={socialTwitter} target="_blank" rel="noopener noreferrer" className="social-link social-link--twitter">
+                    <i className="fab fa-x-twitter" aria-hidden /> X
                   </a>
                 ) : null}
               </div>

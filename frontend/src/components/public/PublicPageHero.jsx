@@ -1,6 +1,7 @@
 /**
  * Page hero: school name (eyebrow) from School Branding; title from Public Pages row title.
  */
+import { Link } from 'react-router-dom';
 import { settingValue } from '../../utils/publicPageContent';
 
 export default function PublicPageHero({ page, fallbackTitle, settings, variant = 'default' }) {
@@ -27,17 +28,37 @@ export default function PublicPageHero({ page, fallbackTitle, settings, variant 
           {title ? <h1 className="fees-hero__title">{title}</h1> : null}
         </header>
       );
-    case 'admissions':
+    case 'admissions': {
+      const contactPhone = settingValue(settings, 'contact_phone');
       return (
         <header className="admissions-hero admissions-hero--compact">
           <div className="admissions-hero__inner">
             <div className="admissions-hero__text">
               {eyebrow ? <p className="admissions-hero__eyebrow">{eyebrow}</p> : null}
               {title ? <h1 className="admissions-hero__title">{title}</h1> : null}
+              <p className="admissions-hero__lead admissions-hero__lead--solo">
+                Vigezo, utaratibu wa maombi, na taarifa za kuwasiliana — yote hapa chini.
+              </p>
+            </div>
+            <div className="admissions-hero__cta">
+              <Link to="/admissions/apply" className="admissions-apply-button">
+                <i className="fas fa-file-signature" aria-hidden />
+                Omba Udahili / Apply Online
+              </Link>
+              {contactPhone ? (
+                <a
+                  href={`tel:${contactPhone.replace(/\s/g, '')}`}
+                  className="admissions-hero__phone"
+                >
+                  <i className="fas fa-phone" aria-hidden />
+                  {contactPhone}
+                </a>
+              ) : null}
             </div>
           </div>
         </header>
       );
+    }
     case 'about':
       return (
         <header className="about-hero">
@@ -47,13 +68,54 @@ export default function PublicPageHero({ page, fallbackTitle, settings, variant 
           </div>
         </header>
       );
-    case 'contact':
+    case 'contact': {
+      const contactPhone = settingValue(settings, 'contact_phone');
+      const contactEmail = settingValue(settings, 'contact_email');
+      const contactWhatsapp = settingValue(settings, 'contact_whatsapp');
+      const whatsappNumber = contactWhatsapp.replace(/[+\s]/g, '');
+      const whatsappUrl = whatsappNumber ? `https://wa.me/${whatsappNumber}` : '';
       return (
-        <header className="contact-card contact-card--intro contact-card--hero">
-          {eyebrow ? <p className="contact-page-eyebrow">{eyebrow}</p> : null}
-          {title ? <h1 className="contact-page-title">{title}</h1> : null}
+        <header className="contact-hero">
+          <div className="contact-hero__inner">
+            <div className="contact-hero__text">
+              {eyebrow ? <p className="contact-hero__eyebrow">{eyebrow}</p> : null}
+              {title ? <h1 className="contact-hero__title">{title}</h1> : null}
+              <p className="contact-hero__lead">
+                Wasiliana nasi kwa simu, barua pepe, au WhatsApp — ofisi yetu iko chini na ramani.
+              </p>
+            </div>
+            <div className="contact-hero__cta">
+              {contactPhone ? (
+                <a
+                  href={`tel:${contactPhone.replace(/\s/g, '')}`}
+                  className="contact-hero__action contact-hero__action--phone"
+                >
+                  <i className="fas fa-phone" aria-hidden />
+                  {contactPhone}
+                </a>
+              ) : null}
+              {contactEmail ? (
+                <a href={`mailto:${contactEmail}`} className="contact-hero__action contact-hero__action--email">
+                  <i className="fas fa-envelope" aria-hidden />
+                  Barua pepe
+                </a>
+              ) : null}
+              {whatsappUrl ? (
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="contact-hero__action contact-hero__action--whatsapp"
+                >
+                  <i className="fab fa-whatsapp" aria-hidden />
+                  WhatsApp
+                </a>
+              ) : null}
+            </div>
+          </div>
         </header>
       );
+    }
     case 'student-life':
       return (
         <header className="content-card sl-surface sl-surface--hero">

@@ -10,7 +10,7 @@ const Admissions = () => (
     pageSlug="admissions"
     pageLabel="Udahili"
     loadingMessage="Inapakia ukurasa wa udahili..."
-    shellClassName="admissions-page"
+    shellClassName="admissions-page admissions-page--immersive"
     innerClassName="admissions-page__inner"
     cmsClassName="admissions-grid"
     showPageHero

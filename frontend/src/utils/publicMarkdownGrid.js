@@ -35,12 +35,19 @@ const THEMES = {
     titleClass: 'admissions-card__title',
     textClass: 'admissions-card__intro',
     listClass: 'admissions-checklist',
+    orderedListClass: 'admissions-steps',
     icon: 'fa-graduation-cap',
     useCardHead: true,
     headClass: 'admissions-card__head',
     iconClass: 'admissions-card__icon',
     bodyWrapClass: 'admissions-card__body',
     skipIntro: /^udahili$/i,
+    sectionIcons: [
+      { test: /vigezo|mahitaji|sifa/i, icon: 'fa-clipboard-check' },
+      { test: /utaratibu|hatua|maombi|jinsi/i, icon: 'fa-list-ol' },
+      { test: /tarehe|kalenda|ratiba|muda/i, icon: 'fa-calendar-days' },
+      { test: /wasiliana|mawasiliano|contact/i, icon: 'fa-phone' },
+    ],
   },
   studentLife: {
     gridClass: 'student-life-grid',
@@ -72,8 +79,14 @@ const THEMES = {
     useCardHead: true,
     headClass: 'contact-card__head',
     iconClass: 'contact-card__icon',
-    bodyWrapClass: 'contact-card__body',
+    bodyWrapClass: 'contact-card__body-wrap',
     skipIntro: /^mawasiliano$/i,
+    sectionIcons: [
+      { test: /wasiliana|karibu|tembelea|ziara/i, icon: 'fa-handshake' },
+      { test: /taarifa|anwani|simu|barua/i, icon: 'fa-address-card' },
+      { test: /saa|ofisi|masaa|jumatatu/i, icon: 'fa-clock' },
+      { test: /tembelea|ramani|visit|map/i, icon: 'fa-map-marker-alt' },
+    ],
   },
   privacy: {
     gridClass: 'policy-cms-grid',
@@ -98,11 +111,49 @@ const THEMES = {
   },
 };
 
-function bodyToHtml(body, theme) {
+function admissionsBodyClasses(theme, title) {
+  const t = String(title || '').trim();
+  if (/tarehe|kalenda|ratiba|muda/i.test(t)) {
+    return { listClass: 'admissions-timeline', listVariant: 'timeline' };
+  }
+  if (/utaratibu|hatua|maombi|jinsi/i.test(t)) {
+    return { listVariant: 'steps', orderedListClass: theme.orderedListClass || 'admissions-steps' };
+  }
+  if (/wasiliana|mawasiliano|contact/i.test(t)) {
+    return { listClass: 'admissions-contact-list', listVariant: 'contact' };
+  }
+  return {};
+}
+
+function contactBodyClasses(theme, title) {
+  const t = String(title || '').trim();
+  if (/saa|ofisi|masaa|jumatatu|sikukuu/i.test(t)) {
+    return { listClass: 'contact-hours-grid', listVariant: 'timeline', timelineClass: 'contact-hours' };
+  }
+  if (/taarifa|anwani|simu|barua|whatsapp/i.test(t)) {
+    return { listClass: 'contact-detail-list', listVariant: 'contact' };
+  }
+  return {};
+}
+
+function themeBodyClasses(themeKey, theme, title) {
+  if (themeKey === 'admissions') return admissionsBodyClasses(theme, title);
+  if (themeKey === 'contact') return contactBodyClasses(theme, title);
+  return {};
+}
+
+function sectionIcon(theme, title) {
+  const match = theme.sectionIcons?.find(({ test }) => test.test(String(title || '').trim()));
+  return match?.icon || theme.icon;
+}
+
+function bodyToHtml(body, theme, title = '', themeKey = '') {
   return bodyMarkdownToHtml(body, {
     listClass: theme.listClass,
     textClass: theme.textClass,
     h3Class: theme.h3Class,
+    orderedListClass: theme.orderedListClass,
+    ...themeBodyClasses(themeKey, theme, title),
   });
 }
 
@@ -119,10 +170,11 @@ function buildSection(theme, title, bodyHtml, idx) {
   const safeTitle = escapeHtml(title);
 
   if (theme.useCardHead) {
+    const icon = sectionIcon(theme, title);
     return (
       `<section class="${theme.sectionBase}${stripe}" aria-labelledby="${hId}">` +
       `<div class="${theme.headClass}">` +
-      `<span class="${theme.iconClass}" aria-hidden="true"><i class="fas ${theme.icon}"></i></span>` +
+      `<span class="${theme.iconClass}" aria-hidden="true"><i class="fas ${icon}"></i></span>` +
       `<h2 id="${hId}" class="${theme.titleClass}">${safeTitle}</h2>` +
       `</div>` +
       `<div class="${theme.bodyWrapClass}">${bodyHtml}</div>` +
@@ -154,10 +206,10 @@ function markdownToGridHtml(markdown, themeKey) {
       const body = sec.bodyLines.join('\n').trim();
       if (sec.preamble && !sec.title) {
         if (!body) return '';
-        return buildSection(theme, 'Taarifa', bodyToHtml(body, theme), cardIndex++);
+        return buildSection(theme, 'Taarifa', bodyToHtml(body, theme, 'Taarifa', themeKey), cardIndex++);
       }
       if (!sec.title || shouldSkipSection(theme, sec.title, body)) return '';
-      return buildSection(theme, sec.title, bodyToHtml(body, theme), cardIndex++);
+      return buildSection(theme, sec.title, bodyToHtml(body, theme, sec.title, themeKey), cardIndex++);
     })
     .filter(Boolean);
 
