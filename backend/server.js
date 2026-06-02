@@ -59,11 +59,15 @@ async function validateCloudinaryCredentials() {
   }
 }
 
-// Placeholder SVG for missing uploads (avoids 404s; shows a simple person icon)
+// Placeholder SVG for missing image uploads only (photos, logos — not PDFs/documents)
 const PLACEHOLDER_IMAGE = Buffer.from(
   '<svg xmlns="http://www.w3.org/2000/svg" width="200" height="200" viewBox="0 0 24 24" fill="none" stroke="#ccc" stroke-width="1.5"><circle cx="12" cy="8" r="3"/><path d="M5 20c0-4 3-6 7-6s7 2 7 6"/></svg>',
   'utf8'
 );
+
+const UPLOAD_PLACEHOLDER_IMAGE_EXTENSIONS = new Set([
+  '.png', '.jpg', '.jpeg', '.gif', '.webp', '.svg', '.ico', '.bmp', '.avif',
+]);
 
 const app = express();
 
@@ -419,7 +423,7 @@ app.use('/static/uploads', (req, res, next) => {
     const stat = fs.statSync(filePath);
     if (stat.isFile()) {
       const ext = path.extname(filePath).toLowerCase();
-      const types = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp' };
+      const types = { '.png': 'image/png', '.jpg': 'image/jpeg', '.jpeg': 'image/jpeg', '.gif': 'image/gif', '.webp': 'image/webp', '.pdf': 'application/pdf' };
       const mtime = stat.mtime.getTime();
       const etag = `"${stat.size}-${mtime}"`;
 
@@ -441,6 +445,11 @@ app.use('/static/uploads', (req, res, next) => {
       res.setHeader('Last-Modified', stat.mtime.toUTCString());
       return res.sendFile(filePath);
     }
+  }
+  const ext = path.extname(relativePath).toLowerCase();
+  if (!UPLOAD_PLACEHOLDER_IMAGE_EXTENSIONS.has(ext)) {
+    res.status(404).setHeader('Content-Type', 'application/json');
+    return res.json({ message: 'File not found' });
   }
   res.setHeader('Content-Type', 'image/svg+xml');
   res.setHeader('Access-Control-Allow-Origin', '*');

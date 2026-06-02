@@ -380,42 +380,96 @@ async function ensureAdmissionLettersTable() {
 }
 
 async function deleteAdmissionLetterFile(filePath) {
-  if (!filePath || /^https?:\/\//i.test(String(filePath))) return;
-  const relative = String(filePath).replace(/^\/+/, '').replace(/^static\//, '');
+  if (!filePath) return;
+  const s = String(filePath);
+  if (/^https?:\/\//i.test(s)) {
+    if (s.includes('cloudinary.com') && cloudinary.isCloudinaryConfigured()) {
+      try {
+        const pathname = new URL(s).pathname;
+        const marker = '/upload/';
+        const idx = pathname.indexOf(marker);
+        if (idx !== -1) {
+          let publicId = decodeURIComponent(pathname.slice(idx + marker.length));
+          publicId = publicId.replace(/^v\d+\//, '');
+          publicId = publicId.replace(/\.[^/.]+$/, '');
+          await cloudinary.uploader.destroy(publicId, { resource_type: 'raw' });
+        }
+      } catch (err) {
+        console.warn('[admission-letters] Failed to delete Cloudinary PDF:', err.message);
+      }
+    }
+    return;
+  }
+  const relative = s.replace(/^\/+/, '').replace(/^static\//, '');
   const absolute = path.join(__dirname, '../static', relative);
   await fs.unlink(absolute).catch(() => {});
 }
 
-const admissionLettersUploadPath = path.join(__dirname, '../static/uploads/admission-letters');
-const admissionLettersStorage = multer.diskStorage({
-  destination: async (req, file, cb) => {
-    try {
-      await fs.mkdir(admissionLettersUploadPath, { recursive: true });
-      cb(null, admissionLettersUploadPath);
-    } catch (err) {
-      cb(err, null);
-    }
-  },
-  filename: (req, file, cb) => {
-    const safe = (file.originalname || 'application-form.pdf')
-      .replace(/[^a-zA-Z0-9._-]/g, '_')
-      .replace(/\.pdf$/i, '');
-    cb(null, `admission-form-${Date.now()}-${safe}.pdf`);
-  },
-});
-
-const admissionLettersUpload = multer({
-  storage: admissionLettersStorage,
-  limits: { fileSize: 15 * 1024 * 1024 },
-  fileFilter: (req, file, cb) => {
-    const ext = (path.extname(file.originalname || '') || '').toLowerCase();
-    if (ext === '.pdf') {
-      cb(null, true);
+let _admissionLettersStorage = null;
+function getAdmissionLettersStorage() {
+  if (!_admissionLettersStorage) {
+    if (cloudinary.isCloudinaryConfigured()) {
+      console.log('[cloudinary] Creating admissionLettersStorage instance (raw PDF)');
+      _admissionLettersStorage = createCloudinaryStorage({
+        folder: 'admission-letters',
+        allowed_formats: ['pdf'],
+        resource_type: 'raw',
+        publicId: (req, file) => {
+          const safe = (file.originalname || 'application-form.pdf')
+            .replace(/\.pdf$/i, '')
+            .replace(/[^a-zA-Z0-9._-]/g, '_');
+          return `admission-form-${Date.now()}-${safe}`;
+        },
+        label: 'ADMISSION LETTERS storage',
+      });
     } else {
-      cb(new Error('Only PDF files are allowed'));
+      console.log('[admission-letters] Cloudinary not configured — using local disk storage');
+      _admissionLettersStorage = multer.diskStorage({
+        destination: async (req, file, cb) => {
+          try {
+            const uploadPath = path.join(__dirname, '../static/uploads/admission-letters');
+            await fs.mkdir(uploadPath, { recursive: true });
+            cb(null, uploadPath);
+          } catch (err) {
+            cb(err, null);
+          }
+        },
+        filename: (req, file, cb) => {
+          const safe = (file.originalname || 'application-form.pdf')
+            .replace(/[^a-zA-Z0-9._-]/g, '_')
+            .replace(/\.pdf$/i, '');
+          cb(null, `admission-form-${Date.now()}-${safe}.pdf`);
+        },
+      });
     }
+  }
+  return _admissionLettersStorage;
+}
+
+const admissionLettersUpload = {
+  single: (field) => (req, res, next) => {
+    let storage;
+    try {
+      storage = getAdmissionLettersStorage();
+    } catch (err) {
+      console.error('[admission-letters] storage init failed:', err.message);
+      return res.status(500).json({ message: err.message });
+    }
+    const pdfFilter = (req, file, cb) => {
+      const ext = (path.extname(file.originalname || '') || '').toLowerCase();
+      if (ext === '.pdf') {
+        cb(null, true);
+      } else {
+        cb(new Error('Only PDF files are allowed'));
+      }
+    };
+    return multer({
+      storage,
+      limits: { fileSize: 15 * 1024 * 1024 },
+      fileFilter: pdfFilter,
+    }).single(field)(req, res, next);
   },
-});
+};
 
 router.get('/admission-letters', requireRole('admin', 'superadmin'), async (req, res) => {
   try {
@@ -443,7 +497,10 @@ router.post(
         return res.status(400).json({ message: 'No PDF file uploaded' });
       }
       await ensureAdmissionLettersTable();
-      const filePath = `uploads/admission-letters/${req.file.filename}`;
+      const isCloudinaryUpload = /^https?:\/\//i.test(String(req.file.path || ''));
+      const filePath = isCloudinaryUpload
+        ? req.file.path
+        : `uploads/admission-letters/${req.file.filename}`;
       const originalFilename = req.file.originalname || 'application-form.pdf';
 
       const existing = await query(
@@ -469,7 +526,7 @@ router.post(
         form: { file_path: filePath, original_filename: originalFilename },
       });
     } catch (error) {
-      if (req.file?.path) {
+      if (req.file?.path && !/^https?:\/\//i.test(String(req.file.path))) {
         await fs.unlink(req.file.path).catch(() => {});
       }
       return sendError(res, error, 500);

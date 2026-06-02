@@ -93,11 +93,12 @@ function createCloudinaryStorage({
   publicId,
   timeoutMs = 55000,
   label = 'cloudinary',
+  resource_type = 'image',
 }) {
   return {
     _handleFile(req, file, cb) {
       const public_id = publicId(req, file);
-      console.log(`[${label}] upload_stream starting — folder: ${folder}, public_id: ${public_id}`);
+      console.log(`[${label}] upload_stream starting — folder: ${folder}, public_id: ${public_id}, resource_type: ${resource_type}`);
 
       let settled = false;
       function settle(err, result) {
@@ -114,12 +115,10 @@ function createCloudinaryStorage({
           originalname: file.originalname,
           encoding: file.encoding,
           mimetype: file.mimetype,
-          // Match the shape that multer-storage-cloudinary produces so
-          // downstream route handlers can read req.file.path and req.file.filename
-          // without any changes.
           path: result.secure_url,
           filename: result.public_id,
           size: result.bytes,
+          resource_type,
         });
       }
 
@@ -127,7 +126,7 @@ function createCloudinaryStorage({
         settle(new Error(`Cloudinary upload_stream timed out after ${timeoutMs / 1000}s`));
       }, timeoutMs);
 
-      const uploadParams = { folder, public_id };
+      const uploadParams = { folder, public_id, resource_type };
       if (allowed_formats && allowed_formats.length) {
         uploadParams.allowed_formats = allowed_formats;
       }
@@ -152,7 +151,8 @@ function createCloudinaryStorage({
 
     _removeFile(req, file, cb) {
       if (file.filename) {
-        cloudinary.uploader.destroy(file.filename, (err) => {
+        const destroyOpts = file.resource_type ? { resource_type: file.resource_type } : {};
+        cloudinary.uploader.destroy(file.filename, destroyOpts, (err) => {
           if (err) console.warn(`[${label}] _removeFile destroy error:`, err);
           cb(null);
         });
