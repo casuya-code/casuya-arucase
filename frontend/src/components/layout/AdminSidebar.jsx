@@ -217,6 +217,7 @@ const AdminSidebar = () => {
         { path: '/admin/announcements', label: 'Announcements', icon: 'fa-bullhorn' },
         { path: '/admin/gallery', label: 'Gallery', icon: 'fa-images' },
         { path: '/admin/admission-applications', label: 'Admissions Apps', icon: 'fa-file-signature' },
+        { path: '/admin/admission-letters', label: 'Admission Letters', icon: 'fa-file-pdf' },
         { path: '/admin/staff-profiles', label: 'Staff Profiles', icon: 'fa-id-badge' },
         { path: '/admin/pass-ids', label: 'Pass ID', icon: 'fa-key' },
         { path: '/admin/faqs', label: 'FAQs', icon: 'fa-question-circle' },

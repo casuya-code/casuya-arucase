@@ -365,6 +365,141 @@ router.delete('/admission-applications/:id', requireRole('admin', 'superadmin'),
   }
 });
 
+// ========== ADMISSION LETTERS (public application form PDF) ==========
+
+async function ensureAdmissionLettersTable() {
+  await query(`
+    CREATE TABLE IF NOT EXISTS admission_letters (
+      id INTEGER PRIMARY KEY DEFAULT 1,
+      file_path VARCHAR(500),
+      original_filename VARCHAR(255),
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT chk_admission_letters_id CHECK (id = 1)
+    )
+  `);
+}
+
+async function deleteAdmissionLetterFile(filePath) {
+  if (!filePath || /^https?:\/\//i.test(String(filePath))) return;
+  const relative = String(filePath).replace(/^\/+/, '').replace(/^static\//, '');
+  const absolute = path.join(__dirname, '../static', relative);
+  await fs.unlink(absolute).catch(() => {});
+}
+
+const admissionLettersUploadPath = path.join(__dirname, '../static/uploads/admission-letters');
+const admissionLettersStorage = multer.diskStorage({
+  destination: async (req, file, cb) => {
+    try {
+      await fs.mkdir(admissionLettersUploadPath, { recursive: true });
+      cb(null, admissionLettersUploadPath);
+    } catch (err) {
+      cb(err, null);
+    }
+  },
+  filename: (req, file, cb) => {
+    const safe = (file.originalname || 'application-form.pdf')
+      .replace(/[^a-zA-Z0-9._-]/g, '_')
+      .replace(/\.pdf$/i, '');
+    cb(null, `admission-form-${Date.now()}-${safe}.pdf`);
+  },
+});
+
+const admissionLettersUpload = multer({
+  storage: admissionLettersStorage,
+  limits: { fileSize: 15 * 1024 * 1024 },
+  fileFilter: (req, file, cb) => {
+    const ext = (path.extname(file.originalname || '') || '').toLowerCase();
+    if (ext === '.pdf') {
+      cb(null, true);
+    } else {
+      cb(new Error('Only PDF files are allowed'));
+    }
+  },
+});
+
+router.get('/admission-letters', requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    await ensureAdmissionLettersTable();
+    const result = await query(
+      'SELECT file_path, original_filename, updated_at FROM admission_letters WHERE id = 1'
+    );
+    const row = result.rows[0];
+    if (!row?.file_path) {
+      return res.json({ form: null });
+    }
+    res.json({ form: row });
+  } catch (error) {
+    return sendError(res, error, 500);
+  }
+});
+
+router.post(
+  '/admission-letters',
+  requireRole('admin', 'superadmin'),
+  admissionLettersUpload.single('pdf_file'),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No PDF file uploaded' });
+      }
+      await ensureAdmissionLettersTable();
+      const filePath = `uploads/admission-letters/${req.file.filename}`;
+      const originalFilename = req.file.originalname || 'application-form.pdf';
+
+      const existing = await query(
+        'SELECT file_path FROM admission_letters WHERE id = 1'
+      );
+      if (existing.rows[0]?.file_path) {
+        await deleteAdmissionLetterFile(existing.rows[0].file_path);
+      }
+
+      await query(
+        `INSERT INTO admission_letters (id, file_path, original_filename, updated_at)
+         VALUES (1, $1, $2, NOW())
+         ON CONFLICT (id) DO UPDATE SET
+           file_path = EXCLUDED.file_path,
+           original_filename = EXCLUDED.original_filename,
+           updated_at = NOW()`,
+        [filePath, originalFilename]
+      );
+
+      clearCachePattern('public');
+      res.json({
+        message: 'Application form PDF uploaded successfully',
+        form: { file_path: filePath, original_filename: originalFilename },
+      });
+    } catch (error) {
+      if (req.file?.path) {
+        await fs.unlink(req.file.path).catch(() => {});
+      }
+      return sendError(res, error, 500);
+    }
+  }
+);
+
+router.delete('/admission-letters', requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    await ensureAdmissionLettersTable();
+    const existing = await query('SELECT file_path FROM admission_letters WHERE id = 1');
+    const oldPath = existing.rows[0]?.file_path;
+    if (oldPath) {
+      await deleteAdmissionLetterFile(oldPath);
+    }
+    await query(
+      `INSERT INTO admission_letters (id, file_path, original_filename, updated_at)
+       VALUES (1, NULL, NULL, NOW())
+       ON CONFLICT (id) DO UPDATE SET
+         file_path = NULL,
+         original_filename = NULL,
+         updated_at = NOW()`
+    );
+    clearCachePattern('public');
+    res.json({ message: 'Application form PDF removed' });
+  } catch (error) {
+    return sendError(res, error, 500);
+  }
+});
+
 // Configure multer for file uploads (for non-photo uploads)
 // Use sync fs operations for multer destination to avoid async issues
 

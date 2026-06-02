@@ -197,5 +197,13 @@ export const adminAPI = {
   updateAdmissionApplicationStatus: (id, status, feedback) =>
     api.post(`/admin/admission-applications/${id}/status`, { status, feedback }),
   deleteAdmissionApplication: (id) => api.delete(`/admin/admission-applications/${id}`),
+
+  // Admission application form PDF (homepage Udahili card download)
+  getAdmissionLettersForm: () => api.get('/admin/admission-letters'),
+  uploadAdmissionLettersForm: (formData) =>
+    api.post('/admin/admission-letters', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  deleteAdmissionLettersForm: () => api.delete('/admin/admission-letters'),
 };
 

@@ -852,6 +852,18 @@ async function initDatabase() {
       )
     `);
     console.log('✅ School stamp table created');
+
+    // Admission application form PDF (homepage download + admin Admission Letters)
+    await query(`
+      CREATE TABLE IF NOT EXISTS admission_letters (
+        id INTEGER PRIMARY KEY DEFAULT 1,
+        file_path VARCHAR(500),
+        original_filename VARCHAR(255),
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        CONSTRAINT chk_admission_letters_id CHECK (id = 1)
+      )
+    `);
+    console.log('✅ Admission letters table created');
     
     // Authority data table
     await query(`

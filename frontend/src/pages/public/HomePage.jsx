@@ -95,6 +95,7 @@ const HomePage = () => {
           administrators: [],
           announcements: [],
           school_stats: { graduates_since_1967: 0, current_students: 0, academic_year: null },
+          admission_application_form: null,
         };
       }
     },
@@ -112,7 +113,14 @@ const HomePage = () => {
     administrators = [],
     announcements = [],
     school_stats = {},
+    admission_application_form: admissionForm = null,
   } = actualData;
+
+  const admissionFormUrl = admissionForm?.file_path
+    ? resolveStaticUrl(admissionForm.file_path)
+    : null;
+  const admissionFormDownloadName =
+    admissionForm?.original_filename || 'fomu-ya-maombi.pdf';
 
   const schoolName = settingValue(settings, 'school_name');
   const rectorStatement = settingValue(settings, 'rector_statement');
@@ -480,6 +488,18 @@ const HomePage = () => {
                   Maelezo ya Udahili
                 </Link>
               </div>
+              {admissionFormUrl && (
+                <a
+                  href={admissionFormUrl}
+                  className="home-admissions-btn home-admissions-btn--download"
+                  download={admissionFormDownloadName}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  <i className="fas fa-file-pdf" aria-hidden />
+                  Pakua Fomu ya Maombi / Download Application Form
+                </a>
+              )}
               {contactPhone && (
                 <a href={`tel:${contactPhone.replace(/\s/g, '')}`} className="home-admissions-phone">
                   <i className="fas fa-phone" aria-hidden />

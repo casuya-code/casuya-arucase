@@ -235,6 +235,13 @@ router.get('/homepage', async (req, res) => {
       current_students,
       academic_year: currentYear,
     };
+
+    const admissionFormRow = await safeSingle(
+      'SELECT file_path, original_filename FROM admission_letters WHERE id = 1 AND file_path IS NOT NULL',
+      [],
+      null
+    );
+    const admission_application_form = admissionFormRow?.file_path ? admissionFormRow : null;
     
     res.setHeader('Cache-Control', 'public, max-age=60'); // 1 min cache for fast repeat loads on slow/mobile
     res.json({
@@ -244,6 +251,7 @@ router.get('/homepage', async (req, res) => {
       administrators,
       announcements,
       school_stats,
+      admission_application_form,
     });
   } catch (error) {
     console.error('Homepage error:', error);

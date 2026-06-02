@@ -877,6 +877,15 @@
   border-color: #e8c96a;
 }
 
+.home-admissions-btn--download {
+  border-color: var(--home-primary-mid, #234a73);
+  background: rgba(26, 84, 144, 0.06);
+}
+
+.home-admissions-btn--download:hover {
+  background: rgba(26, 84, 144, 0.12);
+}
+
 .home-admissions-phone {
   display: inline-flex;
   align-items: center;

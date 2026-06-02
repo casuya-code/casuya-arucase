@@ -1,0 +1,202 @@
+.admission-letters-page {
+  --al-primary: #1a5490;
+  --al-line: #d1d5db;
+  --al-line-soft: #e5e7eb;
+  --al-muted: #6b7280;
+
+  max-width: 900px;
+  margin: 0 auto;
+  padding: clamp(0.75rem, 2.5vw, 1.25rem);
+  box-sizing: border-box;
+}
+
+.admission-letters-page__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.admission-letters-page__header h1 {
+  margin: 0;
+  font-size: clamp(1.15rem, 3vw, 1.35rem);
+  font-weight: 600;
+  color: var(--al-primary);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admission-letters-page__header h1 i {
+  color: #b91c1c;
+}
+
+.admission-letters-status {
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 0.25rem 0.65rem;
+  border: 1px solid var(--al-line);
+  border-radius: 999px;
+  color: var(--al-muted);
+}
+
+.admission-letters-status--live {
+  color: #166534;
+  background: #ecfdf5;
+  border-color: #86efac;
+}
+
+.admission-letters-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+@media (max-width: 640px) {
+  .admission-letters-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admission-letters-card {
+  border: 1px solid var(--al-line);
+  background: #fff;
+  min-width: 0;
+}
+
+.admission-letters-card > h2 {
+  margin: 0;
+  padding: 0.65rem 0.85rem;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #0f2d52;
+  border-bottom: 1px solid var(--al-line-soft);
+  background: #f8fafc;
+}
+
+.admission-letters-card__body {
+  padding: 0.85rem;
+}
+
+.admission-letters-file {
+  display: flex;
+  flex-direction: column;
+  gap: 0.65rem;
+}
+
+.admission-letters-file__icon {
+  font-size: 2rem;
+  color: #b91c1c;
+  line-height: 1;
+}
+
+.admission-letters-file__name {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 600;
+  word-break: break-word;
+}
+
+.admission-letters-file__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admission-letters-action-btn {
+  flex: 1 1 calc(50% - 0.25rem);
+  min-height: 40px;
+  justify-content: center;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.admission-letters-empty {
+  margin: 0;
+  padding: 1.5rem 0.5rem;
+  text-align: center;
+  color: var(--al-muted);
+  font-size: 0.9rem;
+}
+
+.admission-letters-dropzone {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 9rem;
+  padding: 1rem;
+  border: 2px dashed var(--al-line);
+  cursor: pointer;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.admission-letters-dropzone:focus-visible {
+  outline: 2px solid var(--al-primary);
+  outline-offset: 2px;
+}
+
+.admission-letters-dropzone:hover:not(.admission-letters-dropzone--busy) {
+  border-color: var(--al-primary);
+  background: #f0f6fc;
+}
+
+.admission-letters-dropzone--active {
+  border-color: #c9a227;
+  background: #fffbeb;
+}
+
+.admission-letters-dropzone--busy {
+  opacity: 0.8;
+  pointer-events: none;
+}
+
+.admission-letters-dropzone__input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+}
+
+.admission-letters-dropzone__icon {
+  font-size: 1.5rem;
+  color: var(--al-primary);
+  margin-bottom: 0.5rem;
+}
+
+.admission-letters-dropzone__label {
+  margin: 0;
+  font-size: 0.95rem;
+  font-weight: 600;
+}
+
+.admission-letters-dropzone__hint {
+  margin: 0.25rem 0 0;
+  font-size: 0.75rem;
+  color: var(--al-muted);
+}
+
+.admission-letters-grid--loading .admission-letters-card--skeleton {
+  min-height: 10rem;
+  background: linear-gradient(90deg, #f3f4f6, #e5e7eb, #f3f4f6);
+  background-size: 200% 100%;
+  animation: admission-letters-shimmer 1.2s ease-in-out infinite;
+}
+
+@keyframes admission-letters-shimmer {
+  to {
+    background-position: -200% 0;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .admission-letters-grid--loading .admission-letters-card--skeleton {
+    animation: none;
+    background: #f3f4f6;
+  }
+}

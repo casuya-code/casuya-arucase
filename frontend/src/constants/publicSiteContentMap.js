@@ -15,6 +15,7 @@ export const PUBLIC_SITE_CONTENT_SOURCES = [
       { adminPath: '/admin/administrators', label: 'Leadership cards' },
       { adminPath: '/admin/faqs', label: 'FAQ accordion' },
       { adminPath: '/admin/department-contacts', label: 'Phones, emails, footer' },
+      { adminPath: '/admin/admission-letters', label: 'Udahili card — application form PDF download' },
     ],
   },
   {
