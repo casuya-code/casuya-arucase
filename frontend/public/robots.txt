@@ -1,55 +1,12 @@
-# Arusha Catholic Seminary - robots.txt (2026 SEO Compliant)
+# Arusha Catholic Seminary — robots.txt
+# All rules live under User-agent: * so Google/Bing parse Disallow correctly.
+
 User-agent: *
 Allow: /
-
-# Major Search Engine Crawlers 2026
-User-agent: Googlebot
-Allow: /
-Crawl-delay: 1
-
-User-agent: Bingbot
-Allow: /
-Crawl-delay: 1
-
-User-agent: Yandexbot
-Allow: /
-Crawl-delay: 1
-
-User-agent: DuckDuckBot
-Allow: /
-Crawl-delay: 1
-
-User-agent: GPTBot
-Allow: /
-Crawl-delay: 2
-
-User-agent: ChatGPT-User
-Allow: /
-Crawl-delay: 2
-
-User-agent: Claude-Web
-Allow: /
-Crawl-delay: 2
-
-User-agent: PerplexityBot
-Allow: /
-Crawl-delay: 2
-
-# Sitemap location (all crawlers use this to discover pages)
-Sitemap: https://www.arushacatholicseminary.co.tz/sitemap.xml
-
-# Disallow admin and protected areas from general indexing
 Disallow: /admin
 Disallow: /login
 Disallow: /student/dashboard
 Disallow: /api/
 Disallow: /static/uploads/private/
-# Note: /student-login is allowed (public page students need to find)
 
-# Allow important public directories
-Allow: /static/uploads/photos/
-Allow: /static/uploads/documents/
-Allow: /static/uploads/gallery/
-
-# Crawl-delay honored by some crawlers (Google ignores it)
-Crawl-delay: 1
+Sitemap: https://www.arushacatholicseminary.co.tz/sitemap.xml

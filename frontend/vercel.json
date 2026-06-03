@@ -4,6 +4,14 @@
   "devCommand": "npm run dev",
   "installCommand": "npm install",
   "framework": "vite",
+  "redirects": [
+    {
+      "source": "/:path*",
+      "has": [{ "type": "host", "value": "arushacatholicseminary.co.tz" }],
+      "destination": "https://www.arushacatholicseminary.co.tz/:path*",
+      "permanent": true
+    }
+  ],
   "rewrites": [
     {
       "source": "/((?!js/|assets/|images/|fonts/|icons/|sounds/|sw\\.js|manifest\\.json|robots\\.txt|sitemap\\.xml|BingSiteAuth\\.xml|googlea7be70d078753cc0\\.html|yandex-verification\\.html).*)",
