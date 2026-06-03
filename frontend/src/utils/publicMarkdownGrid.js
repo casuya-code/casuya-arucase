@@ -15,12 +15,7 @@ const THEMES = {
   staff: {
     gridClass: 'staff-cms-grid',
     sectionBase: 'content-card staff-surface staff-surface--chunk',
-    stripes: [
-      'staff-surface--stripe-navy',
-      'staff-surface--stripe-teal',
-      'staff-surface--stripe-slate',
-      'staff-surface--stripe-gold',
-    ],
+    stripes: [],
     titleClass: 'staff-chunk__title',
     textClass: 'staff-chunk__text',
     listClass: 'staff-chunk__contacts',
@@ -52,12 +47,7 @@ const THEMES = {
   studentLife: {
     gridClass: 'student-life-grid',
     sectionBase: 'content-card sl-surface sl-surface--chunk',
-    stripes: [
-      'sl-surface--stripe-navy',
-      'sl-surface--stripe-teal',
-      'sl-surface--stripe-slate',
-      'sl-surface--stripe-gold',
-    ],
+    stripes: [],
     titleClass: 'sl-card__title',
     textClass: 'sl-card__intro',
     listClass: 'sl-list',
@@ -90,13 +80,8 @@ const THEMES = {
   },
   privacy: {
     gridClass: 'policy-cms-grid',
-    sectionBase: 'content-card policy-surface policy-surface--chunk policy-rich-content',
-    stripes: [
-      'policy-surface--stripe-navy',
-      'policy-surface--stripe-slate',
-      'policy-surface--stripe-teal',
-      'policy-surface--stripe-gold',
-    ],
+    sectionBase: 'policy-surface policy-surface--chunk policy-rich-content',
+    stripes: [],
     titleClass: 'policy-fact__title',
     textClass: 'policy-fact__text',
     listClass: 'policy-chunk__list',

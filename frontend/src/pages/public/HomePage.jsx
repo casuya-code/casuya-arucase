@@ -215,14 +215,15 @@ const HomePage = () => {
               <SkeletonLoader type="image" height="400px" />
             ) : carouselPhotos.length > 0 ? (
               <>
-                <div className="carousel-wrapper">
+                <div className="carousel-wrapper" aria-hidden="true">
                   {carouselPhotos.map((photo, index) => {
                     const { src: imageUrl, srcSet } = getHeroSources(photo.path);
                     const isActive = index === carouselIndex;
                     const shouldLoad =
                       index === 0 ||
                       (heroImageLoaded && (isActive || Math.abs(index - carouselIndex) <= 1));
-                    const slideAlt = photo.caption || (index === 0 ? '' : `Picha ${index + 1}`);
+                    /* Decorative hero slides — captions belong in gallery section, not alt text */
+                    const slideAlt = '';
                     return (
                       <div
                         key={photo.id || index}
@@ -450,7 +451,7 @@ const HomePage = () => {
         )}
 
         {/* —— Admissions CTA —— */}
-        <section className="home-admissions-cta" aria-labelledby="home-admissions-heading">
+        <section className="home-admissions-cta home-band--light" aria-labelledby="home-admissions-heading">
           <div className="home-admissions-cta__inner">
             <div className="home-framed-panel home-framed-panel--cta home-admissions-cta__frame">
             <div className="home-admissions-cta__copy">
@@ -479,15 +480,16 @@ const HomePage = () => {
               </ol>
             </div>
             <div className="home-admissions-cta__actions">
-              <div className="home-admissions-cta__btn-row">
-                <Link to="/admissions/apply" className="home-admissions-btn home-admissions-btn--primary">
-                  <i className="fas fa-pen-to-square" aria-hidden />
+              <Link to="/admissions/apply" className="home-admissions-btn home-admissions-btn--primary">
+                <i className="fas fa-pen-to-square" aria-hidden />
+                <span className="home-admissions-btn__label">
                   Omba Udahili / Apply Online
-                </Link>
-                <Link to="/admissions" className="home-admissions-btn">
-                  Maelezo ya Udahili
-                </Link>
-              </div>
+                </span>
+              </Link>
+              <Link to="/admissions" className="home-admissions-btn home-admissions-btn--secondary">
+                <i className="fas fa-info-circle" aria-hidden />
+                <span className="home-admissions-btn__label">Maelezo ya Udahili</span>
+              </Link>
               {admissionFormUrl && (
                 <a
                   href={admissionFormUrl}
@@ -495,13 +497,18 @@ const HomePage = () => {
                   download={admissionFormDownloadName}
                 >
                   <i className="fas fa-file-pdf" aria-hidden />
-                  Pakua Fomu ya Maombi / Download Application Form
+                  <span className="home-admissions-btn__label">
+                    Pakua Fomu ya Maombi / Download Application Form
+                  </span>
                 </a>
               )}
               {contactPhone && (
-                <a href={`tel:${contactPhone.replace(/\s/g, '')}`} className="home-admissions-phone">
+                <a
+                  href={`tel:${contactPhone.replace(/\s/g, '')}`}
+                  className="home-admissions-btn home-admissions-btn--phone"
+                >
                   <i className="fas fa-phone" aria-hidden />
-                  {contactPhone}
+                  <span className="home-admissions-btn__label">{contactPhone}</span>
                 </a>
               )}
             </div>
@@ -544,20 +551,26 @@ const HomePage = () => {
                         onClick={() => setSelectedGalleryPhoto(photo)}
                         aria-label={photo.caption || 'Fungua picha'}
                       >
-                        <img
-                          src={imageUrl}
-                          alt={photo.caption || 'Picha ya seminari'}
-                          width={320}
-                          height={240}
-                          sizes="(max-width: 768px) 50vw, 320px"
-                          loading="lazy"
-                          decoding="async"
-                          onError={(e) => {
-                            e.currentTarget.style.display = 'none';
-                          }}
-                        />
-                        {photo.caption && (
+                        <span className="home-gallery-item__media">
+                          <img
+                            src={imageUrl}
+                            alt=""
+                            width={320}
+                            height={240}
+                            sizes="(max-width: 768px) 50vw, 320px"
+                            loading="lazy"
+                            decoding="async"
+                            onError={(e) => {
+                              e.currentTarget.style.display = 'none';
+                            }}
+                          />
+                        </span>
+                        {photo.caption ? (
                           <span className="home-gallery-caption">{photo.caption}</span>
+                        ) : (
+                          <span className="home-gallery-caption home-gallery-caption--placeholder">
+                            Picha ya seminari
+                          </span>
                         )}
                       </button>
                     );
@@ -691,7 +704,7 @@ const HomePage = () => {
         </section>
 
         {/* —— Contact strip —— */}
-        <section className="home-contact-strip" aria-label="Mawasiliano">
+        <section className="home-contact-strip home-band--light" aria-label="Mawasiliano">
           <div className="home-section-inner">
             <header className="home-section-header">
               <h2 className="home-section-title">
@@ -820,11 +833,11 @@ const HomePage = () => {
               </button>
               <img
                 src={getHeroUrl(selectedGalleryPhoto.path)}
-                alt={selectedGalleryPhoto.caption || 'Picha ya seminari'}
+                alt=""
               />
-              {selectedGalleryPhoto.caption && (
-                <p className="home-gallery-lightbox-caption">{selectedGalleryPhoto.caption}</p>
-              )}
+              <p className="home-gallery-lightbox-caption">
+                {selectedGalleryPhoto.caption || 'Picha ya seminari'}
+              </p>
             </div>
           </div>
         )}

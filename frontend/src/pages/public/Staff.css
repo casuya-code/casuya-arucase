@@ -1,14 +1,13 @@
 @import '../../styles/public-common.css';
 
-/* ========== Immersive staff page (matches /necta-results look: wide, sharp cards, dark mesh bg) ========== */
+/* ========== Immersive staff page (wide, sharp cards, light grey shell) ========== */
 
-.staff-page.staff-page--immersive {
+.staff-page.staff-page--immersive.public-immersive-shell {
   position: relative;
   width: 100%;
   min-width: 100%;
   max-width: 100vw;
   min-height: 65vh;
-  padding: clamp(1rem, 3vw, 2rem) var(--public-content-pad-x, clamp(0.85rem, 2.5vw, 2rem));
   overflow-x: hidden;
   box-sizing: border-box;
   isolation: isolate;
@@ -16,46 +15,13 @@
   --profile-photo-outer-padding: 3px;
 }
 
-.staff-page__bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-color: #070b14;
-  background-image:
-    radial-gradient(ellipse 120% 80% at 50% -20%, rgba(37, 99, 235, 0.35), transparent 55%),
-    radial-gradient(ellipse 90% 60% at 100% 50%, rgba(30, 64, 175, 0.12), transparent 45%),
-    radial-gradient(ellipse 70% 50% at 0% 80%, rgba(180, 140, 60, 0.08), transparent 50%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0, rgba(255, 255, 255, 0) 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0, rgba(255, 255, 255, 0) 1px);
-  background-size:
-    100% 100%,
-    100% 100%,
-    100% 100%,
-    28px 28px,
-    28px 28px;
-  background-position: 0 0, 0 0, 0 0, 0 0, 0 0;
-}
-
-.staff-page__inner {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: min(var(--public-content-max-width, 90rem), 100%);
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(0.5rem, 1.4vw, 0.8rem);
-}
-
 /* Sharp elevated surfaces (CMS, fallback, directory) */
 .staff-page--immersive .staff-surface {
   background: #fafbfc;
   border: 1px solid rgba(15, 23, 42, 0.14);
-  border-radius: 0;
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.65) inset,
-    0 6px 24px rgba(0, 0, 0, 0.14);
+  border-radius: var(--public-surface-radius-lg, 12px);
+  overflow: hidden;
+  box-shadow: none;
   width: 100%;
   max-width: 100%;
   margin: 0;
@@ -66,12 +32,10 @@
 }
 
 .staff-page--immersive .staff-surface--cms {
-  border-left: 4px solid #1e3a8a;
   padding: clamp(0.68rem, 1.95vw, 1.2rem) clamp(0.75rem, 2vw, 1.28rem);
 }
 
 .staff-page--immersive .staff-surface--hero {
-  border-left: 4px solid #1e40af;
   text-align: left;
   white-space: normal;
   padding: clamp(0.72rem, 2vw, 1.1rem) clamp(0.8rem, 2.2vw, 1.3rem);
@@ -122,22 +86,6 @@
   padding: clamp(0.55rem, 1.5vw, 0.9rem) clamp(0.65rem, 1.75vw, 1.05rem);
 }
 
-.staff-page--immersive .staff-surface--stripe-navy {
-  border-left: 4px solid #1e3a8a;
-}
-
-.staff-page--immersive .staff-surface--stripe-teal {
-  border-left: 4px solid #0f766e;
-}
-
-.staff-page--immersive .staff-surface--stripe-slate {
-  border-left: 4px solid #475569;
-}
-
-.staff-page--immersive .staff-surface--stripe-gold {
-  border-left: 4px solid #b45309;
-}
-
 .staff-chunk__title {
   margin: 0 0 0.35rem;
   padding: 0 0 0.28rem;
@@ -186,17 +134,14 @@
 }
 
 .staff-page--immersive .staff-surface--directory-intro {
-  border-left: 4px solid #c5a059;
   white-space: normal;
 }
 
 .staff-page--immersive .staff-surface--directory-teachers {
-  border-left: 4px solid #1e3a8a;
   white-space: normal;
 }
 
 .staff-page--immersive .staff-surface--directory-non {
-  border-left: 4px solid #0f766e;
   white-space: normal;
 }
 
@@ -221,10 +166,6 @@
 .staff-surface--directory-non .staff-section-card__title {
   color: #0f766e;
   border-bottom-color: rgba(15, 118, 110, 0.28);
-}
-
-.staff-surface--directory-non .staff-profile-card {
-  border-left-color: #0f766e;
 }
 
 .staff-directory-intro {
@@ -291,7 +232,6 @@
 .staff-profile-card {
   border: 1px solid rgba(15, 23, 42, 0.1);
   border-radius: 0;
-  border-left: 3px solid #1e3a8a;
   padding: 0.65rem 0.65rem;
   background: #fff;
   box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset;
@@ -413,10 +353,6 @@
 }
 
 @media (max-width: 768px) {
-  .staff-page.staff-page--immersive {
-    padding: 0.85rem var(--public-content-pad-x, 0.65rem) 1.25rem;
-  }
-
   .staff-grid-public {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }

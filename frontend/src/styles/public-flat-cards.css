@@ -6,33 +6,69 @@
 :root {
   --public-card-border-color: rgba(15, 23, 42, 0.14);
   --public-card-border: 1px solid var(--public-card-border-color);
-  --public-card-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.65) inset,
-    0 6px 24px rgba(15, 23, 42, 0.1);
-  --public-card-shadow-hover:
-    0 1px 0 rgba(255, 255, 255, 0.65) inset,
-    0 10px 28px rgba(15, 23, 42, 0.12);
+  /* Flat only — no inset highlight or drop-shadow “3D” depth */
+  --public-card-shadow: none;
+  --public-card-shadow-hover: none;
 }
 
-/* —— Remove left accent stripes —— */
-.public-layout .public-main [class*='--stripe-'],
-.public-layout .public-main [class*='-surface--hero'],
-.public-layout .public-main [class*='-surface--cms'],
-.public-layout .public-main [class*='-surface--filters'],
-.public-layout .public-main [class*='-surface--notice'],
-.public-layout .public-main .about-card,
-.public-layout .public-main .announcement-card,
-.public-layout .public-main .necta-card--hero,
-.public-layout .public-main .necta-stat-card,
-.public-layout .public-main .staff-surface--directory-intro,
-.public-layout .public-main .staff-surface--directory-teachers,
-.public-layout .public-main .staff-surface--directory-non,
-.admissions-apply-page [class*='--stripe-'],
-.admissions-apply-page [class*='-surface--hero'],
-.admissions-apply-page [class*='-surface--cms'],
-.necta-results [class*='--stripe-'],
-.necta-results .necta-card--hero,
-.necta-results .necta-stat-card {
+/* —— No coloured left accent stripe on any public card or hero —— */
+.public-immersive-shell :is(
+    .public-cms-hero,
+    [class*='--stripe-'],
+    [class*='-surface--hero'],
+    [class*='-surface--cms'],
+    [class*='-surface--filters'],
+    [class*='-surface--notice'],
+    .about-card,
+    .announcement-card,
+    .sl-surface,
+    .fees-surface,
+    .staff-surface,
+    .admissions-card,
+    .admissions-surface,
+    .admissions-apply-card,
+    .gallery-surface,
+    .gallery-item-card,
+    .contact-card,
+    .policy-surface,
+    .student-report-surface,
+    .student-report-card,
+    .necta-card,
+    .necta-stat-card
+  ),
+.public-layout .public-main :is(
+    .public-cms-hero,
+    [class*='--stripe-'],
+    [class*='-surface--hero'],
+    [class*='-surface--cms'],
+    [class*='-surface--filters'],
+    [class*='-surface--notice'],
+    .about-card,
+    .announcement-card,
+    .sl-surface,
+    .fees-surface,
+    .staff-surface,
+    .staff-surface--directory-intro,
+    .staff-surface--directory-teachers,
+    .staff-surface--directory-non,
+    .admissions-card,
+    .admissions-surface,
+    .admissions-apply-card,
+    .gallery-surface,
+    .gallery-item-card,
+    .contact-card,
+    .policy-surface,
+    .student-report-surface,
+    .student-report-card,
+    .necta-card,
+    .necta-stat-card
+  ),
+.necta-results :is(
+    [class*='--stripe-'],
+    .necta-card,
+    .necta-card--hero,
+    .necta-stat-card
+  ) {
   border-left-width: 1px !important;
   border-left-style: solid !important;
   border-left-color: var(--public-card-border-color) !important;
@@ -46,13 +82,13 @@
     .sl-surface,
     .staff-surface,
     .fees-surface,
-    .policy-surface,
     .admissions-hero,
     .admissions-card,
     .admissions-apply-panel,
     .admissions-apply-form-card,
     .contact-hero,
     .contact-card,
+    .public-cms-hero,
     .necta-card,
     .announcements-surface,
     .announcement-card,
@@ -78,36 +114,114 @@
     .admissions-apply-sidebar-card
   ),
 .necta-results .necta-card {
-  box-shadow: var(--public-card-shadow) !important;
+  box-shadow: none !important;
+}
+
+/* Immersive public pages — never 3D lift on hover */
+.public-immersive-shell :is(
+    .public-cms-hero,
+    .public-cms-card,
+    .sl-surface,
+    .fees-surface,
+    .staff-surface,
+    .about-card,
+    .necta-card,
+    .necta-stat-card,
+    .announcements-surface,
+    .announcement-card,
+    .admissions-card,
+    .admissions-surface,
+    .admissions-apply-card,
+    .gallery-surface,
+    .gallery-item-card,
+    .contact-card,
+    .policy-surface,
+    .student-report-surface,
+    .student-report-card,
+    .admissions-apply-hint,
+    .logged-in-as,
+    .feedback-box,
+    .admissions-apply-success-banner,
+    .admissions-apply-rejected-banner,
+    .admissions-apply-confirm,
+    .admissions-timeline__item,
+    .admissions-contact-list li
+  ),
+.public-immersive-shell :is(
+    .announcement-card,
+    .gallery-item-card,
+    .public-cms-card,
+    .about-card
+  ):hover {
+  box-shadow: none !important;
+  transform: none !important;
+}
+
+/* Apply page: flat panels */
+.admissions-apply-page :is(
+    .admissions-apply-card,
+    .logged-in-as,
+    .feedback-box,
+    .admissions-apply-success-banner,
+    .admissions-apply-rejected-banner,
+    .admissions-apply-hint,
+    .admissions-apply-confirm,
+    .admissions-apply-toolbar__logout,
+    .admissions-apply-confirm__btn,
+    .primary,
+    .admissions-apply-mode-bar__btn
+  ) {
+  box-shadow: none !important;
+}
+
+.admissions-apply-page :is(
+    .admissions-apply-toolbar__logout,
+    .admissions-apply-confirm__btn,
+    .primary
+  ):hover,
+.admissions-apply-page :is(
+    .admissions-apply-toolbar__logout,
+    .admissions-apply-confirm__btn,
+    .primary
+  ):active {
+  box-shadow: none !important;
+  transform: none !important;
 }
 
 .public-layout .public-main .announcement-card:hover,
-.public-layout .public-main .gallery-item-card:hover,
-.public-layout .public-main .month-card:hover,
-.public-layout .public-main .assessment-card:hover {
-  box-shadow: var(--public-card-shadow-hover) !important;
+.public-layout .public-main .gallery-item-card:hover {
+  box-shadow: none !important;
+  transform: none !important;
 }
 
 .public-layout .public-main .student-dashboard {
   --sd-card-shadow: var(--public-card-shadow);
 }
 
+.public-layout .public-main .student-dashboard .month-card:hover,
 .public-layout .public-main .student-dashboard .assessment-card:hover,
-.public-layout .public-main .student-dashboard .month-card:hover {
-  box-shadow: var(--public-card-shadow-hover) !important;
-}
-
 .public-layout .public-main .student-dashboard .report-term-btn,
+.public-layout .public-main .student-dashboard .report-term-btn.active,
 .public-layout .public-main .student-dashboard .logout-button {
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08) !important;
-}
-
-.public-layout .public-main .student-dashboard .report-term-btn.active {
-  box-shadow: 0 2px 8px rgba(15, 45, 82, 0.2) !important;
+  box-shadow: none !important;
+  transform: none !important;
 }
 
 .public-layout .public-main .admissions-apply-button,
 .admissions-apply-page .admissions-apply-submit,
-.admissions-apply-page .admissions-apply-back {
-  box-shadow: 0 4px 14px rgba(15, 45, 82, 0.18) !important;
+.admissions-apply-page .admissions-apply-back,
+.public-immersive-shell .public-cms-hero__btn,
+.public-immersive-shell .admissions-apply-btn {
+  box-shadow: none !important;
+}
+
+.admissions-apply-page .logged-in-as__status.status-badge {
+  box-shadow: none !important;
+  text-shadow: none !important;
+}
+
+.public-layout .public-main .content-card,
+.public-immersive-shell .content-card {
+  box-shadow: none !important;
+  border: 1px solid var(--public-card-border-color) !important;
 }

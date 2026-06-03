@@ -4,6 +4,10 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
+import {
+  buildSeoSiteNavHtml,
+  buildSeoSiteNavJsonLd,
+} from './src/constants/publicSiteNavSeo.js';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 
@@ -61,8 +65,10 @@ export default defineConfig({
     {
       name: 'seo-site-verification-and-bing-xml',
       transformIndexHtml(html) {
-        const block = buildVerificationMetaTags();
-        return html.replace('<!-- SEO_SITE_VERIFICATION_TAGS -->', block);
+        let out = html.replace('<!-- SEO_SITE_VERIFICATION_TAGS -->', buildVerificationMetaTags());
+        out = out.replace('<!-- SEO_SITE_NAV_JSONLD -->', buildSeoSiteNavJsonLd());
+        out = out.replace('<!-- SEO_SITE_NAV_BLOCK -->', buildSeoSiteNavHtml());
+        return out;
       },
       closeBundle() {
         const bingUser = process.env.VITE_BING_WEBMASTER_USER_ID?.trim();

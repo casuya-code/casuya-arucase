@@ -79,6 +79,7 @@ export default function PublicCmsPage({
   afterHero = null,
   prepareHtml = null,
   cmsClassName,
+  proseClassName = 'public-cms-body public-cms-body--prose content-card',
   hashScroll = false,
   showPageHero = false,
   heroVariant = 'default',
@@ -134,7 +135,7 @@ export default function PublicCmsPage({
               dangerouslySetInnerHTML={{ __html: DOMPurify.sanitize(html) }}
             />
           ) : (
-            <PublicCmsHtml page={{ html_content: html }} className={cmsClassName} />
+            <PublicCmsHtml page={{ html_content: html }} className={proseClassName} />
           );
       }
     } else {

@@ -42,9 +42,9 @@
   min-height: var(--pn-btn-min-h);
   padding: var(--pn-btn-pad-y) var(--pn-btn-pad-x);
   border-radius: 0;
-  border: 1px solid #0f172a;
-  background: #1e293b;
-  color: #f8fafc;
+  border: 1px solid rgba(15, 23, 42, 0.2);
+  background: #ffffff;
+  color: #0f172a;
   text-decoration: none;
   font-weight: 600;
   letter-spacing: 0.02em;
@@ -80,7 +80,7 @@
 }
 
 .public-prev-next-nav__btn i {
-  color: #e2e8f0;
+  color: #64748b;
   font-size: var(--pn-icon);
   line-height: 1;
   flex-shrink: 0;
@@ -89,7 +89,7 @@
 .public-prev-next-nav__hint {
   font-size: var(--pn-hint);
   font-weight: 400;
-  color: #94a3b8;
+  color: #64748b;
   line-height: 1.2;
   max-width: 100%;
 }
@@ -103,13 +103,13 @@
 }
 
 .public-prev-next-nav__btn:hover:not(.public-prev-next-nav__btn--disabled) {
-  background: #0f172a;
-  border-color: #020617;
-  color: #fff;
+  background: #f1f5f9;
+  border-color: rgba(15, 23, 42, 0.28);
+  color: #0f172a;
 }
 
 .public-prev-next-nav__btn:active:not(.public-prev-next-nav__btn--disabled) {
-  background: #020617;
+  background: #e2e8f0;
 }
 
 .public-prev-next-nav__btn:focus-visible {
@@ -153,11 +153,11 @@
   min-height: var(--pn-btn-min-h);
   padding: var(--pn-btn-pad-y) var(--pn-btn-pad-x);
   margin: 0;
-  color: #f8fafc;
+  color: #0f172a;
   text-decoration: none;
   -webkit-tap-highlight-color: transparent;
 }
 
 .public-layout .public-main nav.public-prev-next-nav a.public-prev-next-nav__btn:hover {
-  color: #fff;
+  color: #0f172a;
 }

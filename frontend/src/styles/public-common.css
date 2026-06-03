@@ -3,17 +3,18 @@
    =========================================== */
 
 @import './public-flat-cards.css';
+@import './public-immersive-shell.css';
 
-/* Page layout shell — vertical padding only so the content card spans full device width */
-.public-page,
-.about-page,
-.admissions-page,
-.contact-page,
-.fees-page,
-.staff-page,
-.student-life-page,
-.student-report-page,
-.announcements-page {
+/* Legacy page shells only — immersive routes use .public-immersive-shell for padding/bg */
+.public-page:not(.public-immersive-shell),
+.about-page:not(.public-immersive-shell),
+.admissions-page:not(.public-immersive-shell),
+.contact-page:not(.public-immersive-shell),
+.fees-page:not(.public-immersive-shell),
+.staff-page:not(.public-immersive-shell),
+.student-life-page:not(.public-immersive-shell),
+.student-report-page:not(.public-immersive-shell),
+.announcements-page:not(.public-immersive-shell) {
   width: 100%;
   min-width: 100%;
   max-width: 100vw;
@@ -27,9 +28,10 @@
 /* Content Card - Common across all public pages */
 .content-card {
   background: white;
-  border-radius: 6px;
+  border-radius: var(--public-surface-radius-lg, 12px);
+  border: 1px solid rgba(15, 23, 42, 0.14);
   padding: clamp(1rem, 3vw, 2.5rem);
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08), 0 6px 20px rgba(15, 23, 42, 0.05);
+  box-shadow: none;
   width: 100%;
   max-width: 100%;
   margin: 0;
@@ -328,7 +330,8 @@
     --public-content-pad-x: clamp(0.5rem, 2.5vw, 0.85rem);
   }
 
-  .public-layout .public-main .content-card {
+  /* Do not flatten cards inside the immersive shell (rounded surfaces stay consistent) */
+  .public-layout .public-main:not(:has(.public-immersive-shell)) .content-card {
     border-radius: 0;
     padding: clamp(0.85rem, 3vw, 1.15rem) var(--public-content-pad-x, 0.75rem);
   }

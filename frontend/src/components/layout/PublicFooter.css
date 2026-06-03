@@ -1,4 +1,37 @@
 /* ===========================================
+   FOOTER SITE MAP (internal links for SEO)
+   =========================================== */
+.public-footer-sitemap {
+  background: #fff;
+  border-top: 1px solid #e2e8f0;
+  padding: clamp(1rem, 3vw, 1.5rem) clamp(1rem, 4vw, 2.5rem);
+}
+
+.public-footer-sitemap__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  justify-content: center;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  max-width: 72rem;
+  margin-inline: auto;
+}
+
+.public-footer-sitemap__list a {
+  color: #1a5490;
+  font-size: clamp(0.8rem, 2vw, 0.9rem);
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.public-footer-sitemap__list a:hover,
+.public-footer-sitemap__list a:focus-visible {
+  text-decoration: underline;
+}
+
+/* ===========================================
    SOCIAL MEDIA FOOTER
    =========================================== */
 .social-footer {

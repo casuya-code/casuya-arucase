@@ -726,14 +726,21 @@ code {
     touch-action: manipulation; /* Disable double-tap zoom */
   }
 
+  /* Let PublicHeader.css control pill/dropdown heights (avoid squashing on phones) */
+  .header .navigation .nav-pill,
+  .header .navigation button.nav-pill,
+  .header .navigation .nav-links .nav-category-dropdown a {
+    min-height: unset;
+  }
+
   .public-prev-next-nav__btn {
     min-height: 44px;
     touch-action: manipulation;
   }
 
-  /* Better tap targets for links (exclude compact public prev/next controls) */
-  a:not(.public-prev-next-nav__btn) {
-    padding: 0.5rem 0.25rem; /* Add padding for easier tapping */
+  /* Better tap targets for links (exclude header nav dropdown — has its own padding) */
+  a:not(.public-prev-next-nav__btn):not(.header .nav-links .nav-category-dropdown a) {
+    padding: 0.5rem 0.25rem;
   }
   
   /* Improve form inputs on touch devices - 1rem respects user font size, 16px minimum prevents iOS zoom */

@@ -122,9 +122,8 @@ const NECTAResults = () => {
 
   return (
     <PublicLayout>
-      <div className="necta-results">
-        <div className="necta-results__bg" aria-hidden />
-        <div className="necta-results__inner">
+      <div className="necta-results public-immersive-shell">
+        <div className="public-immersive-shell__inner">
           <header className="necta-card necta-card--hero">
             <span className="necta-hero__eyebrow">Arusha Catholic Seminary</span>
             <div className="necta-hero__row">

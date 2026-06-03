@@ -10,8 +10,8 @@ const About = () => (
     pageSlug="about"
     pageLabel="Kuhusu Sisi"
     loadingMessage="Inapakia ukurasa wa kuhusu sisi..."
-    shellClassName="about-page about-page--immersive"
-    innerClassName="about-page__inner"
+    shellClassName="about-page public-immersive-shell"
+    innerClassName="public-immersive-shell__inner"
     showPageHero
     heroVariant="about"
     prepareHtml={(page) => {

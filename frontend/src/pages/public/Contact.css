@@ -1,139 +1,10 @@
 @import '../../styles/public-common.css';
 
-/* ---- Contact: immersive shell + responsive cards (aligned with /admissions) ---- */
+/* ---- Contact: cards (shell + hero from public-immersive-shell.css) ---- */
 
-.contact-page.contact-page--immersive {
-  position: relative;
+.contact-page {
   width: 100%;
-  max-width: 100vw;
-  min-height: 65vh;
   box-sizing: border-box;
-  isolation: isolate;
-  overflow-x: hidden;
-  padding: clamp(0.85rem, 2.5vw, 1.75rem) var(--public-content-pad-x, clamp(0.65rem, 2.5vw, 1.75rem))
-    clamp(1.25rem, 3vw, 2.5rem);
-  background-color: #c5cdd8;
-  background-image:
-    radial-gradient(ellipse 100% 70% at 50% 0%, rgba(255, 255, 255, 0.55), transparent 52%),
-    radial-gradient(ellipse 80% 50% at 100% 100%, rgba(148, 163, 184, 0.35), transparent 45%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.35) 0, rgba(255, 255, 255, 0) 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.35) 0, rgba(255, 255, 255, 0) 1px);
-  background-size: 100% 100%, 100% 100%, 24px 24px, 24px 24px;
-}
-
-.contact-page__inner {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: var(--public-content-max-width, min(1680px, 100%));
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(0.65rem, 1.8vw, 1rem);
-  min-width: 0;
-}
-
-/* Hero */
-.contact-hero {
-  width: 100%;
-  background: #fafbfc;
-  border: 1px solid rgba(15, 23, 42, 0.14);
-  border-left: 4px solid #1a5490;
-  padding: clamp(1.1rem, 3vw, 1.75rem) clamp(1rem, 2.8vw, 1.65rem);
-  box-sizing: border-box;
-}
-
-.contact-hero__inner {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
-  justify-content: space-between;
-  gap: clamp(0.65rem, 2vw, 1.25rem);
-}
-
-.contact-hero__text {
-  flex: 0 1 auto;
-  min-width: 0;
-}
-
-@media (min-width: 641px) {
-  .contact-hero__text {
-    flex: 1 1 16rem;
-  }
-}
-
-.contact-hero__eyebrow {
-  margin: 0 0 0.35rem;
-  font-size: clamp(0.625rem, 1.8vw, 0.75rem);
-  font-weight: 700;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  color: #64748b;
-}
-
-.contact-hero__title {
-  margin: 0 0 0.45rem;
-  font-size: clamp(1.5rem, 4.5vw, 2.25rem);
-  font-weight: 800;
-  color: #0f172a;
-  line-height: 1.12;
-  letter-spacing: -0.02em;
-}
-
-.contact-hero__lead {
-  margin: 0;
-  max-width: min(56ch, 100%);
-  font-size: clamp(0.875rem, 2.2vw, 1.05rem);
-  line-height: 1.6;
-  color: #475569;
-}
-
-.contact-hero__cta {
-  display: flex;
-  flex-wrap: wrap;
-  align-items: center;
-  gap: 0.5rem;
-  flex: 0 0 auto;
-}
-
-.contact-hero__action {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.45rem;
-  padding: 0.65rem 0.95rem;
-  min-height: 44px;
-  font-weight: 600;
-  font-size: clamp(0.85rem, 2vw, 0.92rem);
-  text-decoration: none;
-  border: 1px solid rgba(15, 23, 42, 0.2);
-  background: #fff;
-  color: #0f172a;
-  box-sizing: border-box;
-  transition: background 0.15s ease, border-color 0.15s ease;
-}
-
-.contact-hero__action:hover {
-  background: rgba(26, 84, 144, 0.06);
-  border-color: rgba(26, 84, 144, 0.4);
-}
-
-.contact-hero__action--phone {
-  color: #1a5490;
-}
-
-.contact-hero__action--email {
-  color: #1a5490;
-}
-
-.contact-hero__action--whatsapp {
-  color: #128c7e;
-  border-color: rgba(18, 140, 126, 0.35);
-}
-
-.contact-hero__action--whatsapp:hover {
-  background: rgba(37, 211, 102, 0.08);
-  border-color: rgba(18, 140, 126, 0.5);
 }
 
 /* CMS grid from Public Pages markdown */
@@ -173,11 +44,11 @@
   width: 100%;
   max-width: 100%;
   min-width: 0;
-  transition: box-shadow 0.18s ease;
+  box-shadow: none;
 }
 
 .contact-card:hover {
-  box-shadow: var(--public-card-shadow-hover, 0 10px 28px rgba(15, 23, 42, 0.12));
+  box-shadow: none;
 }
 
 .contact-card--cms {
@@ -560,53 +431,11 @@
 }
 
 .social-link--twitter {
-  background: #0f172a;
+  background: #64748b;
 }
 
 /* Mobile */
 @media (max-width: 640px) {
-  .contact-page.contact-page--immersive {
-    padding: 0.65rem var(--public-content-pad-x, 0.55rem) 1.25rem;
-  }
-
-  .contact-hero {
-    padding: 0.85rem 0.9rem;
-  }
-
-  .contact-hero__inner {
-    flex-direction: column;
-    align-items: stretch;
-    justify-content: flex-start;
-    gap: 0.65rem;
-  }
-
-  .contact-hero__text,
-  .contact-hero__cta {
-    flex: none;
-    width: 100%;
-  }
-
-  .contact-hero__title {
-    margin-bottom: 0.35rem;
-  }
-
-  .contact-hero__lead {
-    font-size: 0.875rem;
-    line-height: 1.5;
-  }
-
-  .contact-hero__cta {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.45rem;
-  }
-
-  .contact-hero__action {
-    width: 100%;
-    white-space: normal;
-    text-align: center;
-  }
-
   .contact-page-grid,
   .contact-cms-grid {
     grid-template-columns: 1fr;
@@ -618,15 +447,5 @@
 
   .contact-map-embed {
     min-height: min(220px, 40vh);
-  }
-}
-
-@media (max-width: 374px) {
-  .contact-hero__title {
-    font-size: 1.35rem;
-  }
-
-  .contact-card {
-    padding: 0.75rem 0.8rem;
   }
 }

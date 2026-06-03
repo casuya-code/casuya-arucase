@@ -64,8 +64,8 @@ const Contact = () => {
 
   return (
     <PublicLayout>
-      <div className="contact-page contact-page--immersive">
-        <div className="contact-page__inner">
+      <div className="contact-page public-immersive-shell">
+        <div className="public-immersive-shell__inner">
           <PublicPageHero
             page={contactPage}
             fallbackTitle="Mawasiliano"

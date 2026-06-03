@@ -25,6 +25,12 @@ function isAuthEndpoint(config) {
   );
 }
 
+/** Only GET mine — expected 401 when logged out; POST submit should reject normally. */
+function isApplicantAdmissionSoftFail(config) {
+  const url = (config?.url || '').split('?')[0];
+  return url === '/public/admissions/application/mine';
+}
+
 function isProtectedApiRequest(config) {
   const url = (config?.url || '').split('?')[0];
   return (
@@ -92,11 +98,10 @@ api.interceptors.response.use(
       }
     }
 
-    // For auth endpoints, don't reject on 401/403 - let the component handle it
-    // This prevents console errors for expected auth failures during token verification
-    if (isAuthEndpoint(error.config || {})) {
+    // For auth / applicant endpoints, don't reject on 401/403 - let the component handle it
+    const config = error.config || {};
+    if (isAuthEndpoint(config) || isApplicantAdmissionSoftFail(config)) {
       if (error.response?.status === 401 || error.response?.status === 403) {
-        // Return the error response instead of rejecting
         return Promise.resolve(error.response);
       }
     }

@@ -110,22 +110,25 @@ const Gallery = () => {
   // Content will appear progressively as it loads
 
   const pageShell = (children) => (
-    <div className="gallery-page gallery-page--immersive">
-      <div className="gallery-page__bg" aria-hidden />
-      <div className="gallery-page__inner">{children}</div>
+    <div className="gallery-page gallery-page--immersive public-immersive-shell">
+      <div className="public-immersive-shell__inner">{children}</div>
     </div>
   );
 
   const hero = (
-    <header className="content-card gallery-surface gallery-surface--hero">
-      <p className="gallery-hero__eyebrow">Seminari ya Kikatoliki Arusha</p>
-      <h1 className="gallery-hero__title">
-        <i className="fas fa-images" aria-hidden />
-        Galeria ya Picha
-      </h1>
-      <p className="gallery-hero__lead">
-        Tazama mkusanyiko wa picha zinazoonesha maisha ya Seminari ya Kikatoliki Arusha.
-      </p>
+    <header className="public-cms-hero">
+      <div className="public-cms-hero__inner">
+        <div className="public-cms-hero__text">
+          <p className="public-cms-hero__eyebrow">Seminari ya Kikatoliki Arusha</p>
+          <h1 className="public-cms-hero__title public-cms-hero__title--with-icon">
+            <i className="fas fa-images" aria-hidden />
+            Galeria ya Picha
+          </h1>
+          <p className="public-cms-hero__lead">
+            Tazama mkusanyiko wa picha zinazoonesha maisha ya Seminari ya Kikatoliki Arusha.
+          </p>
+        </div>
+      </div>
     </header>
   );
 

@@ -407,11 +407,20 @@ router.post('/admissions/application', requireApplicantAuth, async (req, res) =>
 
     const edu = (education_level || '').toString().trim().toUpperCase();
     const desired = (desired_entry || '').toString().trim();
+    const regionVal = (region || '').toString().trim();
+    const districtVal = (district || '').toString().trim();
+    const messageVal = (message || '').toString().trim();
     if (!edu || !desired) {
       return res.status(400).json({ message: 'Chagua kiwango cha elimu na andika unataka kujiunga kidato/darasa gani.' });
     }
+    if (!regionVal || !districtVal || !messageVal) {
+      return res.status(400).json({ message: 'Andika mkoa, wilaya, na ujumbe/maelezo ya ziada.' });
+    }
+    if (edu === 'OTHER' && !(previous_school || '').toString().trim()) {
+      return res.status(400).json({ message: 'Umechagua Nyingine — andika jina la shule uliyotoka.' });
+    }
 
-    const allowedEdu = new Set(['PRIMARY', 'FORM_IV', 'FORM_VI', 'OTHER']);
+    const allowedEdu = new Set(['CLASS_6_7', 'FORM_IV', 'OTHER', 'PRIMARY', 'FORM_VI']);
     if (!allowedEdu.has(edu)) {
       return res.status(400).json({ message: 'Kiwango cha elimu ulichochagua si halali.' });
     }
@@ -443,9 +452,9 @@ router.post('/admissions/application', requireApplicantAuth, async (req, res) =>
         Boolean(is_transfer),
         previous_school,
         desired,
-        region,
-        district,
-        message,
+        regionVal,
+        districtVal,
+        messageVal,
         documents,
         nextNo,
         isReapplication,

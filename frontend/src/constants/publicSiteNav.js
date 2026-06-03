@@ -13,7 +13,6 @@ export const PUBLIC_NAV_CATEGORIES = [
       { path: '/about', label: 'Kuhusu Sisi', icon: 'fa-info-circle' },
       { path: '/staff', label: 'Watumishi', icon: 'fa-users' },
       { path: '/necta-results', label: 'Matokeo ya NECTA', icon: 'fa-certificate' },
-      { path: '/contact', label: 'Mawasiliano', icon: 'fa-envelope' },
     ],
   },
   {
@@ -43,6 +42,7 @@ export const PUBLIC_NAV_CATEGORIES = [
     items: [
       { path: '/gallery', label: 'Picha', icon: 'fa-images' },
       { path: '/announcements', label: 'Matangazo', icon: 'fa-bullhorn' },
+      { path: '/contact', label: 'Mawasiliano', icon: 'fa-envelope' },
     ],
   },
 ];

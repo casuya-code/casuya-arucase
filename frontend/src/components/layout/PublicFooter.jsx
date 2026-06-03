@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { publicAPI } from '../../services/public';
+import { PUBLIC_INDEXABLE_NAV_LINKS } from '../../constants/publicSiteNavSeo';
 import { settingValue } from '../../utils/publicPageContent';
 import { FOOTER_COPYRIGHT_NAME, resolveFooterCopyrightName } from '../../utils/footerCopyright';
 import './PublicFooter.css';
@@ -84,8 +85,20 @@ const PublicFooter = () => {
     total: stats.total || 0
   };
 
+  const footerNavLinks = PUBLIC_INDEXABLE_NAV_LINKS.filter((link) => link.path !== '/');
+
   return (
     <>
+      <nav className="public-footer-sitemap" aria-label="Kurasa kuu za tovuti">
+        <ul className="public-footer-sitemap__list">
+          {footerNavLinks.map((link) => (
+            <li key={link.path}>
+              <Link to={link.path}>{link.nameSw}</Link>
+            </li>
+          ))}
+        </ul>
+      </nav>
+
       {/* Social Media Footer */}
       <footer className="social-footer">
         <div className="social-footer-content">

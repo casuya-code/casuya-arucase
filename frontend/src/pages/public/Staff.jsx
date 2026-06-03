@@ -11,9 +11,8 @@ const Staff = () => (
     pageSlug="staff"
     pageLabel="Watumishi"
     loadingMessage="Inapakia ukurasa wa watumishi..."
-    shellClassName="staff-page staff-page--immersive"
-    innerClassName="staff-page__inner"
-    header={<div className="staff-page__bg" aria-hidden />}
+    shellClassName="staff-page staff-page--immersive public-immersive-shell"
+    innerClassName="public-immersive-shell__inner"
     showPageHero
     heroVariant="staff"
     cmsClassName="staff-cms-grid"

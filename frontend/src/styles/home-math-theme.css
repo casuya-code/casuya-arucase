@@ -270,22 +270,17 @@
   font-weight: 700;
 }
 
-/* Admissions CTA */
+/* Admissions CTA — no blue band; matches other homepage sections */
 .homepage .home-admissions-cta {
-  background: linear-gradient(
-    135deg,
-    var(--home-primary-deep) 0%,
-    var(--home-primary) 55%,
-    var(--home-primary-mid) 100%
-  );
+  background: transparent;
   padding: var(--home-section-pad-y) 0;
 }
 
 .homepage .home-admissions-cta .home-admissions-cta__frame {
-  background: rgba(255, 255, 255, 0.98);
+  background: var(--home-surface, #fff);
   color: var(--home-ink-body);
-  border-color: rgba(201, 162, 39, 0.4);
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.14);
+  border-color: var(--home-border, rgba(15, 23, 42, 0.12));
+  box-shadow: var(--home-frame-shadow, 0 1px 3px rgba(15, 23, 42, 0.08));
 }
 
 .homepage .home-admissions-cta .home-section-eyebrow {
@@ -332,12 +327,15 @@
   color: var(--home-primary-deep);
 }
 
-.homepage .home-admissions-cta .home-admissions-phone {
-  color: var(--home-primary);
+.homepage .home-admissions-cta .home-admissions-btn--phone {
+  color: #14532d;
+  border-color: #16a34a;
 }
 
-.homepage .home-admissions-cta .home-admissions-phone:hover {
-  color: var(--home-primary-mid);
+.homepage .home-admissions-cta .home-admissions-btn--phone:hover {
+  color: #14532d;
+  background: #d1fae5;
+  border-color: #15803d;
 }
 
 /* Gallery */
@@ -395,22 +393,49 @@
   color: var(--home-accent-deep);
 }
 
-/* Contact strip */
+/* Contact strip — readable labels/values on white cards */
 .homepage .home-contact-strip {
-  background: linear-gradient(180deg, var(--home-primary-deep) 0%, #0a1f38 100%);
+  background: var(--home-surface-band, #f1f5f9);
   padding: var(--home-section-pad-y) 0 calc(var(--home-space-5) + var(--home-space-2));
 }
 
+.homepage .home-contact-strip .home-section-title {
+  color: var(--home-ink);
+}
+
+.homepage .home-contact-strip .home-section-subtitle {
+  color: var(--home-ink-muted);
+}
+
+.homepage .home-contact-card {
+  background: var(--home-surface, #fff);
+  color: var(--home-ink-body);
+  border-color: var(--home-border);
+}
+
+.homepage .home-contact-card:hover {
+  background: #f8fafc;
+  border-color: rgba(26, 84, 144, 0.28);
+}
+
 .homepage .home-contact-card i {
-  color: var(--home-accent);
+  color: var(--home-primary);
+}
+
+.homepage .home-contact-card .home-contact-label {
+  color: var(--home-ink-muted);
+}
+
+.homepage .home-contact-card .home-contact-value {
+  color: var(--home-ink);
 }
 
 .homepage .home-contact-page-link {
-  color: var(--home-accent);
+  color: var(--home-primary);
 }
 
 .homepage .home-contact-page-link:hover {
-  color: #e8c96a;
+  color: var(--home-primary-mid);
 }
 
 /* Hero refinements */

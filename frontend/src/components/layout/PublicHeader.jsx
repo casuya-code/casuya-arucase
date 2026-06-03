@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { publicAPI } from '../../services/public';
@@ -11,8 +11,26 @@ import {
 } from '../../constants/publicSiteNav';
 import './PublicHeader.css';
 
+const HOVER_CLOSE_DELAY_MS = 200;
+
+function useFinePointerHover() {
+  const [enabled, setEnabled] = useState(false);
+
+  useEffect(() => {
+    const mq = window.matchMedia('(hover: hover) and (pointer: fine)');
+    const sync = () => setEnabled(mq.matches);
+    sync();
+    mq.addEventListener('change', sync);
+    return () => mq.removeEventListener('change', sync);
+  }, []);
+
+  return enabled;
+}
+
 const PublicHeader = () => {
   const [openDropdown, setOpenDropdown] = useState(null);
+  const finePointerHover = useFinePointerHover();
+  const closeDropdownTimerRef = useRef(null);
   const location = useLocation();
 
   const { data: homepageData } = useQuery({
@@ -58,20 +76,87 @@ const PublicHeader = () => {
 
   const isCategoryActive = (category) => category.items.some((item) => isActive(item.path));
 
-  const toggleDropdown = (id) => {
-    setOpenDropdown((prev) => (prev === id ? null : id));
-  };
+  const clearCloseDropdownTimer = useCallback(() => {
+    if (closeDropdownTimerRef.current !== null) {
+      window.clearTimeout(closeDropdownTimerRef.current);
+      closeDropdownTimerRef.current = null;
+    }
+  }, []);
+
+  const openCategoryDropdown = useCallback(
+    (id) => {
+      clearCloseDropdownTimer();
+      setOpenDropdown(id);
+    },
+    [clearCloseDropdownTimer]
+  );
+
+  const scheduleCloseDropdown = useCallback(() => {
+    clearCloseDropdownTimer();
+    closeDropdownTimerRef.current = window.setTimeout(() => {
+      setOpenDropdown(null);
+      closeDropdownTimerRef.current = null;
+    }, HOVER_CLOSE_DELAY_MS);
+  }, [clearCloseDropdownTimer]);
+
+  const toggleDropdown = useCallback(
+    (id) => {
+      clearCloseDropdownTimer();
+      setOpenDropdown((prev) => (prev === id ? null : id));
+    },
+    [clearCloseDropdownTimer]
+  );
+
+  const handleCategoryPointerEnter = useCallback(
+    (id) => {
+      if (!finePointerHover) return;
+      openCategoryDropdown(id);
+    },
+    [finePointerHover, openCategoryDropdown]
+  );
+
+  const handleCategoryPointerLeave = useCallback(() => {
+    if (!finePointerHover) return;
+    scheduleCloseDropdown();
+  }, [finePointerHover, scheduleCloseDropdown]);
+
+  /** Touch: tap toggles. Desktop: hover opens; keyboard Enter/Space toggles (click ignored). */
+  const handleCategoryClick = useCallback(
+    (_event, id) => {
+      if (finePointerHover) return;
+      toggleDropdown(id);
+    },
+    [finePointerHover, toggleDropdown]
+  );
+
+  const handleCategoryKeyDown = useCallback(
+    (event, id) => {
+      if (!finePointerHover) return;
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      toggleDropdown(id);
+    },
+    [finePointerHover, toggleDropdown]
+  );
+
+  const runPrefetch = useCallback((path) => {
+    const prefetch = getPrefetchHandler(path);
+    prefetch?.();
+  }, []);
+
+  useEffect(() => () => clearCloseDropdownTimer(), [clearCloseDropdownTimer]);
 
   useEffect(() => {
-    if (!openDropdown) return;
-    const handleClickOutside = (e) => {
-      if (!e.target.closest('.nav-category-wrapper')) {
-        setOpenDropdown(null);
-      }
+    if (!openDropdown || finePointerHover) return;
+
+    const handleOutside = (event) => {
+      if (event.target.closest('.nav-category-wrapper')) return;
+      setOpenDropdown(null);
     };
-    document.addEventListener('click', handleClickOutside);
-    return () => document.removeEventListener('click', handleClickOutside);
-  }, [openDropdown]);
+
+    document.addEventListener('pointerdown', handleOutside, true);
+    return () => document.removeEventListener('pointerdown', handleOutside, true);
+  }, [openDropdown, finePointerHover]);
 
   useEffect(() => {
     if (!openDropdown) return;
@@ -110,13 +195,9 @@ const PublicHeader = () => {
     setOpenDropdown(null);
   }, [location.pathname]);
 
-  const getPrefetchHandler = (path) => {
-    if (path === '/gallery') return () => { import('../../pages/public/Gallery'); };
-    if (path === '/student-report') return () => { import('../../pages/public/StudentReport'); };
-    if (path === '/student-login') return () => { import('../../pages/public/StudentLogin'); };
-    if (path === '/login') return () => { import('../../pages/auth/Login'); };
-    return undefined;
-  };
+  const navigationClassName = finePointerHover
+    ? 'navigation navigation--fine-pointer'
+    : 'navigation navigation--touch';
 
   return (
     <header className="header">
@@ -187,27 +268,38 @@ const PublicHeader = () => {
           </div>
         </div>
 
-        <nav className="navigation" aria-label="Urambazaji mkuu">
+        <nav className={navigationClassName} aria-label="Urambazaji mkuu">
           <div className="nav-container">
             <ul className="nav-links">
-              <li>
+              <li className="nav-pill-slot nav-pill-slot--home">
                 <Link
                   to={PUBLIC_HOME_ITEM.path}
-                  className={`${isActive(PUBLIC_HOME_ITEM.path) ? 'active' : ''} icon-only nav-link-home`}
-                  aria-label={PUBLIC_HOME_ITEM.label}
+                  className={`nav-pill nav-pill-home ${isActive(PUBLIC_HOME_ITEM.path) ? 'active' : ''}`}
+                  aria-current={isActive(PUBLIC_HOME_ITEM.path) ? 'page' : undefined}
                 >
                   <i className={`fas ${PUBLIC_HOME_ITEM.icon}`} aria-hidden="true" />
+                  <span className="nav-link-text">{PUBLIC_HOME_ITEM.label}</span>
+                  <i
+                    className="fas fa-chevron-down nav-category-chevron nav-category-chevron--spacer"
+                    aria-hidden="true"
+                  />
                 </Link>
               </li>
               {PUBLIC_NAV_CATEGORIES.map((category) => {
                 const menuId = getCategoryMenuId(category.id);
                 const isOpen = openDropdown === category.id;
                 return (
-                  <li key={category.id} className="nav-category-wrapper">
+                  <li
+                    key={category.id}
+                    className={`nav-category-wrapper nav-category-wrapper--${category.id}`}
+                    onPointerEnter={() => handleCategoryPointerEnter(category.id)}
+                    onPointerLeave={handleCategoryPointerLeave}
+                  >
                     <button
                       type="button"
-                      className={`nav-category-btn ${isCategoryActive(category) ? 'category-active' : ''} ${isOpen ? 'open' : ''}`}
-                      onClick={() => toggleDropdown(category.id)}
+                      className={`nav-pill nav-category-btn nav-category-btn--${category.id} ${isCategoryActive(category) ? 'category-active' : ''} ${isOpen ? 'open' : ''}`}
+                      onClick={(e) => handleCategoryClick(e, category.id)}
+                      onKeyDown={(e) => handleCategoryKeyDown(e, category.id)}
                       aria-expanded={isOpen}
                       aria-haspopup="true"
                       aria-controls={menuId}
@@ -226,6 +318,8 @@ const PublicHeader = () => {
                         id={menuId}
                         role="menu"
                         aria-labelledby={`${menuId}-button`}
+                        onPointerEnter={clearCloseDropdownTimer}
+                        onPointerLeave={handleCategoryPointerLeave}
                       >
                         {category.items.map((item) => (
                           <li key={item.path} role="none">
@@ -233,7 +327,7 @@ const PublicHeader = () => {
                               to={item.path}
                               className={isActive(item.path) ? 'active' : ''}
                               onClick={() => setOpenDropdown(null)}
-                              onMouseEnter={getPrefetchHandler(item.path)}
+                              onMouseEnter={() => runPrefetch(item.path)}
                               role="menuitem"
                             >
                               <i className={`fas ${item.icon}`} aria-hidden="true" />
@@ -259,5 +353,12 @@ const PublicHeader = () => {
   );
 };
 
-export default PublicHeader;
+function getPrefetchHandler(path) {
+  if (path === '/gallery') return () => { import('../../pages/public/Gallery'); };
+  if (path === '/student-report') return () => { import('../../pages/public/StudentReport'); };
+  if (path === '/student-login') return () => { import('../../pages/public/StudentLogin'); };
+  if (path === '/login') return () => { import('../../pages/auth/Login'); };
+  return undefined;
+}
 
+export default PublicHeader;

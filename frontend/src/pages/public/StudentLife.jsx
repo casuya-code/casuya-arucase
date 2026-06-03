@@ -10,8 +10,8 @@ const StudentLife = () => (
     pageSlug="student-life"
     pageLabel="Maisha ya Wanafunzi"
     loadingMessage="Inapakia ukurasa wa maisha ya wanafunzi..."
-    shellClassName="student-life-page student-life-page--immersive"
-    innerClassName="student-life-page__inner"
+    shellClassName="student-life-page student-life-page--immersive public-immersive-shell"
+    innerClassName="public-immersive-shell__inner"
     showPageHero
     heroVariant="student-life"
     cmsClassName="student-life-grid"

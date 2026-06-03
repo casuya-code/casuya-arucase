@@ -10,9 +10,8 @@ const Fees = () => (
     pageSlug="school-fee"
     pageLabel="Ada ya Shule"
     loadingMessage="Inapakia ukurasa wa ada…"
-    shellClassName="fees-page fees-page--immersive"
-    innerClassName="fees-page__inner"
-    header={<div className="fees-page__bg" aria-hidden />}
+    shellClassName="fees-page fees-page--immersive public-immersive-shell"
+    innerClassName="public-immersive-shell__inner"
     showPageHero
     heroVariant="fees"
     prepareHtml={(page) => {

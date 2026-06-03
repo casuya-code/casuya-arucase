@@ -1,65 +1,29 @@
-@import '../../styles/public-flat-cards.css';
+@import '../../styles/public-common.css';
 
-/* NECTA Results — sharp cards on a deep layered background */
+/* NECTA Results — sharp cards on light grey shell */
 
-.necta-results {
+.necta-results.public-immersive-shell {
   position: relative;
   width: 100%;
   max-width: 100%;
   margin: 0;
-  padding: clamp(1rem, 3vw, 2rem) var(--public-content-pad-x, clamp(0.85rem, 2.5vw, 2rem));
   min-height: 65vh;
   box-sizing: border-box;
   overflow-x: hidden;
   isolation: isolate;
 }
 
-/* Mesh + vignette (no border-radius — sharp page frame) */
-.necta-results__bg {
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  pointer-events: none;
-  background-color: #070b14;
-  background-image:
-    radial-gradient(ellipse 120% 80% at 50% -20%, rgba(37, 99, 235, 0.35), transparent 55%),
-    radial-gradient(ellipse 90% 60% at 100% 50%, rgba(30, 64, 175, 0.12), transparent 45%),
-    radial-gradient(ellipse 70% 50% at 0% 80%, rgba(180, 140, 60, 0.08), transparent 50%),
-    linear-gradient(180deg, rgba(255, 255, 255, 0.04) 0, rgba(255, 255, 255, 0) 1px),
-    linear-gradient(90deg, rgba(255, 255, 255, 0.04) 0, rgba(255, 255, 255, 0) 1px);
-  background-size:
-    100% 100%,
-    100% 100%,
-    100% 100%,
-    28px 28px,
-    28px 28px;
-  background-position: 0 0, 0 0, 0 0, 0 0, 0 0;
-}
-
-.necta-results__inner {
-  position: relative;
-  z-index: 1;
-  width: 100%;
-  max-width: min(var(--public-content-max-width, 90rem), 100%);
-  margin: 0 auto;
-  display: flex;
-  flex-direction: column;
-  gap: clamp(0.5rem, 1.4vw, 0.8rem);
-}
-
 /* Shared card shell — crisp corners, tight border */
 .necta-card {
   background: #fafbfc;
   border: 1px solid rgba(15, 23, 42, 0.14);
-  border-radius: 0;
-  box-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.65) inset,
-    0 6px 24px rgba(0, 0, 0, 0.14);
+  border-radius: var(--public-surface-radius-lg, 12px);
+  overflow: hidden;
+  box-shadow: none;
 }
 
 .necta-card--hero {
   padding: clamp(0.75rem, 2.2vw, 1.15rem) clamp(0.85rem, 2.5vw, 1.35rem);
-  border-left: 4px solid #1e3a8a;
   text-align: left;
 }
 
@@ -155,8 +119,8 @@
   font-size: 0.875rem;
   font-weight: 700;
   cursor: pointer;
-  transition: border-color 0.15s, background 0.15s, color 0.15s, box-shadow 0.15s;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+  transition: border-color 0.15s, background 0.15s, color 0.15s;
+  box-shadow: none;
 }
 
 .necta-tab:hover {
@@ -234,7 +198,7 @@
   font-weight: 800;
   cursor: pointer;
   transition: border-color 0.15s, background 0.15s, color 0.15s, box-shadow 0.15s;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.85) inset;
+  box-shadow: none;
 }
 
 .necta-year-btn__year {
@@ -336,22 +300,13 @@
   border-radius: 0;
   border: 1px solid rgba(15, 23, 42, 0.1);
   background: #fff;
-  border-left-width: 3px;
-  border-left-style: solid;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.9) inset;
+  box-shadow: none;
 }
 
 .necta-stat-card--total {
   grid-column: 1 / -1;
-  border-left-color: #1e40af;
   background: linear-gradient(180deg, #eff6ff 0%, #fff 55%);
 }
-
-.necta-stat-card--div1 { border-left-color: #059669; }
-.necta-stat-card--div2 { border-left-color: #2563eb; }
-.necta-stat-card--div3 { border-left-color: #d97706; }
-.necta-stat-card--div4 { border-left-color: #dc2626; }
-.necta-stat-card--div0 { border-left-color: #94a3b8; }
 
 .necta-stat-label {
   font-size: 0.625rem;
@@ -393,8 +348,8 @@
   border-radius: 0;
   cursor: pointer;
   text-decoration: none;
-  transition: background 0.15s, transform 0.12s, box-shadow 0.15s;
-  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.12) inset;
+  transition: background 0.15s, border-color 0.15s;
+  box-shadow: none;
 }
 
 .necta-open-btn:hover {
@@ -427,8 +382,3 @@
   }
 }
 
-@media (max-width: 768px) {
-  .necta-results {
-    padding: 0.85rem var(--public-content-pad-x, 0.65rem) 1.25rem;
-  }
-}

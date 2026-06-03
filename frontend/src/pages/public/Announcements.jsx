@@ -55,9 +55,8 @@ const Announcements = () => {
   if (isLoading) {
     return (
       <PublicLayout>
-        <div className="announcements-page announcements-page--immersive">
-          <div className="announcements-page__bg" aria-hidden />
-          <div className="announcements-page__inner">
+        <div className="announcements-page announcements-page--immersive public-immersive-shell">
+          <div className="public-immersive-shell__inner">
             <div className="content-card announcements-surface announcements-surface--hero">
               <SkeletonLoader type="text" lines={1} width="45%" height="1.75rem" className="mb-2" />
               <SkeletonLoader type="text" lines={2} width="90%" />
@@ -79,15 +78,21 @@ const Announcements = () => {
 
   return (
     <PublicLayout>
-      <div className="announcements-page announcements-page--immersive">
-        <div className="announcements-page__bg" aria-hidden />
-        <div className="announcements-page__inner">
-          <header className="content-card announcements-surface announcements-surface--hero">
-            <p className="announcements-hero__eyebrow">Seminari ya Kikatoliki Arusha</p>
-            <h1 className="announcements-hero__title">Matangazo</h1>
-            <p className="announcements-hero__lead">
-              Habari na matangazo mapya — tafuta au chuja kwa mwaka.
-            </p>
+      <div className="announcements-page announcements-page--immersive public-immersive-shell">
+        <div className="public-immersive-shell__inner">
+          <header className="public-cms-hero">
+            <div className="public-cms-hero__inner">
+              <div className="public-cms-hero__text">
+                <p className="public-cms-hero__eyebrow">Seminari ya Kikatoliki Arusha</p>
+                <h1 className="public-cms-hero__title public-cms-hero__title--with-icon">
+                  <i className="fas fa-bullhorn" aria-hidden />
+                  Matangazo
+                </h1>
+                <p className="public-cms-hero__lead">
+                  Habari na matangazo mapya — tafuta au chuja kwa mwaka.
+                </p>
+              </div>
+            </div>
           </header>
 
           <section className="content-card announcements-surface announcements-surface--filters">
