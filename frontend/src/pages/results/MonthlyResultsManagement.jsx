@@ -12,6 +12,7 @@ import { adminAPI } from '../../services/admin';
 import { useAuth } from '../../context/AuthContext';
 import { resolveStaticUrl } from '../../utils/backendUrl';
 import './MonthlyResultsManagement.css';
+import { CSV_BULK_LABELS } from '../../constants/csvBulkActions';
 
 const MonthlyResultsManagement = ({ formLevel }) => {
   const { year, stream, month } = useParams();
@@ -757,7 +758,7 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                 <i className="fas fa-file-pdf"></i> <span id="downloadBtnText">Download Result (PDF)</span>
               </button>
               <button type="button" onClick={handleDownloadCSV} className="download-btn-monthly" style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)' }}>
-                <i className="fas fa-file-csv"></i> Download CSV
+                <i className="fas fa-file-csv"></i> {CSV_BULK_LABELS.filled}
               </button>
             </div>
 
@@ -914,7 +915,7 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                 <i className="fas fa-arrow-left"></i> Back
               </Link>
               <button type="button" onClick={handleDownloadCSV} className="excel-btn csv-btn">
-                <i className="fas fa-file-csv"></i> Download CSV
+                <i className="fas fa-file-csv"></i> {CSV_BULK_LABELS.filled}
               </button>
             </div>
           </>

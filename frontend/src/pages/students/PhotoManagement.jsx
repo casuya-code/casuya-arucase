@@ -11,7 +11,8 @@ import AdminLayout from '../../components/layout/AdminLayout';
 import { studentsAPI } from '../../services/students';
 import api from '../../services/api';
 import { resolveStaticUrl } from '../../utils/backendUrl';
-import { requiresSpecialAcademicYearLogic, getAcademicYearRange, getCurrentTerm, getApiYearForFormVVI } from '../../utils/academicYearUtils';
+import { getCurrentTerm, requiresSpecialAcademicYearLogic, normalizeFormLevel } from '../../utils/academicYearUtils';
+import { useFormVVITermGuard } from '../../hooks/useFormVVITermGuard';
 import './PhotoManagement.css';
 
 const PhotoManagement = ({ formLevel: formLevelProp }) => {
@@ -64,7 +65,23 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
     : '';
 
   // Check if this is Form V or VI
-  const isFormVOrVI = normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI';
+  const isFormVOrVI = requiresSpecialAcademicYearLogic(normalizeFormLevel(normalizedLevel));
+
+  const photoTermsPath =
+    isFormVOrVI && formLevel && stream && year
+      ? `/admin/students/photos/${formLevel}/stream/${stream}/year/${year}/terms`
+      : '';
+
+  const { valid: termPairValid } = useFormVVITermGuard({
+    enabled: isFormVOrVI && Boolean(term),
+    displayYear: year,
+    term,
+    redirectTo: photoTermsPath,
+  });
+
+  if (isFormVOrVI && term && !termPairValid) {
+    return null;
+  }
 
   // Use calendar year directly for Form V/VI (no academic year conversion)
   // Form V First Term (Jul-Dec 2025) -> year 2025

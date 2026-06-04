@@ -1,3 +1,5 @@
+@import './csv-bulk-actions.css';
+
 /* Reset and Base Styles - Full viewport for public pages */
 * {
   margin: 0;
@@ -544,6 +546,10 @@ code {
 .excel-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+}
+
+.excel-btn.is-busy:not(:disabled) {
+  cursor: wait;
 }
 
 .excel-btn.small {

@@ -44,7 +44,10 @@ const StudentRegistration = () => {
                 You do not have access to any registration classes. Contact an administrator if you need access.
               </p>
             ) : (
-              <div className="registration-grid">
+              <div
+                className="registration-grid"
+                style={{ '--form-card-count': forms.length }}
+              >
                 {forms.map((form) => (
                   <Link
                     key={form.id}

@@ -397,25 +397,46 @@ const AdminSidebar = () => {
           </div>
         </nav>
 
-        {/* User Info & Logout */}
+        {/* User Info & Logout — round buttons */}
         <div className="sidebar-footer">
-          <div className="sidebar-footer__user-row">
-            {!sidebarCollapsed ? (
-              <div className="user-info">
-                <div className="user-name">{user?.full_name || user?.username || 'Admin'}</div>
-                <div className="user-role">{user?.role || 'Administrator'}</div>
-              </div>
-            ) : null}
-            <SidebarOnlinePresence collapsed={sidebarCollapsed} />
-          </div>
-          <button 
-            className="logout-btn"
-            onClick={handleLogout}
-            title="Logout"
+          <div
+            className={`sidebar-footer__actions${sidebarCollapsed ? ' sidebar-footer__actions--collapsed' : ''}`}
           >
-            <i className="fas fa-sign-out-alt"></i>
-            {!sidebarCollapsed && <span>Logout</span>}
-          </button>
+            <span
+              className="sidebar-footer__round-btn sidebar-footer__round-btn--user"
+              title={user?.full_name || user?.username || 'Admin'}
+            >
+              {sidebarCollapsed ? (
+                <i className="fas fa-user" aria-hidden="true" />
+              ) : (
+                <span className="sidebar-footer__round-btn-label">
+                  {user?.username || 'admin'}
+                </span>
+              )}
+            </span>
+            <span
+              className="sidebar-footer__round-btn sidebar-footer__round-btn--role"
+              title={user?.role || 'Administrator'}
+            >
+              {sidebarCollapsed ? (
+                <i className="fas fa-user-shield" aria-hidden="true" />
+              ) : (
+                <span className="sidebar-footer__round-btn-label">
+                  {user?.role || 'Administrator'}
+                </span>
+              )}
+            </span>
+            <SidebarOnlinePresence collapsed={sidebarCollapsed} />
+            <button
+              type="button"
+              className="logout-btn logout-btn--round"
+              onClick={handleLogout}
+              title="Logout"
+            >
+              <i className="fas fa-sign-out-alt" aria-hidden="true" />
+              {!sidebarCollapsed && <span>Logout</span>}
+            </button>
+          </div>
         </div>
       </aside>
     </>

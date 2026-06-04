@@ -7,24 +7,22 @@ import { Link, Navigate } from 'react-router-dom';
 import { useMemo } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { useAuth } from '../../context/AuthContext';
+import {
+  formLevelToPathSlug,
+  getCurrentCalendarYear,
+  getSchoolYearOptions,
+} from '../../utils/academicYearUtils';
 import './ScoreEntryYearSelection.css';
 
 const ScoreEntryYearSelection = ({ formLevel }) => {
-  const currentYear = new Date().getFullYear();
+  const currentYear = getCurrentCalendarYear();
   const { getAllowedYearsForClass, hasClass, isAdminLike } = useAuth();
 
   if (!isAdminLike() && !hasClass(formLevel)) {
     return <Navigate to="/admin/score-entry" replace />;
   }
 
-  // Generate full year range
-  const startYear = 2025;
-  const endYear = currentYear + 3;
-  const fullYears = useMemo(() => {
-    const arr = [];
-    for (let i = startYear; i <= endYear; i++) arr.push(i);
-    return arr.reverse();
-  }, [endYear]);
+  const fullYears = useMemo(() => getSchoolYearOptions(), []);
 
   // For non-admin: only show years allocated for this class (e.g. FORM I)
   const years = useMemo(() => {
@@ -38,15 +36,8 @@ const ScoreEntryYearSelection = ({ formLevel }) => {
     return '/admin/score-entry';
   };
 
-  const getYearDetailPath = (year) => {
-    const formMap = {
-      'FORM I': 'form-i',
-      'FORM II': 'form-ii',
-      'FORM III': 'form-iii',
-      'FORM IV': 'form-iv',
-    };
-    return `/admin/score-entry/${formMap[formLevel]}/year/${year}/streams`;
-  };
+  const getYearDetailPath = (year) =>
+    `/admin/score-entry/${formLevelToPathSlug(formLevel)}/year/${year}/streams`;
 
   return (
     <AdminLayout>
@@ -68,7 +59,10 @@ const ScoreEntryYearSelection = ({ formLevel }) => {
               </div>
             ) : (
             <>
-              <div className="year-selection-grid">
+              <div
+                className="year-selection-grid"
+                style={{ '--year-card-count': years.length }}
+              >
                 {years.map((year) => (
                   <Link
                     key={`score-${year}`}

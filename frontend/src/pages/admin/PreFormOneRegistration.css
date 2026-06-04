@@ -333,26 +333,8 @@
 }.preform-one-registration-route .file-input:focus + .upload-label, .preform-one-registration-route .upload-label:focus{
   outline: 2px solid #9ca3af;
   outline-offset: 2px;
-}.preform-one-registration-route .bulk-upload-actions{
-  display: flex;
-  flex-direction: column;
-  gap: clamp(0.75rem, 2vw, 1rem);
-  align-items: center;
-}
-
-
-
-@media (min-width: 768px) {.preform-one-registration-route .bulk-upload-actions{
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: stretch;
-  }.preform-one-registration-route .bulk-upload-actions .form-btn{
-    flex: 1;
-    min-width: 0;
-  }.preform-one-registration-route .bulk-upload-actions .file-upload-wrapper{
-    flex: 1;
-    min-width: 0;
-  }
+}.preform-one-registration-route .bulk-upload-actions.csv-bulk-actions{
+  align-items: stretch;
 }.preform-one-registration-route .registered-students{
   background: #ffffff;
   border: 1px solid #e2e8f0;

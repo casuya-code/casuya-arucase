@@ -9,6 +9,7 @@ import { toast } from '../../utils/toast';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { studentsAPI } from '../../services/students';
 import './FeesManagement.css';
+import { CSV_BULK_LABELS, CSV_BULK_TITLES } from '../../constants/csvBulkActions';
 
 const FeesManagement = ({ formLevel }) => {
   const { year, stream, term } = useParams();
@@ -325,18 +326,29 @@ const FeesManagement = ({ formLevel }) => {
                   <div className="csv-section">
                     <h3><i className="fas fa-file-csv"></i> CSV Bulk Operations</h3>
                     <p className="csv-hint">Download the template, fill rows 1–10 under MATANGAZO, then upload to replace announcements for this class and term.</p>
-                    <div className="csv-actions">
+                    <div className="csv-actions csv-bulk-actions">
                       <button
                         type="button"
                         className="excel-btn primary"
                         onClick={handleDownloadTemplate}
                         disabled={uploading || saveMutation.isLoading}
+                        title={CSV_BULK_TITLES.template}
                       >
-                        <i className="fas fa-download"></i> Download Template CSV
+                        <i className="fas fa-download"></i> {CSV_BULK_LABELS.template}
+                      </button>
+                      <button
+                        type="button"
+                        className="excel-btn secondary"
+                        onClick={handleDownloadFilledCSV}
+                        disabled={uploading || saveMutation.isLoading}
+                        title={CSV_BULK_TITLES.filled}
+                      >
+                        <i className="fas fa-download"></i> {CSV_BULK_LABELS.filled}
                       </button>
                       <label
                         className="excel-btn success"
                         style={{ cursor: uploading ? 'not-allowed' : 'pointer', opacity: uploading ? 0.6 : 1 }}
+                        title={CSV_BULK_TITLES.upload}
                       >
                         <input
                           ref={fileInputRef}
@@ -346,16 +358,9 @@ const FeesManagement = ({ formLevel }) => {
                           disabled={uploading || saveMutation.isLoading}
                           style={{ display: 'none' }}
                         />
-                        <i className="fas fa-upload"></i> {uploading ? 'Uploading...' : 'Upload CSV'}
+                        <i className={`fas ${uploading ? 'fa-spinner fa-spin' : 'fa-upload'}`}></i>{' '}
+                        {uploading ? CSV_BULK_LABELS.uploading : CSV_BULK_LABELS.upload}
                       </label>
-                      <button
-                        type="button"
-                        className="excel-btn secondary"
-                        onClick={handleDownloadFilledCSV}
-                        disabled={uploading || saveMutation.isLoading}
-                      >
-                        <i className="fas fa-download"></i> Download Filled CSV
-                      </button>
                     </div>
                   </div>
 

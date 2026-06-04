@@ -11,6 +11,13 @@ import AdminLayout from '../../components/layout/AdminLayout';
 import { useAuth } from '../../context/AuthContext';
 import { studentsAPI } from '../../services/students';
 import './RegistrationForm.css';
+import { CSV_BULK_LABELS, CSV_BULK_TITLES } from '../../constants/csvBulkActions';
+import {
+  formLevelToPathSlug,
+  requiresSpecialAcademicYearLogic,
+  getFormVVIEmptyClassHint,
+} from '../../utils/academicYearUtils';
+import { useFormVVITermGuard } from '../../hooks/useFormVVITermGuard';
 
 const RegistrationForm = () => {
   const { year, stream, term } = useParams();
@@ -60,6 +67,20 @@ const RegistrationForm = () => {
 
   /** Form V/VI URLs include :term; Form I–IV list/delete entire class year (all terms). */
   const termScoped = Boolean(term);
+
+  const isFormVOrVI = requiresSpecialAcademicYearLogic(normalizedLevel);
+  const formPathSlug = formLevelToPathSlug(normalizedLevel);
+  const formVVITermsPath =
+    isFormVOrVI && stream && year
+      ? `/admin/students/registration/${formPathSlug}/stream/${stream}/year/${year}/terms`
+      : '';
+
+  const { valid: termPairValid } = useFormVVITermGuard({
+    enabled: isFormVOrVI && Boolean(term),
+    displayYear: year,
+    term,
+    redirectTo: formVVITermsPath,
+  });
 
   const effectiveTerm = useMemo(
     () => term || formData.term || 'First Term',
@@ -472,21 +493,17 @@ const RegistrationForm = () => {
   };
 
   const getBackPath = useCallback(() => {
-    const formMap = {
-      'FORM I': 'form-i',
-      'FORM II': 'form-ii',
-      'FORM III': 'form-iii',
-      'FORM IV': 'form-iv',
-      'FORM V': 'form-v',
-      'FORM VI': 'form-vi',
-    };
-    const formPath = formMap[normalizedLevel];
+    const formPath = formLevelToPathSlug(normalizedLevel);
     
     const isFormVOrVI = normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI';
     return isFormVOrVI
       ? `/admin/students/registration/${formPath}/stream/${stream}/year/${year}/term/${term}/actions`
       : `/admin/students/registration/${formPath}/year/${year}/stream/${stream}/actions`;
   }, [normalizedLevel, stream, year, term]);
+
+  if (isFormVOrVI && term && !termPairValid) {
+    return null;
+  }
 
   // Validate required parameters
   if (!normalizedLevel || !stream || !year) {
@@ -675,24 +692,26 @@ const RegistrationForm = () => {
           </div>
           <div className="bulk-upload-card-body">
             <div className="bulk-upload-content">
-              <div className="bulk-upload-actions">
+              <div className="bulk-upload-actions csv-bulk-actions">
                 <button 
                   type="button"
                   className="form-btn primary" 
                   onClick={handleDownloadTemplate}
                   disabled={isUploading}
+                  title={CSV_BULK_TITLES.template}
                 >
                   <i className="fas fa-download"></i>
-                  <span className="btn-text">Download Template</span>
+                  <span className="btn-text">{CSV_BULK_LABELS.template}</span>
                 </button>
                 <button 
                   type="button"
                   className="form-btn secondary" 
                   onClick={handleExportCSV}
                   disabled={isUploading || students.length === 0}
+                  title={CSV_BULK_TITLES.filled}
                 >
                   <i className="fas fa-file-export"></i>
-                  <span className="btn-text">Export CSV</span>
+                  <span className="btn-text">{CSV_BULK_LABELS.filled}</span>
                 </button>
                 <div className="file-upload-wrapper">
                   <input
@@ -710,7 +729,7 @@ const RegistrationForm = () => {
                       </span>
                     ) : (
                       <span>
-                        <i className="fas fa-folder-open"></i> Choose CSV File
+                        <i className="fas fa-upload"></i> {CSV_BULK_LABELS.upload}
                       </span>
                     )}
                   </label>
@@ -721,7 +740,7 @@ const RegistrationForm = () => {
                     disabled={isUploading || !csvFile}
                   >
                     <i className={`fas ${isUploading ? 'fa-spinner fa-spin' : 'fa-upload'}`}></i>
-                    <span className="btn-text">{isUploading ? 'Uploading...' : 'Upload'}</span>
+                    <span className="btn-text">{isUploading ? CSV_BULK_LABELS.uploading : CSV_BULK_LABELS.upload}</span>
                   </button>
                 </div>
               </div>
@@ -840,10 +859,16 @@ const RegistrationForm = () => {
             ) : students.length === 0 ? (
               <div className="empty-state">
                 <i className="fas fa-user-graduate"></i>
-                <p>No students registered yet for {normalizedLevel} {stream} {year}.</p>
-                <p style={{ fontSize: '12px', marginTop: '10px', color: '#666' }}>
-                  Use the form above to register new students.
-                </p>
+                <p>No students registered yet for {normalizedLevel} {stream} {year}{termScoped ? ` (${effectiveTerm})` : ''}.</p>
+                {requiresSpecialAcademicYearLogic(normalizedLevel) && termScoped ? (
+                  <p style={{ fontSize: '12px', marginTop: '10px', color: '#666' }}>
+                    {getFormVVIEmptyClassHint(apiYear, effectiveTerm, stream)}
+                  </p>
+                ) : (
+                  <p style={{ fontSize: '12px', marginTop: '10px', color: '#666' }}>
+                    Use the form above to register new students.
+                  </p>
+                )}
               </div>
             ) : (
               <div className="table-responsive">

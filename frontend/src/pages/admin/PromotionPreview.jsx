@@ -97,15 +97,7 @@ const PromotionPreview = ({ formLevel }) => {
     }
   };
 
-  const getBackPath = () => {
-    if (normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI') {
-      return `/admin/promotion/${formLevel}/streams`;
-    } else {
-      return `/admin/promotion/${formLevel}/years`;
-    }
-  };
-
-  const formVVIStreams = ['PCM', 'PCB', 'EGM', 'HGE', 'HGL', 'PGM'];
+  const getBackPath = () => `/admin/promotion/${formLevel}/years`;
 
   return (
     <AdminLayout>
@@ -160,7 +152,7 @@ const PromotionPreview = ({ formLevel }) => {
                       className="excel-input"
                     >
                       <option value="">Select Stream</option>
-                      {formVVIStreams.map((s) => (
+                      {['PCM', 'PCB', 'CBG', 'HGL', 'HKL', 'EGM', 'HGE', 'PGM'].map((s) => (
                         <option key={s} value={s}>{s}</option>
                       ))}
                     </select>

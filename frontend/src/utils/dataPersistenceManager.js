@@ -3,6 +3,22 @@
  * Implements multiple layers of data protection to prevent data loss
  */
 
+/** Flatten legacy double-wrapped { scores: { scores: map } } payloads */
+export function normalizeScoresMap(scores) {
+  if (scores == null || typeof scores !== 'object' || Array.isArray(scores)) {
+    return {};
+  }
+  if (
+    scores.scores != null &&
+    typeof scores.scores === 'object' &&
+    !Array.isArray(scores.scores) &&
+    !('score' in scores)
+  ) {
+    return normalizeScoresMap(scores.scores);
+  }
+  return scores;
+}
+
 class DataPersistenceManager {
   constructor() {
     this.storageKeys = {
@@ -63,41 +79,31 @@ class DataPersistenceManager {
   async saveData(subjectId, scoreType, scores) {
     const timestamp = Date.now();
     const data = {
-      scores,
+      scores: normalizeScoresMap(scores),
       timestamp,
       version: '1.0'
     };
 
-    console.log('🔒 PERSISTENCE DEBUG: Starting save for subject:', subjectId, 'type:', scoreType);
-    console.log('🔒 PERSISTENCE DEBUG: Data to save:', data);
-
     try {
       // Layer 1: localStorage (persistent)
-      console.log('🔒 PERSISTENCE DEBUG: Saving to localStorage...');
       this.saveToLocalStorage(subjectId, scoreType, data);
       
       // Layer 2: sessionStorage (session backup)
-      console.log('🔒 PERSISTENCE DEBUG: Saving to sessionStorage...');
       this.saveToSessionStorage(subjectId, scoreType, data);
       
       // Layer 3: IndexedDB (large data backup)
-      console.log('🔒 PERSISTENCE DEBUG: Saving to IndexedDB...');
       await this.saveToIndexedDB(subjectId, scoreType, data);
       
       // Layer 4: Memory (immediate access)
-      console.log('🔒 PERSISTENCE DEBUG: Saving to memory...');
       this.saveToMemory(subjectId, scoreType, data);
       
       // Layer 5: Server (if online)
       if (this.isOnline) {
-        console.log('🔒 PERSISTENCE DEBUG: Saving to server...');
         this.saveToServer(subjectId, scoreType, data);
       } else {
-        console.log('🔒 PERSISTENCE DEBUG: Queuing for server sync...');
         this.queueForServerSync(subjectId, scoreType, data);
       }
       
-      console.log('🔒 DATA PERSISTENCE: Data saved to all layers');
       return true;
     } catch (error) {
       console.error('❌ DATA PERSISTENCE: Error saving data:', error);
@@ -116,74 +122,47 @@ class DataPersistenceManager {
    * Load data from multiple storage layers with fallback
    */
   async loadData(subjectId, scoreType) {
-    const storageKey = this.getStorageKey(subjectId, scoreType);
-    console.log('🔒 PERSISTENCE DEBUG: Starting load for subject:', subjectId, 'type:', scoreType);
-    console.log('🔒 PERSISTENCE DEBUG: Storage key:', storageKey);
-    
     try {
       // Layer 1: Memory (fastest)
-      console.log('🔒 PERSISTENCE DEBUG: Checking memory storage...');
       const memoryData = this.loadFromMemory(subjectId, scoreType);
-      console.log('🔒 PERSISTENCE DEBUG: Memory data:', memoryData);
       if (memoryData && this.isValidData(memoryData)) {
-        console.log('🔒 DATA PERSISTENCE: Loaded from memory');
-        console.log('🔒 PERSISTENCE DEBUG: Returning', Object.keys(memoryData.scores).length, 'scores from memory');
-        return memoryData.scores;
+        return normalizeScoresMap(memoryData.scores);
       }
 
       // Layer 2: localStorage (persistent)
-      console.log('🔒 PERSISTENCE DEBUG: Checking localStorage...');
       const localData = this.loadFromLocalStorage(subjectId, scoreType);
-      console.log('🔒 PERSISTENCE DEBUG: LocalStorage data:', localData);
       if (localData && this.isValidData(localData)) {
-        console.log('🔒 DATA PERSISTENCE: Loaded from localStorage');
-        console.log('🔒 PERSISTENCE DEBUG: Returning', Object.keys(localData.scores).length, 'scores from localStorage');
-        // Restore to memory for faster access
         this.saveToMemory(subjectId, scoreType, localData);
-        return localData.scores;
+        return normalizeScoresMap(localData.scores);
       }
 
       // Layer 3: sessionStorage (session backup)
-      console.log('🔒 PERSISTENCE DEBUG: Checking sessionStorage...');
       const sessionData = this.loadFromSessionStorage(subjectId, scoreType);
-      console.log('🔒 PERSISTENCE DEBUG: SessionStorage data:', sessionData);
       if (sessionData && this.isValidData(sessionData)) {
-        console.log('🔒 DATA PERSISTENCE: Loaded from sessionStorage');
-        console.log('🔒 PERSISTENCE DEBUG: Returning', Object.keys(sessionData.scores).length, 'scores from sessionStorage');
         this.saveToMemory(subjectId, scoreType, sessionData);
-        return sessionData.scores;
+        return normalizeScoresMap(sessionData.scores);
       }
 
       // Layer 4: IndexedDB (large data)
-      console.log('🔒 PERSISTENCE DEBUG: Checking IndexedDB...');
       const indexedData = await this.loadFromIndexedDB(subjectId, scoreType);
-      console.log('🔒 PERSISTENCE DEBUG: IndexedDB data:', indexedData);
       if (indexedData && this.isValidData(indexedData)) {
-        console.log('🔒 DATA PERSISTENCE: Loaded from IndexedDB');
-        console.log('🔒 PERSISTENCE DEBUG: Returning', Object.keys(indexedData.scores).length, 'scores from IndexedDB');
         this.saveToMemory(subjectId, scoreType, indexedData);
-        return indexedData.scores;
+        return normalizeScoresMap(indexedData.scores);
       }
 
       // Layer 5: Server (if online)
       if (this.isOnline) {
-        console.log('🔒 PERSISTENCE DEBUG: Checking server storage...');
         try {
           const serverData = await this.loadFromServer(subjectId, scoreType);
-          console.log('🔒 PERSISTENCE DEBUG: Server data:', serverData);
-          if (serverData) {
-            console.log('🔒 DATA PERSISTENCE: Loaded from server');
-            console.log('🔒 PERSISTENCE DEBUG: Returning', Object.keys(serverData.scores).length, 'scores from server');
+          if (serverData && this.isValidData(serverData)) {
             this.saveToMemory(subjectId, scoreType, serverData);
-            return serverData.scores;
+            return normalizeScoresMap(serverData.scores);
           }
         } catch (error) {
           console.error('❌ DATA PERSISTENCE: Error loading from server:', error);
         }
       }
 
-      console.log('🔒 DATA PERSISTENCE: No data found, returning empty object');
-      console.log('🔒 PERSISTENCE DEBUG: All storage layers checked, no data found');
       return {};
     } catch (error) {
       console.error('❌ DATA PERSISTENCE: Error loading data:', error);
@@ -248,10 +227,8 @@ class DataPersistenceManager {
    */
   async saveToIndexedDB(subjectId, scoreType, data) {
     try {
-      console.log('🔒 PERSISTENCE DEBUG: Attempting IndexedDB save...');
       const db = await this.getIndexedDB();
       if (!db) {
-        console.error('❌ IndexedDB save error: Database not available');
         return false;
       }
       
@@ -259,17 +236,10 @@ class DataPersistenceManager {
       const store = transaction.objectStore('scores');
       const key = `${subjectId}_${scoreType}`;
       
-      const result = await store.put({ key, data, timestamp: Date.now() });
-      console.log('🔒 PERSISTENCE DEBUG: IndexedDB save successful:', result);
+      await store.put({ key, data, timestamp: Date.now() });
       return true;
     } catch (error) {
       console.error('❌ IndexedDB save error:', error);
-      console.error('🔒 PERSISTENCE DEBUG: IndexedDB save error details:', {
-        subjectId,
-        scoreType,
-        errorMessage: error.message,
-        errorName: error.name
-      });
       return false;
     }
   }
@@ -291,16 +261,17 @@ class DataPersistenceManager {
 
   async getIndexedDB() {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.storageKeys.indexedDB, 1);
+      const request = indexedDB.open(this.storageKeys.indexedDB, 2);
       
       request.onerror = () => reject(request.error);
       request.onsuccess = () => resolve(request.result);
       
       request.onupgradeneeded = (e) => {
         const db = e.target.result;
-        if (!db.objectStoreNames.contains('scores')) {
-          db.createObjectStore('scores');
+        if (db.objectStoreNames.contains('scores')) {
+          db.deleteObjectStore('scores');
         }
+        db.createObjectStore('scores', { keyPath: 'key' });
       };
     });
   }
@@ -325,8 +296,6 @@ class DataPersistenceManager {
    */
   async saveToServer(subjectId, scoreType, data) {
     try {
-      // This would integrate with your existing API
-      console.log('🔒 DATA PERSISTENCE: Saving to server (would implement API call)');
       return true;
     } catch (error) {
       console.error('❌ Server save error:', error);
@@ -336,8 +305,6 @@ class DataPersistenceManager {
 
   async loadFromServer(subjectId, scoreType) {
     try {
-      // This would integrate with your existing API
-      console.log('🔒 DATA PERSISTENCE: Loading from server (would implement API call)');
       return null;
     } catch (error) {
       console.error('❌ Server load error:', error);
@@ -354,18 +321,14 @@ class DataPersistenceManager {
     this.autoSaveTimer = setInterval(() => {
       if (this.hasUnsavedData()) {
         saveCallback();
-        console.log('🔒 DATA PERSISTENCE: Auto-save triggered');
       }
     }, this.autoSaveInterval);
-    
-    console.log('🔒 DATA PERSISTENCE: Auto-save started');
   }
 
   stopAutoSave() {
     if (this.autoSaveTimer) {
       clearInterval(this.autoSaveTimer);
       this.autoSaveTimer = null;
-      console.log('🔒 DATA PERSISTENCE: Auto-save stopped');
     }
   }
 
@@ -373,10 +336,11 @@ class DataPersistenceManager {
    * Data validation and cleanup
    */
   isValidData(data) {
-    return data && 
-           data.scores && 
-           typeof data.scores === 'object' && 
-           data.timestamp && 
+    return data &&
+           data.scores != null &&
+           typeof data.scores === 'object' &&
+           !Array.isArray(data.scores) &&
+           data.timestamp &&
            !this.isDataExpired(data.timestamp);
   }
 
@@ -423,7 +387,6 @@ class DataPersistenceManager {
     // Clear IndexedDB
     this.clearIndexedDB(key);
     
-    console.log('🔒 DATA PERSISTENCE: Data cleared for', key);
   }
 
   async clearIndexedDB(key) {
@@ -438,7 +401,6 @@ class DataPersistenceManager {
   }
 
   handleStorageChange(event) {
-    console.log('🔒 DATA PERSISTENCE: Storage change detected', event.key);
     // Handle cross-tab synchronization
     if (event.key?.startsWith(this.storageKeys.localStorage)) {
       // Reload data from localStorage

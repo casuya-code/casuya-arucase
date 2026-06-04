@@ -5,6 +5,7 @@
 import { Link, useParams, Navigate } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { useAuth } from '../../context/AuthContext';
+import { formLevelToPathSlug } from '../../utils/academicYearUtils';
 import './ScoreEntryStreamSelection.css';
 
 const ScoreEntryStreamSelection = ({ formLevel }) => {
@@ -18,25 +19,12 @@ const ScoreEntryStreamSelection = ({ formLevel }) => {
   // Standard streams for FORM I-IV
   const standardStreams = ['A', 'B'];
 
-  const getBackPath = () => {
-    const formMap = {
-      'FORM I': 'form-i',
-      'FORM II': 'form-ii',
-      'FORM III': 'form-iii',
-      'FORM IV': 'form-iv',
-    };
-    return `/admin/score-entry/${formMap[formLevel]}/years`;
-  };
+  const formSlug = formLevelToPathSlug(formLevel);
 
-  const getStreamDetailPath = (stream) => {
-    const formMap = {
-      'FORM I': 'form-i',
-      'FORM II': 'form-ii',
-      'FORM III': 'form-iii',
-      'FORM IV': 'form-iv',
-    };
-    return `/admin/score-entry/${formMap[formLevel]}/year/${year}/stream/${stream}/subjects`;
-  };
+  const getBackPath = () => `/admin/score-entry/${formSlug}/years`;
+
+  const getStreamDetailPath = (stream) =>
+    `/admin/score-entry/${formSlug}/year/${year}/stream/${stream}/subjects`;
 
   return (
     <AdminLayout>

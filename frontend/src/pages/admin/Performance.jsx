@@ -1,17 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { getSchoolYearOptions } from '../../utils/academicYearUtils';
 import './Performance.css';
 
 const Performance = () => {
-  // Generate year cards from 2025 to current year + 1
-  const currentYear = new Date().getFullYear();
-  const startYear = 2025;
-  const endYear = currentYear + 1;
-  
-  const years = [];
-  for (let year = startYear; year <= endYear; year++) {
-    years.push(year);
-  }
+  const years = [...getSchoolYearOptions()].reverse();
 
   return (
     <div className="performance-page">

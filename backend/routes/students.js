@@ -47,24 +47,7 @@ function checkPhotoUploadRateLimit(username) {
   return true;
 }
 
-// Term variants so DELETE matches both "Term I" and "Term 1" (and II/2, etc.) in DB
-function getTermMatchValues(term) {
-  const t = term != null ? String(term).trim() : '';
-  // Guard against excessively long input that could produce huge IN clauses
-  if (t.length > 50) {
-    throw new Error('Invalid term value: too long');
-  }
-  const variants = [t];
-  if (/^Term\s+I$/i.test(t) || /^Term\s+1$/i.test(t) || /^First\s+Term$/i.test(t)) {
-    variants.push('Term I', 'Term 1', 'First Term');
-  }
-  else if (/^Term\s+II$/i.test(t) || /^Term\s+2$/i.test(t) || /^Second\s+Term$/i.test(t)) {
-    variants.push('Term II', 'Term 2', 'Second Term');
-  }
-  else if (/^Term\s+III$/i.test(t) || /^Term\s+3$/i.test(t)) { variants.push('Term III', 'Term 3'); }
-  else if (/^Term\s+IV$/i.test(t) || /^Term\s+4$/i.test(t)) { variants.push('Term IV', 'Term 4'); }
-  return [...new Set(variants)];
-}
+const { getTermMatchValues } = require('../utils/termNormalizer');
 
 // Derive canonical term label from assessment month (matches score-entry template logic).
 function getTermFromMonth(month, level) {
@@ -348,6 +331,61 @@ const getStreamsForSubject = (subjectCode) => {
   return streams;
 };
 
+// ========== FORM V / VI PROMOTION (term rollover & Form V → Form VI) ==========
+
+const {
+  PROMOTION_MODES,
+  buildPreview: buildFormVVIPreview,
+  executePromotion: executeFormVVIPromotion,
+} = require('../utils/formVVIPromotion');
+
+router.get('/form-vvi/promotion/preview', requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    let { level, stream, year, term, mode } = req.query;
+    if (!level || !stream || !year || !term || !mode) {
+      return res.status(400).json({
+        message: 'level, stream, year, term, and mode are required',
+      });
+    }
+    level = decodeURIComponent(String(level).replace(/\+/g, ' ')).trim().toUpperCase();
+    stream = normalizeStream(stream);
+    const preview = await buildFormVVIPreview(query, {
+      mode,
+      level,
+      stream,
+      year,
+      term,
+    });
+    res.json(preview);
+  } catch (error) {
+    const status = error.status || 500;
+    return res.status(status).json({ message: error.message || 'Preview failed' });
+  }
+});
+
+router.post('/form-vvi/promotion/execute', requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    let { level, stream, year, term, mode, excluded_adm_nos } = req.body;
+    if (!level || !stream || !year || !term || !mode) {
+      return res.status(400).json({
+        message: 'level, stream, year, term, and mode are required',
+      });
+    }
+    level = String(level).trim().toUpperCase();
+    stream = normalizeStream(stream);
+    const result = await executeFormVVIPromotion(
+      query,
+      withTransaction,
+      { level, stream, year, term, mode, excluded_adm_nos },
+      req.user?.username
+    );
+    res.json(result);
+  } catch (error) {
+    const status = error.status || 500;
+    return res.status(status).json({ message: error.message || 'Promotion failed' });
+  }
+});
+
 // Get students with filters.
 // Used by score entry and others: returns ALL registered students for the requested class (level, stream, year, term).
 // Do not filter by user allocation here; access to which class a user can request is enforced by the frontend.
@@ -355,7 +393,7 @@ const getStreamsForSubject = (subjectCode) => {
 router.get('/', async (req, res) => {
   try {
     const { level, stream, year, term, search, subject_code } = req.query;
-    let queryText = 'SELECT adm_no, first_name, middle_name, surname, sex, level, stream, year, term, com FROM students WHERE 1=1';
+    let queryText = 'SELECT adm_no, first_name, middle_name, surname, sex, level, stream, year, term, com, status FROM students WHERE 1=1';
     const params = [];
     let paramCount = 1;
     
@@ -1155,9 +1193,9 @@ router.put('/:admNo', async (req, res) => {
       updates.push(`sex = $${paramCount++}`);
       params.push(sex);
     }
-    if (status) {
+    if (status !== undefined && status !== null && String(status).trim() !== '') {
       updates.push(`status = $${paramCount++}`);
-      params.push(status);
+      params.push(String(status).trim().toUpperCase());
     }
 
     if (calculatedCom !== undefined) {
@@ -1173,8 +1211,16 @@ router.put('/:admNo', async (req, res) => {
     params.push(admNo);
     
     if (level) {
-      queryText += ` AND level = $${paramCount++}`;
-      params.push(level);
+      const levelVariants = getLevelMatchValues(level);
+      if (levelVariants.length === 1) {
+        queryText += ` AND level = $${paramCount++}`;
+        params.push(levelVariants[0]);
+      } else {
+        const levelPlaceholders = levelVariants.map((_, i) => `$${paramCount + i}`).join(', ');
+        queryText += ` AND level IN (${levelPlaceholders})`;
+        params.push(...levelVariants);
+        paramCount += levelVariants.length;
+      }
     }
     if (stream) {
       // Backward compatible stream filtering:

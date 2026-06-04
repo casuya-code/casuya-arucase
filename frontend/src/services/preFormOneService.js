@@ -234,16 +234,16 @@ throw error;
     try {
       let endpoint;
       if (type === 'interview') {
-        endpoint = `/pre-form-one/student-score/${studentId}/${subjectId}`;
+        endpoint = `/pre-form-one/interview-score/${studentId}/${subjectId}`;
       } else if (type === 'continuing') {
-        endpoint = `/pre-form-one/student-score/${studentId}/${subjectId}?type=continuing`;
+        endpoint = `/pre-form-one/continuing-score/${studentId}/${subjectId}`;
       } else {
         throw new Error('Invalid score type. Must be "interview" or "continuing"');
       }
-      
+
       const response = await api.get(endpoint);
-      
-      return response.data?.score || 0;
+
+      return response.data?.data ?? response.data?.score ?? 0;
     } catch (error) {
       if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
         throw new Error('Request timed out. Please check your connection and try again.');

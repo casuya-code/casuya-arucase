@@ -7,6 +7,7 @@ import { Link } from 'react-router-dom';
 import { useMemo } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { useAuth } from '../../context/AuthContext';
+import { FORM_V_VI_STREAM_CODES } from '../../utils/academicYearUtils';
 import './ScoreEntry.css';
 
 const ALL_FORMS = [
@@ -23,8 +24,6 @@ const TOGETHER_FORMS = [
   { id: 'FORM VI TOGETHER', label: 'FORM VI TOGETHER', path: '/admin/score-entry/form-vi/together/years', icon: 'fa-layer-group' },
 ];
 
-const FORM_V_STREAMS = ['PCB', 'PCM', 'CBG', 'HGL', 'HKL', 'EGM', 'HGE', 'PGM'];
-
 const ScoreEntry = () => {
   const { isAdminLike, hasClass } = useAuth();
 
@@ -35,7 +34,7 @@ const ScoreEntry = () => {
         return hasClass(form.id);
       }
       if (form.id === 'FORM V' || form.id === 'FORM VI') {
-        return FORM_V_STREAMS.some((stream) => hasClass(`${form.id} ${stream}`));
+        return FORM_V_VI_STREAM_CODES.some((stream) => hasClass(`${form.id} ${stream}`));
       }
       return false;
     });

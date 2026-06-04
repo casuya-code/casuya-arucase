@@ -3,39 +3,20 @@
  * Non-admin users only see streams (classes) allocated to them.
  */
 import { Link } from 'react-router-dom';
-import { useMemo } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
-import { useAuth } from '../../context/AuthContext';
+import { useFormVVIStreams } from '../../hooks/useFormVVIStreams';
+import { formLevelToPathSlug } from '../../utils/academicYearUtils';
 import './ScoreEntryStreamSelection.css';
 
-const ALL_STREAMS = [
-  { code: 'PCB', name: 'Physics, Chemistry, Biology' },
-  { code: 'PCM', name: 'Physics, Chemistry, Mathematics' },
-  { code: 'CBG', name: 'Chemistry, Biology, Geography' },
-  { code: 'HGL', name: 'History, Geography, Literature' },
-  { code: 'HKL', name: 'History, Kiswahili, Literature' },
-  { code: 'EGM', name: 'Economics, Geography, Mathematics' },
-  { code: 'HGE', name: 'History, Geography, Economics' },
-  { code: 'PGM', name: 'Physics, Geography, Advanced Mathematics' },
-];
-
 const ScoreEntryFormVVIStreamSelection = ({ formLevel }) => {
-  const { hasClass } = useAuth();
-  const formVVIStreams = useMemo(() => {
-    return ALL_STREAMS.filter((s) => hasClass(`${formLevel} ${s.code}`));
-  }, [formLevel, hasClass]);
+  const formVVIStreams = useFormVVIStreams(formLevel);
 
   const getBackPath = () => {
     return '/admin/score-entry';
   };
 
-  const getStreamDetailPath = (stream) => {
-    const formMap = {
-      'FORM V': 'form-v',
-      'FORM VI': 'form-vi',
-    };
-    return `/admin/score-entry/${formMap[formLevel]}/stream/${stream}/years`;
-  };
+  const getStreamDetailPath = (stream) =>
+    `/admin/score-entry/${formLevelToPathSlug(formLevel)}/stream/${stream}/years`;
 
   return (
     <AdminLayout>

@@ -6,6 +6,7 @@ import { useAuth } from '../../context/AuthContext';
 import { toast } from '../../utils/toast';
 import { useSound } from '../../utils/useSound';
 import { publicAPI } from '../../services/public';
+import api from '../../services/api';
 import { resolveStaticUrl } from '../../utils/backendUrl';
 import KeyringIcon from '../../components/icons/KeyringIcon';
 import './Login.css';
@@ -13,10 +14,6 @@ import './Login.css';
 const DEFAULT_LOGO = '/uploads/photos/9749b4af-7e1c-454b-a482-37a0f64162f1.jpg';
 
 const Login = () => {
-  useEffect(() => {
-    loadFontAwesome().catch(() => {});
-  }, []);
-
   const [username, setUsername] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -28,6 +25,27 @@ const Login = () => {
   const { login } = useAuth();
   const navigate = useNavigate();
   const { playLogin } = useSound();
+
+  useEffect(() => {
+    loadFontAwesome().catch(() => {});
+  }, []);
+
+  /** Already signed in — skip showing the form again. */
+  useEffect(() => {
+    const token = localStorage.getItem('token');
+    if (!token) return;
+    let cancelled = false;
+    api
+      .get('/auth/me')
+      .then((res) => {
+        if (cancelled) return;
+        if (res?.data?.user) navigate('/admin', { replace: true });
+      })
+      .catch(() => {});
+    return () => {
+      cancelled = true;
+    };
+  }, [navigate]);
 
   const { data: homepageData } = useQuery({
     queryKey: ['homepage'],
@@ -56,7 +74,7 @@ const Login = () => {
     const user = username.trim();
     const pass = password;
     if (!user || !pass) {
-      reportError('Enter your username and password.');
+      reportError('Andika jina la mtumiaji na nenosiri.');
       return;
     }
 
@@ -65,11 +83,11 @@ const Login = () => {
     try {
       const result = await login(user, pass);
       if (!result || typeof result !== 'object') {
-        reportError('Sign-in failed. Unexpected response.');
+        reportError('Imeshindwa kuingia. Majibu hayatarajiwi kutoka kwa seva.');
         return;
       }
       if (result.success) {
-        toast.success('Signed in successfully.');
+        toast.success('Umeingia kikamilifu.');
         try {
           playLogin();
         } catch {
@@ -78,13 +96,13 @@ const Login = () => {
         navigate('/admin');
         return;
       }
-      reportError(result.error || 'Sign-in failed. Check your credentials and try again.');
+      reportError(result.error || 'Imeshindwa kuingia. Angalia jina la mtumiaji na nenosiri kisha jaribu tena.');
     } catch (err) {
-      let msg = 'Something went wrong. Please try again.';
+      let msg = 'Hitilafu imetokea. Tafadhali jaribu tena.';
       if (err?.name === 'TypeError' && String(err?.message || '').includes('fetch')) {
-        msg = 'Network error. Check your connection and try again.';
+        msg = 'Hitilafu ya mtandao. Angalia muunganisho wako kisha jaribu tena.';
       } else if (err?.code === 'ECONNABORTED') {
-        msg = 'Request timed out. Please try again.';
+        msg = 'Ombi limechelewa. Tafadhali jaribu tena.';
       } else if (err?.message) {
         msg = String(err.message);
       }
@@ -97,7 +115,7 @@ const Login = () => {
   return (
     <div className="login-page">
       <a href="#staff-login-main" className="login-skip-link">
-        Skip to sign-in form
+        Ruka hadi fomu ya kuingia
       </a>
 
       <div className="login-card-stack">
@@ -106,7 +124,7 @@ const Login = () => {
             <div className="login-logo-wrap">
               <img
                 src={logoUrl}
-                alt="Arusha Catholic Seminary school logo"
+                alt="Nembo ya Arusha Catholic Seminary"
                 className="login-logo"
                 width={88}
                 height={88}
@@ -114,7 +132,7 @@ const Login = () => {
               />
             </div>
             <p className="login-eyebrow">Arusha Catholic Seminary</p>
-            <h1 id={titleId}>Staff sign in</h1>
+            <h1 id={titleId}>Matumizi ya Ofisi tu.</h1>
           </header>
 
           <form
@@ -131,7 +149,7 @@ const Login = () => {
             ) : null}
 
             <div className="form-group">
-              <label htmlFor="username">Username</label>
+              <label htmlFor="username">Jina la mtumiaji</label>
               <div className="input-with-icon">
                 <i className="fas fa-user input-icon" aria-hidden="true" />
                 <input
@@ -156,7 +174,7 @@ const Login = () => {
             </div>
 
             <div className="form-group">
-              <label htmlFor="password">Password</label>
+              <label htmlFor="password">Nenosiri</label>
               <div className="input-with-icon">
                 <span className="input-icon input-icon--keyring" aria-hidden="true">
                   <KeyringIcon />
@@ -180,7 +198,7 @@ const Login = () => {
                     type="button"
                     className="password-toggle"
                     onClick={() => setShowPassword((v) => !v)}
-                    aria-label={showPassword ? 'Hide password' : 'Show password'}
+                    aria-label={showPassword ? 'Ficha nenosiri' : 'Onyesha nenosiri'}
                     aria-pressed={showPassword}
                     disabled={loading}
                   >
@@ -202,11 +220,14 @@ const Login = () => {
               {loading ? (
                 <>
                   <i className="fas fa-spinner fa-spin" aria-hidden="true" />
-                  <span>Signing in…</span>
-                  <span className="sr-only">Please wait</span>
+                  <span>Inaingia…</span>
+                  <span className="sr-only">Tafadhali subiri</span>
                 </>
               ) : (
-                'Sign in'
+                <>
+                  <i className="fas fa-sign-in-alt" aria-hidden="true" />
+                  <span>Ingia</span>
+                </>
               )}
             </button>
           </form>
@@ -214,7 +235,7 @@ const Login = () => {
 
         <Link to="/" className="back-button">
           <i className="fas fa-arrow-left" aria-hidden="true" />
-          <span>Back to public site</span>
+          <span>Rudi kwenye tovuti ya umma</span>
         </Link>
       </div>
     </div>

@@ -1,5 +1,6 @@
-import { lazy, Suspense, useDeferredValue } from 'react';
-import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
+import { lazy, Suspense } from 'react';
+import { BrowserRouter, Route, Navigate } from 'react-router-dom';
+import { RouteTransitionProvider, DeferredRoutes } from './context/RouteTransitionContext';
 import { AuthProvider } from './context/AuthContext';
 import { SocketProvider } from './context/SocketContext';
 import { ToastContainer } from 'react-toastify';
@@ -151,6 +152,7 @@ const Users = lazy(() => import('./pages/admin/Users'));
 const Promotion = lazy(() => import('./pages/admin/Promotion'));
 const PromotionSelectClass = lazy(() => import('./pages/admin/PromotionSelectClass'));
 const PromotionPreview = lazy(() => import('./pages/admin/PromotionPreview'));
+const FormVVIPromotion = lazy(() => import('./pages/admin/FormVVIPromotion'));
 const PreFormOne = lazy(() => import('./pages/admin/PreFormOne'));
 const PreFormOneYear = lazy(() => import('./pages/admin/PreFormOneYear'));
 const PreFormOneRegistration = lazy(() => import('./pages/admin/PreFormOneRegistration'));
@@ -192,13 +194,6 @@ import PageSEO from './components/common/PageSEO';
 import SchoolFavicon from './components/common/SchoolFavicon';
 import SoundInitializer from './components/common/SoundInitializer';
 
-// Defer route location so lazy components don't suspend during synchronous input (fixes "suspended while responding to synchronous input")
-function DeferredRoutes({ children }) {
-  const location = useLocation();
-  const deferredLocation = useDeferredValue(location);
-  return <Routes location={deferredLocation}>{children}</Routes>;
-}
-
 function App() {
   return (
     <ErrorBoundary>
@@ -218,7 +213,8 @@ function App() {
           <NetworkStatusBanner />
           <PwaInstallBanner />
           <PublicChatbotLayer />
-          <Suspense fallback={<Loading minimal message="" />}>
+          <RouteTransitionProvider>
+          <Suspense fallback={<Loading minimal message="Loading page…" />}>
           <DeferredRoutes>
             {/* Public Routes */}
             <Route path="/" element={<HomePage />} />
@@ -2188,8 +2184,8 @@ function App() {
             <Route path="/admin/promotion/form-ii/year/:year/stream/:stream/preview" element={<ProtectedRoute><PromotionPreview formLevel="form-ii" /></ProtectedRoute>} />
             <Route path="/admin/promotion/form-iii/year/:year/stream/:stream/preview" element={<ProtectedRoute><PromotionPreview formLevel="form-iii" /></ProtectedRoute>} />
             <Route path="/admin/promotion/form-iv/year/:year/stream/:stream/preview" element={<ProtectedRoute><PromotionPreview formLevel="form-iv" /></ProtectedRoute>} />
-            <Route path="/admin/promotion/form-v/stream/:stream/year/:year/preview" element={<ProtectedRoute><PromotionPreview formLevel="form-v" /></ProtectedRoute>} />
-            <Route path="/admin/promotion/form-vi/stream/:stream/year/:year/preview" element={<ProtectedRoute><PromotionPreview formLevel="form-vi" /></ProtectedRoute>} />
+            <Route path="/admin/promotion/form-v/stream/:stream/year/:year" element={<ProtectedRoute><FormVVIPromotion formLevel="FORM V" /></ProtectedRoute>} />
+            <Route path="/admin/promotion/form-vi/stream/:stream/year/:year" element={<ProtectedRoute><FormVVIPromotion formLevel="FORM VI" /></ProtectedRoute>} />
 
             {/* Pre-Form One */}
             <Route path="/admin/pre-form-one" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOne /></ProtectedRoute>} />
@@ -2210,6 +2206,7 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </DeferredRoutes>
           </Suspense>
+          </RouteTransitionProvider>
           <ToastContainer
             position="top-right"
             autoClose={3000}

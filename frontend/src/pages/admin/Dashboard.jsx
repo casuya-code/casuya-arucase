@@ -176,7 +176,7 @@ const Dashboard = () => {
               <div className="welcome-text">
                 <h2>
                   <i className="fas fa-graduation-cap" aria-hidden="true"></i>{' '}
-                  Welcome, Administrator
+                  Welcome, {user?.full_name || user?.username || 'Administrator'}
                 </h2>
               </div>
               <button
@@ -245,9 +245,20 @@ const Dashboard = () => {
                   return total;
                 };
 
+                const yearGrandTotal = (year) =>
+                  rows
+                    .filter((r) => r.year === year)
+                    .reduce((sum, row) => sum + (typeof row.total === 'number' ? row.total : 0), 0);
+
+                const allYearsGrandTotal = yearColumns.reduce(
+                  (sum, year) => sum + yearGrandTotal(year),
+                  0
+                );
+
                 return (
                   <div className="year-table-container dashboard-surface-card">
                     <div className="year-table-header">Form-wise Student Distribution (per Year)</div>
+                    <div className="year-table-scroll">
                     <div
                       className="year-table year-table--forms"
                       style={{ '--year-cols': yearColumns.length }}
@@ -290,29 +301,19 @@ const Dashboard = () => {
                         <div className="year-table-cell year-table-cell--year">
                           <strong>Grand Total</strong>
                         </div>
-                        {yearColumns.map((year) => {
-                          // Aggregate total across all terms for the same year
-                          const yearRows = rows.filter((r) => r.year === year);
-                          const total = yearRows.reduce((sum, row) => {
-                            return sum + (typeof row.total === 'number' ? row.total : 0);
-                          }, 0);
-                          return (
+                        {yearColumns.map((year) => (
                             <div
                               key={`total-${year}`}
                               className="year-table-cell year-table-cell--count-no-suffix"
                             >
-                              {total}
+                              {yearGrandTotal(year)}
                             </div>
-                          );
-                        })}
+                          ))}
                         <div className="year-table-cell year-table-cell--count-no-suffix">
-                          {yearColumns.reduce((sum, year) => {
-                            const row = rows.find((r) => r.year === year);
-                            const total = row && typeof row.total === 'number' ? row.total : 0;
-                            return sum + total;
-                          }, 0)}
+                          {allYearsGrandTotal}
                         </div>
                       </div>
+                    </div>
                     </div>
                   </div>
                 );

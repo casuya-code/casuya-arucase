@@ -3,32 +3,23 @@
  */
 import { Link } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
+import {
+  formLevelToPathSlug,
+  getCurrentCalendarYear,
+  getSchoolYearOptions,
+} from '../../utils/academicYearUtils';
 import '../academic/SubjectsYearSelection.css';
 
 const MonthlyResultsYearSelection = ({ formLevel }) => {
-  const currentYear = new Date().getFullYear();
-  
-  const startYear = 2025;
-  const endYear = currentYear + 3;
-  const years = [];
-  for (let i = startYear; i <= endYear; i++) {
-    years.push(i);
-  }
-  years.reverse();
+  const currentYear = getCurrentCalendarYear();
+  const years = getSchoolYearOptions();
 
   const getBackPath = () => {
     return '/admin/results/monthly';
   };
 
-  const getYearDetailPath = (year) => {
-    const formMap = {
-      'FORM I': 'form-i',
-      'FORM II': 'form-ii',
-      'FORM III': 'form-iii',
-      'FORM IV': 'form-iv',
-    };
-    return `/admin/results/monthly/${formMap[formLevel]}/year/${year}/streams`;
-  };
+  const getYearDetailPath = (year) =>
+    `/admin/results/monthly/${formLevelToPathSlug(formLevel)}/year/${year}/streams`;
 
   return (
     <AdminLayout>
@@ -39,7 +30,10 @@ const MonthlyResultsYearSelection = ({ formLevel }) => {
             {formLevel} - Choose Year
           </div>
           <div className="subjects-year-selection-card-body">
-            <div className="subjects-year-selection-grid">
+            <div
+              className="subjects-year-selection-grid"
+              style={{ '--year-card-count': years.length }}
+            >
               {years.map((year) => (
                 <Link
                   key={`monthly-${year}`}

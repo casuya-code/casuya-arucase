@@ -10,6 +10,8 @@ import AdminLayout from '../../components/layout/AdminLayout';
 import { studentsAPI } from '../../services/students';
 import api from '../../services/api';
 import './CommentsManagement.css';
+import { CSV_BULK_LABELS, CSV_BULK_TITLES } from '../../constants/csvBulkActions';
+import { useFormVVITermGuard } from '../../hooks/useFormVVITermGuard';
 
 const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, icon }) => {
   const { year, stream, term } = useParams();
@@ -30,6 +32,22 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
 
   // Check if this is Form V or VI
   const isFormVOrVI = normalizedLevel.toUpperCase() === 'FORM V' || normalizedLevel.toUpperCase() === 'FORM VI';
+
+  const formVVITermsPath =
+    isFormVOrVI && stream && year
+      ? `/admin/${moduleName}/${formLevel}/stream/${stream}/year/${year}/terms`
+      : '';
+
+  const { valid: termPairValid } = useFormVVITermGuard({
+    enabled: isFormVOrVI && Boolean(term),
+    displayYear: year,
+    term,
+    redirectTo: formVVITermsPath,
+  });
+
+  if (isFormVOrVI && term && !termPairValid) {
+    return null;
+  }
 
   // Don't normalize stream here - let backend handle it
   const normalizedStream = stream || 'NA';
@@ -539,27 +557,34 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
             <i className={`fas ${icon}`}></i>
             {year} - {moduleLabel} - {normalizedTerm}
             <div className="header-actions">
-              <button
-                type="button"
-                className="excel-btn small secondary"
-                onClick={handleDownloadTemplate}
-                disabled={students.length === 0}
-                title="Download CSV with columns: AdmNumber, first_name, middle_name, surname, Comment"
-              >
-                <i className="fas fa-download"></i> Download CSV template
-              </button>
-              <label className="excel-btn small secondary" style={{ marginBottom: 0 }}>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".csv"
-                  onChange={handleUploadFilled}
-                  disabled={students.length === 0 || uploading}
-                  style={{ display: 'none' }}
-                />
-                {uploading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-upload"></i>}
-                {uploading ? ' Uploading...' : ' Upload filled template'}
-              </label>
+              <div className="csv-bulk-actions">
+                <button
+                  type="button"
+                  className="excel-btn small secondary"
+                  onClick={handleDownloadTemplate}
+                  disabled={students.length === 0}
+                  title={CSV_BULK_TITLES.template}
+                >
+                  <i className="fas fa-download"></i> {CSV_BULK_LABELS.template}
+                </button>
+                <span className="csv-bulk-actions-spacer" aria-hidden="true" />
+                <label
+                  className="excel-btn small secondary"
+                  style={{ marginBottom: 0, cursor: 'pointer' }}
+                  title={CSV_BULK_TITLES.upload}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv"
+                    onChange={handleUploadFilled}
+                    disabled={students.length === 0 || uploading}
+                    style={{ display: 'none' }}
+                  />
+                  {uploading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-upload"></i>}
+                  {uploading ? ` ${CSV_BULK_LABELS.uploading}` : ` ${CSV_BULK_LABELS.upload}`}
+                </label>
+              </div>
               {supportsGradeAutoFill && (
                 <button
                   type="button"

@@ -95,8 +95,19 @@
 .dashboard-surface-card {
   background: #ffffff;
   border: 1px solid #c9cdd4;
-  border-radius: 0;
+  border-radius: clamp(0.625rem, 2vw, 0.875rem);
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  width: 100%;
+  min-width: 0;
+  box-sizing: border-box;
+}
+
+.year-table-scroll {
+  width: 100%;
+  max-width: 100%;
+  min-width: 0;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
 /* Welcome Header */
@@ -112,10 +123,21 @@
 
 .welcome-header-content {
   display: flex;
+  flex-direction: row;
+  flex-wrap: nowrap;
   justify-content: space-between;
   align-items: center;
-  gap: 1rem;
+  gap: 0.75rem;
   width: 100%;
+}
+
+.welcome-text {
+  flex: 1 1 auto;
+  min-width: 0;
+}
+
+.dashboard-layout .welcome-header .mute-toggle-btn {
+  flex-shrink: 0;
 }
 
 .welcome-text h2 {
@@ -247,9 +269,10 @@
 .year-table {
   display: grid;
   border: 1px solid #c9cdd4;
-  border-radius: 0;
+  border-radius: clamp(0.5rem, 1.5vw, 0.625rem);
   overflow: hidden;
   background: #ffffff;
+  min-width: 100%;
 }
 
 .year-table-row {
@@ -328,18 +351,75 @@
   background: #ffffff;
 }
 
+@media (max-width: 768px) {
+  .dashboard-layout {
+    padding: 0.75rem 0 1.5rem;
+  }
+
+  .dashboard-content-shell {
+    padding: 0 clamp(0.5rem, 3vw, 0.75rem);
+    gap: 1rem;
+  }
+
+  .welcome-header {
+    padding: 1rem;
+  }
+
+  .welcome-header-content {
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
+  }
+
+  .welcome-text h2 {
+    justify-content: flex-start;
+    text-align: left;
+    font-size: clamp(0.9375rem, 3.8vw, 1.25rem);
+  }
+
+  .dashboard-layout .welcome-header .mute-toggle-btn {
+    padding: 0.5rem 0.75rem;
+    min-width: 2.75rem;
+    min-height: 2.75rem;
+  }
+
+  .dashboard-layout .section-title {
+    justify-content: flex-start;
+    text-align: left;
+  }
+
+  .year-table-container.dashboard-surface-card {
+    padding: 0.875rem 0.75rem 1rem;
+  }
+
+  .year-table-scroll {
+    margin: 0 -0.25rem;
+    padding: 0 0.25rem 0.125rem;
+  }
+}
+
 @media (max-width: 640px) {
   .year-table-row {
     grid-template-columns: 0.9fr 1.1fr;
   }
 
+  .year-table--forms {
+    min-width: min(100%, 20rem);
+  }
+
   .year-table--forms .year-table-row {
-    grid-template-columns: 1.2fr repeat(var(--year-cols, 1), minmax(60px, 1fr)) 1.1fr;
-    overflow-x: auto;
+    grid-template-columns: 1.35fr repeat(var(--year-cols, 1), minmax(3.25rem, 1fr)) minmax(3.5rem, 1.1fr);
+    min-width: max(100%, calc(5.5rem + var(--year-cols, 1) * 3.5rem));
   }
 
   .year-table-cell {
-    padding: 0.5rem 0.6rem;
+    padding: 0.5rem 0.5rem;
+    font-size: 0.8125rem;
+  }
+
+  .year-table-cell--head {
+    font-size: 0.625rem;
+    letter-spacing: 0.02em;
   }
 }
 
@@ -821,14 +901,14 @@
   }
 
   .welcome-header-content {
-    flex-direction: column;
-    align-items: stretch;
-    gap: 0.75rem;
+    flex-direction: row;
+    align-items: center;
+    gap: 0.5rem;
   }
 
   .welcome-text h2 {
     justify-content: flex-start;
-    font-size: clamp(1rem, 4.5vw, 1.25rem);
+    font-size: clamp(0.875rem, 4vw, 1.125rem);
   }
 
   .dashboard-main-grid {
@@ -866,15 +946,8 @@
     padding: 0.75rem clamp(0.5rem, 2.5vw, 0.75rem);
   }
 
-  .year-table--forms {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
-    display: block;
-    max-width: 100%;
-  }
-
   .year-table--forms .year-table-row {
-    min-width: max(100%, 280px);
+    min-width: max(100%, 17.5rem);
   }
 
   .guidelines-grid {

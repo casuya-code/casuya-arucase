@@ -28,12 +28,7 @@ const PreFormOneContinuingSubjects = () => {
       try {
         setLoading(true);
         const subjectsData = await preFormOneContinuingSubjectsService.getSubjects();
-        
-        if (subjectsData && subjectsData.data) {
-          setSubjects(subjectsData.data);
-        } else {
-          setSubjects([]);
-        }
+        setSubjects(Array.isArray(subjectsData) ? subjectsData : []);
       } catch (error) {
         toast.error('Error loading continuing subjects. Please try again.');
       } finally {

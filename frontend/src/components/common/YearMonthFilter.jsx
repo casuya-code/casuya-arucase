@@ -3,6 +3,7 @@
  * Reusable component for filtering results by year and month
  */
 import React, { useState, useEffect, useMemo } from 'react';
+import './YearMonthFilter.css';
 
 const MONTHS = [
   'January', 'February', 'March', 'April', 'May', 'June',
@@ -62,15 +63,15 @@ const YearMonthFilter = ({
 
   return (
     <div className="year-month-filter">
-      <div className="filter-group">
-        <label htmlFor="year-select" className="filter-label">
-          <i className="fas fa-calendar-alt"></i> Year:
+      <div className="year-month-filter__group">
+        <label htmlFor="year-select" className="year-month-filter__label">
+          <i className="fas fa-calendar-alt" aria-hidden="true"></i> Year:
         </label>
         <select
           id="year-select"
           value={selectedYear}
           onChange={handleYearChange}
-          className="filter-select"
+          className="year-month-filter__select"
           disabled={disabled}
         >
           <option value="">Select Year</option>
@@ -82,15 +83,15 @@ const YearMonthFilter = ({
         </select>
       </div>
 
-      <div className="filter-group">
-        <label htmlFor="month-select" className="filter-label">
-          <i className="fas fa-calendar"></i> Month:
+      <div className="year-month-filter__group">
+        <label htmlFor="month-select" className="year-month-filter__label">
+          <i className="fas fa-calendar" aria-hidden="true"></i> Month:
         </label>
         <select
           id="month-select"
           value={selectedMonth}
           onChange={handleMonthChange}
-          className="filter-select"
+          className="year-month-filter__select"
           disabled={disabled}
         >
           {showAllMonthsOption && <option value="all">All Months</option>}

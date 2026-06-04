@@ -5,6 +5,7 @@
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import { useEffect } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
+import { formLevelToPathSlug } from '../../utils/academicYearUtils';
 import './ActionSelection.css';
 
 const ActionSelection = ({ formLevel }) => {
@@ -15,14 +16,7 @@ const ActionSelection = ({ formLevel }) => {
   const actualStream = stream || 'NA';
   const normalizedStream = String(actualStream).toUpperCase();
   
-  const formMap = {
-    'FORM I': 'form-i',
-    'FORM II': 'form-ii',
-    'FORM III': 'form-iii',
-    'FORM IV': 'form-iv',
-  };
-  
-  const formPath = formMap[formLevel];
+  const formPath = formLevelToPathSlug(formLevel);
   const backPath = `/admin/students/registration/${formPath}/year/${year}/streams`;
 
   useEffect(() => {

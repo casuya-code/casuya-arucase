@@ -7,16 +7,9 @@ import { Link, useParams } from 'react-router-dom';
 import { useMemo } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { useAuth } from '../../context/AuthContext';
+import { useFormVVIStreams } from '../../hooks/useFormVVIStreams';
+import { formLevelToPathSlug } from '../../utils/academicYearUtils';
 import './ParishStreamSelection.css';
-
-const FORM_VVI_STREAMS = [
-  { code: 'PCB', name: 'Physics, Chemistry, Biology' },
-  { code: 'PCM', name: 'Physics, Chemistry, Mathematics' },
-  { code: 'EGM', name: 'Economics, Geography, Mathematics' },
-  { code: 'HGE', name: 'History, Geography, Economics' },
-  { code: 'HGL', name: 'History, Geography, Literature' },
-  { code: 'PGM', name: 'Physics, Geography, Advanced Mathematics' },
-];
 
 const ParishStreamSelection = ({ formLevel, isFormVOrVI = false }) => {
   const { year } = useParams();
@@ -24,10 +17,10 @@ const ParishStreamSelection = ({ formLevel, isFormVOrVI = false }) => {
   const parishModule = { moduleId: 'student_parishes' };
   const standardStreams = ['A', 'B'];
 
-  const formVVIStreams = useMemo(() => {
-    if (!isFormVOrVI) return FORM_VVI_STREAMS;
-    return FORM_VVI_STREAMS.filter((s) => hasClass(`${formLevel} ${s.code}`, parishModule));
-  }, [isFormVOrVI, formLevel, hasClass]);
+  const formVVIStreams = useFormVVIStreams(formLevel, {
+    requireAllocation: isFormVOrVI,
+    moduleId: 'student_parishes',
+  });
 
   const visibleStandardStreams = useMemo(() => {
     if (isFormVOrVI) return standardStreams;
@@ -35,38 +28,20 @@ const ParishStreamSelection = ({ formLevel, isFormVOrVI = false }) => {
     return standardStreams.filter(() => hasClass(formLevel, parishModule));
   }, [isFormVOrVI, isAdminLike, formLevel, hasClass, standardStreams]);
 
+  const formSlug = formLevelToPathSlug(formLevel);
+
   const getBackPath = () => {
     if (isFormVOrVI) {
       return '/admin/students/parishes';
     }
-    // For FORM I-IV, go back to year selection
-    const formMap = {
-      'FORM I': 'form-i',
-      'FORM II': 'form-ii',
-      'FORM III': 'form-iii',
-      'FORM IV': 'form-iv',
-    };
-    return `/admin/students/parishes/${formMap[formLevel]}/years`;
+    return `/admin/students/parishes/${formSlug}/years`;
   };
 
   const getStreamDetailPath = (stream) => {
     if (isFormVOrVI) {
-      // For FORM V-VI, after stream selection, go to year selection
-      const formMap = {
-        'FORM V': 'form-v',
-        'FORM VI': 'form-vi',
-      };
-      return `/admin/students/parishes/${formMap[formLevel]}/stream/${stream}/years`;
-    } else {
-      // For FORM I-IV, after stream selection, go directly to parish management
-      const formMap = {
-        'FORM I': 'form-i',
-        'FORM II': 'form-ii',
-        'FORM III': 'form-iii',
-        'FORM IV': 'form-iv',
-      };
-      return `/admin/students/parishes/${formMap[formLevel]}/year/${year}/stream/${stream}`;
+      return `/admin/students/parishes/${formSlug}/stream/${stream}/years`;
     }
+    return `/admin/students/parishes/${formSlug}/year/${year}/stream/${stream}`;
   };
 
   return (

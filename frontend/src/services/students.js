@@ -16,6 +16,13 @@ export const studentsAPI = {
     return api.get(`/students/${admNo}?${queryString}`);
   },
   
+  // Form V/VI promotion (term rollover & Form V → Form VI)
+  getFormVVIPromotionPreview: (params) => {
+    const queryString = new URLSearchParams(params).toString();
+    return api.get(`/students/form-vvi/promotion/preview?${queryString}`);
+  },
+  executeFormVVIPromotion: (data) => api.post('/students/form-vvi/promotion/execute', data),
+
   // Create student
   createStudent: (data) => api.post('/students', data),
   

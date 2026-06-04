@@ -5,24 +5,24 @@
  */
 import { Link, useParams } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
+import { formLevelToPathSlug } from '../../utils/academicYearUtils';
+import { useFormVVITermGuard } from '../../hooks/useFormVVITermGuard';
 import './ActionSelection.css';
 
 const ActionSelectionVVI = ({ formLevel }) => {
   const { stream, year, term } = useParams();
-  
-  // Use calendar year directly for Form V/VI (no academic year conversion)
-  // Form V First Term (Jul-Dec 2025) -> year 2025
-  // Form V Second Term (Jan-Jun 2026) -> year 2026
-  // Form VI First Term (Jul-Dec 2026) -> year 2026
-  // Form VI Second Term (Jan-Jun 2027) -> year 2027
-  const apiYear = parseInt(year);
-  
-  const formMap = {
-    'FORM V': 'form-v',
-    'FORM VI': 'form-vi',
-  };
-  
-  const formPath = formMap[formLevel];
+  const formPath = formLevelToPathSlug(formLevel);
+
+  const { valid: termPairValid } = useFormVVITermGuard({
+    enabled: Boolean(term),
+    displayYear: year,
+    term,
+    redirectTo: `/admin/students/registration/${formPath}/stream/${stream}/year/${year}/terms`,
+  });
+
+  if (term && !termPairValid) {
+    return null;
+  }
   
   const getBackPath = () => {
     return `/admin/students/registration/${formPath}/stream/${stream}/years`;
@@ -34,7 +34,7 @@ const ActionSelectionVVI = ({ formLevel }) => {
   
   const getRegisteredStudentsPath = () => {
     // For Form V-VI, we can use the StudentList component with filters
-    return `/students/list?level=${encodeURIComponent(formLevel)}&stream=${encodeURIComponent(stream)}&year=${year}`;
+    return `/students/list?level=${encodeURIComponent(formLevel)}&stream=${encodeURIComponent(stream)}&year=${year}&term=${encodeURIComponent(term)}`;
   };
 
   return (
@@ -44,7 +44,7 @@ const ActionSelectionVVI = ({ formLevel }) => {
           <div className="action-selection-card-header">
             <i className="fas fa-tasks"></i>
             <span>
-              {formLevel} {stream} {year} - Select Action
+              {formLevel} {stream} {year} ({term}) — Select Action
             </span>
           </div>
           <div className="action-selection-card-body">

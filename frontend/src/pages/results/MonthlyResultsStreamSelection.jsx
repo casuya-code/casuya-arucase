@@ -3,55 +3,33 @@
  */
 import { Link, useParams, useSearchParams } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
+import { useFormVVIStreams } from '../../hooks/useFormVVIStreams';
+import { formVVIModuleBase } from '../../components/formVVI/formVVIStreamPaths';
+import { formLevelToPathSlug } from '../../utils/academicYearUtils';
 import '../academic/SubjectsStreamSelection.css';
 
 const MonthlyResultsStreamSelection = ({ formLevel, isFormVOrVI = false }) => {
   const { year } = useParams();
   const [searchParams] = useSearchParams();
   const isCombined = searchParams.get('combined') === '1';
-  
+
   const standardStreams = ['A', 'B'];
-  
-  const formVVIStreams = [
-    { code: 'PCB', name: 'Physics, Chemistry, Biology' },
-    { code: 'PCM', name: 'Physics, Chemistry, Mathematics' },
-    { code: 'CBG', name: 'Chemistry, Biology, Geography' },
-    { code: 'HGL', name: 'History, Geography, Literature' },
-    { code: 'HKL', name: 'History, Kiswahili, Literature' },
-    { code: 'EGM', name: 'Economics, Geography, Mathematics' },
-    { code: 'HGE', name: 'History, Geography, Economics' },
-    { code: 'PGM', name: 'Physics, Geography, Advanced Mathematics' },
-  ];
+  const formVVIStreams = useFormVVIStreams(formLevel, { requireAllocation: isFormVOrVI });
+
+  const formSlug = formLevelToPathSlug(formLevel);
 
   const getBackPath = () => {
     if (isFormVOrVI) {
       return '/admin/results/monthly';
     }
-    const formMap = {
-      'FORM I': 'form-i',
-      'FORM II': 'form-ii',
-      'FORM III': 'form-iii',
-      'FORM IV': 'form-iv',
-    };
-    return `/admin/results/monthly/${formMap[formLevel]}/years`;
+    return `/admin/results/monthly/${formSlug}/years`;
   };
 
   const getStreamDetailPath = (stream) => {
     if (isFormVOrVI) {
-      const formMap = {
-        'FORM V': 'form-v',
-        'FORM VI': 'form-vi',
-      };
-      return `/admin/results/monthly/${formMap[formLevel]}/stream/${stream}/years`;
-    } else {
-      const formMap = {
-        'FORM I': 'form-i',
-        'FORM II': 'form-ii',
-        'FORM III': 'form-iii',
-        'FORM IV': 'form-iv',
-      };
-      return `/admin/results/monthly/${formMap[formLevel]}/year/${year}/stream/${stream}/months`;
+      return `${formVVIModuleBase('results/monthly', formLevel)}/stream/${stream}/years`;
     }
+    return `/admin/results/monthly/${formSlug}/year/${year}/stream/${stream}/months`;
   };
 
   const streams = isFormVOrVI ? formVVIStreams : standardStreams;
@@ -60,13 +38,8 @@ const MonthlyResultsStreamSelection = ({ formLevel, isFormVOrVI = false }) => {
     ? 'CLICK HERE TO SEE RESULTS OF ALL FORM FIVE STREAM IN ONE PAPER'
     : 'CLICK HERE TO SEE RESULTS OF ALL FORM SIX STREAM IN ONE PAPER';
 
-  const getCombinedYearSelectionPath = () => {
-    const formMap = {
-      'FORM V': 'form-v',
-      'FORM VI': 'form-vi',
-    };
-    return `/admin/results/monthly/${formMap[formLevel]}/stream/all/years?combined=1`;
-  };
+  const getCombinedYearSelectionPath = () =>
+    `/admin/results/monthly/${formSlug}/stream/all/years?combined=1`;
 
   return (
     <AdminLayout>

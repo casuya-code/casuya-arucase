@@ -74,8 +74,13 @@
   box-sizing: border-box;
 }
 
-.tabia-mwenendo-mgmt-page-container .excel-card-header .header-actions .excel-btn,
-.tabia-mwenendo-mgmt-page-container .excel-card-header .header-actions label.excel-btn {
+.tabia-mwenendo-mgmt-page-container .excel-card-header .header-actions .csv-bulk-actions {
+  width: 100%;
+}
+
+.tabia-mwenendo-mgmt-page-container .excel-card-header .header-actions > .excel-btn,
+.tabia-mwenendo-mgmt-page-container .excel-card-header .header-actions > label.excel-btn,
+.tabia-mwenendo-mgmt-page-container .excel-card-header .header-actions > a.excel-btn {
   width: 100%;
   max-width: 100%;
   justify-content: center;

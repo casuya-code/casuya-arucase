@@ -9,6 +9,7 @@ import {
   SITE_ORIGIN,
   DEFAULT_PUBLIC_DESCRIPTION,
   getPublicPageSeo,
+  isNoIndexPath,
 } from '../../constants/publicSiteNavSeo';
 
 const BASE_URL = SITE_ORIGIN;
@@ -18,13 +19,6 @@ const DEFAULT_OG_IMAGE = `${BASE_URL}/icons/icon-192x192.png`;
 const OG_IMAGE_WIDTH = '192';
 const OG_IMAGE_HEIGHT = '192';
 const DEFAULT_OG_IMAGE_ALT = 'Arusha Catholic Seminary (ARUCASE) emblem';
-
-/** Staff login only — not in indexable pages list. */
-const STAFF_LOGIN_SEO = {
-  title: `Staff Login | ${SITE_NAME}`,
-  description: 'Staff portal login for Arusha Catholic Seminary school management system.',
-  ogImageAlt: 'Staff login — Arusha Catholic Seminary',
-};
 
 function canonicalForPath(pathname) {
   return pathname === '/' ? `${BASE_URL}/` : `${BASE_URL}${pathname}`;
@@ -113,24 +107,16 @@ function syncBreadcrumbJsonLd(pathname) {
   el.textContent = JSON.stringify(payload);
 }
 
-function resolveRouteSeo(pathname) {
-  if (pathname === '/login') return STAFF_LOGIN_SEO;
-  return getPublicPageSeo(pathname);
-}
-
 export default function PageSEO() {
   const { pathname } = useLocation();
-  const config = resolveRouteSeo(pathname);
+  const config = getPublicPageSeo(pathname);
   const canonicalUrl = canonicalForPath(pathname);
   const title = config?.title || SITE_NAME;
   const description = config?.description || DEFAULT_PUBLIC_DESCRIPTION;
   const ogImage = DEFAULT_OG_IMAGE;
   const ogImageAlt = config?.ogImageAlt || DEFAULT_OG_IMAGE_ALT;
 
-  const noIndex =
-    pathname.startsWith('/admin') ||
-    pathname === '/login' ||
-    pathname.startsWith('/student/dashboard');
+  const noIndex = isNoIndexPath(pathname);
 
   useEffect(() => {
     document.title = title;

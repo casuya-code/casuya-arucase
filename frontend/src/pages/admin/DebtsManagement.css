@@ -177,18 +177,8 @@
   font-weight: 600;
 }
 
-.csv-actions {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 0.65rem;
-  align-items: stretch;
-}
-
-@media (min-width: 640px) {
-  .csv-actions {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
-    gap: 0.75rem;
-  }
+.csv-actions.csv-bulk-actions {
+  gap: clamp(0.25rem, 1vw, 0.75rem);
 }
 
 /* Compact actions in this section only (header Back link keeps .excel-btn.small) */
@@ -415,10 +405,6 @@
   .csv-section {
     margin-top: 1.5rem;
     padding: clamp(0.875rem, 2.5vw, 1.25rem);
-  }
-
-  .csv-actions {
-    grid-template-columns: 1fr;
   }
 
   .csv-section .csv-actions .excel-btn,

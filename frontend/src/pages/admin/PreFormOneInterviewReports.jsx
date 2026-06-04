@@ -10,6 +10,7 @@ import { preFormOneService } from '../../services/preFormOneService';
 import { adminAPI } from '../../services/admin';
 import { useAuth } from '../../context/AuthContext';
 import { buildFetchUrl } from '../../utils/backendUrl';
+import { resultsByAdmissionNumber } from '../../services/preFormOneApiHelpers';
 import './PreFormOneResults.css';
 import AdminLayout from '../../components/layout/AdminLayout';
 
@@ -43,14 +44,7 @@ const PreFormOneInterviewReports = () => {
     queryFn: async () => {
       try {
         const res = await preFormOneService.getInterviewResults(year);
-        // Backend returns data directly as array, not wrapped in 'results' property
-        const resultsArray = Array.isArray(res.data) ? res.data : res.data?.results || [];
-        // Convert array to object keyed by admission_number for lookup
-        const resultsObject = {};
-        resultsArray.forEach(result => {
-          resultsObject[result.admission_number] = result;
-        });
-        return resultsObject;
+        return resultsByAdmissionNumber(res);
       } catch (error) {
         if (error.response?.status !== 401) {
           toast.error(error.response?.data?.message || 'Failed to load interview results');
@@ -82,7 +76,14 @@ const PreFormOneInterviewReports = () => {
       });
       
       if (!response.ok) {
-        throw new Error('Failed to generate PDF');
+        let message = 'Failed to generate PDF';
+        try {
+          const errBody = await response.json();
+          message = errBody.message || errBody.error || message;
+        } catch {
+          /* response may not be JSON */
+        }
+        throw new Error(message);
       }
       
       const blob = await response.blob();
@@ -99,7 +100,10 @@ const PreFormOneInterviewReports = () => {
       
       toast.success(`${student.first_name} ${student.surname}'s interview report downloaded successfully!`);
     } catch (error) {
-      toast.error(`Failed to generate interview report for ${student.first_name} ${student.surname}`);
+      toast.error(
+        error.message ||
+          `Failed to generate interview report for ${student.first_name} ${student.surname}`
+      );
     } finally {
       setIsGenerating(prev => ({ ...prev, [student.id]: false }));
     }

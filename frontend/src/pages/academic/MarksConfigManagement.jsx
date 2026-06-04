@@ -8,6 +8,8 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '../../utils/toast';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { studentsAPI } from '../../services/students';
+import { requiresSpecialAcademicYearLogic } from '../../utils/academicYearUtils';
+import { useFormVVITermGuard } from '../../hooks/useFormVVITermGuard';
 import './MarksConfigManagement.css';
 
 const MarksConfigManagement = ({ formLevel }) => {
@@ -22,6 +24,24 @@ const MarksConfigManagement = ({ formLevel }) => {
     ? formLevel.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
     : '';
   
+  const isFormVOrVI = requiresSpecialAcademicYearLogic(normalizedLevel);
+
+  const marksTermsPath =
+    isFormVOrVI && stream && year
+      ? `/admin/marks-config/${formLevel}/stream/${stream}/year/${year}/terms`
+      : '';
+
+  const { valid: termPairValid } = useFormVVITermGuard({
+    enabled: isFormVOrVI && Boolean(term),
+    displayYear: year,
+    term,
+    redirectTo: marksTermsPath,
+  });
+
+  if (isFormVOrVI && term && !termPairValid) {
+    return null;
+  }
+
   // Normalize stream: use 'A' as default for Form I-IV (previously 'NA')
   const normalizedStream = stream || 'A';
 

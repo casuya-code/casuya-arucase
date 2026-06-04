@@ -1,19 +1,39 @@
-/* Online staff count — inline next to sidebar user info */
+/* Online staff count — round badge button */
 .sidebar-online-presence {
   flex-shrink: 0;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  justify-content: center;
+  gap: 0.3rem;
+  min-width: 2.5rem;
+  height: 2.5rem;
+  padding: 0 0.65rem;
+  border-radius: 9999px;
+  border: 1px solid rgba(1, 167, 43, 0.35);
+  background: rgba(1, 167, 43, 0.08);
+  box-shadow: 0 1px 2px rgba(1, 167, 43, 0.12);
+}
+
+.sidebar-online-presence--collapsed {
+  width: 2.5rem;
+  height: 2.5rem;
+  padding: 0;
+  border-radius: 50%;
 }
 
 .sidebar-online-presence__dot {
-  width: 0.5rem;
-  height: 0.5rem;
+  width: 0.45rem;
+  height: 0.45rem;
   border-radius: 50%;
   background: #01a72b;
   flex-shrink: 0;
   box-shadow: 0 0 0 2px rgba(1, 167, 43, 0.25);
   animation: sidebar-online-pulse 2s ease-in-out infinite;
+}
+
+.sidebar-online-presence--collapsed .sidebar-online-presence__dot {
+  width: 0.4rem;
+  height: 0.4rem;
 }
 
 @keyframes sidebar-online-pulse {
@@ -29,7 +49,7 @@
 }
 
 .sidebar-online-presence__count {
-  font-size: 0.95rem;
+  font-size: 0.85rem;
   font-weight: 800;
   font-variant-numeric: tabular-nums;
   color: #028a23;
@@ -38,5 +58,5 @@
 }
 
 .sidebar-online-presence--collapsed .sidebar-online-presence__count {
-  font-size: 0.875rem;
+  font-size: 0.8rem;
 }

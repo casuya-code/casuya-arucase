@@ -10,6 +10,7 @@ import AdminLayout from '../../components/layout/AdminLayout';
 import { studentsAPI } from '../../services/students';
 import api from '../../services/api';
 import './TabiaMwenendoManagement.css';
+import { CSV_BULK_LABELS, CSV_BULK_TITLES } from '../../constants/csvBulkActions';
 
 const CRITERIA_CODES = ['901', '902', '903', '904', '905', '906', '907', '908', '909', '910', '911'];
 const VALID_GRADES = ['A', 'B', 'C', 'D', 'F'];
@@ -496,27 +497,34 @@ const TabiaMwenendoManagement = ({ formLevel }) => {
               </span>
             </div>
             <div className="header-actions">
-              <button
-                type="button"
-                className="excel-btn small secondary"
-                onClick={handleDownloadTemplate}
-                disabled={students.length === 0}
-                title="Download CSV with AdmNumber and columns 901–911"
-              >
-                <i className="fas fa-download"></i> Download CSV template
-              </button>
-              <label className="excel-btn small secondary" style={{ marginBottom: 0, cursor: 'pointer' }}>
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept=".csv"
-                  onChange={handleUploadFilled}
-                  disabled={students.length === 0 || uploading}
-                  style={{ display: 'none' }}
-                />
-                {uploading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-upload"></i>}
-                {uploading ? ' Uploading...' : ' Upload filled template'}
-              </label>
+              <div className="csv-bulk-actions">
+                <button
+                  type="button"
+                  className="excel-btn small secondary"
+                  onClick={handleDownloadTemplate}
+                  disabled={students.length === 0}
+                  title={CSV_BULK_TITLES.template}
+                >
+                  <i className="fas fa-download"></i> {CSV_BULK_LABELS.template}
+                </button>
+                <span className="csv-bulk-actions-spacer" aria-hidden="true" />
+                <label
+                  className="excel-btn small secondary"
+                  style={{ marginBottom: 0, cursor: 'pointer' }}
+                  title={CSV_BULK_TITLES.upload}
+                >
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept=".csv"
+                    onChange={handleUploadFilled}
+                    disabled={students.length === 0 || uploading}
+                    style={{ display: 'none' }}
+                  />
+                  {uploading ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-upload"></i>}
+                  {uploading ? ` ${CSV_BULK_LABELS.uploading}` : ` ${CSV_BULK_LABELS.upload}`}
+                </label>
+              </div>
               <Link to={getBackPath()} className="excel-btn small secondary">
                 <i className="fas fa-arrow-left"></i> Back
               </Link>

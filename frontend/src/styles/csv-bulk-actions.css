@@ -1,0 +1,122 @@
+/* Template / Filled / Upload — always one row, equal columns (all screen sizes) */
+.csv-bulk-actions,
+.parish-csv-actions,
+.csv-actions.csv-bulk-actions,
+.bulk-upload-actions.csv-bulk-actions,
+.preform-one-registration-route .bulk-upload-actions.csv-bulk-actions {
+  display: grid !important;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: clamp(0.25rem, 1vw, 0.75rem);
+  align-items: stretch;
+  width: 100%;
+  flex-direction: unset !important;
+  flex-wrap: nowrap !important;
+}
+
+.csv-bulk-actions > .form-btn,
+.csv-bulk-actions > .parish-btn,
+.csv-bulk-actions > label.parish-btn,
+.csv-bulk-actions > label.excel-btn,
+.csv-bulk-actions > button.excel-btn,
+.csv-section .csv-actions.csv-bulk-actions .excel-btn,
+.csv-section .csv-actions.csv-bulk-actions label.excel-btn,
+.parish-csv-actions .parish-btn,
+.parish-csv-actions label.parish-btn {
+  width: 100%;
+  min-width: 0;
+  justify-content: center;
+  min-height: 44px;
+  box-sizing: border-box;
+  text-align: center;
+  font-size: clamp(0.65rem, 2.8vw, 0.875rem);
+  padding: clamp(0.35rem, 1.2vw, 0.625rem) clamp(0.25rem, 1vw, 0.75rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.csv-bulk-actions > .file-upload-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(0.2rem, 0.8vw, 0.5rem);
+  min-width: 0;
+}
+
+.csv-bulk-actions > .file-upload-wrapper .form-btn,
+.csv-bulk-actions > .file-upload-wrapper .file-label {
+  width: 100%;
+  min-width: 0;
+  justify-content: center;
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  box-sizing: border-box;
+  font-size: clamp(0.65rem, 2.8vw, 0.875rem);
+  padding: clamp(0.35rem, 1.2vw, 0.625rem) clamp(0.25rem, 1vw, 0.75rem);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.csv-bulk-actions-spacer {
+  display: block;
+  min-width: 0;
+  min-height: 0;
+}
+
+/* CSV row inside mixed toolbars (comments, score entry headers) */
+.header-actions .csv-bulk-actions,
+.bulk-actions .csv-bulk-actions {
+  grid-column: 1 / -1;
+  width: 100%;
+}
+
+.header-actions .csv-bulk-actions .excel-btn,
+.header-actions .csv-bulk-actions label.excel-btn,
+.bulk-actions .csv-bulk-actions .excel-btn,
+.bulk-actions .csv-bulk-actions label.excel-btn {
+  width: 100%;
+  min-width: 0;
+  justify-content: center;
+  min-height: 40px;
+  font-size: clamp(0.6rem, 2.8vw, 0.8rem);
+  padding: clamp(0.3rem, 1.2vw, 0.5rem) clamp(0.2rem, 0.8vw, 0.5rem);
+  white-space: nowrap !important;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  word-break: normal;
+  hyphens: none;
+}
+
+@media (max-width: 639px) {
+  .csv-bulk-actions,
+  .parish-csv-actions {
+    gap: clamp(0.2rem, 0.8vw, 0.35rem);
+  }
+
+  .csv-bulk-actions > .form-btn,
+  .csv-bulk-actions > .parish-btn,
+  .csv-bulk-actions > label.parish-btn,
+  .parish-csv-actions .parish-btn,
+  .parish-csv-actions label.parish-btn,
+  .csv-section .csv-actions.csv-bulk-actions .excel-btn,
+  .csv-section .csv-actions.csv-bulk-actions label.excel-btn {
+    min-height: 40px;
+    font-size: clamp(0.58rem, 3.2vw, 0.75rem);
+    padding: clamp(0.3rem, 1vw, 0.45rem) clamp(0.15rem, 0.6vw, 0.35rem);
+  }
+
+  .csv-bulk-actions > .file-upload-wrapper .form-btn,
+  .csv-bulk-actions > .file-upload-wrapper .file-label {
+    min-height: 40px;
+    font-size: clamp(0.58rem, 3.2vw, 0.75rem);
+  }
+
+  .header-actions .csv-bulk-actions .excel-btn,
+  .header-actions .csv-bulk-actions label.excel-btn,
+  .bulk-actions .csv-bulk-actions .excel-btn,
+  .bulk-actions .csv-bulk-actions label.excel-btn {
+    min-height: 38px;
+    font-size: clamp(0.55rem, 3vw, 0.7rem);
+  }
+}

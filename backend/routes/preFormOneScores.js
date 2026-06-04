@@ -46,13 +46,50 @@ createScoresTable();
 const calculateGrade = (score) => {
   console.log('🔍 DEBUG: Calculating grade for score:', score);
   
-  // Use system O-Level grade configuration (Pre-Form One uses O-Level standards)
-  if (score >= 85) return 'A';
+  // Match interview/continuing results grading (average scale applied per subject)
+  if (score >= 80) return 'A';
   if (score >= 70) return 'B';
-  if (score >= 50) return 'C';
-  if (score >= 40) return 'D';
+  if (score >= 55) return 'C';
+  if (score >= 45) return 'D';
   return 'F';
 };
+
+// Get all scores for a Pre-Form One year and type (interview | continuing)
+router.get('/year/:year', requireAuth, async (req, res) => {
+  try {
+    const { year } = req.params;
+    const { type = 'interview' } = req.query;
+
+    if (!year || Number.isNaN(parseInt(year, 10))) {
+      return sendError(res, 400, 'Invalid year parameter');
+    }
+
+    const subjectsTable =
+      type === 'continuing' ? 'preformone_continuing_subjects' : 'preformone_interview_subjects';
+
+    const result = await query(
+      `
+      SELECT
+        sc.student_id,
+        sc.score,
+        sc.subject_id,
+        sub.subject_code,
+        st.admission_number
+      FROM preform_one_scores sc
+      JOIN ${subjectsTable} sub ON sc.subject_id = sub.id
+      JOIN preform_one_students st ON sc.student_id = st.id
+      WHERE sc.subject_type = $1 AND st.year = $2
+      ORDER BY st.admission_number, sub.subject_code
+      `,
+      [type, parseInt(year, 10)]
+    );
+
+    return sendSuccess(res, 200, 'Scores retrieved successfully', result.rows);
+  } catch (error) {
+    console.error('Error getting scores by year:', error);
+    return sendError(res, 500, 'Failed to get scores', error);
+  }
+});
 
 // Get scores for a specific subject and type
 router.get('/subject/:subjectId', requireAuth, async (req, res) => {
@@ -219,10 +256,15 @@ router.post('/bulk', requireAuth, async (req, res) => {
 router.get('/stats/:subjectId', requireAuth, async (req, res) => {
   try {
     const { subjectId } = req.params;
-    const { type = 'interview' } = req.query;
-    
-    console.log('🔍 DEBUG: Getting stats for subject:', subjectId, 'type:', type);
-    
+    const { type = 'interview', year } = req.query;
+
+    const yearNum = parseInt(year, 10);
+    if (!year || Number.isNaN(yearNum)) {
+      return sendError(res, 400, 'Valid year query parameter is required');
+    }
+
+    console.log('🔍 DEBUG: Getting stats for subject:', subjectId, 'type:', type, 'year:', yearNum);
+
     const result = await query(`
       SELECT 
         COUNT(*) as total_students,
@@ -238,8 +280,8 @@ router.get('/stats/:subjectId', requireAuth, async (req, res) => {
         COUNT(CASE WHEN sc.grade = 'F' THEN 1 END) as grade_f
       FROM preform_one_students st
       LEFT JOIN preform_one_scores sc ON st.id = sc.student_id AND sc.subject_id = $1 AND sc.subject_type = $2
-      WHERE st.year = 2025
-    `, [subjectId, type]);
+      WHERE st.year = $3
+    `, [subjectId, type, yearNum]);
     
     const stats = result.rows[0];
     stats.pass_rate = stats.scored_students > 0 ? 
@@ -256,10 +298,15 @@ router.get('/stats/:subjectId', requireAuth, async (req, res) => {
 router.get('/export/:subjectId', requireAuth, async (req, res) => {
   try {
     const { subjectId } = req.params;
-    const { type = 'interview' } = req.query;
-    
-    console.log('🔍 DEBUG: Exporting scores for subject:', subjectId, 'type:', type);
-    
+    const { type = 'interview', year } = req.query;
+
+    const yearNum = parseInt(year, 10);
+    if (!year || Number.isNaN(yearNum)) {
+      return sendError(res, 400, 'Valid year query parameter is required');
+    }
+
+    console.log('🔍 DEBUG: Exporting scores for subject:', subjectId, 'type:', type, 'year:', yearNum);
+
     const result = await query(`
       SELECT 
         st.admission_number,
@@ -271,9 +318,9 @@ router.get('/export/:subjectId', requireAuth, async (req, res) => {
         sc.created_at
       FROM preform_one_students st
       LEFT JOIN preform_one_scores sc ON st.id = sc.student_id AND sc.subject_id = $1 AND sc.subject_type = $2
-      WHERE st.year = 2025
+      WHERE st.year = $3
       ORDER BY st.admission_number
-    `, [subjectId, type]);
+    `, [subjectId, type, yearNum]);
     
     // Generate CSV
     const csvHeader = 'Admission Number,First Name,Surname,Score,Grade,Remarks,Created At\n';

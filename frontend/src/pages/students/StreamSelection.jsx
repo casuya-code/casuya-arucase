@@ -4,62 +4,31 @@
  * Non-admin users only see FORM V-VI streams (classes) allocated to them.
  */
 import { Link, useParams } from 'react-router-dom';
-import { useMemo } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
-import { useAuth } from '../../context/AuthContext';
+import { formLevelToPathSlug } from '../../utils/academicYearUtils';
+import { useFormVVIStreams } from '../../hooks/useFormVVIStreams';
 import './StreamSelection.css';
 
 const standardStreams = ['A', 'B'];
-const FORM_VVI_STREAMS = [
-  { code: 'PCB', name: 'Physics, Chemistry, Biology' },
-  { code: 'PCM', name: 'Physics, Chemistry, Mathematics' },
-  { code: 'EGM', name: 'Economics, Geography, Mathematics' },
-  { code: 'HGE', name: 'History, Geography, Economics' },
-  { code: 'HGL', name: 'History, Geography, Literature' },
-  { code: 'PGM', name: 'Physics, Geography, Advanced Mathematics' },
-];
 
 const StreamSelection = ({ formLevel, isFormVOrVI = false }) => {
   const { year } = useParams();
-  const { hasClass } = useAuth();
+  const formVVIStreams = useFormVVIStreams(formLevel, { requireAllocation: isFormVOrVI });
 
-  const formVVIStreams = useMemo(() => {
-    if (!isFormVOrVI) return FORM_VVI_STREAMS;
-    return FORM_VVI_STREAMS.filter((s) => hasClass(`${formLevel} ${s.code}`));
-  }, [isFormVOrVI, formLevel, hasClass]);
+  const formSlug = formLevelToPathSlug(formLevel);
 
   const getBackPath = () => {
     if (isFormVOrVI) {
       return '/admin/students/registration';
     }
-    // For FORM I-IV, go back to year selection
-    const formMap = {
-      'FORM I': 'form-i',
-      'FORM II': 'form-ii',
-      'FORM III': 'form-iii',
-      'FORM IV': 'form-iv',
-    };
-    return `/admin/students/registration/${formMap[formLevel]}/years`;
+    return `/admin/students/registration/${formSlug}/years`;
   };
 
   const getStreamDetailPath = (stream) => {
     if (isFormVOrVI) {
-      // For FORM V-VI, after stream selection, go to year selection
-      const formMap = {
-        'FORM V': 'form-v',
-        'FORM VI': 'form-vi',
-      };
-      return `/admin/students/registration/${formMap[formLevel]}/stream/${stream}/years`;
-    } else {
-      // For FORM I-IV, after stream selection, go to action selection
-      const formMap = {
-        'FORM I': 'form-i',
-        'FORM II': 'form-ii',
-        'FORM III': 'form-iii',
-        'FORM IV': 'form-iv',
-      };
-      return `/admin/students/registration/${formMap[formLevel]}/year/${year}/stream/${stream}/actions`;
+      return `/admin/students/registration/${formSlug}/stream/${stream}/years`;
     }
+    return `/admin/students/registration/${formSlug}/year/${year}/stream/${stream}/actions`;
   };
 
   return (

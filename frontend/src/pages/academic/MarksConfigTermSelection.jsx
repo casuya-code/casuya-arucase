@@ -3,31 +3,35 @@
  */
 import { Link, useParams } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
+import FormVVITermGrid from '../../components/formVVI/FormVVITermGrid';
+import { normalizeFormLevel, requiresSpecialAcademicYearLogic } from '../../utils/academicYearUtils';
 import './MarksConfigTermSelection.css';
+import '../students/YearSelection.css';
 
 const MarksConfigTermSelection = ({ formLevel }) => {
   const { year, stream } = useParams();
-  
-  const terms = ['Term I', 'Term II'];
+
+  const normalizedLevel = normalizeFormLevel(
+    formLevel
+      ? formLevel.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
+      : ''
+  );
+  const isFormVOrVI = requiresSpecialAcademicYearLogic(normalizedLevel);
 
   const getBackPath = () => {
-    const normalizedLevel = formLevel
-      ? formLevel.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
-      : '';
-
-    if (normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI') {
+    if (isFormVOrVI) {
       return `/admin/marks-config/${formLevel}/stream/${stream}/years`;
-    } else {
-      return `/admin/marks-config/${formLevel}/year/${year}/streams`;
     }
+    return `/admin/marks-config/${formLevel}/year/${year}/streams`;
   };
 
+  const marksTermSlug = (term) => (term === 'First Term' ? 'Term I' : 'Term II');
+
   const getTermDetailPath = (term) => {
-    if (formLevel.includes('form-v') || formLevel.includes('form-vi')) {
-      return `/admin/marks-config/${formLevel}/stream/${stream}/year/${year}/term/${term}`;
-    } else {
-      return `/admin/marks-config/${formLevel}/year/${year}/stream/${stream}/term/${term}`;
+    if (isFormVOrVI) {
+      return `/admin/marks-config/${formLevel}/stream/${stream}/year/${year}/term/${marksTermSlug(term)}`;
     }
+    return `/admin/marks-config/${formLevel}/year/${year}/stream/${stream}/term/${term}`;
   };
 
   return (
@@ -44,18 +48,29 @@ const MarksConfigTermSelection = ({ formLevel }) => {
             </div>
           </div>
           <div className="excel-card-body">
-            <div className="term-selection-grid">
-              {terms.map((term) => (
-                <Link
-                  key={term}
-                  to={getTermDetailPath(term)}
-                  className="term-selection-card-item"
-                >
-                  <div className="term-selection-name">{term}</div>
-                  <div className="term-selection-subtitle">Configure month weights</div>
-                </Link>
-              ))}
-            </div>
+            {isFormVOrVI ? (
+              <FormVVITermGrid
+                displayYear={year}
+                stream={stream}
+                formLevel={normalizedLevel}
+                backPath={null}
+                getTermLink={getTermDetailPath}
+                moduleActionLabel="Configure marks"
+              />
+            ) : (
+              <div className="term-selection-grid">
+                {['Term I', 'Term II'].map((term) => (
+                  <Link
+                    key={term}
+                    to={getTermDetailPath(term)}
+                    className="term-selection-card-item"
+                  >
+                    <div className="term-selection-name">{term}</div>
+                    <div className="term-selection-subtitle">Configure month weights</div>
+                  </Link>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

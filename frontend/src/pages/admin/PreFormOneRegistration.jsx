@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { preFormOneService } from '../../services/preFormOneService';
 import AdminLayout from '../../components/layout/AdminLayout';
+import { CSV_BULK_LABELS, CSV_BULK_TITLES } from '../../constants/csvBulkActions';
 import './PreFormOneRegistration.css';
 
 const PreFormOneRegistration = () => {
@@ -637,24 +638,26 @@ const PreFormOneRegistration = () => {
         </div>
         <div className="bulk-upload-card-body">
           <div className="bulk-upload-content">
-            <div className="bulk-upload-actions">
+            <div className="bulk-upload-actions csv-bulk-actions">
               <button 
                 type="button"
                 className="form-btn primary" 
                 onClick={downloadCsvTemplate}
                 disabled={loading}
+                title={CSV_BULK_TITLES.template}
               >
                 <i className="fas fa-download"></i>
-                <span className="btn-text">Download Template</span>
+                <span className="btn-text">{CSV_BULK_LABELS.template}</span>
               </button>
               <button 
                 type="button"
                 className="form-btn secondary" 
                 onClick={exportToCsv}
                 disabled={loading || students.length === 0}
+                title={CSV_BULK_TITLES.filled}
               >
                 <i className="fas fa-file-export"></i>
-                <span className="btn-text">Export CSV</span>
+                <span className="btn-text">{CSV_BULK_LABELS.filled}</span>
               </button>
               <div className="file-upload-wrapper">
                 <input
@@ -665,9 +668,10 @@ const PreFormOneRegistration = () => {
                   onChange={handleCsvUpload}
                   disabled={loading}
                 />
-                <label htmlFor="csv-file" className={`file-label ${loading ? 'disabled' : ''}`}>
+                <label htmlFor="csv-file" className={`file-label ${loading ? 'disabled' : ''}`} title={CSV_BULK_TITLES.upload}>
                   <span>
-                    <i className="fas fa-folder-open"></i> Choose CSV File
+                    <i className={`fas ${loading ? 'fa-spinner fa-spin' : 'fa-upload'}`}></i>{' '}
+                    {loading ? CSV_BULK_LABELS.uploading : CSV_BULK_LABELS.upload}
                   </span>
                 </label>
               </div>

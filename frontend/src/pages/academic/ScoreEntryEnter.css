@@ -401,11 +401,19 @@
 
   /* Bulk actions */
   .score-entry-enter-page-container .bulk-actions {
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: clamp(0.25rem, 0.75vw, 0.375rem);
     margin-top: clamp(0.75rem, 2vw, 1rem);
     padding-bottom: max(0.75rem, env(safe-area-inset-bottom));
+  }
+
+  .score-entry-enter-page-container .bulk-actions .excel-btn:not(.csv-bulk-actions .excel-btn) {
+    width: 100%;
+  }
+
+  .score-entry-enter-page-container .bulk-actions .csv-bulk-actions {
+    width: 100%;
   }
 
   .score-entry-enter-page-container .bulk-actions .excel-btn {

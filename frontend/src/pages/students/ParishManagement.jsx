@@ -1,5 +1,5 @@
 /**
- * Student Parish Management Page
+ * Parishes Management Page
  * Allows assigning, viewing, and deleting student parish assignments
  */
 import { useState, useEffect, useRef } from 'react';
@@ -10,6 +10,7 @@ import AdminLayout from '../../components/layout/AdminLayout';
 import { studentsAPI } from '../../services/students';
 import { useAuth } from '../../context/AuthContext';
 import './ParishManagement.css';
+import { CSV_BULK_LABELS, CSV_BULK_TITLES } from '../../constants/csvBulkActions';
 
 const ParishManagement = ({ formLevel: formLevelProp }) => {
   const params = useParams();
@@ -611,36 +612,41 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
       <div className="parish-mgmt-page-container">
         <div className="parish-mgmt-card">
           <div className="parish-mgmt-card-header">
-            <i className="fas fa-place-of-worship"></i>
-            <span>
-              Student Parishes Management - {normalizedLevel} {stream} {apiYear}
-              <select
-                value={selectedTerm}
-                onChange={(e) => setSelectedTerm(e.target.value)}
-                style={{ marginLeft: '10px', padding: '4px 8px', fontSize: '14px' }}
-              >
-                <option value="First Term">First Term (Jul-Dec)</option>
-                <option value="Second Term">Second Term (Jan-Jun)</option>
-              </select>
-            </span>
-            <span style={{ marginLeft: '15px', fontSize: '14px', opacity: 0.8 }}>
-              {parishesLoading ? '(Loading parishes...)' : 
-               parishesError ? '(Error loading parishes)' :
-               parishesData && typeof parishesData === 'object' && Object.keys(parishesData).length > 0 ? 
-                 `(${Object.keys(parishesData).length} parish${Object.keys(parishesData).length !== 1 ? 'es' : ''} loaded)` :
-                 '(No parishes loaded)'}
-            </span>
+            <i className="fas fa-place-of-worship" aria-hidden="true"></i>
+            <div className="parish-mgmt-card-header-content">
+              <span className="parish-mgmt-card-header-title">
+                Parishes Management - {normalizedLevel} {stream} {apiYear}
+              </span>
+              <div className="parish-mgmt-card-header-meta">
+                <select
+                  className="parish-term-select"
+                  value={selectedTerm}
+                  onChange={(e) => setSelectedTerm(e.target.value)}
+                  aria-label="Academic term"
+                >
+                  <option value="First Term">First Term (Jul-Dec)</option>
+                  <option value="Second Term">Second Term (Jan-Jun)</option>
+                </select>
+                <span className="parish-load-status">
+                  {parishesLoading ? '(Loading parishes...)' : 
+                   parishesError ? '(Error loading parishes)' :
+                   parishesData && typeof parishesData === 'object' && Object.keys(parishesData).length > 0 ? 
+                     `(${Object.keys(parishesData).length} parish${Object.keys(parishesData).length !== 1 ? 'es' : ''} loaded)` :
+                     '(No parishes loaded)'}
+                </span>
+              </div>
+            </div>
           </div>
           <div className="parish-mgmt-card-body">
-            <div className="action-buttons" style={{ marginBottom: '1rem' }}>
+            <div className="parish-csv-actions csv-bulk-actions">
               <button
                 type="button"
                 className="parish-btn small primary"
                 onClick={handleDownloadTemplate}
                 disabled={students.length === 0 || uploading}
-                title="Download CSV template with empty Parish column"
+                title={CSV_BULK_TITLES.template}
               >
-                <i className="fas fa-download"></i> Download CSV Template
+                <i className="fas fa-download"></i> {CSV_BULK_LABELS.template}
               </button>
 
               <button
@@ -648,15 +654,15 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
                 className="parish-btn small primary"
                 onClick={handleDownloadFilledCSV}
                 disabled={students.length === 0 || uploading || parishesLoading}
-                title="Download CSV with current parish assignments filled in"
+                title={CSV_BULK_TITLES.filled}
               >
-                <i className="fas fa-file-csv"></i> Download Filled CSV
+                <i className="fas fa-file-csv"></i> {CSV_BULK_LABELS.filled}
               </button>
 
               <label
                 className="parish-btn small primary"
                 style={{ cursor: 'pointer', opacity: uploading || students.length === 0 ? 0.6 : 1 }}
-                title="Upload filled CSV"
+                title={CSV_BULK_TITLES.upload}
               >
                 <input
                   ref={fileInputRef}
@@ -666,7 +672,7 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
                   disabled={uploading || students.length === 0}
                   style={{ display: 'none' }}
                 />
-                <i className={`fas ${uploading ? 'fa-spinner fa-spin' : 'fa-upload'}`}></i> {uploading ? 'Uploading...' : 'Upload Filled CSV'}
+                <i className={`fas ${uploading ? 'fa-spinner fa-spin' : 'fa-upload'}`}></i> {uploading ? CSV_BULK_LABELS.uploading : CSV_BULK_LABELS.upload}
               </label>
             </div>
 

@@ -3,32 +3,12 @@
  */
 import { Link } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
+import { useFormVVIStreams } from '../../hooks/useFormVVIStreams';
+import { formVVIModuleBase } from '../../components/formVVI/formVVIStreamPaths';
 import './SubjectsStreamSelection.css';
 
 const TeachersStreamSelection = ({ formLevel }) => {
-  // Streams for FORM V-VI
-  const formVVIStreams = [
-    { code: 'PCB', name: 'Physics, Chemistry, Biology' },
-    { code: 'PCM', name: 'Physics, Chemistry, Mathematics' },
-    { code: 'CBG', name: 'Chemistry, Biology, Geography' },
-    { code: 'HGL', name: 'History, Geography, Literature' },
-    { code: 'HKL', name: 'History, Kiswahili, Literature' },
-    { code: 'EGM', name: 'Economics, Geography, Mathematics' },
-    { code: 'HGE', name: 'History, Geography, Economics' },
-    { code: 'PGM', name: 'Physics, Geography, Advanced Mathematics' },
-  ];
-
-  const getBackPath = () => {
-    return '/admin/teachers';
-  };
-
-  const getStreamDetailPath = (stream) => {
-    const formMap = {
-      'FORM V': 'form-v',
-      'FORM VI': 'form-vi',
-    };
-    return `/admin/teachers/${formMap[formLevel]}/stream/${stream}/years`;
-  };
+  const formVVIStreams = useFormVVIStreams(formLevel);
 
   return (
     <AdminLayout>
@@ -43,7 +23,7 @@ const TeachersStreamSelection = ({ formLevel }) => {
               {formVVIStreams.map((stream) => (
                 <Link
                   key={stream.code}
-                  to={getStreamDetailPath(stream.code)}
+                  to={`${formVVIModuleBase('teachers', formLevel)}/stream/${stream.code}/years`}
                   className="subjects-stream-selection-card-item"
                   aria-label={`${stream.name} Stream`}
                 >
@@ -52,9 +32,9 @@ const TeachersStreamSelection = ({ formLevel }) => {
                 </Link>
               ))}
             </div>
-            <Link to={getBackPath()} className="subjects-stream-selection-back-btn">
+            <Link to="/admin/teachers" className="subjects-stream-selection-back-btn">
               <i className="fas fa-arrow-left"></i>
-              <span>Back to Classes</span>
+              <span>Back</span>
             </Link>
           </div>
         </div>
@@ -64,4 +44,3 @@ const TeachersStreamSelection = ({ formLevel }) => {
 };
 
 export default TeachersStreamSelection;
-

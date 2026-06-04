@@ -37,12 +37,18 @@
 
 .subjects-year-selection-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  width: 100%;
   gap: clamp(0.75rem, 2vw, 1.5rem);
   margin-bottom: clamp(1rem, 2.5vw, 1.5rem);
+  grid-template-columns: repeat(auto-fit, minmax(min(9.5rem, 100%), 1fr));
+}
+
+.subjects-year-selection-grid[style*='--year-card-count'] {
+  grid-template-columns: repeat(var(--year-card-count), minmax(0, 1fr));
 }
 
 .subjects-year-selection-card-item {
+  width: 100%;
   background: white;
   border: 1px solid #e5e7eb;
   border-radius: 0;
@@ -134,7 +140,6 @@
   }
 
   .subjects-year-selection-grid {
-    grid-template-columns: repeat(2, 1fr);
     gap: 0.5rem;
   }
 
@@ -156,26 +161,7 @@
   }
 }
 
-@media (min-width: 600px) and (max-width: 767px) {
-  .subjects-year-selection-grid {
-    grid-template-columns: repeat(2, 1fr);
-  }
-}
-
-@media (min-width: 768px) {
-  .subjects-year-selection-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
-}
-
 @media (min-width: 1200px) {
-  .subjects-year-selection-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 1.5rem;
-    max-width: 1400px;
-    margin: 0 auto;
-  }
-
   .subjects-year-selection-card-item {
     padding: 1.5rem;
     min-height: 100px;

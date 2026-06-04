@@ -6,6 +6,7 @@ import ReactDOM from 'react-dom/client';
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import App from './App';
 import './styles/index.css';
+import './styles/navigation-feedback.css';
 // adminTheme + Font Awesome load from AdminLayout / PublicLayout (smaller public entry)
 if (import.meta.env.DEV) {
   import('./utils/debugAuth.js');

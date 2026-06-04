@@ -6,11 +6,15 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
-  PUBLIC_INDEXABLE_PAGES,
+  STATIC_HTML_SEO_PAGES,
   SITE_ORIGIN,
   absolutePublicUrl,
   buildSeoPageSnapshotHtml,
 } from '../src/constants/publicSiteNavSeo.js';
+
+const ROBOTS_INDEX =
+  'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1';
+const ROBOTS_NOINDEX = 'noindex, nofollow';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const distDir = path.resolve(__dirname, '../dist');
@@ -55,11 +59,14 @@ function injectSnapshot(html, page) {
 
 function tailorHtml(baseHtml, page) {
   const canonical = absolutePublicUrl(page.path);
+  const robots = page.indexable === false ? ROBOTS_NOINDEX : ROBOTS_INDEX;
   let html = baseHtml;
   html = setTitle(html, page.title);
   html = setCanonical(html, canonical);
   html = setMeta(html, 'name', 'description', page.description);
-  html = setMeta(html, 'name', 'robots', 'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1');
+  html = setMeta(html, 'name', 'robots', robots);
+  html = setMeta(html, 'name', 'googlebot', robots);
+  html = setMeta(html, 'name', 'bingbot', robots);
   html = setMeta(html, 'property', 'og:title', page.title);
   html = setMeta(html, 'property', 'og:description', page.description);
   html = setMeta(html, 'property', 'og:url', canonical);
@@ -86,7 +93,7 @@ if (!fs.existsSync(templatePath)) {
 const template = fs.readFileSync(templatePath, 'utf8');
 let written = 0;
 
-for (const page of PUBLIC_INDEXABLE_PAGES) {
+for (const page of STATIC_HTML_SEO_PAGES) {
   const html = tailorHtml(template, page);
   const outFile = distFileForPath(page.path);
   fs.mkdirSync(path.dirname(outFile), { recursive: true });

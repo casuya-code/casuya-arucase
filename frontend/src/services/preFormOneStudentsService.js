@@ -36,15 +36,36 @@ const preFormOneStudentsService = {
     return response.data;
   },
 
-  getScoreStatistics: async (subjectId, scoreType) => {
-    const response = await api.get(`/preformone-scores/stats/${subjectId}?type=${scoreType}`);
+  getScoresByYear: async (year, scoreType) => {
+    const response = await api.get(`/preformone-scores/year/${year}?type=${scoreType}`);
     return response.data;
   },
 
-  exportScores: async (subjectId, scoreType) => {
-    const response = await api.get(`/preformone-scores/export/${subjectId}?type=${scoreType}`, {
-      responseType: 'blob',
-    });
+  getScoreStatistics: async (subjectId, scoreType, year) => {
+    const response = await api.get(
+      `/preformone-scores/stats/${subjectId}?type=${scoreType}&year=${encodeURIComponent(year)}`
+    );
+    const payload = response.data;
+    const stats = payload?.data ?? payload;
+    const total = Number(stats?.total_students) || 0;
+    const scored = Number(stats?.scored_students) || 0;
+    return {
+      total,
+      scored,
+      pending: Math.max(0, total - scored),
+      averageScore: stats?.average_score != null ? Number(stats.average_score) : null,
+      highestScore: stats?.highest_score != null ? Number(stats.highest_score) : null,
+      lowestScore: stats?.lowest_score != null ? Number(stats.lowest_score) : null,
+    };
+  },
+
+  exportScores: async (subjectId, scoreType, year) => {
+    const response = await api.get(
+      `/preformone-scores/export/${subjectId}?type=${scoreType}&year=${encodeURIComponent(year)}`,
+      {
+        responseType: 'blob',
+      }
+    );
     return response;
   },
 };

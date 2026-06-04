@@ -3,23 +3,14 @@
  */
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
+import { getCurrentCalendarYear, getSchoolYearOptions } from '../../utils/academicYearUtils';
 import './BulkReport.css';
 
 const BulkReportYearSelection = () => {
   const { form, stream } = useParams();
   const navigate = useNavigate();
-  const currentYear = new Date().getFullYear();
-
-  // Generate years list from 2025 to current year + 3
-  const startYear = 2025;
-  const endYear = currentYear + 3;
-  const generatedYears = [];
-  for (let i = startYear; i <= endYear; i++) {
-    generatedYears.push(i);
-  }
-  generatedYears.reverse(); // Most recent first
-
-  const availableYears = generatedYears;
+  const currentYear = getCurrentCalendarYear();
+  const availableYears = getSchoolYearOptions();
 
   const handleYearClick = (year) => {
     navigate(`/reports/bulk/${encodeURIComponent(form)}/${encodeURIComponent(stream)}/${encodeURIComponent(year)}/term`);

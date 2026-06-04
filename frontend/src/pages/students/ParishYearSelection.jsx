@@ -6,19 +6,17 @@ import { Link } from 'react-router-dom';
 import { useMemo } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { useAuth } from '../../context/AuthContext';
+import {
+  formLevelToPathSlug,
+  getCurrentCalendarYear,
+  getSchoolYearOptions,
+} from '../../utils/academicYearUtils';
 import './ParishYearSelection.css';
 
 const ParishYearSelection = ({ formLevel }) => {
-  const currentYear = new Date().getFullYear();
+  const currentYear = getCurrentCalendarYear();
   const { getAllowedYearsForClass } = useAuth();
-
-  const startYear = 2025;
-  const endYear = currentYear + 3;
-  const fullYears = useMemo(() => {
-    const arr = [];
-    for (let i = startYear; i <= endYear; i++) arr.push(i);
-    return arr.reverse();
-  }, [endYear]);
+  const fullYears = useMemo(() => getSchoolYearOptions(), []);
 
   const years = useMemo(() => {
     const allowed = getAllowedYearsForClass(formLevel, { moduleId: 'student_parishes' });
@@ -31,15 +29,8 @@ const ParishYearSelection = ({ formLevel }) => {
     return '/admin/students/parishes';
   };
 
-  const getYearDetailPath = (year) => {
-    const formMap = {
-      'FORM I': 'form-i',
-      'FORM II': 'form-ii',
-      'FORM III': 'form-iii',
-      'FORM IV': 'form-iv',
-    };
-    return `/admin/students/parishes/${formMap[formLevel]}/year/${year}/streams`;
-  };
+  const getYearDetailPath = (year) =>
+    `/admin/students/parishes/${formLevelToPathSlug(formLevel)}/year/${year}/streams`;
 
   return (
     <AdminLayout>
@@ -53,7 +44,10 @@ const ParishYearSelection = ({ formLevel }) => {
             {years.length === 0 ? (
               <p className="parish-year-selection-empty">You do not have access to any years for this class. Contact an administrator.</p>
             ) : (
-            <div className="parish-year-selection-grid">
+            <div
+              className="parish-year-selection-grid"
+              style={{ '--year-card-count': years.length }}
+            >
               {years.map((year) => (
                 <Link
                   key={`parish-${year}`}

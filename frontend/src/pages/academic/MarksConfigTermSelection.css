@@ -124,3 +124,27 @@
   }
 }
 
+.form-vvi-term-recommended {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #166534;
+}
+
+.form-vvi-term-disabled {
+  opacity: 0.55;
+  cursor: not-allowed;
+  pointer-events: none;
+  border-style: dashed;
+  background: #f9fafb;
+}
+
+.form-vvi-term-invalid-label {
+  display: inline-block;
+  margin-top: 8px;
+  font-size: 0.75rem;
+  color: #b91c1c;
+  font-weight: 600;
+}
+

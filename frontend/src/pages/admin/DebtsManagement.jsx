@@ -9,6 +9,7 @@ import { toast } from '../../utils/toast';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { studentsAPI } from '../../services/students';
 import './DebtsManagement.css';
+import { CSV_BULK_LABELS, CSV_BULK_TITLES } from '../../constants/csvBulkActions';
 
 const DebtsManagement = ({ formLevel }) => {
   const { year, stream, term } = useParams();
@@ -662,18 +663,27 @@ const DebtsManagement = ({ formLevel }) => {
 
                 <div className="csv-section">
                   <h3><i className="fas fa-file-csv"></i> CSV Bulk Operations</h3>
-                  <div className="csv-actions">
+                  <div className="csv-actions csv-bulk-actions">
                     <button
                       className="excel-btn primary"
                       onClick={handleDownloadTemplate}
                       disabled={students.length === 0 || uploading}
+                      title={CSV_BULK_TITLES.template}
                     >
-                      <i className="fas fa-download"></i> Download Template CSV
+                      <i className="fas fa-download"></i> {CSV_BULK_LABELS.template}
                     </button>
-
+                    <button
+                      className="excel-btn secondary"
+                      onClick={handleDownloadFilledCSV}
+                      disabled={students.length === 0 || uploading}
+                      title={CSV_BULK_TITLES.filled}
+                    >
+                      <i className="fas fa-download"></i> {CSV_BULK_LABELS.filled}
+                    </button>
                     <label
                       className="excel-btn success"
                       style={{ cursor: students.length === 0 ? 'not-allowed' : 'pointer', opacity: students.length === 0 ? 0.6 : 1 }}
+                      title={CSV_BULK_TITLES.upload}
                     >
                       <input
                         ref={fileInputRef}
@@ -683,16 +693,9 @@ const DebtsManagement = ({ formLevel }) => {
                         disabled={students.length === 0 || uploading}
                         style={{ display: 'none' }}
                       />
-                      <i className="fas fa-upload"></i> {uploading ? 'Uploading...' : 'Upload CSV'}
+                      <i className={`fas ${uploading ? 'fa-spinner fa-spin' : 'fa-upload'}`}></i>{' '}
+                      {uploading ? CSV_BULK_LABELS.uploading : CSV_BULK_LABELS.upload}
                     </label>
-
-                    <button
-                      className="excel-btn secondary"
-                      onClick={handleDownloadFilledCSV}
-                      disabled={students.length === 0 || uploading}
-                    >
-                      <i className="fas fa-download"></i> Download Filled CSV
-                    </button>
                   </div>
                 </div>
               </>

@@ -125,6 +125,22 @@ export const PUBLIC_INDEXABLE_PAGES = [
   },
 ];
 
+/** Staff portal — static HTML + noindex (robots.txt Disallow). */
+export const STAFF_LOGIN_PAGE = {
+  path: '/login',
+  name: 'Matumizi ya Ofisi tu.',
+  title: `Matumizi ya Ofisi tu. | ${SITE_NAME}`,
+  description: 'Ingia kwa matumizi ya ofisi tu — Arusha Catholic Seminary staff portal.',
+  ogImageAlt: 'Matumizi ya Ofisi tu. — Arusha Catholic Seminary',
+  indexable: false,
+};
+
+/** All routes that get their own dist/<path>/index.html at build time. */
+export const STATIC_HTML_SEO_PAGES = [
+  ...PUBLIC_INDEXABLE_PAGES.map((p) => ({ ...p, indexable: true })),
+  STAFF_LOGIN_PAGE,
+];
+
 /** @deprecated alias — use PUBLIC_INDEXABLE_PAGES */
 export const PUBLIC_INDEXABLE_NAV_LINKS = PUBLIC_INDEXABLE_PAGES.map(({ path, name, nameSw }) => ({
   path,
@@ -132,10 +148,16 @@ export const PUBLIC_INDEXABLE_NAV_LINKS = PUBLIC_INDEXABLE_PAGES.map(({ path, na
   nameSw,
 }));
 
-const SEO_BY_PATH = Object.fromEntries(PUBLIC_INDEXABLE_PAGES.map((p) => [p.path, p]));
+const SEO_BY_PATH = Object.fromEntries(STATIC_HTML_SEO_PAGES.map((p) => [p.path, p]));
 
 export function getPublicPageSeo(pathname) {
   return SEO_BY_PATH[pathname] || null;
+}
+
+export function isNoIndexPath(pathname) {
+  const page = SEO_BY_PATH[pathname];
+  if (page?.indexable === false) return true;
+  return pathname.startsWith('/admin') || pathname.startsWith('/student/dashboard');
 }
 
 export const DEFAULT_PUBLIC_DESCRIPTION =

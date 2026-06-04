@@ -4,11 +4,12 @@
  */
 
 import api from './api';
+import { unwrapListPayload } from './preFormOneApiHelpers';
 
 const preFormOneContinuingSubjectsService = {
   getSubjects: async () => {
     const response = await api.get('/preformone-continuing-subjects');
-    return response.data;
+    return unwrapListPayload(response.data);
   },
 
   getSubjectById: async (id) => {

@@ -3,64 +3,37 @@
  */
 import { Link, useParams } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
+import { useFormVVIStreams } from '../../hooks/useFormVVIStreams';
+import { formVVIModuleBase } from '../../components/formVVI/formVVIStreamPaths';
+import { formLevelToPathSlug } from '../../utils/academicYearUtils';
 import '../academic/SubjectsStreamSelection.css';
 
 const CommentsStreamSelection = ({ formLevel, moduleName, isFormVOrVI = false }) => {
   const { year } = useParams();
-  
+
   const standardStreams = ['A', 'B'];
-  
-  const formVVIStreams = [
-    { code: 'PCB', name: 'Physics, Chemistry, Biology' },
-    { code: 'PCM', name: 'Physics, Chemistry, Mathematics' },
-    { code: 'CBG', name: 'Chemistry, Biology, Geography' },
-    { code: 'HGL', name: 'History, Geography, Literature' },
-    { code: 'HKL', name: 'History, Kiswahili, Literature' },
-    { code: 'EGM', name: 'Economics, Geography, Mathematics' },
-    { code: 'HGE', name: 'History, Geography, Economics' },
-    { code: 'PGM', name: 'Physics, Geography, Advanced Mathematics' },
-  ];
+  const formVVIStreams = useFormVVIStreams(formLevel, { requireAllocation: isFormVOrVI });
+
+  const formSlug = formLevelToPathSlug(formLevel);
 
   const getBackPath = () => {
     if (isFormVOrVI) {
       return `/admin/${moduleName}`;
     }
-    const formMap = {
-      'FORM I': 'form-i',
-      'FORM II': 'form-ii',
-      'FORM III': 'form-iii',
-      'FORM IV': 'form-iv',
-    };
-    return `/admin/${moduleName}/${formMap[formLevel]}/years`;
+    return `/admin/${moduleName}/${formSlug}/years`;
   };
 
   const getStreamDetailPath = (stream) => {
     if (isFormVOrVI) {
-      const formMap = {
-        'FORM V': 'form-v',
-        'FORM VI': 'form-vi',
-      };
-      if (moduleName === 'promotion') {
-        return `/admin/${moduleName}/${formMap[formLevel]}/stream/${stream}/years`;
-      }
-      return `/admin/${moduleName}/${formMap[formLevel]}/stream/${stream}/years`;
-    } else {
-      const formMap = {
-        'FORM I': 'form-i',
-        'FORM II': 'form-ii',
-        'FORM III': 'form-iii',
-        'FORM IV': 'form-iv',
-      };
-      if (moduleName === 'promotion') {
-        return `/admin/${moduleName}/${formMap[formLevel]}/year/${year}/stream/${stream}/preview`;
-      }
-      // For debts, go directly to management page (no term selection needed)
-      if (moduleName === 'debts') {
-        return `/admin/${moduleName}/${formMap[formLevel]}/year/${year}/stream/${stream}`;
-      }
-      // For fees and comments modules, go to term selection first
-      return `/admin/${moduleName}/${formMap[formLevel]}/year/${year}/stream/${stream}/terms`;
+      return `${formVVIModuleBase(moduleName, formLevel)}/stream/${stream}/years`;
     }
+    if (moduleName === 'promotion') {
+      return `/admin/${moduleName}/${formSlug}/year/${year}/stream/${stream}/preview`;
+    }
+    if (moduleName === 'debts') {
+      return `/admin/${moduleName}/${formSlug}/year/${year}/stream/${stream}`;
+    }
+    return `/admin/${moduleName}/${formSlug}/year/${year}/stream/${stream}/terms`;
   };
 
   const streams = isFormVOrVI ? formVVIStreams : standardStreams;

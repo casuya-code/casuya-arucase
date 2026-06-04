@@ -366,9 +366,13 @@
 
   .comments-mgmt-page-container .excel-card-header .header-actions {
     width: 100%;
-    display: grid;
-    grid-template-columns: repeat(2, 1fr);
+    display: flex;
+    flex-direction: column;
     gap: clamp(0.25rem, 0.75vw, 0.375rem);
+  }
+
+  .comments-mgmt-page-container .excel-card-header .header-actions .csv-bulk-actions {
+    width: 100%;
   }
 
   .comments-mgmt-page-container .excel-card-header .header-actions .excel-btn,

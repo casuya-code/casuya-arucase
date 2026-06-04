@@ -6,24 +6,14 @@
 import { Link, useParams } from 'react-router-dom';
 import { useMemo, useState } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
-import { useAuth } from '../../context/AuthContext';
 import { studentsAPI } from '../../services/students';
-import { getFormVVIYears, getCurrentTerm } from '../../utils/academicYearUtils';
+import { formLevelToPathSlug, getFormVVIYears, getCurrentTerm } from '../../utils/academicYearUtils';
+import { useFormVVIStreams } from '../../hooks/useFormVVIStreams';
 import { toast } from '../../utils/toast';
 import './PhotoStreamSelection.css';
 
-const FORM_VVI_STREAMS = [
-  { code: 'PCB', name: 'Physics, Chemistry, Biology' },
-  { code: 'PCM', name: 'Physics, Chemistry, Mathematics' },
-  { code: 'EGM', name: 'Economics, Geography, Mathematics' },
-  { code: 'HGE', name: 'History, Geography, Economics' },
-  { code: 'HGL', name: 'History, Geography, Literature' },
-  { code: 'PGM', name: 'Physics, Geography, Advanced Mathematics' },
-];
-
 const PhotoStreamSelection = ({ formLevel, isFormVOrVI = false }) => {
   const { year } = useParams();
-  const { hasClass } = useAuth();
   const standardStreams = ['A', 'B'];
   const availableYears = useMemo(() => getFormVVIYears(), []);
   const currentTermInfo = useMemo(() => getCurrentTerm(), []);
@@ -33,43 +23,22 @@ const PhotoStreamSelection = ({ formLevel, isFormVOrVI = false }) => {
   const [selectedTerm, setSelectedTerm] = useState(currentTermInfo.term);
   const [downloadingAll, setDownloadingAll] = useState(false);
 
-  const formVVIStreams = useMemo(() => {
-    if (!isFormVOrVI) return FORM_VVI_STREAMS;
-    return FORM_VVI_STREAMS.filter((s) => hasClass(`${formLevel} ${s.code}`));
-  }, [isFormVOrVI, formLevel, hasClass]);
+  const formVVIStreams = useFormVVIStreams(formLevel, { requireAllocation: isFormVOrVI });
+
+  const formSlug = formLevelToPathSlug(formLevel);
 
   const getBackPath = () => {
     if (isFormVOrVI) {
       return '/admin/students/photos';
     }
-    // For FORM I-IV, go back to year selection
-    const formMap = {
-      'FORM I': 'form-i',
-      'FORM II': 'form-ii',
-      'FORM III': 'form-iii',
-      'FORM IV': 'form-iv',
-    };
-    return `/admin/students/photos/${formMap[formLevel]}/years`;
+    return `/admin/students/photos/${formSlug}/years`;
   };
 
   const getStreamDetailPath = (stream) => {
     if (isFormVOrVI) {
-      // For FORM V-VI, after stream selection, go to year selection
-      const formMap = {
-        'FORM V': 'form-v',
-        'FORM VI': 'form-vi',
-      };
-      return `/admin/students/photos/${formMap[formLevel]}/stream/${stream}/years`;
-    } else {
-      // For FORM I-IV, after stream selection, go directly to photo management
-      const formMap = {
-        'FORM I': 'form-i',
-        'FORM II': 'form-ii',
-        'FORM III': 'form-iii',
-        'FORM IV': 'form-iv',
-      };
-      return `/admin/students/photos/${formMap[formLevel]}/year/${year}/stream/${stream}`;
+      return `/admin/students/photos/${formSlug}/stream/${stream}/years`;
     }
+    return `/admin/students/photos/${formSlug}/year/${year}/stream/${stream}`;
   };
 
   const handleDownloadAllStreamsPhotoEntryForm = async () => {

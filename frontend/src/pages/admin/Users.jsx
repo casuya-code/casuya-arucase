@@ -19,8 +19,8 @@ const ROLES_WITH_PERMISSIONS = ['teacher', 'secretary', 'priest', 'discipline'];
 // Class options for assignment (match reference: FORM I–IV and FORM V/VI streams)
 const CLASS_OPTIONS = [
   'FORM I', 'FORM II', 'FORM III', 'FORM IV',
-  'FORM V PCM', 'FORM V PCB', 'FORM V EGM', 'FORM V HGE', 'FORM V HGL',
-  'FORM VI PCM', 'FORM VI PCB', 'FORM VI EGM', 'FORM VI HGE', 'FORM VI HGL',
+  'FORM V PCM', 'FORM V PCB', 'FORM V CBG', 'FORM V EGM', 'FORM V HGE', 'FORM V HGL', 'FORM V HKL', 'FORM V PGM',
+  'FORM VI PCM', 'FORM VI PCB', 'FORM VI CBG', 'FORM VI EGM', 'FORM VI HGE', 'FORM VI HGL', 'FORM VI HKL', 'FORM VI PGM',
 ];
 
 // Year options for class restrictions

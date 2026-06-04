@@ -11,7 +11,7 @@ import { preFormOneInterviewSubjectsService } from '../../services/preFormOneInt
 import preFormOneContinuingSubjectsService from '../../services/preFormOneContinuingSubjectsService';
 import preFormOneStudentsService from '../../services/preFormOneStudentsService';
 import gradeSystemService from '../../services/gradeSystemService';
-import dataPersistenceManager from '../../utils/dataPersistenceManager';
+import dataPersistenceManager, { normalizeScoresMap } from '../../utils/dataPersistenceManager';
 import AdminLayout from '../../components/layout/AdminLayout';
 import './PreFormOneScoreEntry.css';
 
@@ -30,14 +30,23 @@ const PreFormOneScoreEntry = () => {
   const [gradeConfig, setGradeConfig] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [loadingSubjectId, setLoadingSubjectId] = useState(null);
+  const [exporting, setExporting] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null); // 'interview' or 'continuing'
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(50);
   const [isVirtualScrollEnabled, setIsVirtualScrollEnabled] = useState(false);
   const [keyboardNavigation, setKeyboardNavigation] = useState(false);
+  const [scoreStats, setScoreStats] = useState({ total: 0, scored: 0, pending: 0 });
   const tableRef = useRef(null);
   const virtualListRef = useRef(null);
+  const studentScoresRef = useRef({});
+  const loadedSubjectRef = useRef(null);
+
+  useEffect(() => {
+    studentScoresRef.current = studentScores;
+  }, [studentScores]);
 
   // Use all students directly since search functionality is removed
   const filteredStudents = preFormOneStudents;
@@ -98,34 +107,123 @@ const PreFormOneScoreEntry = () => {
     }
   }, [selectedSubject, selectedCard, loading]);
 
+  const buildScoresMapFromApi = (scoresData) => {
+    const scoresMap = {};
+    const rows = scoresData?.data ?? (Array.isArray(scoresData) ? scoresData : []);
+    if (Array.isArray(rows)) {
+      rows.forEach((score) => {
+        const key = score.student_id ?? score.studentId;
+        if (key == null) return;
+        scoresMap[key] = {
+          score: score.score,
+          grade: score.grade,
+        };
+      });
+    }
+    return scoresMap;
+  };
+
+  const computeLocalScoreStats = useCallback(
+    (scoresMap) => {
+      const scores = normalizeScoresMap(scoresMap ?? studentScores);
+      const scored = Object.values(scores).filter(
+        (s) => s != null && s.score !== '' && s.score !== undefined && s.score !== null
+      ).length;
+      const total = preFormOneStudents.length;
+      return {
+        total,
+        scored,
+        pending: Math.max(0, total - scored),
+      };
+    },
+    [preFormOneStudents.length, studentScores]
+  );
+
+  const refreshScoreStats = useCallback(
+    async (subjectId, cardType, scoresMap) => {
+      if (!subjectId || !cardType || !year) {
+        setScoreStats({ total: 0, scored: 0, pending: 0 });
+        return;
+      }
+
+      try {
+        const stats = await preFormOneStudentsService.getScoreStatistics(
+          subjectId,
+          cardType,
+          year
+        );
+        setScoreStats({
+          total: stats.total,
+          scored: stats.scored,
+          pending: stats.pending,
+        });
+      } catch {
+        setScoreStats(computeLocalScoreStats(scoresMap));
+      }
+    },
+    [year, computeLocalScoreStats]
+  );
+
+  const loadScoresForSubject = useCallback(async (subject, cardType) => {
+    if (!subject?.id || !cardType) return;
+
+    try {
+      setLoading(true);
+      const scoresData = await preFormOneStudentsService.getStudentScoresBySubject(
+        subject.id,
+        cardType
+      );
+      const scoresMap = buildScoresMapFromApi(scoresData);
+      const persistenceScores = normalizeScoresMap(
+        await dataPersistenceManager.loadData(subject.id, cardType)
+      );
+      const mergedScores = normalizeScoresMap({ ...persistenceScores, ...scoresMap });
+      setStudentScores(mergedScores);
+      await refreshScoreStats(subject.id, cardType, mergedScores);
+    } catch (error) {
+      toast.error('Error loading existing scores. Please try again.');
+      setStudentScores({});
+      setScoreStats(computeLocalScoreStats({}));
+    } finally {
+      setLoading(false);
+    }
+  }, [year, refreshScoreStats, computeLocalScoreStats]);
+
   // Auto-select subject and card when on subject detail page
   useEffect(() => {
     if (isSubjectDetail && subjectId) {
-      // Find the subject and auto-select it
-      const findSubject = (subjects) => {
-        return subjects.find(s => s.id === parseInt(subjectId) || s.id === subjectId);
-      };
-      
-      const interviewSubject = findSubject(interviewSubjects);
-      const continuingSubject = findSubject(continuingSubjects);
-      
+      const sid = String(subjectId);
+      const interviewSubject = interviewSubjects.find((s) => String(s.id) === sid);
+      const continuingSubject = continuingSubjects.find((s) => String(s.id) === sid);
+
       if (interviewSubject) {
         setSelectedCard('interview');
         setSelectedSubject(interviewSubject);
-        // Trigger score loading for auto-selected subject
-        handleSubjectClick(interviewSubject);
+        if (loadedSubjectRef.current !== sid) {
+          loadedSubjectRef.current = sid;
+          loadScoresForSubject(interviewSubject, 'interview');
+        }
       } else if (continuingSubject) {
         setSelectedCard('continuing');
         setSelectedSubject(continuingSubject);
-        // Trigger score loading for auto-selected subject
-        handleSubjectClick(continuingSubject);
+        if (loadedSubjectRef.current !== sid) {
+          loadedSubjectRef.current = sid;
+          loadScoresForSubject(continuingSubject, 'continuing');
+        }
       }
     } else if (isSubjectsList) {
-      // On subjects list page, show both cards
+      loadedSubjectRef.current = null;
       setSelectedCard(null);
       setSelectedSubject(null);
     }
-  }, [isSubjectDetail, isSubjectsList, subjectId, interviewSubjects, continuingSubjects]);
+  }, [
+    isSubjectDetail,
+    isSubjectsList,
+    subjectId,
+    interviewSubjects,
+    continuingSubjects,
+    loadScoresForSubject,
+  ]);
 
   // Load grade configuration, subjects and students on component mount
   useEffect(() => {
@@ -150,25 +248,11 @@ const PreFormOneScoreEntry = () => {
           });
         }
         
-        // Load interview subjects
         const interviewData = await preFormOneInterviewSubjectsService.getSubjects();
-        if (interviewData && interviewData.data) {
-          setInterviewSubjects(interviewData.data);
-        } else if (interviewData && Array.isArray(interviewData)) {
-          setInterviewSubjects(interviewData);
-        } else {
-          setInterviewSubjects([]);
-        }
-        
-        // Load continuing subjects
+        setInterviewSubjects(Array.isArray(interviewData) ? interviewData : []);
+
         const continuingData = await preFormOneContinuingSubjectsService.getSubjects();
-        if (continuingData && continuingData.data) {
-          setContinuingSubjects(continuingData.data);
-        } else if (continuingData && Array.isArray(continuingData)) {
-          setContinuingSubjects(continuingData);
-        } else {
-          setContinuingSubjects([]);
-        }
+        setContinuingSubjects(Array.isArray(continuingData) ? continuingData : []);
         
         // Load Pre-Form One students from registration
         try {
@@ -204,43 +288,19 @@ const PreFormOneScoreEntry = () => {
 
   // Handle subject click
   const handleSubjectClick = async (subject) => {
-    // Set selected subject first
+    if (!selectedCard || loadingSubjectId) return;
+
+    setLoadingSubjectId(subject.id);
     setSelectedSubject(subject);
-    
-    // Load existing scores for this subject
+    loadedSubjectRef.current = String(subject.id);
     try {
-      setLoading(true);
-      const scoresData = await preFormOneStudentsService.getStudentScoresBySubject(subject.id, selectedCard);
-      
-      // Process scores into a map for easy access
-      const scoresMap = {};
-      if (scoresData && scoresData.data) {
-        scoresData.data.forEach(score => {
-          scoresMap[score.student_id] = {
-            score: score.score,
-            grade: score.grade
-          };
-        });
-      } else {
+      await loadScoresForSubject(subject, selectedCard);
+
+      if (!isSubjectDetail || String(subject.id) !== String(subjectId)) {
+        navigate(`/admin/pre-form-one/${year}/score-entry/${subject.id}`);
       }
-      
-      // Load scores from comprehensive persistence layers
-      const persistenceScores = await loadScoresFromPersistence(subject.id, selectedCard);
-      
-      // Preserve any existing unsaved scores by merging with loaded scores
-      // Backend scores take priority, but persistence scores fill in gaps
-      const mergedScores = { ...persistenceScores, ...scoresMap };
-      setStudentScores(mergedScores);
-      startAutoSave();
-      
-      // Navigate to subject detail page using React Router
-      navigate(`/admin/pre-form-one/${year}/score-entry/${subject.id}`);
-      
-    } catch (error) {
-      toast.error('Error loading existing scores. Please try again.');
-      setStudentScores({});
     } finally {
-      setLoading(false);
+      setLoadingSubjectId(null);
     }
   };
 
@@ -397,45 +457,47 @@ const PreFormOneScoreEntry = () => {
   };
 
 
-  // Calculate score statistics for display
-  const scoreStats = useMemo(() => {
-    const scored = Object.values(studentScores).filter(s => s.score && s.score > 0).length;
-    const pending = preFormOneStudents.length - scored;
-    
-    return {
-      scored,
-      pending,
-      total: preFormOneStudents.length
-    };
-  }, [studentScores, preFormOneStudents]);
+  // Live local counts while editing; skip during load so API refresh from loadScores wins
+  useEffect(() => {
+    if (!selectedSubject?.id || !selectedCard || loading) return;
+    setScoreStats(computeLocalScoreStats(studentScores));
+  }, [
+    studentScores,
+    loading,
+    preFormOneStudents.length,
+    selectedSubject?.id,
+    selectedCard,
+    computeLocalScoreStats,
+  ]);
 
   // Handle score input change
   const handleScoreChange = (studentId, field, value) => {
-    setStudentScores(prev => {
-      const updated = { ...prev };
-      
+    setStudentScores((prev) => {
+      const updated = { ...normalizeScoresMap(prev) };
+
       if (!updated[studentId]) {
         updated[studentId] = {};
       }
-      
+
       if (field === 'score') {
-        const score = parseInt(value) || 0;
-        
+        const score = parseInt(value, 10) || 0;
+
         if (score < 0 || score > 100) {
           toast.error('Score must be between 0 and 100');
           return prev;
         }
-        
+
         updated[studentId].score = score;
         updated[studentId].grade = calculateGrade(score);
       } else {
         updated[studentId][field] = value;
       }
-      
-      // Save to persistence if subject is selected
+
       if (selectedSubject && selectedCard) {
         saveScoresToPersistence(selectedSubject.id, selectedCard, updated);
       }
+
+      return updated;
     });
   };
 
@@ -450,9 +512,22 @@ const PreFormOneScoreEntry = () => {
     return student.admission_number || student.admission_no || student.student_number || `PF2025-${student.id || student.student_id}`;
   }, []);
 
+  const getStudentKey = useCallback((student) => {
+    if (!student) return null;
+    return student.id ?? student.student_id ?? null;
+  }, []);
+
+  const scoresByStudentId = useMemo(
+    () => normalizeScoresMap(studentScores),
+    [studentScores]
+  );
+
   // Virtual scrolling item renderer
-  const renderVirtualItem = useCallback((student, index) => {
-    const studentScore = studentScores[student.id] || {};
+  const renderVirtualItem = useCallback((student) => {
+    const studentKey = getStudentKey(student);
+    if (studentKey == null) return null;
+
+    const studentScore = scoresByStudentId[studentKey] || {};
     const displayScore = studentScore.score;
     const displayGrade = studentScore.grade;
     const hasScore = displayScore || displayGrade;
@@ -461,7 +536,7 @@ const PreFormOneScoreEntry = () => {
     const admissionNumber = getStudentAdmissionNumber(student);
     
     return (
-      <tr key={student.id} className={hasScore ? 'scored-row' : 'pending-row'}>
+      <tr key={studentKey} className={hasScore ? 'scored-row' : 'pending-row'}>
         <td className="admission-number">
           <span className="student-id">{admissionNumber}</span>
         </td>
@@ -484,7 +559,7 @@ const PreFormOneScoreEntry = () => {
             min="0"
             max="100"
             value={displayScore || ''}
-            onChange={(e) => handleScoreChange(student.id, 'score', e.target.value)}
+            onChange={(e) => handleScoreChange(studentKey, 'score', e.target.value)}
             aria-label={`Score for ${studentName}`}
           />
         </td>
@@ -492,7 +567,7 @@ const PreFormOneScoreEntry = () => {
           <select 
             className="form-input small"
             value={displayGrade || ''}
-            onChange={(e) => handleScoreChange(student.id, 'grade', e.target.value)}
+            onChange={(e) => handleScoreChange(studentKey, 'grade', e.target.value)}
             aria-label={`Grade for ${studentName}`}
           >
             <option value="">-</option>
@@ -511,17 +586,18 @@ const PreFormOneScoreEntry = () => {
         <td className="actions-cell">
           <div className="action-buttons-row">
             <button 
-              className="excel-btn primary small"
-              onClick={() => saveIndividualScore(student.id)}
+              className={`excel-btn primary small${saving ? ' is-busy' : ''}`}
+              onClick={() => saveIndividualScore(studentKey)}
               disabled={saving || loading}
+              aria-busy={saving || undefined}
               aria-label={`Save score for ${studentName}`}
             >
-              <i className="fas fa-save"></i>
-              Save
+              <i className={`fas ${saving ? 'fa-spinner fa-spin' : 'fa-save'}`}></i>
+              {saving ? 'Saving…' : 'Save'}
             </button>
             <button 
               className="excel-btn secondary small"
-              onClick={() => viewStudentDetails(student.id)}
+              onClick={() => viewStudentDetails(studentKey)}
               aria-label={`View details for ${studentName}`}
             >
               <i className="fas fa-eye"></i>
@@ -531,7 +607,7 @@ const PreFormOneScoreEntry = () => {
         </td>
       </tr>
     );
-  }, [studentScores, handleScoreChange, saving, loading, getStudentDisplayName, getStudentAdmissionNumber]);
+  }, [scoresByStudentId, handleScoreChange, saving, loading, getStudentDisplayName, getStudentAdmissionNumber, getStudentKey]);
 
   
   // Memoized render function to prevent infinite re-renders
@@ -569,19 +645,21 @@ const PreFormOneScoreEntry = () => {
           <div className="subject-actions">
             <button 
               onClick={saveAllScores}
-              className="excel-btn primary"
+              className={`excel-btn primary${saving ? ' is-busy' : ''}`}
               disabled={saving || loading}
+              aria-busy={saving || undefined}
             >
-              <i className="fas fa-save"></i>
-              Save All Scores
+              <i className={`fas ${saving ? 'fa-spinner fa-spin' : 'fa-save'}`}></i>
+              {saving ? 'Saving…' : 'Save All Scores'}
             </button>
             <button 
               onClick={exportScores}
-              className="excel-btn secondary"
-              disabled={loading}
+              className={`excel-btn secondary${exporting ? ' is-busy' : ''}`}
+              disabled={exporting || loading}
+              aria-busy={exporting || undefined}
             >
-              <i className="fas fa-download"></i>
-              Export
+              <i className={`fas ${exporting ? 'fa-spinner fa-spin' : 'fa-download'}`}></i>
+              {exporting ? 'Exporting…' : 'Export'}
             </button>
           </div>
         </div>
@@ -627,7 +705,7 @@ const PreFormOneScoreEntry = () => {
                   </td>
                 </tr>
               ) : (
-                paginatedStudents.map(renderVirtualItem)
+                paginatedStudents.map((student) => renderVirtualItem(student)).filter(Boolean)
               )}
             </tbody>
           </table>
@@ -640,7 +718,7 @@ const PreFormOneScoreEntry = () => {
   const saveIndividualScore = async (studentId) => {
     try {
       setSaving(true);
-      const scoreData = studentScores[studentId];
+      const scoreData = scoresByStudentId[studentId];
       
       if (!scoreData || !scoreData.score) {
         toast.warning('Please enter a score before saving');
@@ -648,7 +726,7 @@ const PreFormOneScoreEntry = () => {
       }
       
       const payload = {
-        student_id: studentId,
+        student_id: parseInt(studentId, 10),
         subject_id: selectedSubject.id,
         subject_type: selectedCard,
         score: scoreData.score
@@ -658,22 +736,19 @@ const PreFormOneScoreEntry = () => {
       
       toast.success('Score saved successfully!');
       
-      // Update the local state immediately with the saved score
-      setStudentScores(prev => {
-        const updated = {
-          ...prev,
-          [studentId]: {
-            score: scoreData.score,
-            grade: calculateGrade(scoreData.score)
-          }
-        };
-        return updated;
-      });
-      
+      const mergedScores = {
+        ...normalizeScoresMap(studentScoresRef.current),
+        [studentId]: {
+          score: scoreData.score,
+          grade: calculateGrade(scoreData.score),
+        },
+      };
+      setStudentScores(mergedScores);
+
       // Clear comprehensive persistence after successful save
       clearScoresFromPersistence(selectedSubject.id, selectedCard);
-      
-      
+
+      await refreshScoreStats(selectedSubject.id, selectedCard, mergedScores);
     } catch (error) {
       toast.error('Error saving score. Please try again.');
     } finally {
@@ -687,8 +762,8 @@ const PreFormOneScoreEntry = () => {
       setSaving(true);
       
       const scoresToSave = [];
-      Object.keys(studentScores).forEach(studentId => {
-        const scoreData = studentScores[studentId];
+      Object.keys(scoresByStudentId).forEach((studentId) => {
+        const scoreData = scoresByStudentId[studentId];
         if (scoreData && scoreData.score) {
           scoresToSave.push({
             student_id: parseInt(studentId),
@@ -717,14 +792,16 @@ const PreFormOneScoreEntry = () => {
         };
       });
       
-      setStudentScores(prev => ({
-        ...prev,
-        ...updatedScores
-      }));
-      
+      const mergedScores = {
+        ...normalizeScoresMap(studentScoresRef.current),
+        ...updatedScores,
+      };
+      setStudentScores(mergedScores);
+
       // Clear comprehensive persistence after successful save
       clearScoresFromPersistence(selectedSubject.id, selectedCard);
-      
+
+      await refreshScoreStats(selectedSubject.id, selectedCard, mergedScores);
     } catch (error) {
       toast.error('Error saving scores. Please try again.');
     } finally {
@@ -734,8 +811,14 @@ const PreFormOneScoreEntry = () => {
 
   // Export scores to CSV
   const exportScores = async () => {
+    if (exporting) return;
+    setExporting(true);
     try {
-      const response = await preFormOneStudentsService.exportScores(selectedSubject.id, selectedCard);
+      const response = await preFormOneStudentsService.exportScores(
+        selectedSubject.id,
+        selectedCard,
+        year
+      );
       
       // Create download link
       const url = window.URL.createObjectURL(new Blob([response.data]));
@@ -750,13 +833,19 @@ const PreFormOneScoreEntry = () => {
       
     } catch (error) {
       toast.error('Error exporting scores. Please try again.');
+    } finally {
+      setExporting(false);
     }
   };
 
   // View student details
   const viewStudentDetails = (studentId) => {
-    const student = preFormOneStudents.find(s => s.id === studentId);
-    const score = studentScores[studentId];
+    const student = preFormOneStudents.find(
+      (s) => String(getStudentKey(s)) === String(studentId)
+    );
+    if (!student) return;
+
+    const score = scoresByStudentId[studentId];
     
     const details = `
       Student: ${student.first_name && student.surname ? `${student.first_name} ${student.surname}` : student.name || student.student_name || 'Unknown Student'}
@@ -771,22 +860,16 @@ const PreFormOneScoreEntry = () => {
   // Comprehensive data persistence functions
   const saveScoresToPersistence = async (subjectId, scoreType, scores) => {
     try {
-      const success = await dataPersistenceManager.saveData(subjectId, scoreType, { scores });
+      const success = await dataPersistenceManager.saveData(
+        subjectId,
+        scoreType,
+        normalizeScoresMap(scores)
+      );
       if (!success) {
         toast.warning('Some data protection features are not available, but your scores are still saved locally.');
       }
     } catch (error) {
       toast.error('Error saving scores to backup storage.');
-    }
-  };
-
-  const loadScoresFromPersistence = async (subjectId, scoreType) => {
-    try {
-      const scores = await dataPersistenceManager.loadData(subjectId, scoreType);
-      return scores;
-    } catch (error) {
-      toast.error('Error loading scores from backup storage.');
-      return {};
     }
   };
 
@@ -801,7 +884,11 @@ const PreFormOneScoreEntry = () => {
   const startAutoSave = () => {
     if (selectedSubject && selectedCard) {
       dataPersistenceManager.startAutoSave(selectedSubject.id, selectedCard, () => {
-        saveScoresToPersistence(selectedSubject.id, selectedCard, studentScores);
+        saveScoresToPersistence(
+          selectedSubject.id,
+          selectedCard,
+          studentScoresRef.current
+        );
       });
     }
   };
@@ -851,8 +938,9 @@ const PreFormOneScoreEntry = () => {
             {activeSubjects.map((subject) => (
               <div
                 key={subject.id}
-                className="subject-card"
+                className={`subject-card${loadingSubjectId === subject.id ? ' is-busy' : ''}`}
                 onClick={() => handleSubjectClick(subject)}
+                aria-busy={loadingSubjectId === subject.id || undefined}
               >
                 <div className="subject-card-header">
                   <h4>{subject.subject_name}</h4>

@@ -9,7 +9,9 @@ import { toast } from '../../utils/toast';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { useAuth } from '../../context/AuthContext';
 import { studentsAPI } from '../../services/students';
+import { FORM_V_VI_STREAM_CODES } from '../../utils/academicYearUtils';
 import './ScoreEntryEnter.css';
+import { CSV_BULK_LABELS, CSV_BULK_TITLES } from '../../constants/csvBulkActions';
 
 const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
   const params = useParams();
@@ -124,9 +126,8 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
   // Only check access if we have valid parameters
   // This prevents false negatives when stream is missing for Form V-VI
   // For together mode, check if user has access to ANY stream for this form
-  const FORM_V_STREAMS = ['PCB', 'PCM', 'CBG', 'HGL', 'HKL', 'EGM', 'HGE', 'PGM'];
   const hasAccessToAnyStream = isTogetherMode
-    ? FORM_V_STREAMS.some(stream => hasClass(`${normalizedLevel} ${stream}`))
+    ? FORM_V_VI_STREAM_CODES.some((stream) => hasClass(`${normalizedLevel} ${stream}`))
     : hasClass(currentClassKey);
 
   if (allParamsValid && !isAdminLike() && !hasAccessToAnyStream) {
@@ -206,8 +207,7 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
       try {
         // For together mode, fetch students from all streams
         if (isTogetherMode) {
-          const FORM_V_STREAMS = ['PCB', 'PCM', 'CBG', 'HGL', 'HKL', 'EGM', 'HGE', 'PGM'];
-          const studentPromises = FORM_V_STREAMS.map(async (stream) => {
+          const studentPromises = FORM_V_VI_STREAM_CODES.map(async (stream) => {
             try {
               const res = await studentsAPI.getStudents({
                 level: normalizedLevel,
@@ -834,27 +834,32 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
                   >
                     <i className="fas fa-eraser"></i> Clear All Scores
                   </button>
-                  <button
-                    type="button"
-                    className="excel-btn secondary"
-                    onClick={handleDownloadTemplate}
-                    title="Download CSV with Adm No, names, and Score column (fill scores and upload)"
-                  >
-                    <i className="fas fa-download"></i> Download CSV template
-                  </button>
-                  <label className="excel-btn secondary" style={{ marginBottom: 0 }}>
-                    <i className="fas fa-upload"></i> Upload CSV
-                    <input
-                      type="file"
-                      accept=".csv"
-                      style={{ position: 'absolute', width: 0, height: 0, opacity: 0 }}
-                      onChange={handleUploadCsv}
-                      disabled={uploadScoresCsvMutation.isLoading}
-                    />
-                  </label>
-                  {uploadScoresCsvMutation.isLoading && (
-                    <span className="score-entry-upload-status">Uploading…</span>
-                  )}
+                  <div className="csv-bulk-actions">
+                    <button
+                      type="button"
+                      className="excel-btn secondary"
+                      onClick={handleDownloadTemplate}
+                      title={CSV_BULK_TITLES.template}
+                    >
+                      <i className="fas fa-download"></i> {CSV_BULK_LABELS.template}
+                    </button>
+                    <span className="csv-bulk-actions-spacer" aria-hidden="true" />
+                    <label
+                      className="excel-btn secondary"
+                      style={{ marginBottom: 0, cursor: 'pointer' }}
+                      title={CSV_BULK_TITLES.upload}
+                    >
+                      <i className={`fas ${uploadScoresCsvMutation.isLoading ? 'fa-spinner fa-spin' : 'fa-upload'}`}></i>{' '}
+                      {uploadScoresCsvMutation.isLoading ? CSV_BULK_LABELS.uploading : CSV_BULK_LABELS.upload}
+                      <input
+                        type="file"
+                        accept=".csv"
+                        style={{ position: 'absolute', width: 0, height: 0, opacity: 0 }}
+                        onChange={handleUploadCsv}
+                        disabled={uploadScoresCsvMutation.isLoading}
+                      />
+                    </label>
+                  </div>
                 </div>
               </>
             )}

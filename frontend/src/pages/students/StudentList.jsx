@@ -10,19 +10,13 @@ import SkeletonLoader from '../../components/common/SkeletonLoader';
 import DataTable from '../../components/common/DataTable';
 import api from '../../services/api';
 import { studentsAPI } from '../../services/students';
+import { FORM_V_VI_STREAMS } from '../../utils/academicYearUtils';
 import './StudentList.css';
 
-/** FORM V/VI streams — keep in sync with `ScoreEntryFormVVIStreamSelection.jsx` ALL_STREAMS */
-const COMBINATION_STREAMS = [
-  { value: 'PCB', label: 'PCB — Physics, Chemistry, Biology' },
-  { value: 'PCM', label: 'PCM — Physics, Chemistry, Mathematics' },
-  { value: 'CBG', label: 'CBG — Chemistry, Biology, Geography' },
-  { value: 'HGL', label: 'HGL — History, Geography, Literature' },
-  { value: 'HKL', label: 'HKL — History, Kiswahili, Literature' },
-  { value: 'EGM', label: 'EGM — Economics, Geography, Mathematics' },
-  { value: 'HGE', label: 'HGE — History, Geography, Economics' },
-  { value: 'PGM', label: 'PGM — Physics, Geography, Advanced Mathematics' },
-];
+const COMBINATION_STREAMS = FORM_V_VI_STREAMS.map((s) => ({
+  value: s.code,
+  label: `${s.code} — ${s.name}`,
+}));
 
 /** Map DB/UI term to report URL segment (matches individual report routes). */
 function reportTermSegmentForPdf(studentTerm, filterTerm) {
@@ -220,8 +214,15 @@ const StudentList = () => {
         stream: student.stream,
         year: String(student.year),
       }),
-    onSuccess: () => {
-      queryClient.invalidateQueries(['students', filters]);
+    onSuccess: (res, { student, status: newStatus }) => {
+      const savedStatus = res?.data?.student?.status ?? newStatus;
+      queryClient.setQueryData(['students', filters], (old) => {
+        if (!Array.isArray(old)) return old;
+        return old.map((s) =>
+          s.adm_no === student.adm_no ? { ...s, status: savedStatus } : s
+        );
+      });
+      queryClient.invalidateQueries({ queryKey: ['students'] });
       toast.success('Student status updated');
     },
     onError: (err) => {
@@ -230,8 +231,10 @@ const StudentList = () => {
   });
 
   const handleStatusChange = (student, newStatus) => {
-    if (student.status === newStatus) return;
-    updateStatusMutation.mutate({ student, status: newStatus });
+    const current = String(student.status || 'PENDING').toUpperCase();
+    const next = String(newStatus || '').toUpperCase();
+    if (current === next) return;
+    updateStatusMutation.mutate({ student, status: next });
   };
 
   const bulkStatusMutation = useMutation({
@@ -249,8 +252,15 @@ const StudentList = () => {
       if (failed > 0) throw new Error(`${failed} update(s) failed`);
       return results;
     },
-    onSuccess: (_, { students }) => {
-      queryClient.invalidateQueries(['students', filters]);
+    onSuccess: (_, { students, status: newStatus }) => {
+      const ids = new Set(students.map((s) => s.adm_no));
+      queryClient.setQueryData(['students', filters], (old) => {
+        if (!Array.isArray(old)) return old;
+        return old.map((s) =>
+          ids.has(s.adm_no) ? { ...s, status: newStatus } : s
+        );
+      });
+      queryClient.invalidateQueries({ queryKey: ['students'] });
       toast.success(`${students.length} student(s) marked successfully`);
       setSelectedStudents([]);
       setTableKey((k) => k + 1);
@@ -376,7 +386,7 @@ const StudentList = () => {
         return (
           <select
             className={`status-select status-${(value || 'PENDING').toLowerCase()}`}
-            value={value || 'PENDING'}
+            value={String(value || 'PENDING').toUpperCase()}
             onChange={(e) => handleStatusChange(row, e.target.value)}
             disabled={isUpdating}
             title="Change student status"

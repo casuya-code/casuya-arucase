@@ -14,6 +14,11 @@
   --login-brand-dark: #164a7d;
   --login-font: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
   --login-field-height: 3rem;
+  --login-radius-xl: clamp(1rem, 4vw, 1.5rem);
+  --login-radius-lg: clamp(0.75rem, 3vw, 1rem);
+  --login-radius-md: 0.75rem;
+  --login-radius-sm: 0.5rem;
+  --login-shadow-card: 0 1.25rem 2.5rem rgba(15, 23, 42, 0.18), 0 0.25rem 0.75rem rgba(15, 23, 42, 0.08);
 
   position: fixed !important;
   inset: 0 !important;
@@ -80,12 +85,12 @@ body:has(.login-page) {
 
 .login-page .login-card-stack {
   width: 100% !important;
-  max-width: min(28rem, 100%) !important;
+  max-width: min(28rem, calc(100vw - 1.5rem)) !important;
   min-width: 0 !important;
   margin: auto !important;
   display: flex !important;
   flex-direction: column !important;
-  gap: 0.75rem !important;
+  gap: clamp(0.625rem, 2.5vw, 0.875rem) !important;
 }
 
 .login-page .sr-only {
@@ -101,10 +106,12 @@ body:has(.login-page) {
 
 .login-page .login-container {
   background: #fff !important;
-  border: 1px solid #e5e7eb !important;
-  border-radius: 0 !important;
-  padding: clamp(1.25rem, 4vw, 3rem) clamp(1rem, 4vw, 2rem) !important;
+  border: 1px solid rgba(255, 255, 255, 0.65) !important;
+  border-radius: var(--login-radius-xl) !important;
+  box-shadow: var(--login-shadow-card) !important;
+  padding: clamp(1.25rem, 5vw, 2.5rem) clamp(1rem, 4vw, 2rem) !important;
   width: 100% !important;
+  overflow: hidden !important;
 }
 
 .login-page .login-container:focus {
@@ -113,7 +120,7 @@ body:has(.login-page) {
 
 .login-header {
   text-align: center !important;
-  margin-bottom: 2.5rem !important;
+  margin-bottom: clamp(1.25rem, 5vw, 2rem) !important;
 }
 
 .login-logo-wrap {
@@ -149,7 +156,7 @@ body:has(.login-page) {
   padding: 0.75rem 1rem !important;
   background: #fef2f2 !important;
   border: 1px solid #fecaca !important;
-  border-radius: 0 !important;
+  border-radius: var(--login-radius-md) !important;
   color: #991b1b !important;
   font-size: 0.875rem !important;
   font-weight: 700 !important;
@@ -159,7 +166,7 @@ body:has(.login-page) {
 .login-form {
   display: flex !important;
   flex-direction: column !important;
-  gap: 1.75rem !important;
+  gap: clamp(1.25rem, 4vw, 1.75rem) !important;
 }
 
 .login-page .form-group {
@@ -177,10 +184,14 @@ body:has(.login-page) {
 .input-with-icon {
   display: flex !important;
   align-items: stretch !important;
-  gap: 0.5rem !important;
+  gap: 0 !important;
   width: 100% !important;
   min-width: 0 !important;
-  background: transparent !important;
+  background: #fff !important;
+  border: 1px solid #d1d5db !important;
+  border-radius: var(--login-radius-md) !important;
+  overflow: hidden !important;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
 }
 
 .login-page .input-icon,
@@ -215,9 +226,10 @@ body:has(.login-page) {
   flex-shrink: 0 !important;
   align-self: stretch !important;
   background: rgba(26, 84, 144, 0.08) !important;
-  border: 1px solid #d1d5db !important;
+  border: none !important;
+  border-right: 1px solid #e5e7eb !important;
   border-radius: 0 !important;
-  transition: border-color 0.2s ease, background 0.2s ease, color 0.2s ease !important;
+  transition: background 0.2s ease, color 0.2s ease !important;
 }
 
 .input-field-group {
@@ -225,17 +237,16 @@ body:has(.login-page) {
   align-items: center !important;
   flex: 1 !important;
   min-width: 0 !important;
-  border: 1px solid #d1d5db !important;
+  border: none !important;
   border-radius: 0 !important;
-  background: #fff !important;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
+  background: transparent !important;
 }
 
 .input-with-icon-field {
   padding: 0 1rem !important;
-  border: 1px solid #d1d5db !important;
+  border: none !important;
   border-radius: 0 !important;
-  background: #fff !important;
+  background: transparent !important;
   color: #1f2937 !important;
   font-size: max(16px, 0.875rem) !important;
   font-weight: 600 !important;
@@ -244,7 +255,6 @@ body:has(.login-page) {
   flex: 1 !important;
   line-height: 1.5 !important;
   outline: none !important;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease !important;
 }
 
 .login-page .input-field-group .input-with-icon-field {
@@ -255,16 +265,14 @@ body:has(.login-page) {
   box-shadow: none !important;
 }
 
+.input-with-icon:focus-within {
+  border-color: var(--login-brand) !important;
+  box-shadow: 0 0 0 3px rgba(26, 84, 144, 0.15) !important;
+}
+
 .input-with-icon:focus-within .input-icon {
   color: var(--login-brand-dark) !important;
   background: rgba(26, 84, 144, 0.12) !important;
-  border-color: var(--login-brand) !important;
-}
-
-.input-with-icon:focus-within .input-with-icon-field,
-.input-with-icon:focus-within .input-field-group {
-  border-color: var(--login-brand) !important;
-  box-shadow: 0 0 0 1px var(--login-brand) !important;
 }
 
 .password-toggle {
@@ -297,9 +305,10 @@ body:has(.login-page) {
 
 .login-submit {
   width: 100% !important;
+  min-height: var(--login-field-height) !important;
   padding: 0.875rem 1.5rem !important;
   border: 1px solid var(--login-brand-dark) !important;
-  border-radius: 0 !important;
+  border-radius: var(--login-radius-lg) !important;
   background: var(--login-brand) !important;
   color: #fff !important;
   font-size: 0.875rem !important;
@@ -333,10 +342,12 @@ body:has(.login-page) {
   justify-content: center !important;
   gap: 0.5rem !important;
   width: 100% !important;
+  min-height: 2.75rem !important;
   padding: 0.65rem 1rem !important;
   border: 1px solid #e5e7eb !important;
-  border-radius: 0 !important;
+  border-radius: var(--login-radius-lg) !important;
   background: #fff !important;
+  box-shadow: 0 0.5rem 1.25rem rgba(15, 23, 42, 0.08) !important;
   color: #1f2937 !important;
   font-size: 0.9rem !important;
   font-weight: 700 !important;
@@ -356,19 +367,58 @@ body:has(.login-page) {
 }
 
 @media (max-width: 768px) {
+  .login-page {
+    padding-left: max(0.625rem, env(safe-area-inset-left, 0px)) !important;
+    padding-right: max(0.625rem, env(safe-area-inset-right, 0px)) !important;
+  }
+
+  .login-page .login-card-stack {
+    max-width: min(26rem, calc(100vw - 1.25rem)) !important;
+  }
+
+  .login-page .login-container {
+    padding: clamp(1.125rem, 4.5vw, 1.75rem) clamp(0.875rem, 3.5vw, 1.25rem) !important;
+  }
+
   .login-page .back-button {
     font-size: max(16px, 0.8rem) !important;
-    padding: 0.55rem 0.75rem !important;
+    padding: 0.65rem 0.875rem !important;
   }
 }
 
 @media (max-width: 480px) {
+  .login-page .login-card-stack {
+    max-width: 100% !important;
+    gap: 0.5rem !important;
+  }
+
+  .login-page .login-container {
+    border-radius: clamp(0.875rem, 5vw, 1.25rem) !important;
+    padding: 1.125rem 0.875rem 1.25rem !important;
+  }
+
+  .login-header {
+    margin-bottom: 1.125rem !important;
+  }
+
   .login-header h1 {
     font-size: clamp(1.1rem, 4.5vw, 1.35rem) !important;
   }
 
+  .login-logo-wrap {
+    margin-bottom: 0.75rem !important;
+  }
+
+  .login-page .form-group {
+    gap: 0.5rem !important;
+  }
+
   .login-page .form-group label {
     font-size: max(14px, 0.8rem) !important;
+  }
+
+  .login-form {
+    gap: 1.125rem !important;
   }
 
   .login-page .input-with-icon-field {
@@ -378,11 +428,54 @@ body:has(.login-page) {
   .login-submit {
     font-size: max(16px, 0.875rem) !important;
     padding: 0.75rem 1.25rem !important;
+    border-radius: var(--login-radius-md) !important;
+  }
+
+  .login-page .back-button {
+    border-radius: var(--login-radius-md) !important;
+  }
+}
+
+@media (max-width: 380px) {
+  .login-page {
+    --login-field-height: 2.875rem;
+  }
+
+  .login-page .login-container {
+    padding: 1rem 0.75rem 1.125rem !important;
+  }
+}
+
+@media (max-height: 520px) and (orientation: landscape) {
+  .login-page {
+    align-content: safe center !important;
+    padding-top: 0.5rem !important;
+    padding-bottom: 0.5rem !important;
+  }
+
+  .login-header {
+    margin-bottom: 0.75rem !important;
+  }
+
+  .login-logo-wrap {
+    margin-bottom: 0.5rem !important;
+  }
+
+  .login-logo {
+    max-height: 3.5rem !important;
+  }
+
+  .login-form {
+    gap: 1rem !important;
   }
 }
 
 @media (min-width: 900px) {
   .login-page .login-card-stack {
     max-width: min(30rem, 100%) !important;
+  }
+
+  .login-page .login-container {
+    padding: 2.5rem 2rem !important;
   }
 }
