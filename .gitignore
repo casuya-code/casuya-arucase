@@ -34,8 +34,7 @@ wheels/
 *.db
 *.sqlite
 *.sqlite3
-# Keep SQL backups in data/backups/ but ignore if too large
-# data/backups/*.sql
+*.sql
 
 # Logs
 logs/
@@ -70,6 +69,8 @@ Thumbs.db
 # Uploads (keep structure, ignore user-uploaded files)
 static/uploads/*
 !static/uploads/.gitkeep
+backend/static/uploads/*/*
+!backend/static/uploads/*/.gitkeep
 
 # Admin photos source — committed to repo so they can be copied to the
 # Railway persistent volume (/app/admin-photos) on deployment.
@@ -86,6 +87,7 @@ backend/backups/
 
 # Markdown — keep out of version control (local docs only).
 *.md
+!.github/**/*.md
 **/temp_*.js
 temp_*.js
 backend/auto_login.html

@@ -1,0 +1,21 @@
+{
+  "name": "arucase",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "lint": "cd frontend && npm run lint",
+    "test": "cd backend && npm test",
+    "prepare": "husky"
+  },
+  "devDependencies": {
+    "@commitlint/cli": "^19.0.0",
+    "@commitlint/config-conventional": "^19.0.0",
+    "husky": "^9.0.0",
+    "lint-staged": "^15.0.0"
+  },
+  "lint-staged": {
+    "frontend/src/**/*.{js,jsx}": [
+      "eslint --fix"
+    ]
+  }
+}

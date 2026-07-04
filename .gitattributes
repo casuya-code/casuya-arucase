@@ -1,0 +1,26 @@
+* text=auto eol=lf
+
+# Binary images (no diff)
+*.png binary
+*.jpg binary
+*.jpeg binary
+*.gif binary
+*.ico binary
+*.webp binary
+
+# Binary docs
+*.pdf binary
+
+# Database
+*.db binary
+*.sqlite binary
+*.sqlite3 binary
+
+# Archives
+*.zip binary
+*.gz binary
+
+# Node
+package-lock.json -diff
+yarn.lock -diff
+pnpm-lock.yaml -diff
