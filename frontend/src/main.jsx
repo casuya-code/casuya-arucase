@@ -3,7 +3,9 @@ installBenignConsoleFilters();
 
 import React from 'react';
 import ReactDOM from 'react-dom/client';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClient } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
+import { createIndexedDbPersister } from './utils/queryPersister';
 import App from './App';
 import './styles/index.css';
 import './styles/navigation-feedback.css';
@@ -13,6 +15,8 @@ if (import.meta.env.DEV) {
   import('./utils/logHelper');
   import('./utils/tokenDecoder');
 }
+import { initSentry } from './utils/sentry';
+initSentry();
 import { registerServiceWorker } from './utils/registerServiceWorker';
 import { isBenignUnhandledRejection } from './utils/benignRejections';
 import {
@@ -74,6 +78,8 @@ const getNetworkSpeed = () => {
 const networkInfo = getNetworkSpeed();
 
 // Create a client for React Query optimized for 3G-4G networks
+const queryPersister = createIndexedDbPersister();
+
 const queryClient = new QueryClient({
   defaultOptions: {
     queries: {
@@ -208,9 +214,15 @@ if (typeof window !== 'undefined' && isHomeRoute()) {
 
 ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
-    <QueryClientProvider client={queryClient}>
+    <PersistQueryClientProvider
+      client={queryClient}
+      persistOptions={{
+        persister: queryPersister,
+        maxAge: 24 * 60 * 60 * 1000,
+      }}
+    >
       <App />
-    </QueryClientProvider>
+    </PersistQueryClientProvider>
   </React.StrictMode>
 );
 

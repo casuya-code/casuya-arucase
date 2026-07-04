@@ -5,6 +5,7 @@
 const path = require('path');
 const fs = require('fs');
 const { spawn } = require('child_process');
+const cloudinary = require('../config/cloudinary');
 
 const backendRoot = path.join(__dirname, '..');
 const repoRoot = path.join(backendRoot, '..');
@@ -395,6 +396,26 @@ async function restoreBackup(dumpPath, { clean = true } = {}) {
   return { restoredFrom: path.basename(dumpPath) };
 }
 
+async function syncToCloudinary(backupPath) {
+  if (!cloudinary.isCloudinaryConfigured()) return null;
+  const fileName = path.basename(backupPath);
+  try {
+    const result = await cloudinary.v2.uploader.upload(backupPath, {
+      resource_type: 'raw',
+      public_id: `backups/${fileName}`,
+      folder: '',
+      use_filename: true,
+      unique_filename: false,
+      overwrite: true,
+    });
+    console.log('Backup synced to Cloudinary:', result.secure_url);
+    return result;
+  } catch (err) {
+    console.warn('Failed to sync backup to Cloudinary:', err.message);
+    return null;
+  }
+}
+
 async function main() {
   const verify =
     process.env.BACKUP_VERIFY === undefined ||
@@ -403,6 +424,9 @@ async function main() {
   console.log('Running database backup...');
   const backup = await createBackup({ verify });
   console.log('Backup written to:', backup.path);
+  if (process.env.BACKUP_CLOUDINARY_SYNC !== 'false') {
+    await syncToCloudinary(backup.path);
+  }
 }
 
 if (require.main === module) {
@@ -419,4 +443,5 @@ module.exports = {
   restoreBackup,
   listBackups,
   pruneBackups,
+  syncToCloudinary,
 };

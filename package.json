@@ -15,7 +15,7 @@
   },
   "lint-staged": {
     "frontend/src/**/*.{js,jsx}": [
-      "eslint --fix"
+      "cd frontend && npx eslint --fix"
     ]
   }
 }

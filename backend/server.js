@@ -3,6 +3,8 @@
  * Main entry point
  */
 require('dotenv').config({ path: require('path').join(__dirname, '.env') });
+const { initSentry, Sentry } = require('./config/sentry');
+initSentry();
 const express = require('express');
 const cors = require('cors');
 const compression = require('compression');
@@ -368,6 +370,12 @@ setImmediate(() => {
 const { securityHeaders, customSecurityHeaders, securityMonitor } = require('./middleware/securityHeaders');
 const { globalApiRateLimit } = require('./middleware/enhancedRateLimiting');
 
+// Sentry request handler (must be first)
+if (process.env.SENTRY_DSN) {
+  app.use(Sentry.Handlers.requestHandler());
+  app.use(Sentry.Handlers.tracingHandler());
+}
+
 // Apply security middleware to all requests
 app.use(securityHeaders);
 app.use(customSecurityHeaders);
@@ -658,6 +666,11 @@ io.on('connection', (socket) => {
   });
 });
 
+// Sentry error handler (must be before generic error handler)
+if (process.env.SENTRY_DSN) {
+  app.use(Sentry.Handlers.errorHandler());
+}
+
 // Error handling middleware (DatabaseOverloadError -> 503; in production hide 5xx details)
 app.use((err, req, res, next) => {
   if (err.name === 'DatabaseOverloadError') {
@@ -687,6 +700,9 @@ app.use((req, res) => {
 
 // Global error handlers to prevent crashes
 process.on('uncaughtException', (error) => {
+  if (process.env.SENTRY_DSN) {
+    Sentry.captureException(error);
+  }
   console.error('Uncaught Exception:', error);
   // Don't exit in production, log and continue
   if (process.env.NODE_ENV === 'production') {
@@ -696,6 +712,9 @@ process.on('uncaughtException', (error) => {
 
 process.on('unhandledRejection', (reason, promise) => {
   console.error('Unhandled Rejection at:', promise, 'reason:', reason);
+  if (process.env.SENTRY_DSN) {
+    Sentry.captureException(reason);
+  }
   // Don't exit in production, log and continue
   if (process.env.NODE_ENV === 'production') {
     console.error('Server continuing despite unhandled rejection');
