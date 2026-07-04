@@ -7,16 +7,33 @@ const cache = new NodeCache({
 });
 
 function cacheMiddleware(durationSeconds) {
+  if (typeof durationSeconds === 'function') {
+    const fn = durationSeconds;
+    return (req, res, next) => {
+      if (req.method !== 'GET') return next();
+      const key = `cache:${req.originalUrl}`;
+      const cached = cache.get(key);
+      if (cached !== undefined) {
+        res.set('X-Cache', 'HIT');
+        return res.json(cached);
+      }
+      const originalJson = res.json.bind(res);
+      res.json = (body) => {
+        cache.set(key, body, 300);
+        res.set('X-Cache', 'MISS');
+        return originalJson(body);
+      };
+      next();
+    };
+  }
   return (req, res, next) => {
     if (req.method !== 'GET') return next();
-
     const key = `cache:${req.originalUrl}`;
     const cached = cache.get(key);
     if (cached !== undefined) {
       res.set('X-Cache', 'HIT');
       return res.json(cached);
     }
-
     const originalJson = res.json.bind(res);
     res.json = (body) => {
       cache.set(key, body, durationSeconds);
@@ -45,4 +62,12 @@ function cacheStats() {
   };
 }
 
-module.exports = { cacheMiddleware, clearCache, cacheStats };
+const cacheRoutes = {
+  dashboardStats: cacheMiddleware(300),
+  publicData: cacheMiddleware(60),
+  marksConfig: cacheMiddleware(600),
+};
+
+const clearCachePattern = clearCache;
+
+module.exports = { cacheMiddleware, clearCache, cacheStats, cacheRoutes, clearCachePattern };
