@@ -101,7 +101,7 @@
 }.preform-one-registration-route .form-actions-field{
   display: flex;
   align-items: flex-end;
-}.preform-one-registration-route .form-btn{
+}.preform-one-registration-route .excel-btn{
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -115,27 +115,27 @@
   cursor: pointer;
   transition: all 0.2s ease;
   min-height: clamp(32px, 5vw, 40px);
-}.preform-one-registration-route .form-btn.primary{
+}.preform-one-registration-route .excel-btn.primary{
   background: #ffffff;
   color: #111827;
   border-color: #111827;
-}.preform-one-registration-route .form-btn.primary:hover:not(:disabled){
+}.preform-one-registration-route .excel-btn.primary:hover:not(:disabled){
   background: #f9fafb;
   border-color: #111827;
   transform: translateY(-1px);
-}.preform-one-registration-route .form-btn.secondary{
+}.preform-one-registration-route .excel-btn.secondary{
   background: #ffffff;
   color: #374151;
   border-color: #d1d5db;
-}.preform-one-registration-route .form-btn.secondary:hover:not(:disabled){
+}.preform-one-registration-route .excel-btn.secondary:hover:not(:disabled){
   background: #f9fafb;
   border-color: #9ca3af;
   transform: translateY(-1px);
-}.preform-one-registration-route .form-btn:disabled{
+}.preform-one-registration-route .excel-btn:disabled{
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;
-}.preform-one-registration-route .form-btn.small{
+}.preform-one-registration-route .excel-btn.small{
   padding: clamp(0.25rem, 0.75vw, 0.375rem) clamp(0.5rem, 1vw, 0.625rem);
   font-size: clamp(0.7rem, 1.25vw, 0.75rem);
   min-height: clamp(28px, 4vw, 32px);
@@ -510,22 +510,6 @@
 }.preform-one-registration-route .back-navigation-bottom{
   text-align: center;
   margin-top: clamp(2rem, 6vw, 3rem);
-}.preform-one-registration-route .back-button{
-  display: inline-flex;
-  align-items: center;
-  gap: clamp(0.5rem, 1vw, 0.75rem);
-  padding: clamp(0.75rem, 2vw, 1rem) clamp(1.5rem, 3.5vw, 2rem);
-  background: #6b7280;
-  color: #ffffff;
-  border: 1px solid #6b7280;
-  font-size: clamp(0.875rem, 2.5vw, 1rem);
-  font-weight: 500;
-  text-decoration: none;
-  transition: all 0.2s ease;
-  border-radius: 0;
-}.preform-one-registration-route .back-button:hover{
-  background: #4b5563;
-  transform: translateY(-1px);
 }
 
 

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Pre-Form One Promotion Routes
  * Handles promotion of Pre-Form One students to Form One
  */
@@ -143,7 +143,7 @@ router.post('/promote/:year', requireAuth, async (req, res) => {
           return { success: false, message: 'No students found for promotion' };
         }
 
-        console.log(`🔍 PROMOTION: Promoting ${studentsToPromote.length} students from ${year} to Form One ${targetYear}`);
+        console.log(`ðŸ” PROMOTION: Promoting ${studentsToPromote.length} students from ${year} to Form One ${targetYear}`);
 
         const promotedStudents = [];
         const errors = [];
@@ -206,10 +206,10 @@ router.post('/promote/:year', requireAuth, async (req, res) => {
               }
             });
 
-            console.log(`🔍 PROMOTION: Successfully promoted ${student.admission_number} to Form I ${assignedStream}`);
+            console.log(`ðŸ” PROMOTION: Successfully promoted ${student.admission_number} to Form I ${assignedStream}`);
 
           } catch (error) {
-            console.error(`🔍 PROMOTION ERROR: Failed to promote ${student.admission_number}:`, error);
+            console.error(`ðŸ” PROMOTION ERROR: Failed to promote ${student.admission_number}:`, error);
             errors.push({
               admissionNumber: student.admission_number,
               name: `${student.first_name} ${student.surname}`,
@@ -238,7 +238,7 @@ router.post('/promote/:year', requireAuth, async (req, res) => {
       await saveUserActivity({
         username: req.user?.username || req.user?.email || String(req.user?.id || 'unknown'),
         activity_type: 'PROMOTE_PREFORM_ONE',
-        description: `Pre-Form One promotion: cohort ${year} → Form I ${targetYear}`,
+        description: `Pre-Form One promotion: cohort ${year} â†’ Form I ${targetYear}`,
         details: {
           sourceYear: year,
           targetYear,

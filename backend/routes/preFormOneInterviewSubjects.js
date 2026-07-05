@@ -1,4 +1,4 @@
-const express = require('express');
+﻿const express = require('express');
 const router = express.Router();
 const { query, withTransaction } = require('../config/database');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
@@ -7,13 +7,13 @@ const { requireAuth } = require('../middleware/auth');
 // Get all interview subjects
 router.get('/', requireAuth, async (req, res) => {
   try {
-    console.log('🔍 DEBUG: Get interview subjects request received');
+    console.log('ðŸ” DEBUG: Get interview subjects request received');
     
     const result = await query(
       'SELECT * FROM preformone_interview_subjects ORDER BY subject_name'
     );
     
-    console.log('🔍 DEBUG: Interview subjects retrieved:', result.rowCount);
+    console.log('ðŸ” DEBUG: Interview subjects retrieved:', result.rowCount);
     
     return sendSuccess(res, 200, 'Interview subjects retrieved successfully', result.rows);
   } catch (error) {
@@ -25,13 +25,13 @@ router.get('/', requireAuth, async (req, res) => {
 // Get interview subject by ID
 router.get('/:id', requireAuth, async (req, res) => {
   try {
-    console.log('🔍 DEBUG: Get interview subject request received');
-    console.log('🔍 DEBUG: Request params:', req.params);
+    console.log('ðŸ” DEBUG: Get interview subject request received');
+    console.log('ðŸ” DEBUG: Request params:', req.params);
     
     const { id } = req.params;
     
     if (!id || isNaN(parseInt(id))) {
-      console.log('🔍 DEBUG: Invalid subject ID:', id);
+      console.log('ðŸ” DEBUG: Invalid subject ID:', id);
       return sendError(res, 400, 'Invalid subject ID');
     }
     
@@ -41,11 +41,11 @@ router.get('/:id', requireAuth, async (req, res) => {
     );
     
     if (result.rowCount === 0) {
-      console.log('🔍 DEBUG: Interview subject not found:', id);
+      console.log('ðŸ” DEBUG: Interview subject not found:', id);
       return sendError(res, 404, 'Interview subject not found');
     }
     
-    console.log('🔍 DEBUG: Interview subject found:', result.rows[0]);
+    console.log('ðŸ” DEBUG: Interview subject found:', result.rows[0]);
     return sendSuccess(res, 200, 'Interview subject retrieved successfully', result.rows[0]);
   } catch (error) {
     console.error('Error fetching interview subject:', error);
@@ -56,8 +56,8 @@ router.get('/:id', requireAuth, async (req, res) => {
 // Create new interview subject
 router.post('/', requireAuth, async (req, res) => {
   try {
-    console.log('🔍 DEBUG: Create interview subject request received');
-    console.log('🔍 DEBUG: Request body:', JSON.stringify(req.body, null, 2));
+    console.log('ðŸ” DEBUG: Create interview subject request received');
+    console.log('ðŸ” DEBUG: Request body:', JSON.stringify(req.body, null, 2));
     
     const { 
       subject_name, 
@@ -67,8 +67,8 @@ router.post('/', requireAuth, async (req, res) => {
     
     // Validation
     if (!subject_name || !subject_code) {
-      console.log('🔍 DEBUG: Create interview subject validation failed');
-      console.log('🔍 DEBUG: Missing fields:', {
+      console.log('ðŸ” DEBUG: Create interview subject validation failed');
+      console.log('ðŸ” DEBUG: Missing fields:', {
         subject_name: !subject_name,
         subject_code: !subject_code
       });
@@ -77,7 +77,7 @@ router.post('/', requireAuth, async (req, res) => {
     
     const client = await withTransaction(async (client) => {
       try {
-        console.log('🔍 DEBUG: Creating interview subject with data:', {
+        console.log('ðŸ” DEBUG: Creating interview subject with data:', {
           subject_name,
           subject_code,
           is_active
@@ -96,19 +96,19 @@ router.post('/', requireAuth, async (req, res) => {
           is_active !== undefined ? is_active : true
         ];
         
-        console.log('🔍 DEBUG: Insert query:', insertQuery);
-        console.log('🔍 DEBUG: Insert values:', insertValues);
+        console.log('ðŸ” DEBUG: Insert query:', insertQuery);
+        console.log('ðŸ” DEBUG: Insert values:', insertValues);
         
         const result = await client.query(insertQuery, insertValues);
-        console.log('🔍 DEBUG: Interview subject created successfully:', result.rows[0]);
+        console.log('ðŸ” DEBUG: Interview subject created successfully:', result.rows[0]);
         
         return { success: true, data: result.rows[0] };
       } catch (error) {
-        console.error('🔍 DEBUG: Error creating interview subject:', error);
+        console.error('ðŸ” DEBUG: Error creating interview subject:', error);
         
         // Handle duplicate key constraints
         if (error.code === '23505') {
-          console.log('🔍 DEBUG: Duplicate key constraint violation');
+          console.log('ðŸ” DEBUG: Duplicate key constraint violation');
           if (error.constraint.includes('subject_name')) {
             return { success: false, message: 'Subject name already exists' };
           }
@@ -123,10 +123,10 @@ router.post('/', requireAuth, async (req, res) => {
     });
     
     if (client.success) {
-      console.log('🔍 DEBUG: Create interview subject transaction completed');
+      console.log('ðŸ” DEBUG: Create interview subject transaction completed');
       return sendSuccess(res, 201, 'Interview subject created successfully', client.data);
     } else {
-      console.log('🔍 DEBUG: Create interview subject failed:', client.message);
+      console.log('ðŸ” DEBUG: Create interview subject failed:', client.message);
       return sendError(res, 400, client.message || 'Failed to create interview subject');
     }
   } catch (error) {
@@ -138,9 +138,9 @@ router.post('/', requireAuth, async (req, res) => {
 // Update interview subject
 router.put('/:id', requireAuth, async (req, res) => {
   try {
-    console.log('🔍 DEBUG: Update interview subject request received');
-    console.log('🔍 DEBUG: Request params:', req.params);
-    console.log('🔍 DEBUG: Request body:', JSON.stringify(req.body, null, 2));
+    console.log('ðŸ” DEBUG: Update interview subject request received');
+    console.log('ðŸ” DEBUG: Request params:', req.params);
+    console.log('ðŸ” DEBUG: Request body:', JSON.stringify(req.body, null, 2));
     
     const { id } = req.params;
     const { 
@@ -151,18 +151,18 @@ router.put('/:id', requireAuth, async (req, res) => {
     
     // Validation
     if (!id || isNaN(parseInt(id))) {
-      console.log('🔍 DEBUG: Invalid subject ID:', id);
+      console.log('ðŸ” DEBUG: Invalid subject ID:', id);
       return sendError(res, 400, 'Invalid subject ID');
     }
     
     if (!subject_name || !subject_code) {
-      console.log('🔍 DEBUG: Update interview subject validation failed');
+      console.log('ðŸ” DEBUG: Update interview subject validation failed');
       return sendError(res, 400, 'Subject name and code are required');
     }
     
     const client = await withTransaction(async (client) => {
       try {
-        console.log('🔍 DEBUG: Updating interview subject with data:', {
+        console.log('ðŸ” DEBUG: Updating interview subject with data:', {
           id,
           subject_name,
           subject_code,
@@ -174,11 +174,11 @@ router.put('/:id', requireAuth, async (req, res) => {
         const checkResult = await client.query(checkQuery, [id]);
         
         if (checkResult.rowCount === 0) {
-          console.log('🔍 DEBUG: Interview subject not found:', id);
+          console.log('ðŸ” DEBUG: Interview subject not found:', id);
           return { success: false, message: 'Interview subject not found' };
         }
         
-        console.log('🔍 DEBUG: Interview subject exists:', checkResult.rows[0]);
+        console.log('ðŸ” DEBUG: Interview subject exists:', checkResult.rows[0]);
         
         const updateQuery = `
           UPDATE preformone_interview_subjects 
@@ -194,19 +194,19 @@ router.put('/:id', requireAuth, async (req, res) => {
           parseInt(id)
         ];
         
-        console.log('🔍 DEBUG: Update query:', updateQuery);
-        console.log('🔍 DEBUG: Update values:', updateValues);
+        console.log('ðŸ” DEBUG: Update query:', updateQuery);
+        console.log('ðŸ” DEBUG: Update values:', updateValues);
         
         const result = await client.query(updateQuery, updateValues);
-        console.log('🔍 DEBUG: Interview subject updated successfully:', result.rows[0]);
+        console.log('ðŸ” DEBUG: Interview subject updated successfully:', result.rows[0]);
         
         return { success: true, data: result.rows[0] };
       } catch (error) {
-        console.error('🔍 DEBUG: Error updating interview subject:', error);
+        console.error('ðŸ” DEBUG: Error updating interview subject:', error);
         
         // Handle duplicate key constraints
         if (error.code === '23505') {
-          console.log('🔍 DEBUG: Duplicate key constraint violation');
+          console.log('ðŸ” DEBUG: Duplicate key constraint violation');
           if (error.constraint.includes('subject_name')) {
             return { success: false, message: 'Subject name already exists' };
           }
@@ -221,10 +221,10 @@ router.put('/:id', requireAuth, async (req, res) => {
     });
     
     if (client.success) {
-      console.log('🔍 DEBUG: Update interview subject transaction completed');
+      console.log('ðŸ” DEBUG: Update interview subject transaction completed');
       return sendSuccess(res, 200, 'Interview subject updated successfully', client.data);
     } else {
-      console.log('🔍 DEBUG: Update interview subject failed:', client.message);
+      console.log('ðŸ” DEBUG: Update interview subject failed:', client.message);
       return sendError(res, 400, client.message || 'Failed to update interview subject');
     }
   } catch (error) {
@@ -236,37 +236,37 @@ router.put('/:id', requireAuth, async (req, res) => {
 // Delete interview subject
 router.delete('/:id', requireAuth, async (req, res) => {
   try {
-    console.log('🔍 DEBUG: Delete interview subject request received');
-    console.log('🔍 DEBUG: Request params:', req.params);
+    console.log('ðŸ” DEBUG: Delete interview subject request received');
+    console.log('ðŸ” DEBUG: Request params:', req.params);
     
     const { id } = req.params;
     
     // Validation
     if (!id || isNaN(parseInt(id))) {
-      console.log('🔍 DEBUG: Invalid subject ID:', id);
+      console.log('ðŸ” DEBUG: Invalid subject ID:', id);
       return sendError(res, 400, 'Invalid subject ID');
     }
     
     const client = await withTransaction(async (client) => {
       try {
-        console.log('🔍 DEBUG: Deleting interview subject with ID:', id);
+        console.log('ðŸ” DEBUG: Deleting interview subject with ID:', id);
         
         // First check if subject exists
         const checkQuery = 'SELECT * FROM preformone_interview_subjects WHERE id = $1';
         const checkResult = await client.query(checkQuery, [id]);
         
         if (checkResult.rowCount === 0) {
-          console.log('🔍 DEBUG: Interview subject not found:', id);
+          console.log('ðŸ” DEBUG: Interview subject not found:', id);
           return { success: false, message: 'Interview subject not found' };
         }
         
-        console.log('🔍 DEBUG: Interview subject to delete:', checkResult.rows[0]);
+        console.log('ðŸ” DEBUG: Interview subject to delete:', checkResult.rows[0]);
         
         const deleteQuery = 'DELETE FROM preformone_interview_subjects WHERE id = $1';
         const result = await client.query(deleteQuery, [id]);
         
-        console.log('🔍 DEBUG: Delete query successful');
-        console.log('🔍 DEBUG: Row count:', result.rowCount);
+        console.log('ðŸ” DEBUG: Delete query successful');
+        console.log('ðŸ” DEBUG: Row count:', result.rowCount);
         
         return { 
           success: true, 
@@ -274,16 +274,16 @@ router.delete('/:id', requireAuth, async (req, res) => {
           data: checkResult.rows[0] 
         };
       } catch (error) {
-        console.error('🔍 DEBUG: Error deleting interview subject:', error);
+        console.error('ðŸ” DEBUG: Error deleting interview subject:', error);
         throw error;
       }
     });
     
     if (client.success) {
-      console.log('🔍 DEBUG: Delete interview subject transaction completed');
+      console.log('ðŸ” DEBUG: Delete interview subject transaction completed');
       return sendSuccess(res, 200, client.message, client.data);
     } else {
-      console.log('🔍 DEBUG: Delete interview subject failed:', client.message);
+      console.log('ðŸ” DEBUG: Delete interview subject failed:', client.message);
       return sendError(res, 400, client.message || 'Failed to delete interview subject');
     }
   } catch (error) {
@@ -295,13 +295,13 @@ router.delete('/:id', requireAuth, async (req, res) => {
 // Export interview subjects to Excel
 router.get('/export', requireAuth, async (req, res) => {
   try {
-    console.log('🔍 DEBUG: Export interview subjects request received');
+    console.log('ðŸ” DEBUG: Export interview subjects request received');
     
     const result = await query(
       'SELECT subject_name, subject_code, is_active FROM preformone_interview_subjects ORDER BY subject_name'
     );
     
-    console.log('🔍 DEBUG: Interview subjects for export:', result.rowCount);
+    console.log('ðŸ” DEBUG: Interview subjects for export:', result.rowCount);
     
     // Create CSV content
     const csvContent = [
@@ -317,7 +317,7 @@ router.get('/export', requireAuth, async (req, res) => {
     res.setHeader('Content-Disposition', 'attachment; filename="preformone-interview-subjects.csv"');
     res.send(csvContent);
     
-    console.log('🔍 DEBUG: Interview subjects exported successfully');
+    console.log('ðŸ” DEBUG: Interview subjects exported successfully');
   } catch (error) {
     console.error('Error exporting interview subjects:', error);
     return sendError(res, 500, 'Failed to export interview subjects', error);

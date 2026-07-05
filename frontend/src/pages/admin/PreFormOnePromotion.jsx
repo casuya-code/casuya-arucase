@@ -274,7 +274,7 @@ const PreFormOnePromotion = () => {
               <div className="promotion-actions">
                 <div className="selection-actions">
                   <button 
-                    className="select-all-btn"
+                    className="excel-btn small"
                     onClick={handleSelectAll}
                   >
                     <i className="fas fa-check-square"></i>
@@ -286,7 +286,7 @@ const PreFormOnePromotion = () => {
                 </div>
                 <div className="promotion-buttons">
                   <button 
-                    className="promote-selected-btn"
+                    className="excel-btn primary"
                     onClick={() => handlePromotion(false)}
                     disabled={selectedStudents.length === 0 || promoting}
                   >
@@ -294,7 +294,7 @@ const PreFormOnePromotion = () => {
                     {promoting ? 'Promoting...' : 'Promote Selected'}
                   </button>
                   <button 
-                    className="promote-all-btn"
+                    className="excel-btn secondary"
                     onClick={() => handlePromotion(true)}
                     disabled={promoting}
                   >

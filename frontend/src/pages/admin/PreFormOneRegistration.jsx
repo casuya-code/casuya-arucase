@@ -507,7 +507,7 @@ const PreFormOneRegistration = () => {
                   <div className="form-actions">
                     <button
                       type="submit"
-                      className="form-btn primary"
+                      className="excel-btn primary"
                       disabled={loading}
                     >
                       {loading ? (
@@ -537,7 +537,7 @@ const PreFormOneRegistration = () => {
                           parish: '',
                           year: year
                         })}
-                        className="form-btn secondary"
+                        className="excel-btn secondary"
                         disabled={loading}
                       >
                         <i className="fas fa-times"></i>
@@ -607,14 +607,14 @@ const PreFormOneRegistration = () => {
                                 id: student.id // Store ID for update
                               });
                             }}
-                            className="form-btn primary small"
+                            className="excel-btn primary small"
                             title="Edit student"
                           >
                             <i className="fas fa-edit"></i>
                           </button>
                           <button 
                             onClick={() => handleDeleteStudent(student)}
-                            className="form-btn secondary small"
+                            className="excel-btn secondary small"
                             title="Delete student"
                           >
                             <i className="fas fa-trash"></i>
@@ -641,7 +641,7 @@ const PreFormOneRegistration = () => {
             <div className="bulk-upload-actions csv-bulk-actions">
               <button 
                 type="button"
-                className="form-btn primary" 
+                className="excel-btn primary" 
                 onClick={downloadCsvTemplate}
                 disabled={loading}
                 title={CSV_BULK_TITLES.template}
@@ -651,7 +651,7 @@ const PreFormOneRegistration = () => {
               </button>
               <button 
                 type="button"
-                className="form-btn secondary" 
+                className="excel-btn secondary" 
                 onClick={exportToCsv}
                 disabled={loading || students.length === 0}
                 title={CSV_BULK_TITLES.filled}

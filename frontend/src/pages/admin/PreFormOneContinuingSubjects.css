@@ -66,7 +66,7 @@
   flex-shrink: 0;
 }
 
-.continuing-subjects-page-header .header-buttons .form-btn {
+.continuing-subjects-page-header .header-buttons .excel-btn {
   min-height: clamp(40px, 5vw, 44px);
   align-items: center;
 }
@@ -318,7 +318,7 @@
   transform: none;
 }
 
-.continuing-subjects-page-container .form-btn {
+.continuing-subjects-page-container .excel-btn {
   padding: 12px 20px;
   border: none;
   cursor: pointer;
@@ -331,37 +331,37 @@
   border-radius: 0;
 }
 
-.continuing-subjects-page-container .form-btn:hover {
+.continuing-subjects-page-container .excel-btn:hover {
   transform: translateY(-1px);
 }
 
-.continuing-subjects-page-container .form-btn.primary {
+.continuing-subjects-page-container .excel-btn.primary {
   background: #ffffff;
   color: #111827;
   border: 1px solid #111827;
 }
 
-.continuing-subjects-page-container .form-btn.primary:hover {
+.continuing-subjects-page-container .excel-btn.primary:hover {
   background: #f9fafb;
 }
 
-.continuing-subjects-page-container .form-btn.secondary {
+.continuing-subjects-page-container .excel-btn.secondary {
   background: #ffffff;
   color: #374151;
   border: 1px solid #d1d5db;
 }
 
-.continuing-subjects-page-container .form-btn.secondary:hover {
+.continuing-subjects-page-container .excel-btn.secondary:hover {
   background: #f9fafb;
   border-color: #9ca3af;
 }
 
-.continuing-subjects-page-container .form-btn.small {
+.continuing-subjects-page-container .excel-btn.small {
   padding: 8px 12px;
   font-size: 12px;
 }
 
-.continuing-subjects-page-container .form-btn:disabled {
+.continuing-subjects-page-container .excel-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
   transform: none;
@@ -373,34 +373,6 @@
   text-align: center;
 }
 
-.continuing-subjects-page-container .back-button {
-  display: inline-flex;
-  align-items: center;
-  gap: clamp(0.25rem, 1vw, 0.5rem);
-  color: #64748b;
-  text-decoration: none;
-  font-size: clamp(0.75rem, 1.6vw, 0.875rem);
-  font-weight: 500;
-  padding: clamp(0.375rem, 1vw, 0.5rem) clamp(0.75rem, 2vw, 1rem);
-  border: 1px solid #e2e8f0;
-  background: #ffffff;
-  border-radius: 0;
-  transition: color 0.2s ease, border-color 0.2s ease, background 0.2s ease, transform 0.2s ease;
-  min-height: clamp(36px, 5vw, 40px);
-  box-sizing: border-box;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
-}
-
-.continuing-subjects-page-container .back-button:hover {
-  color: #1e293b;
-  border-color: #cbd5e1;
-  background: #f9fafb;
-  transform: translateY(-1px);
-}
-
-.continuing-subjects-page-container .back-button i {
-  font-size: clamp(0.65rem, 1.4vw, 0.8rem);
-}
 
 /* Responsive Design */
 @media (max-width: 768px) {
@@ -417,7 +389,7 @@
     justify-content: stretch;
   }
 
-  .continuing-subjects-page-header .header-buttons .form-btn {
+  .continuing-subjects-page-header .header-buttons .excel-btn {
     flex: 1 1 auto;
     justify-content: center;
     min-width: 0;

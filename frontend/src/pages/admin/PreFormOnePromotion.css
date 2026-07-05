@@ -24,28 +24,12 @@
   opacity: 1;
   font-size: 14px;
   color: #6b7280;
-}.promotion-page-container .back-button{
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 16px;
-  background: #ffffff;
-  color: #374151;
-  text-decoration: none;
-  border-radius: 0px;
-  border: 1px solid #d1d5db;
-  font-size: 14px;
-  transition: all 0.2s ease;
-}.promotion-page-container .back-button:hover{
-  background: #f9fafb;
-  border-color: #9ca3af;
-  transform: translateY(-1px);
 }.promotion-page-container .promotion-status-card{
-  background: white;
-  border-radius: 0px;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.06);
   margin-bottom: 30px;
-  border: 1px solid #e1e8ed;
 }.promotion-page-container .status-header{
   display: flex;
   align-items: center;
@@ -126,7 +110,7 @@
   display: flex;
   align-items: center;
   gap: 15px;
-}.promotion-page-container .select-all-btn{
+}.promotion-page-container .excel-btn{
   display: flex;
   align-items: center;
   gap: 8px;
@@ -139,7 +123,7 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.2s ease;
-}.promotion-page-container .select-all-btn:hover{
+}.promotion-page-container .excel-btn:hover{
   background: #f9fafb;
   transform: translateY(-1px);
 }.promotion-page-container .selection-count{
@@ -149,7 +133,7 @@
 }.promotion-page-container .promotion-buttons{
   display: flex;
   gap: 12px;
-}.promotion-page-container .promote-selected-btn, .promotion-page-container .promote-all-btn{
+}.promotion-page-container .excel-btn.primary, .promotion-page-container .excel-btn.secondary{
   display: flex;
   align-items: center;
   gap: 8px;
@@ -159,22 +143,22 @@
   font-weight: 500;
   cursor: pointer;
   transition: all 0.3s ease;
-}.promotion-page-container .promote-selected-btn{
+}.promotion-page-container .excel-btn.primary{
   background: #ffffff;
   color: #111827;
   border: 1px solid #111827;
-}.promotion-page-container .promote-selected-btn:hover:not(:disabled){
+}.promotion-page-container .excel-btn.primary:hover:not(:disabled){
   background: #f3f4f6;
   transform: translateY(-1px);
-}.promotion-page-container .promote-all-btn{
+}.promotion-page-container .excel-btn.secondary{
   background: #ffffff;
   color: #374151;
   border: 1px solid #d1d5db;
-}.promotion-page-container .promote-all-btn:hover:not(:disabled){
+}.promotion-page-container .excel-btn.secondary:hover:not(:disabled){
   background: #f9fafb;
   border-color: #9ca3af;
   transform: translateY(-1px);
-}.promotion-page-container .promote-selected-btn:disabled, .promotion-page-container .promote-all-btn:disabled{
+}.promotion-page-container .excel-btn:disabled{
   opacity: 0.6;
   cursor: not-allowed;
   transform: none;

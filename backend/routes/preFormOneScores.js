@@ -44,8 +44,6 @@ createScoresTable();
 
 // Helper function to calculate grade from score using system grade configuration
 const calculateGrade = (score) => {
-  console.log('🔍 DEBUG: Calculating grade for score:', score);
-  
   // Match interview/continuing results grading (average scale applied per subject)
   if (score >= 80) return 'A';
   if (score >= 70) return 'B';
@@ -97,8 +95,6 @@ router.get('/subject/:subjectId', requireAuth, async (req, res) => {
     const { subjectId } = req.params;
     const { type = 'interview' } = req.query;
     
-    console.log('🔍 DEBUG: Getting scores for subject:', subjectId, 'type:', type);
-    
     const result = await query(`
       SELECT 
         sc.*,
@@ -134,8 +130,6 @@ router.post('/', requireAuth, async (req, res) => {
     } = req.body;
     
     const created_by = req.user?.id || 1; // Default to user ID 1 if authentication fails
-    
-    console.log('🔍 DEBUG: Saving score:', { student_id, subject_id, subject_type, score, created_by });
     
     // Validate input
     if (!student_id || !subject_id || !subject_type || score === undefined) {
@@ -189,8 +183,6 @@ router.post('/bulk', requireAuth, async (req, res) => {
   try {
     const { scores } = req.body;
     const created_by = req.user?.id || 1; // Default to user ID 1 if authentication fails
-    
-    console.log('🔍 DEBUG: Bulk saving scores:', scores?.length, 'scores', 'created_by:', created_by);
     
     if (!scores || !Array.isArray(scores) || scores.length === 0) {
       return sendError(res, 400, 'Invalid scores data');
@@ -263,8 +255,6 @@ router.get('/stats/:subjectId', requireAuth, async (req, res) => {
       return sendError(res, 400, 'Valid year query parameter is required');
     }
 
-    console.log('🔍 DEBUG: Getting stats for subject:', subjectId, 'type:', type, 'year:', yearNum);
-
     const result = await query(`
       SELECT 
         COUNT(*) as total_students,
@@ -304,8 +294,6 @@ router.get('/export/:subjectId', requireAuth, async (req, res) => {
     if (!year || Number.isNaN(yearNum)) {
       return sendError(res, 400, 'Valid year query parameter is required');
     }
-
-    console.log('🔍 DEBUG: Exporting scores for subject:', subjectId, 'type:', type, 'year:', yearNum);
 
     const result = await query(`
       SELECT 

@@ -187,7 +187,7 @@ const PreFormOneInterviewSubjects = () => {
         <div className="header-buttons">
           <button 
             onClick={() => setShowAddForm(true)}
-            className="form-btn primary"
+            className="excel-btn primary"
             disabled={loading}
           >
             <i className="fas fa-plus"></i>
@@ -195,7 +195,7 @@ const PreFormOneInterviewSubjects = () => {
           </button>
           <button 
             onClick={exportToExcel}
-            className="form-btn secondary"
+            className="excel-btn secondary"
             disabled={loading}
           >
             <i className="fas fa-file-excel"></i>
@@ -213,7 +213,7 @@ const PreFormOneInterviewSubjects = () => {
             </h3>
             <button 
               onClick={resetForm}
-              className="form-btn secondary small"
+              className="excel-btn secondary small"
               disabled={loading}
             >
               <i className="fas fa-times"></i>
@@ -273,7 +273,7 @@ const PreFormOneInterviewSubjects = () => {
             <div className="form-actions">
               <button 
                 type="submit" 
-                className="form-btn primary"
+                className="excel-btn primary"
                 disabled={loading}
               >
                 <i className="fas fa-save"></i>
@@ -342,7 +342,7 @@ const PreFormOneInterviewSubjects = () => {
                       <div className="action-buttons">
                         <button 
                           onClick={() => handleToggleActive(subject)}
-                          className={`form-btn small ${subject.is_active ? 'secondary' : 'primary'}`}
+                          className={`excel-btn small ${subject.is_active ? 'secondary' : 'primary'}`}
                           title={subject.is_active ? 'Deactivate' : 'Activate'}
                           disabled={loading}
                         >
@@ -350,7 +350,7 @@ const PreFormOneInterviewSubjects = () => {
                         </button>
                         <button 
                           onClick={() => handleEdit(subject)}
-                          className="form-btn primary small"
+                          className="excel-btn primary small"
                           title="Edit subject"
                           disabled={loading}
                         >
@@ -358,7 +358,7 @@ const PreFormOneInterviewSubjects = () => {
                         </button>
                         <button 
                           onClick={() => handleDelete(subject)}
-                          className="form-btn secondary small"
+                          className="excel-btn secondary small"
                           title="Delete subject"
                           disabled={loading}
                         >

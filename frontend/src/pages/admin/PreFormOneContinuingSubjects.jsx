@@ -189,7 +189,7 @@ const PreFormOneContinuingSubjects = () => {
         <div className="header-buttons">
           <button 
             onClick={() => setShowAddForm(true)}
-            className="form-btn primary"
+            className="excel-btn primary"
             disabled={loading}
           >
             <i className="fas fa-plus"></i>
@@ -197,7 +197,7 @@ const PreFormOneContinuingSubjects = () => {
           </button>
           <button 
             onClick={exportToExcel}
-            className="form-btn secondary"
+            className="excel-btn secondary"
             disabled={loading}
           >
             <i className="fas fa-file-excel"></i>
@@ -215,7 +215,7 @@ const PreFormOneContinuingSubjects = () => {
             </h3>
             <button 
               onClick={resetForm}
-              className="form-btn secondary small"
+              className="excel-btn secondary small"
               disabled={loading}
             >
               <i className="fas fa-times"></i>
@@ -275,7 +275,7 @@ const PreFormOneContinuingSubjects = () => {
             <div className="form-actions">
               <button 
                 type="submit" 
-                className="form-btn primary"
+                className="excel-btn primary"
                 disabled={loading}
               >
                 <i className="fas fa-save"></i>
@@ -284,7 +284,7 @@ const PreFormOneContinuingSubjects = () => {
               <button 
                 type="button" 
                 onClick={resetForm}
-                className="form-btn secondary"
+                className="excel-btn secondary"
                 disabled={loading}
               >
                 <i className="fas fa-times"></i>

@@ -1,4 +1,4 @@
-/**
+﻿/**
  * Pre-Form One Continuing Subjects API Routes
  * Handles CRUD operations for continuing subjects management
  */
@@ -13,17 +13,17 @@ const { requireAuth } = require('../middleware/auth');
 // Get all continuing subjects
 router.get('/', requireAuth, async (req, res) => {
   try {
-    console.log('🔍 DEBUG: Get continuing subjects request received');
+    console.log('ðŸ” DEBUG: Get continuing subjects request received');
     
     const result = await query(
       'SELECT * FROM preformone_continuing_subjects ORDER BY subject_name'
     );
     
-    console.log('🔍 DEBUG: Continuing subjects retrieved successfully:', result.rowCount);
+    console.log('ðŸ” DEBUG: Continuing subjects retrieved successfully:', result.rowCount);
     
     return sendSuccess(res, 200, 'Continuing subjects retrieved successfully', result.rows);
   } catch (error) {
-    console.error('🔍 DEBUG: Error fetching continuing subjects:', error);
+    console.error('ðŸ” DEBUG: Error fetching continuing subjects:', error);
     return sendError(res, 500, 'Failed to fetch continuing subjects', error);
   }
 });
@@ -31,14 +31,14 @@ router.get('/', requireAuth, async (req, res) => {
 // Get continuing subject by ID
 router.get('/:id', requireAuth, async (req, res) => {
   try {
-    console.log('🔍 DEBUG: Get continuing subject by ID request received');
-    console.log('🔍 DEBUG: Request params:', req.params);
+    console.log('ðŸ” DEBUG: Get continuing subject by ID request received');
+    console.log('ðŸ” DEBUG: Request params:', req.params);
     
     const { id } = req.params;
     
     // Validation
     if (!id || isNaN(parseInt(id))) {
-      console.log('🔍 DEBUG: Invalid subject ID:', id);
+      console.log('ðŸ” DEBUG: Invalid subject ID:', id);
       return sendError(res, 400, 'Invalid subject ID');
     }
     
@@ -47,16 +47,16 @@ router.get('/:id', requireAuth, async (req, res) => {
       [id]
     );
     
-    console.log('🔍 DEBUG: Continuing subject retrieved successfully:', result.rowCount);
+    console.log('ðŸ” DEBUG: Continuing subject retrieved successfully:', result.rowCount);
     
     if (result.rowCount === 0) {
-      console.log('🔍 DEBUG: Continuing subject not found:', id);
+      console.log('ðŸ” DEBUG: Continuing subject not found:', id);
       return sendError(res, 404, 'Continuing subject not found');
     }
     
     return sendSuccess(res, 200, 'Continuing subject retrieved successfully', result.rows[0]);
   } catch (error) {
-    console.error('🔍 DEBUG: Error fetching continuing subject:', error);
+    console.error('ðŸ” DEBUG: Error fetching continuing subject:', error);
     return sendError(res, 500, 'Failed to fetch continuing subject', error);
   }
 });
@@ -64,8 +64,8 @@ router.get('/:id', requireAuth, async (req, res) => {
 // Create new continuing subject
 router.post('/', requireAuth, async (req, res) => {
   try {
-    console.log('🔍 DEBUG: Create continuing subject request received');
-    console.log('🔍 DEBUG: Request body:', JSON.stringify(req.body, null, 2));
+    console.log('ðŸ” DEBUG: Create continuing subject request received');
+    console.log('ðŸ” DEBUG: Request body:', JSON.stringify(req.body, null, 2));
     
     const { 
       subject_name, 
@@ -75,8 +75,8 @@ router.post('/', requireAuth, async (req, res) => {
     
     // Validation
     if (!subject_name || !subject_code) {
-      console.log('🔍 DEBUG: Create continuing subject validation failed');
-      console.log('🔍 DEBUG: Missing fields:', {
+      console.log('ðŸ” DEBUG: Create continuing subject validation failed');
+      console.log('ðŸ” DEBUG: Missing fields:', {
         subject_name: !subject_name,
         subject_code: !subject_code
       });
@@ -85,7 +85,7 @@ router.post('/', requireAuth, async (req, res) => {
     
     const client = await withTransaction(async (client) => {
       try {
-        console.log('🔍 DEBUG: Creating continuing subject with data:', {
+        console.log('ðŸ” DEBUG: Creating continuing subject with data:', {
           subject_name,
           subject_code,
           is_active
@@ -104,20 +104,20 @@ router.post('/', requireAuth, async (req, res) => {
           is_active !== undefined ? is_active : true
         ];
         
-        console.log('🔍 DEBUG: Insert query:', insertQuery);
-        console.log('🔍 DEBUG: Insert values:', insertValues);
+        console.log('ðŸ” DEBUG: Insert query:', insertQuery);
+        console.log('ðŸ” DEBUG: Insert values:', insertValues);
         
         const result = await client.query(insertQuery, insertValues);
-        console.log('🔍 DEBUG: Continuing subject created successfully:', result.rows[0]);
+        console.log('ðŸ” DEBUG: Continuing subject created successfully:', result.rows[0]);
         
         return { success: true, data: result.rows[0] };
       } catch (error) {
-        console.error('🔍 DEBUG: Error creating continuing subject:', error);
+        console.error('ðŸ” DEBUG: Error creating continuing subject:', error);
         
         // Handle duplicate key constraints
         if (error.code === '23505') {
-          console.log('🔍 DEBUG: Duplicate key constraint violation');
-          console.log('🔍 DEBUG: Error constraint:', error.constraint);
+          console.log('ðŸ” DEBUG: Duplicate key constraint violation');
+          console.log('ðŸ” DEBUG: Error constraint:', error.constraint);
           if (error.constraint && error.constraint.includes('subject_name')) {
             return { success: false, message: 'Subject name already exists' };
           }
@@ -132,14 +132,14 @@ router.post('/', requireAuth, async (req, res) => {
     });
     
     if (client.success) {
-      console.log('🔍 DEBUG: Create continuing subject transaction completed');
+      console.log('ðŸ” DEBUG: Create continuing subject transaction completed');
       return sendSuccess(res, 201, 'Continuing subject created successfully', client.data);
     } else {
-      console.log('🔍 DEBUG: Create continuing subject failed:', client.message);
+      console.log('ðŸ” DEBUG: Create continuing subject failed:', client.message);
       return sendError(res, 400, client.message || 'Failed to create continuing subject');
     }
   } catch (error) {
-    console.error('🔍 DEBUG: Error in create continuing subject route:', error);
+    console.error('ðŸ” DEBUG: Error in create continuing subject route:', error);
     return sendError(res, 500, 'Failed to create continuing subject', error);
   }
 });
@@ -147,9 +147,9 @@ router.post('/', requireAuth, async (req, res) => {
 // Update continuing subject
 router.put('/:id', requireAuth, async (req, res) => {
   try {
-    console.log('🔍 DEBUG: Update continuing subject request received');
-    console.log('🔍 DEBUG: Request params:', req.params);
-    console.log('🔍 DEBUG: Request body:', JSON.stringify(req.body, null, 2));
+    console.log('ðŸ” DEBUG: Update continuing subject request received');
+    console.log('ðŸ” DEBUG: Request params:', req.params);
+    console.log('ðŸ” DEBUG: Request body:', JSON.stringify(req.body, null, 2));
     
     const { id } = req.params;
     const { 
@@ -160,13 +160,13 @@ router.put('/:id', requireAuth, async (req, res) => {
     
     // Validation
     if (!id || isNaN(parseInt(id))) {
-      console.log('🔍 DEBUG: Invalid subject ID:', id);
+      console.log('ðŸ” DEBUG: Invalid subject ID:', id);
       return sendError(res, 400, 'Invalid subject ID');
     }
     
     if (!subject_name || !subject_code) {
-      console.log('🔍 DEBUG: Update continuing subject validation failed');
-      console.log('🔍 DEBUG: Missing fields:', {
+      console.log('ðŸ” DEBUG: Update continuing subject validation failed');
+      console.log('ðŸ” DEBUG: Missing fields:', {
         subject_name: !subject_name,
         subject_code: !subject_code
       });
@@ -175,7 +175,7 @@ router.put('/:id', requireAuth, async (req, res) => {
     
     const client = await withTransaction(async (client) => {
       try {
-        console.log('🔍 DEBUG: Updating continuing subject with data:', {
+        console.log('ðŸ” DEBUG: Updating continuing subject with data:', {
           id,
           subject_name,
           subject_code,
@@ -187,11 +187,11 @@ router.put('/:id', requireAuth, async (req, res) => {
         const checkResult = await client.query(checkQuery, [id]);
         
         if (checkResult.rowCount === 0) {
-          console.log('🔍 DEBUG: Continuing subject not found:', id);
+          console.log('ðŸ” DEBUG: Continuing subject not found:', id);
           return { success: false, message: 'Continuing subject not found' };
         }
         
-        console.log('🔍 DEBUG: Continuing subject exists:', checkResult.rows[0]);
+        console.log('ðŸ” DEBUG: Continuing subject exists:', checkResult.rows[0]);
         
         const updateQuery = `
           UPDATE preformone_continuing_subjects 
@@ -207,20 +207,20 @@ router.put('/:id', requireAuth, async (req, res) => {
           parseInt(id)
         ];
         
-        console.log('🔍 DEBUG: Update query:', updateQuery);
-        console.log('🔍 DEBUG: Update values:', updateValues);
+        console.log('ðŸ” DEBUG: Update query:', updateQuery);
+        console.log('ðŸ” DEBUG: Update values:', updateValues);
         
         const result = await client.query(updateQuery, updateValues);
-        console.log('🔍 DEBUG: Continuing subject updated successfully:', result.rows[0]);
+        console.log('ðŸ” DEBUG: Continuing subject updated successfully:', result.rows[0]);
         
         return { success: true, data: result.rows[0] };
       } catch (error) {
-        console.error('🔍 DEBUG: Error updating continuing subject:', error);
+        console.error('ðŸ” DEBUG: Error updating continuing subject:', error);
         
         // Handle duplicate key constraints
         if (error.code === '23505') {
-          console.log('🔍 DEBUG: Duplicate key constraint violation');
-          console.log('🔍 DEBUG: Error constraint:', error.constraint);
+          console.log('ðŸ” DEBUG: Duplicate key constraint violation');
+          console.log('ðŸ” DEBUG: Error constraint:', error.constraint);
           if (error.constraint && error.constraint.includes('subject_name')) {
             return { success: false, message: 'Subject name already exists' };
           }
@@ -235,14 +235,14 @@ router.put('/:id', requireAuth, async (req, res) => {
     });
     
     if (client.success) {
-      console.log('🔍 DEBUG: Update continuing subject transaction completed');
+      console.log('ðŸ” DEBUG: Update continuing subject transaction completed');
       return sendSuccess(res, 200, 'Continuing subject updated successfully', client.data);
     } else {
-      console.log('🔍 DEBUG: Update continuing subject failed:', client.message);
+      console.log('ðŸ” DEBUG: Update continuing subject failed:', client.message);
       return sendError(res, 400, client.message || 'Failed to update continuing subject');
     }
   } catch (error) {
-    console.error('🔍 DEBUG: Error in update continuing subject route:', error);
+    console.error('ðŸ” DEBUG: Error in update continuing subject route:', error);
     return sendError(res, 500, 'Failed to update continuing subject', error);
   }
 });
@@ -250,51 +250,51 @@ router.put('/:id', requireAuth, async (req, res) => {
 // Delete continuing subject
 router.delete('/:id', requireAuth, async (req, res) => {
   try {
-    console.log('🔍 DEBUG: Delete continuing subject request received');
-    console.log('🔍 DEBUG: Request params:', req.params);
+    console.log('ðŸ” DEBUG: Delete continuing subject request received');
+    console.log('ðŸ” DEBUG: Request params:', req.params);
     
     const { id } = req.params;
     
     // Validation
     if (!id || isNaN(parseInt(id))) {
-      console.log('🔍 DEBUG: Invalid subject ID:', id);
+      console.log('ðŸ” DEBUG: Invalid subject ID:', id);
       return sendError(res, 400, 'Invalid subject ID');
     }
     
     const client = await withTransaction(async (client) => {
       try {
-        console.log('🔍 DEBUG: Deleting continuing subject with ID:', id);
+        console.log('ðŸ” DEBUG: Deleting continuing subject with ID:', id);
         
         // First check if subject exists
         const checkQuery = 'SELECT * FROM preformone_continuing_subjects WHERE id = $1';
         const checkResult = await client.query(checkQuery, [id]);
         
         if (checkResult.rowCount === 0) {
-          console.log('🔍 DEBUG: Continuing subject not found:', id);
+          console.log('ðŸ” DEBUG: Continuing subject not found:', id);
           return { success: false, message: 'Continuing subject not found' };
         }
         
         const deleteQuery = 'DELETE FROM preformone_continuing_subjects WHERE id = $1';
         const deleteResult = await client.query(deleteQuery, [id]);
         
-        console.log('🔍 DEBUG: Continuing subject deleted successfully:', deleteResult.rowCount);
+        console.log('ðŸ” DEBUG: Continuing subject deleted successfully:', deleteResult.rowCount);
         
         return { success: true, message: 'Continuing subject deleted successfully' };
       } catch (error) {
-        console.error('🔍 DEBUG: Error deleting continuing subject:', error);
+        console.error('ðŸ” DEBUG: Error deleting continuing subject:', error);
         return { success: false, message: error.message || 'Failed to delete continuing subject' };
       }
     });
     
     if (client.success) {
-      console.log('🔍 DEBUG: Delete continuing subject transaction completed');
+      console.log('ðŸ” DEBUG: Delete continuing subject transaction completed');
       return sendSuccess(res, 200, 'Continuing subject deleted successfully');
     } else {
-      console.log('🔍 DEBUG: Delete continuing subject failed:', client.message);
+      console.log('ðŸ” DEBUG: Delete continuing subject failed:', client.message);
       return sendError(res, 400, client.message || 'Failed to delete continuing subject');
     }
   } catch (error) {
-    console.error('🔍 DEBUG: Error in delete continuing subject route:', error);
+    console.error('ðŸ” DEBUG: Error in delete continuing subject route:', error);
     return sendError(res, 500, 'Failed to delete continuing subject', error);
   }
 });
@@ -302,13 +302,13 @@ router.delete('/:id', requireAuth, async (req, res) => {
 // Export continuing subjects to Excel
 router.get('/export', requireAuth, async (req, res) => {
   try {
-    console.log('🔍 DEBUG: Export continuing subjects request received');
+    console.log('ðŸ” DEBUG: Export continuing subjects request received');
     
     const result = await query(
       'SELECT subject_name, subject_code, is_active FROM preformone_continuing_subjects ORDER BY subject_name'
     );
     
-    console.log('🔍 DEBUG: Continuing subjects for export:', result.rowCount);
+    console.log('ðŸ” DEBUG: Continuing subjects for export:', result.rowCount);
     
     // Create CSV content
     const csvContent = [
@@ -324,9 +324,9 @@ router.get('/export', requireAuth, async (req, res) => {
     res.setHeader('Content-Disposition', 'attachment; filename="preformone-continuing-subjects.csv"');
     res.send(csvContent);
     
-    console.log('🔍 DEBUG: Continuing subjects exported successfully');
+    console.log('ðŸ” DEBUG: Continuing subjects exported successfully');
   } catch (error) {
-    console.error('🔍 DEBUG: Error exporting continuing subjects:', error);
+    console.error('ðŸ” DEBUG: Error exporting continuing subjects:', error);
     return sendError(res, 500, 'Failed to export continuing subjects', error);
   }
 });

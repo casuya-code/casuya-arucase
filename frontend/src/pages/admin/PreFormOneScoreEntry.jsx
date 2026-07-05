@@ -979,7 +979,7 @@ const PreFormOneScoreEntry = () => {
           Pre-Form One Score Entry
         </h2>
         <div className="header-info">
-          <span className="year-badge">2025</span>
+          <span className="year-badge">{year}</span>
           <span className="status-badge active">Active</span>
         </div>
       </div>
@@ -987,11 +987,11 @@ const PreFormOneScoreEntry = () => {
       {/* Breadcrumb Navigation */}
       <div className="breadcrumb-navigation">
         {getBreadcrumbs().map((crumb, index) => (
-          <span key={index} className="breadcrumb-item">
+          <span key={crumb.path} className="breadcrumb-item">
             {index > 0 && <i className="fas fa-chevron-right"></i>}
-            <a href={crumb.path} className="breadcrumb-link">
+            <Link to={crumb.path} className="breadcrumb-link">
               {crumb.label}
-            </a>
+            </Link>
           </span>
         ))}
       </div>
@@ -1051,7 +1051,7 @@ const PreFormOneScoreEntry = () => {
         {selectedCard && !selectedSubject && renderSubjectCards(selectedCard === 'interview' ? interviewSubjects : continuingSubjects, selectedCard === 'interview' ? 'Interview Subjects' : 'Continuing Subjects')}
 
         {/* Student Score Entry - Show when subject selected */}
-        {isSubjectDetail && selectedSubject && renderStudentScoreEntry(selectedSubject, selectedCard, preFormOneStudents, loading, scoreStats, paginatedStudents, handleBack, saveAllScores, exportScores, renderVirtualItem)}
+        {isSubjectDetail && selectedSubject && renderStudentScoreEntry()}
 
         {/* Loading State */}
         {loading && (

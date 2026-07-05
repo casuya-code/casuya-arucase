@@ -391,14 +391,14 @@ const PreFormOneParishes = () => {
                 </div>
                 
                 <div className="form-field form-actions-field">
-                  <button type="submit" className="form-btn primary">
+                  <button type="submit" className="excel-btn primary">
                     <i className="fas fa-save"></i>
                     <span className="btn-text">Save Parish</span>
                   </button>
                 </div>
                 
                 <div className="form-field form-actions-field">
-                  <button type="button" onClick={handleCancelEdit} className="form-btn secondary">
+                  <button type="button" onClick={handleCancelEdit} className="excel-btn secondary">
                     <i className="fas fa-times"></i>
                     <span className="btn-text">Cancel</span>
                   </button>
@@ -420,7 +420,7 @@ const PreFormOneParishes = () => {
             <div className="bulk-upload-actions csv-bulk-actions">
               <button 
                 type="button"
-                className="form-btn primary" 
+                className="excel-btn primary" 
                 onClick={downloadCsvTemplate}
                 disabled={loading}
                 title={CSV_BULK_TITLES.template}
@@ -430,7 +430,7 @@ const PreFormOneParishes = () => {
               </button>
               <button 
                 type="button"
-                className="form-btn secondary" 
+                className="excel-btn secondary" 
                 onClick={exportToCsv}
                 disabled={loading || students.length === 0}
                 title={CSV_BULK_TITLES.filled}
@@ -500,7 +500,7 @@ const PreFormOneParishes = () => {
               </select>
               <button
                 onClick={() => setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc')}
-                className="form-btn secondary"
+                className="excel-btn secondary"
               >
                 <i className={`fas fa-sort-${sortOrder === 'asc' ? 'up' : 'down'}`}></i>
                 <span className="btn-text">{sortOrder === 'asc' ? 'A-Z' : 'Z-A'}</span>
@@ -551,14 +551,14 @@ const PreFormOneParishes = () => {
                         <div className="action-buttons">
                           <button 
                             onClick={() => handleEditStudent(student)}
-                            className="form-btn primary small"
+                            className="excel-btn primary small"
                             title="Edit parish"
                           >
                             <i className="fas fa-edit"></i>
                           </button>
                           <button 
                             onClick={() => handleDeleteStudent(student.id)}
-                            className="form-btn secondary small"
+                            className="excel-btn secondary small"
                             title="Remove parish assignment"
                           >
                             <i className="fas fa-times"></i>
