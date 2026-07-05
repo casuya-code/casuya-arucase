@@ -1,7 +1,7 @@
 import { useState, useCallback } from 'react';
 
 const SOUNDS = {
-  login: '/sounds/login.wav',
+  login: '/sounds/login.mp3',
   logout: '/sounds/logout.mp3',
   success: '/sounds/success.mp3',
 };

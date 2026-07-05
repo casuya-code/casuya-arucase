@@ -5,6 +5,7 @@
   margin: 0;
   padding: 0;
   box-sizing: border-box;
+  -webkit-tap-highlight-color: transparent;
 }
 
 /* Respect user's font size preference from OS/browser (Settings > Accessibility > Text size) */
@@ -68,6 +69,7 @@ body {
   z-index: 9990;
   -webkit-backface-visibility: hidden;
   backface-visibility: hidden;
+  overscroll-behavior: contain;
 }
 #fixed-ui-root > * {
   pointer-events: auto;
@@ -714,26 +716,26 @@ code {
 @media (hover: none) and (pointer: coarse) {
   .btn {
     min-height: 48px;
-    min-width: 48px; /* Ensure buttons are large enough for touch */
+    min-width: 48px;
     padding: 0.75rem 1.5rem;
   }
 
-  .btn:active {
+  .btn:active,
+  button.excel-btn:active,
+  button:active {
     transform: scale(0.98);
     opacity: 0.9;
   }
 
-  /* Ensure all interactive elements are touch-friendly */
   a:not(.public-prev-next-nav__btn),
   button,
   input,
   select,
   textarea {
     min-height: 44px;
-    touch-action: manipulation; /* Disable double-tap zoom */
+    touch-action: manipulation;
   }
 
-  /* Let PublicHeader.css control pill/dropdown heights (avoid squashing on phones) */
   .header .navigation .nav-pill,
   .header .navigation button.nav-pill,
   .header .navigation .nav-links .nav-category-dropdown a {
@@ -745,12 +747,10 @@ code {
     touch-action: manipulation;
   }
 
-  /* Better tap targets for links (exclude header nav dropdown — has its own padding) */
   a:not(.public-prev-next-nav__btn):not(.header .nav-links .nav-category-dropdown a) {
     padding: 0.5rem 0.25rem;
   }
-  
-  /* Improve form inputs on touch devices - 1rem respects user font size, 16px minimum prevents iOS zoom */
+
   input[type="text"],
   input[type="email"],
   input[type="tel"],
@@ -759,14 +759,18 @@ code {
   textarea,
   select {
     min-height: 48px;
-    font-size: max(1rem, 16px); /* Scale with user pref; 16px min prevents iOS zoom */
+    font-size: max(1rem, 16px);
     padding: 0.75rem;
   }
-  
-  /* Better spacing for touch interactions */
+
   .form-group {
     margin-bottom: 1.25rem;
   }
+}
+
+/* Disable iOS callout (copy/paste menu) on tap-able elements */
+a, button, .btn, .excel-btn {
+  -webkit-touch-callout: none;
 }
 
 /* Allow browser to scale text per user's font size preference (accessibility) */

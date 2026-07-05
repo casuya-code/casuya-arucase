@@ -134,7 +134,7 @@ export default defineConfig({
     // Hidden maps: generated at build for CI/upload; no sourceMappingURL in shipped JS
     sourcemap: 'hidden',
     minify: 'esbuild',
-    chunkSizeWarningLimit: 2500,
+    chunkSizeWarningLimit: 500,
     rollupOptions: {
       output: {
         sourcemapExcludeSources: false,
