@@ -11,7 +11,7 @@ import AdminLayout from '../../components/layout/AdminLayout';
 import { studentsAPI } from '../../services/students';
 import api from '../../services/api';
 import { resolveStaticUrl } from '../../utils/backendUrl';
-import { getCurrentTerm, requiresSpecialAcademicYearLogic, normalizeFormLevel } from '../../utils/academicYearUtils';
+import { requiresSpecialAcademicYearLogic, normalizeFormLevel } from '../../utils/academicYearUtils';
 import { useFormVVITermGuard } from '../../hooks/useFormVVITermGuard';
 import './PhotoManagement.css';
 
@@ -78,10 +78,6 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
     term,
     redirectTo: photoTermsPath,
   });
-
-  if (isFormVOrVI && term && !termPairValid) {
-    return null;
-  }
 
   // Use calendar year directly for Form V/VI (no academic year conversion)
   // Form V First Term (Jul-Dec 2025) -> year 2025
@@ -298,6 +294,10 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
     },
   });
 
+  if (isFormVOrVI && term && !termPairValid) {
+    return null;
+  }
+
   const openPhotoModal = (student) => {
     // Get student index based on sorted position
     const studentIndex = getStudentIndex(student);
@@ -469,7 +469,7 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
     return photosData[studentIndex]?.photo_filename;
   };
 
-  const handleImageError = (photoFilename, studentIndex) => {
+  const handleImageError = (photoFilename, _studentIndex) => {
     // Track failed images to prevent repeated attempts
     setFailedImages(prev => new Set([...prev, photoFilename]));
     // Silently handle the error - the placeholder will show
@@ -570,7 +570,7 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
                 )}
                 {!hasValidParams && (
                   <p style={{ fontSize: '0.85rem', color: '#f59e0b', marginTop: '0.5rem', fontFamily: 'monospace' }}>
-                    Invalid parameters - Level: "{normalizedLevel}", Stream: "{stream}", Year: {yearNum}
+                    Invalid parameters - Level: {'"'}{normalizedLevel}{'"'}, Stream: {'"'}{stream}{'"'}, Year: {yearNum}
                   </p>
                 )}
                 <p style={{ fontSize: '0.9rem', color: '#6b7280', marginTop: '0.5rem' }}>
@@ -770,7 +770,7 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
                       {!cameraStream && !capturedPhoto && (
                         <div className="camera-placeholder">
                           <i className="fas fa-camera"></i>
-                          <p>Click "Start Camera" to take a photo</p>
+                          <p>Click &quot;Start Camera&quot; to take a photo</p>
                         </div>
                       )}
                     </div>

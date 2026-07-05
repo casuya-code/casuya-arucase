@@ -15,7 +15,7 @@ const MonthlyResultsMonthSelection = ({ formLevel }) => {
     'June', 'July', 'August', 'September', 'October', 'November'
   ];
 
-  const getBackPath = () => {
+  const _getBackPath = () => {
     const normalizedLevel = formLevel
       ? formLevel.split('-').map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
       : '';

@@ -9,7 +9,7 @@ import { CSV_BULK_LABELS, CSV_BULK_TITLES } from '../../constants/csvBulkActions
 const PreFormOneParishes = () => {
   const { year } = useParams();
   const [students, setStudents] = useState([]);
-  const [csvData, setCsvData] = useState('');
+  const [_csvData, _setCsvData] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterParish, setFilterParish] = useState('all');
   const [sortBy, setSortBy] = useState('admission_number');
@@ -39,7 +39,7 @@ const PreFormOneParishes = () => {
   }, [year]);
 
   // Generate admission number
-  const generateAdmissionNumber = (serialNumber) => {
+  const _generateAdmissionNumber = (serialNumber) => {
     return `789ABC${serialNumber}`;
   };
 
@@ -204,7 +204,7 @@ const PreFormOneParishes = () => {
       const updates = [];
       const seenSerialNumbers = new Set();
 
-      dataLines.forEach((line, index) => {
+      dataLines.forEach((line, _index) => {
         const values = parseCSVLine(line);
         let serialNumber = '';
         let parish = '';
@@ -312,7 +312,7 @@ const PreFormOneParishes = () => {
 
   
   // Clear all students
-  const clearAllStudents = () => {
+  const _clearAllStudents = () => {
     if (window.confirm('Are you sure you want to clear all registered students? This action cannot be undone.')) {
       setStudents([]);
       toast.success('All students cleared successfully');

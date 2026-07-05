@@ -41,7 +41,7 @@ const DTAMonitor = () => {
   const isAdmin = isAdminLike();
 
   // Fetch statistics
-  const { data: statsData, isLoading: statsLoading } = useQuery({
+  const { data: statsData, isLoading: _statsLoading } = useQuery({
     queryKey: ['dta-statistics'],
     queryFn: async () => {
       const res = await api.get('/dta-monitor/statistics');

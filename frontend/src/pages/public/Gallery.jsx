@@ -6,7 +6,6 @@ import { useQuery } from '@tanstack/react-query';
 import { LazyLoadImage } from 'react-lazy-load-image-component';
 import PublicLayout from '../../components/layout/PublicLayout';
 import { publicAPI } from '../../services/public';
-import Loading from '../../components/common/Loading';
 import SkeletonLoader from '../../components/common/SkeletonLoader';
 import { getImageLoadingStrategy, getNetworkInfo } from '../../utils/networkUtils';
 import { resolveStaticUrl } from '../../utils/backendUrl';

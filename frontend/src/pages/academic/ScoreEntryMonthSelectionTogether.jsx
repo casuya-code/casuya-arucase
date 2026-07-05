@@ -17,7 +17,7 @@ const ScoreEntryMonthSelectionTogether = () => {
   const { getAllowedScoreEntryMonths } = useAuth();
 
   // Normalize form level
-  const normalizedForm = formLevel
+  const _normalizedForm = formLevel
     ? formLevel.split('-').map(w => w.toUpperCase()).join(' ')
     : '';
 
@@ -29,7 +29,7 @@ const ScoreEntryMonthSelectionTogether = () => {
   const allMonths = allowedMonths === null ? FORM_VVI_MONTHS : FORM_VVI_MONTHS.filter((m) => allowedMonths.includes(m));
 
   const getBackPath = () => {
-    const encodedSubjectCode = encodeURIComponent(subjectCode);
+    const _encodedSubjectCode = encodeURIComponent(subjectCode);
     return `/admin/score-entry/${formLevel}/together/year/${year}/subjects`;
   };
 

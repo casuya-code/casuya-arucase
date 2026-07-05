@@ -272,7 +272,7 @@
   inset: var(--photo-inset);
   border-radius: 0;
   border: 0;
-  object-fit: cover;
+  object-fit: contain;
   display: block;
   background: #ffffff;
   box-shadow: inset 0 0 0 1px #cbd5e1;

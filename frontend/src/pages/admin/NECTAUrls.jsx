@@ -200,7 +200,7 @@ const NECTAUrls = () => {
   }, {});
 
   // Helper to check if URL exists for a year
-  const getUrlForYear = (examType, year) => {
+  const _getUrlForYear = (examType, year) => {
     return groupedUrls[examType]?.[year] || null;
   };
 

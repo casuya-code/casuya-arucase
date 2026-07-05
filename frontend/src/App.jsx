@@ -11,7 +11,6 @@ import PwaInstallBanner from './components/common/PwaInstallBanner';
 import PublicChatbotLayer from './components/public/PublicChatbotLayer';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import Loading from './components/common/Loading';
-import logger from './utils/logger';
 /** Split modules + legacy `student_registration` for registration routes */
 const REGISTRATION_MODULES_FORM_I_IV = ['student_registration_form_i_iv', 'student_registration'];
 const REGISTRATION_MODULES_FORM_V_VI = ['student_registration_form_v_vi', 'student_registration'];

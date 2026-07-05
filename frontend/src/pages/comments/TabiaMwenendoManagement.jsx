@@ -432,7 +432,7 @@ const TabiaMwenendoManagement = ({ formLevel }) => {
           if (skipped > 0) {
             const classSample = students.slice(0, 5).map((s) => String(s.adm_no).trim());
             console.warn('[Tabia CSV] No valid rows. Sample CSV AdmNumber values:', skippedAdmNos, 'Sample class adm_no:', classSample);
-            const ctx = `${level} ${stream} ${year} ${term}`;
+            const ctx = `${formLevel} ${stream} ${year} ${term}`;
             toast.warning(`No valid rows: ${skipped} row(s) had AdmNumber not in this class (${ctx}). Use the template downloaded from this page.`);
           } else {
             toast.warning('No valid grades in CSV. Use columns 901–911 with values A, B, C, D, or F.');

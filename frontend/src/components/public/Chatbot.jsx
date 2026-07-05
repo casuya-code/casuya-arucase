@@ -21,7 +21,8 @@ import './Chatbot.css';
 
 function purifyChatPlainText(raw, { stripMarkdown = false } = {}) {
   if (raw == null) return '';
-  let s = String(raw).replace(/[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g, '');
+  // eslint-disable-next-line no-control-regex
+  let s = String(raw).replace(/[\x00-\x08\x0b\x0c\x0e-\x1f\x7f]/g, '');
   s = DOMPurify.sanitize(s, { ALLOWED_TAGS: [], KEEP_CONTENT: true });
   if (stripMarkdown) s = stripMarkdownForChat(s);
   return s.trim();

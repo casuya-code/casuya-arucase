@@ -313,7 +313,7 @@ const PreFormOneContinuingSubjects = () => {
           <div className="empty-state">
             <i className="fas fa-inbox"></i>
             <h3>No Continuing Subjects Found</h3>
-            <p>Start by adding your first continuing subject using the "Add Subject" button above.</p>
+            <p>Start by adding your first continuing subject using the &quot;Add Subject&quot; button above.</p>
           </div>
         ) : (
           <div className="continuing-subjects-table-container">

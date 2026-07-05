@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { toast } from '../../utils/toast';
 import PublicLayout from '../../components/layout/PublicLayout';

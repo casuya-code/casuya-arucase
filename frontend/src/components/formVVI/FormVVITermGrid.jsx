@@ -11,7 +11,7 @@ const FormVVITermGrid = ({
   formLevel,
   backPath,
   getTermLink,
-  moduleActionLabel = 'Continue',
+  _moduleActionLabel = 'Continue',
 }) => {
   const yearNum = parseInt(displayYear, 10);
   const card = getFormVVICardByYear(yearNum);

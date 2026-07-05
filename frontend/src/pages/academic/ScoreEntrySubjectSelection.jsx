@@ -35,10 +35,6 @@ const ScoreEntrySubjectSelection = ({ formLevel }) => {
     : normalizedLevel;
   const allowedSubjectNames = getAllowedSubjectsForClass(currentClassKey);
 
-  if (!isAdminLike() && !hasClass(currentClassKey)) {
-    return <Navigate to="/admin/score-entry" replace />;
-  }
-
   const { data: allSubjects = [], isLoading } = useQuery({
     queryKey: ['subjects', normalizedLevel, normalizedStream, year],
     queryFn: async () => {
@@ -57,6 +53,10 @@ const ScoreEntrySubjectSelection = ({ formLevel }) => {
     const set = new Set(allowedSubjectNames.map((s) => String(s).trim()));
     return allSubjects.filter((s) => set.has(String(s.subject_name || '').trim()));
   }, [allSubjects, allowedSubjectNames]);
+
+  if (!isAdminLike() && !hasClass(currentClassKey)) {
+    return <Navigate to="/admin/score-entry" replace />;
+  }
 
   const getBackPath = () => {
     if (normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI') {

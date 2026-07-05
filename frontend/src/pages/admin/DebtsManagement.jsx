@@ -89,19 +89,13 @@ const DebtsManagement = ({ formLevel }) => {
   const { data: existingDebt = {}, isLoading: debtLoading, error: debtError } = useQuery({
     queryKey: ['debt-list', normalizedLevel, normalizedStream, year, term],
     queryFn: async () => {
-      try {
-        const res = await studentsAPI.getDebt({
-          level: normalizedLevel,
-          stream: normalizedStream,
-          year: year,
-          term: term || 'First Term',
-        });
-        return res.data.debt || {};
-      } catch (error) {
-        // Log error for debugging
-        // Re-throw to let React Query handle it properly
-        throw error;
-      }
+      const res = await studentsAPI.getDebt({
+        level: normalizedLevel,
+        stream: normalizedStream,
+        year: year,
+        term: term || 'First Term',
+      });
+      return res.data;
     },
     enabled: students.length > 0,
     retry: (failureCount, error) => {
@@ -181,7 +175,7 @@ const DebtsManagement = ({ formLevel }) => {
     });
   };
 
-  const handleSave = (studentIndex) => {
+  const handleSave = (_studentIndex) => {
     if (editForm.amount < 0) {
       toast.error('Amount must be non-negative');
       return;

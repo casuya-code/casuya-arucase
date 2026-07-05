@@ -18,10 +18,6 @@ const ScoreEntryYearSelection = ({ formLevel }) => {
   const currentYear = getCurrentCalendarYear();
   const { getAllowedYearsForClass, hasClass, isAdminLike } = useAuth();
 
-  if (!isAdminLike() && !hasClass(formLevel)) {
-    return <Navigate to="/admin/score-entry" replace />;
-  }
-
   const fullYears = useMemo(() => getSchoolYearOptions(), []);
 
   // For non-admin: only show years allocated for this class (e.g. FORM I)
@@ -31,6 +27,10 @@ const ScoreEntryYearSelection = ({ formLevel }) => {
     if (allowed.length === 0) return [];
     return fullYears.filter((y) => allowed.includes(y));
   }, [fullYears, formLevel, getAllowedYearsForClass]);
+
+  if (!isAdminLike() && !hasClass(formLevel)) {
+    return <Navigate to="/admin/score-entry" replace />;
+  }
 
   const getBackPath = () => {
     return '/admin/score-entry';

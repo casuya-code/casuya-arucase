@@ -32,7 +32,7 @@ const cloudinaryService = {
   // Upload image using signature
   uploadImage: async (file, folder, publicId) => {
     try {
-      const { signature, timestamp, cloud_name, api_key } = await cloudinaryService.getUploadSignature(folder, publicId);
+      const { signature, timestamp, cloud_name: _cloud_name, api_key } = await cloudinaryService.getUploadSignature(folder, publicId);
       
       const formData = new FormData();
       formData.append('file', file);

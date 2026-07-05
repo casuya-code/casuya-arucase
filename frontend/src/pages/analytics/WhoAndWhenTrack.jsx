@@ -1,7 +1,7 @@
 /**
  * Who and When Track - Performance Category Identification
  */
-import { useState, useMemo, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import AdminLayout from '../../components/layout/AdminLayout';
@@ -251,7 +251,7 @@ const WhoAndWhenTrack = () => {
               </div>
             ) : (
               <div className="students-list">
-                {config.students.map((studentData, index) => (
+                {config.students.map((studentData, _index) => (
                   <div key={studentData.student.admNo} className="student-card">
                     <div className="student-header">
                       <div className="student-info">

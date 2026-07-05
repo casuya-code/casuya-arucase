@@ -30,7 +30,7 @@ const StudentTrack = () => {
   });
 
   // Get student performance
-  const { data: performanceData, isLoading: loadingPerformance, error: performanceError, isError: isPerformanceError, refetch: refetchPerformance } = useQuery({
+  const { data: performanceData, isLoading: loadingPerformance, error: _performanceError, isError: _isPerformanceError, refetch: _refetchPerformance } = useQuery({
     queryKey: ['student-performance', selectedStudent?.adm_no, formLabel],
     queryFn: async () => {
       if (!selectedStudent) return null;

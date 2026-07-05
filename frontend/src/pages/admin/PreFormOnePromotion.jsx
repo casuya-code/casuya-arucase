@@ -65,7 +65,7 @@ const PreFormOnePromotion = () => {
       const response = await preFormOnePromotionService.promoteStudents(year, promotionData);
       
       if (response.success) {
-        const { promoted, errors, summary } = response.data;
+        const { promoted: _promoted, errors, summary } = response.data;
         
         // Show success message
         toast.success(`Promotion completed: ${summary.successful} students promoted successfully`);

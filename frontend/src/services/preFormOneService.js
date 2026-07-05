@@ -50,75 +50,50 @@ export const preFormOneService = {
 
   // Create multiple students (bulk registration)
   createBulkStudents: async (students) => {
-    try {
-      const response = await api.post('/pre-form-one/bulk', { students });
-      return response.data;
-    } catch (error) {
-throw error;
-    }
+    const response = await api.post('/pre-form-one/bulk', { students });
+    return response.data;
   },
 
   // Update student parish
   updateStudentParish: async (studentId, parish) => {
-    try {
-      const response = await api.put(`/pre-form-one/${studentId}/parish`, { parish });
-      return response.data;
-    } catch (error) {
-throw error;
-    }
+    const response = await api.put(`/pre-form-one/${studentId}/parish`, { parish });
+    return response.data;
   },
 
   // Bulk update parishes for multiple students
   bulkUpdateParishes: async (updates) => {
-    try {
-      const response = await api.put('/pre-form-one/bulk-parish', { updates });
-      return response.data;
-    } catch (error) {
-throw error;
-    }
+    const response = await api.put('/pre-form-one/bulk-parish', { updates });
+    return response.data;
   },
 
   // Update a student
   updateStudent: async (id, studentData) => {
-    try {
-      const response = await api.put(`/pre-form-one/${id}`, studentData);
-      return response.data;
-    } catch (error) {
-throw error;
-    }
+    const response = await api.put(`/pre-form-one/${id}`, studentData);
+    return response.data;
   },
 
   // Delete a student
   deleteStudent: async (studentId) => {
-    try {
-      const response = await api.delete(`/pre-form-one/${studentId}`);
-      return response.data;
-    } catch (error) {
-throw error;
-    }
+    const response = await api.delete(`/pre-form-one/${studentId}`);
+    return response.data;
   },
 
   // Export students to CSV
   exportStudents: async (year) => {
-    try {
-      const response = await api.get(`/pre-form-one/${year}/export`, {
-        responseType: 'blob'
-      });
-      
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `preform-one-students-${year}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      window.URL.revokeObjectURL(url);
-      
-      return response;
-    } catch (error) {
-      throw error;
-    }
+    const response = await api.get(`/pre-form-one/${year}/export`, {
+      responseType: 'blob'
+    });
+    // Create download link
+    const url = window.URL.createObjectURL(new Blob([response.data]));
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', `preform-one-students-${year}.csv`);
+    document.body.appendChild(link);
+    link.click();
+    link.remove();
+    window.URL.revokeObjectURL(url);
+    
+    return response;
   },
 
   // Get interview results for a specific year and optional month

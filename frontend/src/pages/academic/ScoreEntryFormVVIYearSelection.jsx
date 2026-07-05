@@ -1,7 +1,7 @@
 /**
  * Score Entry Year Selection Page for FORM V-VI (after stream)
  */
-import { Link, useParams, Navigate } from 'react-router-dom';
+import { useParams, Navigate } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
 import FormVVIYearGrid from '../../components/formVVI/FormVVIYearGrid';
 import { useAuth } from '../../context/AuthContext';

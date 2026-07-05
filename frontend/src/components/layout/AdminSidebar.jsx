@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import SidebarOnlinePresence from './SidebarOnlinePresence';
@@ -30,7 +30,7 @@ const AdminSidebar = () => {
         setExpandedCategories(JSON.parse(saved));
         return;
       }
-    } catch {}
+    } catch { /* ignore parse error */ }
     setExpandedCategories(navigationItems.map((_, i) => i));
   }, []);
 
@@ -242,6 +242,46 @@ const AdminSidebar = () => {
     return location.pathname === path || location.pathname.startsWith(path + '/');
   };
 
+  // Ref for keyboard navigation
+  const navRef = useRef(null);
+
+  // Auto-expand category containing active route
+  useEffect(() => {
+    if (keepNavSectionsOpen) return;
+    const activeIdx = filteredNavigationItems.findIndex(cat =>
+      cat.items.some(item => isActive(item.path))
+    );
+    if (activeIdx !== -1) {
+      setExpandedCategories(prev => prev.includes(activeIdx) ? prev : [...prev, activeIdx]);
+    }
+  }, [location.pathname]);
+
+  // Scroll active item into view
+  useEffect(() => {
+    const activeItem = navRef.current?.querySelector('.nav-item.active, .mobile-nav-item.active');
+    activeItem?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+  }, [location.pathname]);
+
+  // Keyboard navigation
+  const handleNavKeyDown = (e) => {
+    const items = e.currentTarget.querySelectorAll('.nav-item, .mobile-nav-item');
+    const currentIdx = Array.from(items).indexOf(document.activeElement);
+    if (currentIdx === -1) return;
+
+    let nextIdx;
+    if (e.key === 'ArrowDown') {
+      e.preventDefault();
+      nextIdx = (currentIdx + 1) % items.length;
+    } else if (e.key === 'ArrowUp') {
+      e.preventDefault();
+      nextIdx = (currentIdx - 1 + items.length) % items.length;
+    } else {
+      return;
+    }
+
+    items[nextIdx]?.focus();
+  };
+
   // Close menu when clicking outside
   const handleOverlayClick = () => {
     setMobileMenuOpen(false);
@@ -308,7 +348,7 @@ const AdminSidebar = () => {
 
         <SidebarUserPhoto collapsed={sidebarCollapsed} />
 
-        <nav className="sidebar-nav">
+        <nav className="sidebar-nav" ref={navRef} onKeyDown={handleNavKeyDown}>
           {/* Desktop Navigation - Grouped by Category */}
           <div className="sidebar-nav-desktop">
             {filteredNavigationItems.map((category, catIndex) => {
@@ -346,6 +386,7 @@ const AdminSidebar = () => {
                         className={`nav-item ${isActive(item.path) ? 'active' : ''}`}
                         title={item.label}
                       >
+                        {item.icon && <i className={`fas ${item.icon} nav-item-icon`}></i>}
                         <span className="nav-item-text">{item.label}</span>
                       </Link>
                     </li>
@@ -386,6 +427,7 @@ const AdminSidebar = () => {
                           className={`mobile-nav-item ${isActive(item.path) ? 'active' : ''}`}
                           onClick={() => setMobileMenuOpen(false)}
                         >
+                          {item.icon && <i className={`fas ${item.icon} nav-item-icon`}></i>}
                           <span className="nav-item-text">{item.label}</span>
                         </Link>
                       </li>

@@ -17,7 +17,7 @@ const PreFormOneRegistration = () => {
     sex: '',
     year: year
   });
-  const [csvData, setCsvData] = useState('');
+  const [_csvData, _setCsvData] = useState(''); /* eslint-disable-line no-unused-vars */
   const [searchTerm, setSearchTerm] = useState('');
   const [filterSex, setFilterSex] = useState('all');
   const [sortBy, setSortBy] = useState('admission_number');
@@ -360,7 +360,7 @@ const PreFormOneRegistration = () => {
   };
 
   // Clear all students
-  const clearAllStudents = () => {
+  const _clearAllStudents = () => {
     if (window.confirm('Are you sure you want to clear all registered students? This action cannot be undone.')) {
       setStudents([]);
       toast.success('All students cleared successfully');

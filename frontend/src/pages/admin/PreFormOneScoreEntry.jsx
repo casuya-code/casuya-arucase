@@ -17,7 +17,7 @@ import './PreFormOneScoreEntry.css';
 
 const PreFormOneScoreEntry = () => {
   const { year, subjectId } = useParams();
-  const location = useLocation();
+  const _location = useLocation();
   const navigate = useNavigate();
   
   // Determine if we're on subjects list or subject detail page
@@ -40,7 +40,7 @@ const PreFormOneScoreEntry = () => {
   const [keyboardNavigation, setKeyboardNavigation] = useState(false);
   const [scoreStats, setScoreStats] = useState({ total: 0, scored: 0, pending: 0 });
   const tableRef = useRef(null);
-  const virtualListRef = useRef(null);
+  const _virtualListRef = useRef(null);
   const studentScoresRef = useRef({});
   const loadedSubjectRef = useRef(null);
 
@@ -335,7 +335,7 @@ const PreFormOneScoreEntry = () => {
   };
 
   // Handle back to cards
-  const handleBackToCards = () => {
+  const _handleBackToCards = () => {
     // Stop auto-save before navigating away
     stopAutoSave();
     
@@ -356,7 +356,7 @@ const PreFormOneScoreEntry = () => {
   };
 
   // Handle back to subjects
-  const handleBackToSubjects = () => {
+  const _handleBackToSubjects = () => {
     // Stop auto-save before navigating away
     stopAutoSave();
     
@@ -732,7 +732,7 @@ const PreFormOneScoreEntry = () => {
         score: scoreData.score
       };
       
-      const result = await preFormOneStudentsService.saveStudentScores(payload);
+      const _result = await preFormOneStudentsService.saveStudentScores(payload);
       
       toast.success('Score saved successfully!');
       
@@ -779,7 +779,7 @@ const PreFormOneScoreEntry = () => {
         return;
       }
       
-      const result = await preFormOneStudentsService.saveBulkStudentScores(scoresToSave);
+      const _result = await preFormOneStudentsService.saveBulkStudentScores(scoresToSave);
       
       toast.success(`${scoresToSave.length} scores saved successfully!`);
       
@@ -876,8 +876,7 @@ const PreFormOneScoreEntry = () => {
   const clearScoresFromPersistence = (subjectId, scoreType) => {
     try {
       dataPersistenceManager.clearData(subjectId, scoreType);
-    } catch (error) {
-    }
+    } catch { /* ignore */ }
   };
 
   // Auto-save functionality

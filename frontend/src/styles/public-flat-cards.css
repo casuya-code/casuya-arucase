@@ -1,14 +1,12 @@
 /**
- * Flat public cards — no coloured left accent, no offset “3D” shadows.
- * Loaded after page CSS via public-common.css (and on standalone public routes).
+ * Public cards — subtle depth, no left accent, clean surfaces.
  */
 
 :root {
   --public-card-border-color: rgba(15, 23, 42, 0.14);
   --public-card-border: 1px solid var(--public-card-border-color);
-  /* Flat only — no inset highlight or drop-shadow “3D” depth */
-  --public-card-shadow: none;
-  --public-card-shadow-hover: none;
+  --public-card-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  --public-card-shadow-hover: 0 4px 12px rgba(15, 23, 42, 0.08);
 }
 
 /* —— No coloured left accent stripe on any public card or hero —— */
@@ -74,7 +72,7 @@
   border-left-color: var(--public-card-border-color) !important;
 }
 
-/* —— Flat shadows on card shells —— */
+/* —— Card shells with subtle shadow + transition —— */
 .public-layout .public-main :is(
     .about-card,
     .about-hero,
@@ -114,10 +112,27 @@
     .admissions-apply-sidebar-card
   ),
 .necta-results .necta-card {
-  box-shadow: none !important;
+  box-shadow: var(--public-card-shadow);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
 }
 
-/* Immersive public pages — never 3D lift on hover */
+.public-layout .public-main :is(
+    .about-card:hover,
+    .announcement-card:hover,
+    .gallery-item-card:hover,
+    .contact-card:hover,
+    .public-cms-card:hover,
+    .admissions-card:hover,
+    .month-card:hover,
+    .assessment-card:hover,
+    .necta-card:not(.necta-card--note):not(.necta-card--loading):hover,
+    .student-report-card:hover
+  ) {
+  box-shadow: var(--public-card-shadow-hover);
+  transform: translateY(-2px);
+}
+
+/* Immersive public pages — subtle hover lift */
 .public-immersive-shell :is(
     .public-cms-hero,
     .public-cms-card,
@@ -146,18 +161,24 @@
     .admissions-apply-confirm,
     .admissions-timeline__item,
     .admissions-contact-list li
-  ),
-.public-immersive-shell :is(
-    .announcement-card,
-    .gallery-item-card,
-    .public-cms-card,
-    .about-card
-  ):hover {
-  box-shadow: none !important;
-  transform: none !important;
+  ) {
+  box-shadow: var(--public-card-shadow);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
 }
 
-/* Apply page: flat panels */
+.public-immersive-shell :is(
+    .announcement-card:hover,
+    .gallery-item-card:hover,
+    .public-cms-card:hover,
+    .about-card:hover,
+    .contact-card:hover,
+    .admissions-card:hover
+  ) {
+  box-shadow: var(--public-card-shadow-hover);
+  transform: translateY(-2px);
+}
+
+/* Apply page: flat panels with subtle shadow */
 .admissions-apply-page :is(
     .admissions-apply-card,
     .logged-in-as,
@@ -171,48 +192,55 @@
     .primary,
     .admissions-apply-mode-bar__btn
   ) {
-  box-shadow: none !important;
+  box-shadow: var(--public-card-shadow);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
 }
 
 .admissions-apply-page :is(
-    .admissions-apply-toolbar__logout,
-    .admissions-apply-confirm__btn,
-    .primary
-  ):hover,
-.admissions-apply-page :is(
-    .admissions-apply-toolbar__logout,
-    .admissions-apply-confirm__btn,
-    .primary
-  ):active {
-  box-shadow: none !important;
-  transform: none !important;
+    .admissions-apply-toolbar__logout:hover,
+    .admissions-apply-confirm__btn:hover:not(:disabled)
+  ) {
+  box-shadow: var(--public-card-shadow-hover);
+  transform: translateY(-1px);
 }
 
-.public-layout .public-main .announcement-card:hover,
-.public-layout .public-main .gallery-item-card:hover {
-  box-shadow: none !important;
-  transform: none !important;
-}
-
-.public-layout .public-main .student-dashboard {
-  --sd-card-shadow: var(--public-card-shadow);
-}
-
-.public-layout .public-main .student-dashboard .month-card:hover,
-.public-layout .public-main .student-dashboard .assessment-card:hover,
-.public-layout .public-main .student-dashboard .report-term-btn,
-.public-layout .public-main .student-dashboard .report-term-btn.active,
-.public-layout .public-main .student-dashboard .logout-button {
-  box-shadow: none !important;
-  transform: none !important;
-}
-
+/* Buttons across all public pages — subtle shadow, hover lift */
 .public-layout .public-main .admissions-apply-button,
 .admissions-apply-page .admissions-apply-submit,
 .admissions-apply-page .admissions-apply-back,
 .public-immersive-shell .public-cms-hero__btn,
-.public-immersive-shell .admissions-apply-btn {
-  box-shadow: none !important;
+.public-immersive-shell .admissions-apply-btn,
+.public-layout .public-main .home-admissions-btn,
+.public-layout .public-main .map-button,
+.public-layout .public-main .login-button,
+.public-layout .public-main .necta-open-btn,
+.public-layout .public-main .necta-tab,
+.public-layout .public-main .necta-year-btn,
+.public-layout .public-main .filter-btn,
+.public-layout .public-main .report-term-btn,
+.public-layout .public-main .back-button,
+.public-layout .public-main .gallery-retry-btn {
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  transition: box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+.public-layout .public-main .admissions-apply-button:hover,
+.admissions-apply-page .admissions-apply-submit:hover:not(:disabled),
+.admissions-apply-page .admissions-apply-back:hover,
+.public-immersive-shell .public-cms-hero__btn:hover,
+.public-immersive-shell .admissions-apply-btn:hover,
+.public-layout .public-main .home-admissions-btn:hover,
+.public-layout .public-main .map-button:hover,
+.public-layout .public-main .login-button:hover:not(:disabled),
+.public-layout .public-main .necta-open-btn:hover,
+.public-layout .public-main .necta-tab:not(.active):hover,
+.public-layout .public-main .necta-year-btn:hover:not(:disabled),
+.public-layout .public-main .filter-btn:not(.active):hover,
+.public-layout .public-main .report-term-btn:not(.active):hover,
+.public-layout .public-main .back-button:hover,
+.public-layout .public-main .gallery-retry-btn:hover {
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.1);
+  transform: translateY(-1px);
 }
 
 .admissions-apply-page .logged-in-as__status.status-badge {
@@ -222,6 +250,13 @@
 
 .public-layout .public-main .content-card,
 .public-immersive-shell .content-card {
-  box-shadow: none !important;
-  border: 1px solid var(--public-card-border-color) !important;
+  box-shadow: var(--public-card-shadow);
+  border: 1px solid var(--public-card-border-color);
+  transition: box-shadow 0.25s ease, transform 0.25s ease;
+}
+
+.public-layout .public-main .content-card:hover,
+.public-immersive-shell .content-card:hover {
+  box-shadow: var(--public-card-shadow-hover);
+  transform: translateY(-1px);
 }

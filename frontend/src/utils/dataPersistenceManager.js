@@ -294,22 +294,12 @@ class DataPersistenceManager {
   /**
    * Server operations
    */
-  async saveToServer(subjectId, scoreType, data) {
-    try {
-      return true;
-    } catch (error) {
-      console.error('❌ Server save error:', error);
-      return false;
-    }
+  async saveToServer(_subjectId, _scoreType, _data) {
+    return true;
   }
 
-  async loadFromServer(subjectId, scoreType) {
-    try {
-      return null;
-    } catch (error) {
-      console.error('❌ Server load error:', error);
-      return null;
-    }
+  async loadFromServer(_subjectId, _scoreType) {
+    return null;
   }
 
   /**

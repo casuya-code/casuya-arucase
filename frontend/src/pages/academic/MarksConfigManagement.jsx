@@ -38,10 +38,6 @@ const MarksConfigManagement = ({ formLevel }) => {
     redirectTo: marksTermsPath,
   });
 
-  if (isFormVOrVI && term && !termPairValid) {
-    return null;
-  }
-
   // Normalize stream: use 'A' as default for Form I-IV (previously 'NA')
   const normalizedStream = stream || 'A';
 
@@ -153,6 +149,10 @@ const MarksConfigManagement = ({ formLevel }) => {
     },
   });
 
+  if (isFormVOrVI && term && !termPairValid) {
+    return null;
+  }
+
   const handleSubmit = (e) => {
     e.preventDefault();
     
@@ -234,7 +234,7 @@ const MarksConfigManagement = ({ formLevel }) => {
                         <tr>
                           <th rowSpan="2" className="table-header-min-width-60">S/N</th>
                           <th rowSpan="2" className="table-header-min-width-150">MONTH</th>
-                          {months.map((month, idx) => (
+                          {months.map((month, _idx) => (
                             <th key={month} colSpan="2" className="month-header">
                               {month.toUpperCase()}
                             </th>

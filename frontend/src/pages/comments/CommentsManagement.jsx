@@ -45,9 +45,7 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
     redirectTo: formVVITermsPath,
   });
 
-  if (isFormVOrVI && term && !termPairValid) {
-    return null;
-  }
+  const shouldReturnNull = isFormVOrVI && term && !termPairValid;
 
   // Don't normalize stream here - let backend handle it
   const normalizedStream = stream || 'NA';
@@ -340,7 +338,7 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
 
   // Calculate student index (position in sorted list)
   // Backend already sorts students by name (ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC)
-  const getStudentIndex = (student, index) => {
+  const getStudentIndex = (student, _index) => {
     const studentIndex = students.findIndex(
       (s) => String(s.adm_no) === String(student.adm_no)
     ).toString();
@@ -388,7 +386,13 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
     commentsLoading,
     gradesLoading,
     saveCommentMutation,
+    getGradeComment,
+    getStudentIndex,
   ]);
+
+  if (shouldReturnNull) {
+    return null;
+  }
 
   // CSV: escape cell for CSV (quote if contains comma, newline, or quote)
   const csvEscape = (val) => {
@@ -446,8 +450,6 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
     out.push(cur.trim().replace(/^\uFEFF/, ''));
     return out;
   };
-
-  const parseCSVLine = (line) => parseLine(line, ',');
 
   // Find student by adm_no (exact or numeric match so Excel-stripped leading zeros still match)
   const findStudentByAdmNo = (admNoStr) => {

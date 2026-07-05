@@ -22,7 +22,7 @@ const LOG_LEVELS = {
 };
 
 // Get log level from environment or default to DEBUG in development
-const getLogLevel = () => {
+const _getLogLevel = () => {
   const envLevel = import.meta.env.VITE_LOG_LEVEL?.toUpperCase();
   if (envLevel && LOG_LEVELS[envLevel] !== undefined) {
     return LOG_LEVELS[envLevel];

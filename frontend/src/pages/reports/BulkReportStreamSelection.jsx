@@ -37,7 +37,7 @@ const BulkReportStreamSelection = () => {
               <i className="fas fa-info-circle"></i>
               <div>
                 <strong>{form} - {year} - {term}</strong>
-                <p>Select a stream to generate bulk reports, or choose "All Streams" to generate reports for all students across all streams.</p>
+                <p>Select a stream to generate bulk reports, or choose &quot;All Streams&quot; to generate reports for all students across all streams.</p>
               </div>
             </div>
             

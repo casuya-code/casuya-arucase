@@ -3,13 +3,12 @@
  * Shows all subjects for a student with embedded marks configuration
  * Matching Python Website Template: month_selection_student_marks.html
  */
-import React, { useState, useEffect, useMemo, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '../../utils/toast';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { studentsAPI } from '../../services/students';
-import api from '../../services/api';
 import './ComprehensiveStudentMarks.css';
 
 // Calculation functions (matching backend/utils/calculations.js)
@@ -364,7 +363,7 @@ const ComprehensiveStudentMarks = ({ formLevel }) => {
   });
 
   // Fetch all students in class for ranking and total count
-  const { data: allStudents = [], isLoading: allStudentsLoading } = useQuery({
+  const { data: allStudents = [], isLoading: _allStudentsLoading } = useQuery({
     queryKey: ['all-students', normalizedLevel, normalizedStream, year],
     queryFn: async () => {
       const res = await studentsAPI.getStudents({

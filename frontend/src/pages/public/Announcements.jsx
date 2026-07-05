@@ -5,7 +5,6 @@ import { useQuery } from '@tanstack/react-query';
 import { useState, useMemo, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import PublicLayout from '../../components/layout/PublicLayout';
-import Loading from '../../components/common/Loading';
 import SkeletonLoader from '../../components/common/SkeletonLoader';
 import { publicAPI } from '../../services/public';
 import './Announcements.css';

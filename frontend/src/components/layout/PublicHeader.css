@@ -190,6 +190,11 @@
   width: 100%;
   max-width: 100%;
   filter: none;
+  transition: transform 0.3s ease;
+}
+
+.header-tropical-frame:hover {
+  transform: scale(1.03);
 }
 
 .header-tropical-frame--patron {
@@ -205,16 +210,16 @@
   z-index: 1;
   width: 100%;
   padding: 0;
-  border-radius: 0;
-  background: transparent;
-  box-shadow: none;
+  border-radius: 6px;
+  background: #fff;
+  box-shadow: 0 1px 4px rgba(15, 23, 42, 0.08);
 }
 
 .header-tropical-frame__mat {
-  background: transparent;
-  padding: 0;
-  border-radius: 0;
-  box-shadow: none;
+  background: #fff;
+  padding: 3px;
+  border-radius: 4px;
+  box-shadow: inset 0 0 0 1px rgba(15, 23, 42, 0.06);
 }
 
 .header-tropical-frame__img {
@@ -223,6 +228,7 @@
   height: auto;
   background: transparent;
   object-fit: contain;
+  border-radius: 4px;
 }
 
 .header-tropical-frame__img--logo {
@@ -308,7 +314,8 @@
   text-align: center;
   color: #1e3a8a;
   text-shadow: none;
-  font-family: 'Franklin Gothic Book', 'Franklin Gothic', 'Arial', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   word-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
@@ -325,7 +332,8 @@
   letter-spacing: clamp(0.2px, 0.12vw, 0.8px);
   text-align: center;
   color: #1e40af;
-  font-family: 'Franklin Gothic Book', 'Franklin Gothic', 'Arial', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   line-height: 1.4;
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -347,7 +355,8 @@
   text-align: center;
   color: #0f172a;
   box-shadow: none;
-  font-family: 'Franklin Gothic Book', 'Franklin Gothic', 'Arial', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   line-height: 1.3;
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -486,7 +495,8 @@
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
-  font-family: 'Franklin Gothic Book', 'Franklin Gothic', 'Arial', sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   display: inline-flex;
   flex-direction: column;
   align-items: center;
@@ -766,7 +776,8 @@
   background-color: var(--nav-dropdown-item-bg);
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
   transform: none;
-  font-family: 'Franklin Gothic', 'Arial Narrow', Arial, sans-serif;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
   font-synthesis: weight;
 }
 

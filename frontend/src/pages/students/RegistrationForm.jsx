@@ -21,7 +21,7 @@ import { useFormVVITermGuard } from '../../hooks/useFormVVITermGuard';
 
 const RegistrationForm = () => {
   const { year, stream, term } = useParams();
-  const navigate = useNavigate();
+  const _navigate = useNavigate();
   const queryClient = useQueryClient();
   const location = useLocation();
   const { isAdminLike } = useAuth();

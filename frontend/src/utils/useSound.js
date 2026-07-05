@@ -51,7 +51,7 @@ export const useSound = () => {
     return saved === 'true';
   });
 
-  const initAudio = useCallback(() => {
+  const _initAudio = useCallback(() => {
     initializeAudio().catch(() => {});
   }, []);
 

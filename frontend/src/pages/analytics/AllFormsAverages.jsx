@@ -11,7 +11,7 @@ import '../../utils/chartConfig'; // Register Chart.js components
 import { 
   sortMonthlyData,
   getCommonChartOptions,
-  exportToCSV
+  _exportToCSV
 } from '../../utils/analyticsUtils';
 import './AnalyticsTrack.css';
 

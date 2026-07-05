@@ -1,7 +1,7 @@
 /**
  * NECTA Results Page - Full Content with Direct Links from Python Template
  */
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import PublicLayout from '../../components/layout/PublicLayout';
 import SkeletonLoader from '../../components/common/SkeletonLoader';
 import api from '../../services/api';

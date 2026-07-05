@@ -244,7 +244,7 @@ const TeachersManagement = ({ formLevel, stream: streamProp }) => {
                       <th>Subject Code</th>
                       <th>Subject Abbreviation</th>
                       <th>Year</th>
-                      <th>Teacher's Name</th>
+                      <th>Teacher&apos;s Name</th>
                       <th>Teacher Signature</th>
                       <th>Actions</th>
                     </tr>
@@ -344,7 +344,7 @@ const TeachersManagement = ({ formLevel, stream: streamProp }) => {
                 </div>
                 
                 <div className="subject-teachers-mgmt-form-group">
-                  <label htmlFor="teacher_name">Teacher's Name <span className="req">*</span></label>
+                  <label htmlFor="teacher_name">Teacher&apos;s Name <span className="req">*</span></label>
                   <input
                     type="text"
                     id="teacher_name"

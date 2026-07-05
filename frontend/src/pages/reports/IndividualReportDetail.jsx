@@ -1006,7 +1006,7 @@ const IndividualReportDetail = () => {
                 // Try to find scores using both code and abbreviation
                 const getScore = (month) => {
                   const score1 = monthlyData[subjectKey]?.[month];
-                  const score2 = subjectAbbr ? monthlyData[subjectAbbr]?.[month] : null;
+                  const _score2 = subjectAbbr ? monthlyData[subjectAbbr]?.[month] : null;
                   return score1 !== undefined && score1 !== null && score1 !== '' ? score1 : null;
                 };
                 

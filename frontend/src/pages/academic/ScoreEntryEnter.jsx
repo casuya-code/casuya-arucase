@@ -130,7 +130,8 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
     ? FORM_V_VI_STREAM_CODES.some((stream) => hasClass(`${normalizedLevel} ${stream}`))
     : hasClass(currentClassKey);
 
-  if (allParamsValid && !isAdminLike() && !hasAccessToAnyStream) {
+  const noAccess = allParamsValid && !isAdminLike() && !hasAccessToAnyStream;
+  if (noAccess) {
     console.warn('ScoreEntryEnter: User does not have access to this class', {
       isAdminLike: isAdminLike(),
       currentClassKey,
@@ -141,7 +142,6 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
       normalizedStream,
       stream
     });
-    return <Navigate to="/admin/score-entry" replace />;
   }
 
   // Non-admin may be restricted to specific months; if so, block entry for other months
@@ -283,7 +283,7 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
 
   // Fetch existing scores for this subject and month
   // For Form V-VI, use apiYear (academic year start) instead of display year
-  const { data: existingScores = {}, isLoading: scoresLoading } = useQuery({
+  const { data: existingScores = {} } = useQuery({
     queryKey: ['scores', normalizedLevel, normalizedStream, apiYear, month, subjectCode, students.length],
     queryFn: async () => {
       try {
@@ -333,7 +333,12 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
           filteredScores[admNo] = existingScores[admNo];
         }
       });
-      setScores(filteredScores);
+      // Only update if scores actually changed to prevent loops when scores is in deps
+      setScores(prev => {
+        const prevStr = JSON.stringify(prev);
+        const newStr = JSON.stringify(filteredScores);
+        return prevStr === newStr ? prev : filteredScores;
+      });
     } else if (students.length > 0) {
       // Initialize empty scores object for all students when no existing scores
       // Check if we need to initialize by comparing student count
@@ -347,7 +352,7 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
         setScores(emptyScores);
       }
     }
-  }, [existingScores, students.length]); // Only depend on students.length to prevent loops
+  }, [existingScores, students, scores]);
 
   // Save score mutation
   const saveScoreMutation = useMutation({
@@ -445,7 +450,7 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
   };
 
   const handleSaveAll = async () => {
-    const validScores = Object.entries(scores).filter(([admNo, score]) => {
+    const validScores = Object.entries(scores).filter(([, score]) => {
       const numScore = parseFloat(score);
       return score !== '' && !isNaN(numScore) && numScore >= 0 && numScore <= 100;
     });
@@ -599,7 +604,7 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
   };
 
   // Fetch subject info
-  const { data: subjects = [], error: subjectsError } = useQuery({
+  const { data: subjects = [] } = useQuery({
     queryKey: ['subjects', normalizedLevel, normalizedStream, year],
     queryFn: async () => {
       try {
@@ -618,6 +623,10 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
   });
 
   const subject = subjects && subjects.length > 0 ? subjects.find(s => s.subject_code === subjectCode || s.subject_abbreviation === subjectCode) : null;
+
+  if (noAccess) {
+    return <Navigate to="/admin/score-entry" replace />;
+  }
 
   // Show error if required parameters are missing
   if (!allParamsValid) {

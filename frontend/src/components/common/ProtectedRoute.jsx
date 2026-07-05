@@ -27,7 +27,7 @@ const ProtectedRoute = ({
     if (token && !hasUser && !loading && !isVerifying) {
       setIsVerifying(true);
       verifyToken()
-        .catch((error) => {
+        .catch((_error) => {
           // Token verification failed
         })
         .finally(() => {

@@ -603,7 +603,7 @@ const Users = () => {
                   <div className="admin-empty-state">
                     <i className="fas fa-users"></i>
                     <h3>No Users Yet</h3>
-                    <p>Click "Add New" to add your first user.</p>
+                    <p>Click &quot;Add New&quot; to add your first user.</p>
                   </div>
                 ) : (
                   <div className="admin-table-container">

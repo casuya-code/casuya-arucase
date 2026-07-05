@@ -122,7 +122,7 @@ const HomePage = () => {
   const admissionFormDownloadName =
     admissionForm?.original_filename || 'fomu-ya-maombi.pdf';
 
-  const schoolName = settingValue(settings, 'school_name');
+  const _schoolName = settingValue(settings, 'school_name');
   const rectorStatement = settingValue(settings, 'rector_statement');
 
   const contactEmail = settingValue(settings, 'contact_email');
@@ -240,7 +240,7 @@ const HomePage = () => {
                               height={540}
                               sizes="(max-width: 480px) 100vw, (max-width: 768px) 100vw, 960px"
                               loading={isActive ? 'eager' : 'lazy'}
-                              fetchpriority={isActive ? 'high' : 'low'}
+                              fetchPriority={isActive ? 'high' : 'low'}
                               decoding={index === 0 ? 'sync' : 'async'}
                               onError={() => handleImageError(imageUrl)}
                               onLoad={() => {
@@ -353,33 +353,49 @@ const HomePage = () => {
         {/* —— Intro —— */}
         <section className="home-intro home-band--white" aria-labelledby="home-intro-heading">
           <div className="home-section-inner">
-            <div className="home-framed-panel">
-            <header className="home-section-header home-section-header--left">
-              <p className="home-section-eyebrow" lang="sw">
-                Karibu
-              </p>
-              <h2 id="home-intro-heading" className="home-section-title">
-                Seminari ya Kikatoliki Arusha
-              </h2>
-              <p className="home-section-subtitle" lang="en">
-                St. Thomas Aquinas Seminary · Oldonyosambu, Tanzania
-              </p>
-            </header>
-            <p className="home-intro-text" lang="sw">
-              Tangu <strong>1967</strong>, tunatoa elimu bora ya Kikatoliki na malezi ya kiroho kwa
-              vijana wa kiume wanaotamani kulitumikia Kanisa na jamii. Tunafundisha{' '}
-              <strong>Form I hadi Form VI</strong> (O-Level na A-Level) kwa ubora wa kitaaluma na
-              nidhamu.
-            </p>
-            <p className="home-intro-text home-intro-text--en" lang="en">
-              For over five decades we have formed young men in faith, academics, and service —
-              offering <strong>O-Level and A-Level</strong> programmes with NECTA excellence and
-              Catholic discipleship in the heart of Arusha.
-            </p>
-            <Link to="/about" className="home-text-link">
-              Soma zaidi kuhusu sisi
-              <i className="fas fa-arrow-right" aria-hidden />
-            </Link>
+            <div className="home-framed-panel home-intro-panel">
+              {administrators?.[1]?.photo && (
+                <div className="home-intro-rector">
+                  <div className="admin-photo-frame home-intro-rector-frame">
+                    <img
+                      src={getImageUrl(administrators[1].photo)}
+                      alt={administrators[1].name || 'Rector'}
+                      className="admin-photo-inner"
+                      loading="eager"
+                    />
+                  </div>
+                  <p className="home-intro-rector-name">{administrators[1].name}</p>
+                  <p className="home-intro-rector-title">{administrators[1].title}</p>
+                </div>
+              )}
+              <div className="home-intro-content">
+                <header className="home-section-header home-section-header--left">
+                  <p className="home-section-eyebrow" lang="sw">
+                    Karibu
+                  </p>
+                  <h2 id="home-intro-heading" className="home-section-title">
+                    Seminari ya Kikatoliki Arusha
+                  </h2>
+                  <p className="home-section-subtitle" lang="en">
+                    St. Thomas Aquinas Seminary · Oldonyosambu, Tanzania
+                  </p>
+                </header>
+                <p className="home-intro-text" lang="sw">
+                  Tangu <strong>1967</strong>, tunatoa elimu bora ya Kikatoliki na malezi ya kiroho kwa
+                  vijana wa kiume wanaotamani kulitumikia Kanisa na jamii. Tunafundisha{' '}
+                  <strong>Form I hadi Form VI</strong> (O-Level na A-Level) kwa ubora wa kitaaluma na
+                  nidhamu.
+                </p>
+                <p className="home-intro-text home-intro-text--en" lang="en">
+                  For over five decades we have formed young men in faith, academics, and service —
+                  offering <strong>O-Level and A-Level</strong> programmes with NECTA excellence and
+                  Catholic discipleship in the heart of Arusha.
+                </p>
+                <Link to="/about" className="home-text-link">
+                  Soma zaidi kuhusu sisi
+                  <i className="fas fa-arrow-right" aria-hidden />
+                </Link>
+              </div>
             </div>
           </div>
         </section>

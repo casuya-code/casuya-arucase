@@ -204,7 +204,7 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
         let skippedCount = 0;
         const skippedReasons = { invalidIndex: 0, noStudents: 0, indexOutOfRange: 0, studentNotFound: 0 };
         
-        parishes.forEach((parish, idx) => {
+        parishes.forEach((parish, _idx) => {
           const parishStream = parish.stream;
           const parishIndex = parseInt(parish.student_index, 10);
           

@@ -55,7 +55,7 @@ api.interceptors.request.use(
     // For enhanced login (httpOnly cookies), we don't need localStorage token
     // The browser automatically sends cookies with requests
     // For fallback login (localStorage tokens), we need to set Authorization header
-    const usingEnhancedAuth = !token; // If no localStorage token, assume using enhanced auth
+    const _usingEnhancedAuth = !token; // If no localStorage token, assume using enhanced auth
     
     // Only set Authorization header if we have a localStorage token
     // Enhanced auth uses httpOnly cookies which are sent automatically
@@ -116,7 +116,7 @@ api.interceptors.response.use(
 
       // Don't attempt refresh for public endpoints or auth endpoints
       if (!requestIsPublic && !requestIsAuth && !window.__verifyingToken) {
-        const token = localStorage.getItem('token');
+        const _token = localStorage.getItem('token');
 
         // If token expired and we haven't tried refreshing yet, attempt refresh
         // This works for both enhanced auth (cookies) and fallback auth (localStorage)

@@ -2,12 +2,11 @@
  * Pre-Form One Interview Reports Page
  * Same design as Continuing Reports - Clean and simple
  */
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQuery, useMutation } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { preFormOneService } from '../../services/preFormOneService';
-import { adminAPI } from '../../services/admin';
 import { useAuth } from '../../context/AuthContext';
 import { buildFetchUrl } from '../../utils/backendUrl';
 import { resultsByAdmissionNumber } from '../../services/preFormOneApiHelpers';
@@ -18,7 +17,6 @@ const PreFormOneInterviewReports = () => {
   const { year } = useParams();
   const { isAuthenticated } = useAuth();
   const [isGenerating, setIsGenerating] = useState({});
-  const queryClient = useQueryClient();
 
   // Fetch students
   const { data: students = [], isLoading: studentsLoading } = useQuery({

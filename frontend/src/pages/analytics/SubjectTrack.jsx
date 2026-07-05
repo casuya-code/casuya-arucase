@@ -6,7 +6,7 @@ import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { analyticsAPI } from '../../services/analytics';
-import { Bar, Line, Doughnut } from 'react-chartjs-2';
+import { Line, Doughnut } from 'react-chartjs-2';
 import '../../utils/chartConfig'; // Register Chart.js components
 import { 
   normalizeFormLabel, 
@@ -96,7 +96,7 @@ const SubjectTrack = () => {
   }, [selectedStream, selectedYear, selectedSubject]);
 
   // Get subjects for form
-  const { data: subjectsData, isLoading: loadingSubjects, error: subjectsError, isError: isSubjectsError, refetch: refetchSubjects } = useQuery({
+  const { data: subjectsData, isLoading: loadingSubjects, error: _subjectsError, isError: _isSubjectsError, refetch: _refetchSubjects } = useQuery({
     queryKey: ['subjects-for-form', formLabel, selectedStream, selectedYear],
     queryFn: async () => {
       const params = {
@@ -114,7 +114,7 @@ const SubjectTrack = () => {
   });
 
   // Get subject performance
-  const { data: subjectPerformance, isLoading: loadingPerformance, error: performanceError, isError: isPerformanceError, refetch: refetchPerformance } = useQuery({
+  const { data: subjectPerformance, isLoading: loadingPerformance, error: _performanceError, isError: _isPerformanceError, refetch: _refetchPerformance } = useQuery({
     queryKey: ['subject-performance', formLabel, selectedSubject, selectedStream, selectedYear],
     queryFn: async () => {
       if (!selectedSubject) return null;
