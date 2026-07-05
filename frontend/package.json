@@ -2,6 +2,7 @@
   "name": "arucase-frontend",
   "version": "1.0.0",
   "description": "Arusha Catholic Seminary - React Frontend",
+  "license": "MIT",
   "private": true,
   "dependencies": {
     "@fontsource/libre-baskerville": "^5.2.10",

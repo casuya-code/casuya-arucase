@@ -1,6 +1,8 @@
 {
   "name": "arucase",
   "version": "1.0.0",
+  "description": "Arusha Catholic Seminary - School Management System",
+  "license": "MIT",
   "private": true,
   "scripts": {
     "lint": "cd frontend && npm run lint",

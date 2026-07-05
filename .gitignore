@@ -85,12 +85,30 @@ backend/backups/
 *.temp
 .cache/
 
-# Markdown — keep out of version control (local docs only).
-*.md
-!.github/**/*.md
+# Temporary/debug scripts
 **/temp_*.js
 temp_*.js
 backend/auto_login.html
+
+# Local development / debug documentation (not part of project docs)
+DATA_FLOW_ANALYSIS.md
+DEBUG_GUIDE.md
+PREFORM_ONE_INTERVIEW_SUBJECTS_GUIDE.md
+RAILWAY_DATABASE_FIX.md
+RAILWAY_DEPLOYMENT_FIX.md
+RAILWAY_DEPLOYMENT.md
+RAILWAY_ENV_SETUP.md
+RAILWAY_ENV_VARIABLES.md
+SECURITY_IMPLEMENTATION_COMPLETE.md
+TERMINATE_PORTS.md
+TEST_REGISTRATION_FLOW.md
+backend/BACKEND.md
+backend/admin-photos-source/README.md
+frontend/src/utils/LOGGER_README.md
+frontend/src/utils/TROUBLESHOOTING_GUIDE.md
+cleanup-ports.ps1
+init.ps1
+*.tmp
 
 # Test / tooling (not needed to run app)
 coverage/
