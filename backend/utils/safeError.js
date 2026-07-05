@@ -3,7 +3,7 @@
  * In production, avoid sending internal error details to the client.
  */
 
-const isProd = process.env.NODE_ENV === 'production';
+const isProd = () => process.env.NODE_ENV === 'production';
 
 /**
  * Returns a message safe to send to the client for the given status.
@@ -12,7 +12,7 @@ const isProd = process.env.NODE_ENV === 'production';
 function getSafeMessage(error, status = 500) {
   if (!error || typeof error !== 'object') return 'Internal server error';
   const msg = error.message || error.error || 'Internal server error';
-  if (isProd && status >= 500) return 'Internal server error';
+  if (isProd() && status >= 500) return 'Internal server error';
   return msg;
 }
 

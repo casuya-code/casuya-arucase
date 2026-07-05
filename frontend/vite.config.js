@@ -59,6 +59,12 @@ function devProxyTarget() {
 const apiProxyTarget = devProxyTarget();
 
 export default defineConfig({
+  test: {
+    globals: true,
+    environment: 'jsdom',
+    setupFiles: [],
+    include: ['src/**/*.{test,spec}.{js,jsx}', 'src/**/__tests__/**/*.test.{js,jsx}'],
+  },
   plugins: [
     react(),
     // font-display:swap for FA runs post-build (see scripts/patch-fa-font-display.mjs) — Vite transform broke source maps

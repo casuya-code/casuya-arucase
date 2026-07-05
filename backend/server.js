@@ -741,6 +741,10 @@ const PORT = process.env.PORT || 5000;
 /** Railway / containers: bind all interfaces. Local: override with HOST=127.0.0.1 if needed. */
 const LISTEN_HOST = process.env.HOST !== undefined && process.env.HOST !== '' ? process.env.HOST : '0.0.0.0';
 
+// Only start listening when run directly (not when required for testing)
+if (require.main !== module) {
+  // Exported for testing — app will be used by supertest
+} else {
 server.listen(PORT, LISTEN_HOST, () => {
   console.log(`🚀 Server running on http://${LISTEN_HOST}:${PORT}`);
   console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
@@ -748,6 +752,7 @@ server.listen(PORT, LISTEN_HOST, () => {
     console.warn('⚠️  SECURITY: Set JWT_SECRET_KEY in production to a long random value. Default secret is not safe.');
   }
 });
+}
 
 module.exports = { app, io };
 
