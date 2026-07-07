@@ -47,6 +47,13 @@ async function main() {
   console.log('✅ server.js found');
 
   try {
+    const { initDatabase } = require('./initDatabase');
+    await initDatabase();
+  } catch (initError) {
+    console.error('⚠️ Database schema initialization encountered an error:', initError.message);
+  }
+
+  try {
     const { runMigrations } = require('./runMigrations');
     await runMigrations();
   } catch (migrationError) {

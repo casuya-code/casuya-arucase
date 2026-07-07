@@ -1127,4 +1127,8 @@ async function initDatabase() {
   }
 }
 
-initDatabase();
+if (require.main === module) {
+  initDatabase();
+}
+
+module.exports = { initDatabase };
