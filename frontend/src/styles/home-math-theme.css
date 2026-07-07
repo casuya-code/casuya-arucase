@@ -18,8 +18,9 @@
   --home-surface: #ffffff;
   --home-surface-band: #f5f3ef;
   --home-surface-elevated: #faf8f5;
-  --home-border: rgba(26, 84, 144, 0.14);
-  --home-border-strong: rgba(26, 84, 144, 0.28);
+  --home-border: rgba(15, 23, 42, 0.08);
+  --home-border-weak: rgba(15, 23, 42, 0.04);
+  --home-border-strong: rgba(15, 23, 42, 0.16);
 
   --home-space-1: var(--fibonacci-8, 8px);
   --home-space-2: var(--fibonacci-13, 13px);
@@ -37,8 +38,8 @@
   --home-frame-shadow: 0 1px 2px rgba(15, 45, 82, 0.06);
   --home-frame-shadow-hover: 0 4px 14px rgba(15, 45, 82, 0.1);
 
-  --home-font-display: 'Libre Baskerville', Georgia, 'Times New Roman', serif;
-  --home-font-ui: 'Source Sans 3', system-ui, 'Segoe UI', sans-serif;
+  --home-font-display: var(--font-display, 'Libre Baskerville', Georgia, 'Times New Roman', serif);
+  --home-font-ui: var(--font-ui, 'Source Sans 3', system-ui, 'Segoe UI', sans-serif);
 
   --home-type-sm: 0.8125rem;
   --home-type-base: 1rem;
@@ -80,6 +81,7 @@
   font-weight: 700;
   color: var(--home-ink);
   line-height: 1.2;
+  letter-spacing: -0.02em;
   font-size: var(--home-type-xl);
 }
 
@@ -138,7 +140,7 @@
 /* Stats — unified gold accent */
 .homepage .home-stats-section {
   padding: var(--home-section-pad-y) 0;
-  border-bottom: 1px solid var(--home-border);
+  border-bottom: 1px solid var(--home-border-weak);
 }
 
 .homepage .home-stat-card {
@@ -176,13 +178,13 @@
 /* CMS block */
 .homepage .home-cms-section {
   padding: var(--home-section-pad-y) 0;
-  border-bottom: 1px solid var(--home-border);
+  border-bottom: 1px solid var(--home-border-weak);
 }
 
 /* Intro */
 .homepage .home-intro {
   padding: var(--home-section-pad-y) 0;
-  border-bottom: 1px solid var(--home-border);
+  border-bottom: 1px solid var(--home-border-weak);
 }
 
 .homepage .home-intro-text {
@@ -202,7 +204,7 @@
 /* Quick links */
 .homepage .home-quicklinks {
   padding: var(--home-section-pad-y) 0;
-  border-bottom: 1px solid var(--home-border);
+  border-bottom: 1px solid var(--home-border-weak);
 }
 
 .homepage .home-quicklink-card {
@@ -230,7 +232,7 @@
 /* Programs */
 .homepage .home-programs {
   padding: var(--home-section-pad-y) 0;
-  border-bottom: 1px solid var(--home-border);
+  border-bottom: 1px solid var(--home-border-weak);
 }
 
 .homepage .home-program-card {
@@ -252,7 +254,7 @@
 /* Announcements */
 .homepage .home-announcements {
   padding: var(--home-section-pad-y) 0;
-  border-bottom: 1px solid var(--home-border);
+  border-bottom: 1px solid var(--home-border-weak);
 }
 
 .homepage .home-announce-item {
@@ -342,7 +344,7 @@
 /* Gallery */
 .homepage .home-gallery {
   padding: var(--home-section-pad-y) 0;
-  border-bottom: 1px solid var(--home-border);
+  border-bottom: 1px solid var(--home-border-weak);
 }
 
 .homepage .home-gallery-item {
@@ -357,7 +359,7 @@
 /* Leadership */
 .homepage .administration-section {
   padding: var(--home-section-pad-y) 0;
-  border-bottom: 1px solid var(--home-border);
+  border-bottom: 1px solid var(--home-border-weak);
 }
 
 .homepage .administration-title-icon {
@@ -377,7 +379,7 @@
 /* FAQ */
 .homepage .home-faq {
   padding: var(--home-section-pad-y) 0;
-  border-bottom: 1px solid var(--home-border);
+  border-bottom: 1px solid var(--home-border-weak);
 }
 
 .homepage .home-faq-item.is-open {
@@ -466,6 +468,7 @@
   background: var(--home-accent);
   color: var(--home-primary-deep);
   border-color: var(--home-accent);
+  border-radius: 9999px;
 }
 
 .homepage .hero-cta--primary:hover {

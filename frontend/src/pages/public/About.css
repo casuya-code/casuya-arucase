@@ -1,8 +1,6 @@
 @import '../../styles/public-common.css';
 @import '../../styles/public-cms-grid.css';
 
-/* ---- About page: cards on shared public-immersive-shell ---------------- */
-
 .about-page {
   width: 100%;
   box-sizing: border-box;
@@ -22,8 +20,6 @@
   margin-top: 0;
 }
 
-/* Hero — uses public-cms-hero from PublicPageHero; card layout below */
-
 .about-grid {
   display: flex;
   flex-direction: column;
@@ -32,7 +28,6 @@
   min-width: 0;
 }
 
-/* Tunu za Msingi — each value is its own card in a responsive sub-grid */
 .about-values-cards {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 14rem), 1fr));
@@ -42,16 +37,16 @@
 }
 
 .about-card {
-  background: #fafbfc;
-  border: 1px solid rgba(15, 23, 42, 0.14);
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
   padding: clamp(0.85rem, 2.2vw, 1.25rem) clamp(0.9rem, 2.4vw, 1.35rem);
   box-sizing: border-box;
   min-width: 0;
-  box-shadow: none;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .about-card:hover {
-  box-shadow: none;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
 }
 
 .about-card--compact {
@@ -82,11 +77,12 @@
   justify-content: center;
   width: 2.5rem;
   height: 2.5rem;
-  border: 1px solid rgba(15, 23, 42, 0.14);
+  border: 1px solid rgba(15, 23, 42, 0.08);
   background: #f8fafc;
   color: #1a5490;
   font-size: 1.1rem;
   flex-shrink: 0;
+  border-radius: 8px;
 }
 
 .about-card__title {
@@ -114,21 +110,22 @@
 .about-card__text--highlight {
   padding: 0.85rem 1rem;
   background: #f8fafc;
-  border: 1px solid rgba(15, 23, 42, 0.1);
+  border: 1px solid rgba(15, 23, 42, 0.06);
   color: #1e293b;
   font-weight: 500;
+  border-radius: 8px;
 }
 
 .about-card__text strong {
   color: #0f172a;
-  font-weight: 600;
+  font-weight: 700;
 }
 
 .about-page__inner .public-cms-empty {
   max-width: var(--about-inner-max);
   margin: 0 auto;
   background: #fff;
-  border: 1px solid rgba(15, 23, 42, 0.14);
+  border: 1px solid rgba(15, 23, 42, 0.08);
   box-shadow: none;
 }
 
@@ -176,7 +173,6 @@
   font-weight: 600;
 }
 
-/* Related links */
 .about-related {
   width: 100%;
   max-width: var(--about-inner-max);
@@ -185,9 +181,9 @@
 
 .about-related__inner {
   background: #fff;
-  border: 1px solid rgba(15, 23, 42, 0.14);
+  border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: var(--public-surface-radius-lg, 12px);
-  box-shadow: none;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   padding: clamp(1.15rem, 2.8vw, 1.65rem);
   box-sizing: border-box;
 }
@@ -213,9 +209,9 @@
   text-align: center;
   padding: 0.85rem 0.5rem;
   background: #f8fafc;
-  border: 1px solid #e2e8f0;
+  border: 1px solid rgba(15, 23, 42, 0.06);
   border-radius: var(--public-surface-radius, 10px);
-  box-shadow: none;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   text-decoration: none;
   color: inherit;
   transition: border-color 0.15s ease, background 0.15s ease;
@@ -224,9 +220,9 @@
 }
 
 .about-related-card:hover {
-  box-shadow: none;
-  transform: none;
-  border-color: #94a3b8;
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
+  transform: translateY(-1px);
+  border-color: rgba(15, 23, 42, 0.12);
   background: #f1f5f9;
 }
 
@@ -239,6 +235,7 @@
   color: #fff;
   font-size: 0.95rem;
   margin-bottom: 0.4rem;
+  border-radius: 6px;
 }
 
 .about-related-card__label {

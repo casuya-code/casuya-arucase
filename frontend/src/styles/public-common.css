@@ -1,11 +1,10 @@
-/* ===========================================
-   COMMON STYLES FOR ALL PUBLIC PAGES
-   =========================================== */
-
 @import './public-flat-cards.css';
 @import './public-immersive-shell.css';
 
-/* Legacy page shells only — immersive routes use .public-immersive-shell for padding/bg */
+/* ===========================
+   Base: mobile-first (≥320px)
+   =========================== */
+
 .public-page:not(.public-immersive-shell),
 .about-page:not(.public-immersive-shell),
 .admissions-page:not(.public-immersive-shell),
@@ -20,18 +19,17 @@
   max-width: 100vw;
   min-height: 100vh;
   min-height: 100dvh;
-  padding: clamp(0.5rem, 2vw, 2rem) 0;
+  padding: 1rem 0;
   overflow-x: hidden;
   box-sizing: border-box;
 }
 
-/* Content Card - Common across all public pages */
 .content-card {
   background: white;
-  border-radius: var(--public-surface-radius-lg, 12px);
-  border: 1px solid rgba(15, 23, 42, 0.1);
-  padding: clamp(1rem, 3vw, 2.5rem);
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
+  border-radius: 6px;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  padding: 1.25rem;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   width: 100%;
   max-width: 100%;
   margin: 0;
@@ -42,40 +40,46 @@
 }
 
 .content-card:hover {
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
   transform: translateY(-1px);
 }
 
-/* Content Card Typography */
 .content-card h1 {
   color: #0f172a;
-  font-size: clamp(1.9rem, 5.2vw, 2.6rem);
-  margin-bottom: clamp(1rem, 2.5vw, 1.5rem);
-  font-weight: 700;
+  font-size: clamp(1.5rem, 6vw, 2rem);
+  margin-bottom: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1.2;
 }
 
 .content-card h2 {
-  color: #334155;
-  font-size: clamp(1.3rem, 4.2vw, 1.85rem);
-  margin-top: clamp(1.5rem, 3vw, 2rem);
-  margin-bottom: clamp(0.75rem, 2vw, 1rem);
-  font-weight: 600;
+  color: #1e293b;
+  font-size: clamp(1.25rem, 5vw, 1.5rem);
+  margin-top: 1.5rem;
+  margin-bottom: 0.875rem;
+  font-weight: 700;
+  line-height: 1.25;
+  letter-spacing: -0.02em;
 }
 
 .content-card h3 {
-  color: #475569;
-  font-size: clamp(1.15rem, 3.6vw, 1.55rem);
-  margin-top: clamp(1rem, 2.5vw, 1.5rem);
-  margin-bottom: clamp(0.5rem, 1.5vw, 0.75rem);
+  color: #334155;
+  font-size: clamp(1.125rem, 4vw, 1.25rem);
+  margin-top: 1.25rem;
+  margin-bottom: 0.75rem;
   font-weight: 600;
+  line-height: 1.3;
+  letter-spacing: -0.01em;
 }
 
 .content-card p {
-  line-height: 1.8;
-  margin-bottom: clamp(1rem, 2.5vw, 1.5rem);
-  color: #374151;
-  font-size: clamp(1rem, 2.65vw, 1.125rem);
+  line-height: 1.7;
+  margin-bottom: 1rem;
+  color: #334155;
+  font-size: clamp(1rem, 3.5vw, 1.0625rem);
   white-space: pre-wrap;
+  max-width: min(75ch, 100%);
 }
 
 .content-card br {
@@ -86,84 +90,68 @@
 
 .content-card ul,
 .content-card ol {
-  margin: 1rem 0;
-  padding-left: 2rem;
+  margin: 0.75rem 0;
+  padding-left: 1.5rem;
 }
 
 .content-card li {
-  line-height: 1.8;
-  margin-bottom: 0.75rem;
-  color: #374151;
+  line-height: 1.7;
+  margin-bottom: 0.5rem;
+  color: #334155;
+  font-size: clamp(1rem, 3.5vw, 1.0625rem);
+  max-width: min(75ch, 100%);
 }
 
 .content-card strong {
-  color: #334155;
-  font-weight: 600;
+  color: #0f172a;
+  font-weight: 700;
 }
 
-/* ===========================================
-   RESPONSIVE DESIGN - MOBILE FIRST APPROACH
-   =========================================== */
+/* ===========================
+   Small phones (≤374px)
+   =========================== */
 
-/* Full width utilization on mobile */
-@media (max-width: 768px) {
-  .public-page,
-  .about-page,
-  .admissions-page,
-  .contact-page,
-  .fees-page,
-  .staff-page,
-  .student-life-page,
-  .student-report-page,
-  .announcements-page {
-    padding: 0;
-  }
-
-  .content-card {
-    max-width: 100%;
-    margin: 0;
-  }
-}
-
-/* Extra small screens (< 375px) */
 @media (max-width: 374px) {
-  .public-page,
-  .about-page,
-  .admissions-page,
-  .contact-page,
-  .fees-page,
-  .staff-page,
-  .student-life-page,
-  .student-report-page,
-  .announcements-page {
-    padding: 0.375rem 0;
+  .public-page:not(.public-immersive-shell),
+  .about-page:not(.public-immersive-shell),
+  .admissions-page:not(.public-immersive-shell),
+  .contact-page:not(.public-immersive-shell),
+  .fees-page:not(.public-immersive-shell),
+  .staff-page:not(.public-immersive-shell),
+  .student-life-page:not(.public-immersive-shell),
+  .student-report-page:not(.public-immersive-shell),
+  .announcements-page:not(.public-immersive-shell) {
+    padding: 0.5rem 0;
   }
 
   .content-card {
-    padding: 0.75rem 0.5rem;
+    padding: 0.85rem 0.65rem;
     max-width: 100%;
   }
 
   .content-card h1 {
     font-size: 1.5rem;
-    margin-bottom: 0.5rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.2;
   }
 
   .content-card h2 {
     font-size: 1.25rem;
-    margin-top: 0.75rem;
-    margin-bottom: 0.375rem;
+    margin-top: 1rem;
+    margin-bottom: 0.5rem;
+    line-height: 1.25;
   }
 
   .content-card h3 {
     font-size: 1.125rem;
-    margin-top: 0.5rem;
-    margin-bottom: 0.25rem;
+    margin-top: 0.75rem;
+    margin-bottom: 0.375rem;
+    line-height: 1.3;
   }
 
   .content-card p {
-    font-size: 0.875rem;
-    margin-bottom: 0.5rem;
+    font-size: 0.9375rem;
+    margin-bottom: 0.75rem;
     line-height: 1.6;
   }
 
@@ -174,134 +162,136 @@
   }
 
   .content-card li {
-    margin-bottom: 0.5rem;
+    font-size: 0.9375rem;
+    margin-bottom: 0.375rem;
     line-height: 1.5;
   }
 }
 
-/* Small screens (375px - 480px) */
-@media (min-width: 375px) and (max-width: 480px) {
-  .content-card h1 {
-    font-size: 1.75rem;
-  }
+/* ===========================
+   Tablets (≥640px)
+   =========================== */
 
-  .content-card h2 {
-    font-size: 1.375rem;
-  }
-
-  .content-card h3 {
-    font-size: 1.1875rem;
-  }
-
-  .content-card p {
-    font-size: 0.9375rem;
-  }
-}
-
-/* Extra Small Devices (phones, 320px and up) */
-@media (min-width: 320px) {
-  .public-page,
-  .about-page,
-  .admissions-page,
-  .contact-page,
-  .fees-page,
-  .staff-page,
-  .student-life-page,
-  .student-report-page,
-  .announcements-page {
-    padding: 1rem 0;
-  }
-
-  .content-card {
-    padding: 1.25rem;
-    margin: 0;
-    border-radius: 6px;
-  }
-
-  .content-card h1 {
-    font-size: clamp(1.5rem, 6vw, 2rem);
-    margin-bottom: 1.25rem;
-    line-height: 1.3;
-  }
-
-  .content-card h2 {
-    font-size: clamp(1.25rem, 5vw, 1.5rem);
-    margin-top: 1.5rem;
-    margin-bottom: 0.875rem;
-    line-height: 1.4;
-  }
-
-  .content-card h3 {
-    font-size: clamp(1.125rem, 4vw, 1.25rem);
-    margin-top: 1.25rem;
-    margin-bottom: 0.75rem;
-    line-height: 1.4;
-  }
-
-  .content-card p {
-    font-size: clamp(0.9375rem, 3.5vw, 1rem);
-    line-height: 1.7;
-  }
-
-  .content-card ul,
-  .content-card ol {
-    padding-left: 1.5rem;
-  }
-
-  .content-card li {
-    font-size: clamp(0.9375rem, 3.5vw, 1rem);
-    line-height: 1.7;
-  }
-}
-
-/* Medium Devices (tablets, 640px and up) */
 @media (min-width: 640px) {
   .content-card {
     padding: 2rem;
     margin: 0;
     max-width: 100%;
+    border-radius: 8px;
+  }
+
+  .content-card p {
+    font-size: 1.0625rem;
+    line-height: 1.75;
+  }
+
+  .content-card ul,
+  .content-card ol {
+    padding-left: 1.75rem;
+  }
+
+  .content-card li {
+    font-size: 1.0625rem;
+    line-height: 1.75;
   }
 }
 
-/* Large Devices (tablets landscape, 768px and up) */
+/* ===========================
+   Desktop (≥768px)
+   =========================== */
+
 @media (min-width: 768px) {
-  .public-page,
-  .about-page,
-  .admissions-page,
-  .contact-page,
-  .fees-page,
-  .staff-page,
-  .student-life-page,
-  .student-report-page,
-  .announcements-page {
+  .public-page:not(.public-immersive-shell),
+  .about-page:not(.public-immersive-shell),
+  .admissions-page:not(.public-immersive-shell),
+  .contact-page:not(.public-immersive-shell),
+  .fees-page:not(.public-immersive-shell),
+  .staff-page:not(.public-immersive-shell),
+  .student-life-page:not(.public-immersive-shell),
+  .student-report-page:not(.public-immersive-shell),
+  .announcements-page:not(.public-immersive-shell) {
     padding: 2rem 0;
   }
 
   .content-card {
     padding: 2.5rem;
     max-width: 100%;
+    border-radius: 12px;
   }
 
   .content-card h1 {
-    font-size: 2rem;
+    font-size: clamp(1.75rem, 4vw, 2.25rem);
+    margin-bottom: 1.5rem;
+    line-height: 1.2;
+  }
+
+  .content-card h2 {
+    font-size: clamp(1.4rem, 3.2vw, 1.75rem);
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    line-height: 1.25;
+  }
+
+  .content-card h3 {
+    font-size: clamp(1.15rem, 2.8vw, 1.45rem);
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    line-height: 1.3;
+  }
+
+  .content-card p {
+    font-size: 1.0625rem;
+    line-height: 1.8;
+    margin-bottom: 1.25rem;
+  }
+
+  .content-card li {
+    font-size: 1.0625rem;
+    line-height: 1.75;
+    margin-bottom: 0.5rem;
+  }
+}
+
+/* Large desktop (≥1200px) */
+@media (min-width: 1200px) {
+  .content-card h1 {
+    font-size: 2.25rem;
   }
 
   .content-card h2 {
     font-size: 1.75rem;
   }
 
-  .content-card h3 {
-    font-size: 1.5rem;
+  .content-card p {
+    font-size: 1.125rem;
   }
 
-  .content-card p {
-    font-size: 1.0625rem;
+  .content-card li {
+    font-size: 1.125rem;
   }
 }
 
-/* ===========================================
-   PUBLIC LAYOUT — full viewport width utilization
-   =========================================== */
+/* ===========================
+   Layout overrides
+   =========================== */
+
+@media (max-width: 768px) {
+  .public-layout {
+    --public-content-pad-x: clamp(0.5rem, 2.5vw, 0.85rem);
+  }
+
+  .public-layout .public-main:not(:has(.public-immersive-shell)) .content-card {
+    border-radius: 0;
+    padding: clamp(0.85rem, 3vw, 1.15rem) var(--public-content-pad-x, 0.75rem);
+  }
+}
+
+@media (min-width: 769px) and (max-width: 1024px) {
+  .public-layout {
+    --public-content-pad-x: clamp(0.75rem, 2vw, 1.25rem);
+  }
+}
+
 .public-layout .public-main {
   width: 100%;
   max-width: 100%;
@@ -321,7 +311,6 @@
   padding-right: 0;
 }
 
-/* Card grids: use available width at every breakpoint */
 .public-layout .public-main [class*="-grid"],
 .public-layout .public-main [class*="-cards"],
 .public-layout .public-main .gallery-grid,
@@ -329,22 +318,4 @@
   width: 100%;
   max-width: 100%;
   min-width: 0;
-}
-
-@media (max-width: 768px) {
-  .public-layout {
-    --public-content-pad-x: clamp(0.5rem, 2.5vw, 0.85rem);
-  }
-
-  /* Do not flatten cards inside the immersive shell (rounded surfaces stay consistent) */
-  .public-layout .public-main:not(:has(.public-immersive-shell)) .content-card {
-    border-radius: 0;
-    padding: clamp(0.85rem, 3vw, 1.15rem) var(--public-content-pad-x, 0.75rem);
-  }
-}
-
-@media (min-width: 769px) and (max-width: 1024px) {
-  .public-layout {
-    --public-content-pad-x: clamp(0.75rem, 2vw, 1.25rem);
-  }
 }

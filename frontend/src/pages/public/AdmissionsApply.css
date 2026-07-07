@@ -69,9 +69,10 @@
   font-size: clamp(0.9rem, 2.2vw, 1rem);
   line-height: 1.6;
   color: #475569;
-  background: #fafbfc;
-  border: 1px solid rgba(15, 23, 42, 0.1);
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: var(--public-surface-radius-lg, 12px);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .admissions-apply-hint strong {
@@ -138,13 +139,13 @@
   flex-direction: column;
   width: 100%;
   box-sizing: border-box;
-  background: #fafbfc;
-  border: 1px solid rgba(15, 23, 42, 0.14);
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: var(--public-surface-radius-lg, 12px);
   overflow: hidden;
   padding: clamp(1.1rem, 2.8vw, 1.65rem) clamp(1rem, 2.6vw, 1.55rem);
   margin-top: 0;
-  box-shadow: none;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .admissions-apply-card__section-title {
@@ -561,11 +562,11 @@
   box-sizing: border-box;
   margin: 0.25rem 0 1rem;
   padding: 0;
-  border: 1px solid rgba(15, 23, 42, 0.1);
+  border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: var(--public-surface-radius-lg, 12px);
-  background: #fafbfc;
+  background: #ffffff;
   overflow: hidden;
-  box-shadow: none;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .logged-in-as__col {
@@ -677,12 +678,12 @@
 }
 
 .feedback-box {
-  border: 1px solid rgba(15, 23, 42, 0.12);
+  border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: var(--public-surface-radius-lg, 12px);
   padding: 0.9rem 1rem;
   margin: 0.5rem 0 1rem;
-  background: #fafbfc;
-  box-shadow: none;
+  background: #ffffff;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .feedback-box--approved {

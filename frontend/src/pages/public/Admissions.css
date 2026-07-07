@@ -14,10 +14,9 @@
 }
 
 .admissions-page--immersive .public-cms-hero {
-  background: #fafbfc;
+  background: #ffffff;
 }
 
-/* Card grid — match student-life-grid */
 .admissions-grid {
   display: grid;
   width: 100%;
@@ -29,8 +28,8 @@
 .admissions-page--immersive .admissions-card {
   display: flex;
   flex-direction: column;
-  background: #fafbfc;
-  border: 1px solid rgba(15, 23, 42, 0.14);
+  background: #ffffff;
+  border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: var(--public-surface-radius-lg, 12px);
   overflow: hidden;
   padding: clamp(0.55rem, 1.5vw, 0.95rem) clamp(0.65rem, 1.75vw, 1.05rem);
@@ -38,7 +37,7 @@
   min-width: 0;
   white-space: normal;
   word-wrap: break-word;
-  box-shadow: none;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
 }
 
 .admissions-card--span-wide {
@@ -235,6 +234,7 @@
   font-size: clamp(0.85rem, 2vw, 0.95rem);
   line-height: 1.4;
   word-break: break-word;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Contact card */
@@ -433,8 +433,8 @@
   width: 100%;
   max-width: 22rem;
   min-height: 44px;
-  padding: 0.65rem 1rem;
-  border-radius: var(--public-surface-radius-icon, 10px);
+  padding: 0.65rem 1.35rem;
+  border-radius: 9999px;
   background: #1a5490;
   color: #ffffff !important;
   text-decoration: none;

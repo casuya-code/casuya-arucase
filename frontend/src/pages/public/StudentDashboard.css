@@ -14,7 +14,7 @@
     0 1px 0 rgba(255, 255, 255, 0.65) inset,
     0 6px 24px rgba(15, 23, 42, 0.1);
   --sd-card-head-rule: rgba(15, 23, 42, 0.08);
-  --sd-icon-tile-border: 1px solid rgba(15, 23, 42, 0.14);
+  --sd-icon-tile-border: 1px solid rgba(15, 23, 42, 0.08);
   width: 100%;
   min-width: 100%;
   max-width: 100vw;

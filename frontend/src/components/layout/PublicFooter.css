@@ -1,9 +1,6 @@
-/* ===========================================
-   FOOTER SITE MAP (internal links for SEO)
-   =========================================== */
 .public-footer-sitemap {
   background: #fff;
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
   padding: clamp(1rem, 3vw, 1.5rem) clamp(1rem, 4vw, 2.5rem);
 }
 
@@ -36,17 +33,14 @@
   border-radius: 2px;
 }
 
-/* ===========================================
-   SOCIAL MEDIA FOOTER
-   =========================================== */
 .social-footer {
-  background: #f8fafc;
+  background: #f8f6f3;
   padding: clamp(15px, 3.5vw, 20px) clamp(15px, 3.5vw, 40px);
   display: flex;
   justify-content: center;
   align-items: center;
   gap: clamp(15px, 3vw, 30px);
-  border-top: 1px solid #e2e8f0;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
   position: relative;
   overflow: hidden;
   width: 100%;
@@ -69,7 +63,7 @@
 }
 
 .social-label {
-  color: #334155;
+  color: #475569;
   font-weight: 600;
   font-size: clamp(0.85rem, 2.2vw, 1rem);
   letter-spacing: clamp(0.5px, 0.15vw, 1px);
@@ -104,7 +98,6 @@
   min-height: 44px;
 }
 
-/* Brand-coloured tiles (true platform colours + white glyphs) */
 .social-icons a.youtube {
   background: #ff0000;
   border: clamp(1px, 0.2vw, 2px) solid #cc0000;
@@ -170,7 +163,7 @@
 
 .social-icons a:hover {
   transform: scale(1.08);
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.2);
+  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.15);
 }
 
 .social-icons a.youtube:hover {
@@ -197,14 +190,11 @@
   color: #ffffff;
 }
 
-/* ===========================================
-   COPYRIGHT FOOTER
-   =========================================== */
 .copyright-footer {
   background: #f3f4f6;
   padding: clamp(15px, 3vw, 20px) clamp(10px, 2.5vw, 15px);
   text-align: center;
-  border-top: clamp(1px, 0.2vw, 2px) solid #d1d5db;
+  border-top: 1px solid rgba(15, 23, 42, 0.06);
   width: 100%;
   max-width: 100%;
   overflow-x: auto;
@@ -234,7 +224,7 @@
 }
 
 .privacy-link {
-  color: #334155;
+  color: #475569;
   text-decoration: none;
   font-weight: 500;
   transition: all 0.3s ease;
@@ -287,7 +277,6 @@
   color: #9ca3af;
 }
 
-/* Responsive Design */
 @media (max-width: 768px) {
   .social-footer {
     padding: clamp(12px, 3vw, 15px) clamp(15px, 4vw, 20px);

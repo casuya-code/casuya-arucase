@@ -11,7 +11,7 @@
   width: 100%;
   max-width: 100%;
   box-sizing: border-box;
-  border-bottom: 1px solid #e2e8f0;
+  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
 }
 
 .header::before {
@@ -314,8 +314,7 @@
   text-align: center;
   color: #1e3a8a;
   text-shadow: none;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: var(--font-display);
   word-wrap: break-word;
   overflow-wrap: break-word;
   hyphens: auto;
@@ -332,8 +331,7 @@
   letter-spacing: clamp(0.2px, 0.12vw, 0.8px);
   text-align: center;
   color: #1e40af;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: var(--font-display);
   line-height: 1.4;
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -355,8 +353,7 @@
   text-align: center;
   color: #0f172a;
   box-shadow: none;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: var(--font-display);
   line-height: 1.3;
   word-wrap: break-word;
   overflow-wrap: break-word;
@@ -370,10 +367,10 @@
 .navigation {
   --nav-pill-min-h: clamp(4.5rem, 10.5vw, 5.35rem);
   --nav-dropdown-item-min-h: 3.75rem;
-  --nav-dropdown-item-bg: #e2e8f0;
-  --nav-dropdown-item-border: #cbd5e1;
-  --nav-dropdown-item-bg-hover: #cbd5e1;
-  --nav-dropdown-item-bg-active: #b8c4d4;
+  --nav-dropdown-item-bg: #f1f5f9;
+  --nav-dropdown-item-border: #e2e8f0;
+  --nav-dropdown-item-bg-hover: #e2e8f0;
+  --nav-dropdown-item-bg-active: #cbd5e1;
   --nav-dropdown-hover-line: #15803d;
   --nav-dropdown-icon-col: 1.375rem;
   --nav-dropdown-icon-gap: 0.65rem;
@@ -390,9 +387,9 @@
   margin-top: clamp(15px, 3vw, 25px);
   border: none;
   border-radius: 0;
-  background: linear-gradient(135deg, #1e3a8a 0%, #1e40af 55%, #2563eb 100%);
-  border-bottom: 2px solid rgba(251, 191, 36, 0.65);
-  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.12);
+  background: linear-gradient(135deg, #1e3a8a 0%, #1a5490 55%, #2563eb 100%);
+  border-bottom: 2px solid rgba(201, 162, 39, 0.5);
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }
@@ -495,8 +492,7 @@
   background-color: #ffffff;
   border: 1px solid #e2e8f0;
   box-shadow: 0 1px 3px rgba(15, 23, 42, 0.1);
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: var(--font-ui);
   display: inline-flex;
   flex-direction: column;
   align-items: center;
@@ -718,8 +714,8 @@
   flex-direction: column;
   gap: clamp(0.3rem, 1vw, 0.4rem);
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 0;
+  border: 1px solid rgba(15, 23, 42, 0.08);
+  border-radius: 12px;
   list-style: none;
   padding: clamp(0.35rem, 1.2vw, 0.5rem);
   min-width: min(220px, 92vw);
@@ -727,7 +723,7 @@
   max-height: min(70vh, 420px);
   overflow-y: auto;
   overflow-x: hidden;
-  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.14);
+  box-shadow: 0 12px 32px rgba(15, 23, 42, 0.1);
   z-index: 10050;
   transform: translateX(-50%);
   animation: dropdownFadeInDesktop 0.15s ease;
@@ -763,7 +759,7 @@
   box-sizing: border-box;
   text-align: left;
   padding: 0.65rem 1rem;
-  color: #000000;
+  color: #1e293b;
   text-decoration: none;
   font-weight: 700;
   font-size: clamp(0.82rem, 1.65vw, 0.98rem);
@@ -771,13 +767,12 @@
   transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease,
     box-shadow 0.15s ease;
   white-space: normal;
-  border-radius: 9999px;
+  border-radius: 10px;
   border: 1px solid var(--nav-dropdown-item-border);
   background-color: var(--nav-dropdown-item-bg);
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.08);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   transform: none;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
-    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue', sans-serif;
+  font-family: var(--font-ui);
   font-synthesis: weight;
 }
 

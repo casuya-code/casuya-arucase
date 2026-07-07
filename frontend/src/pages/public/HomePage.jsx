@@ -50,23 +50,6 @@ const HomePage = () => {
   const [heroImageLoaded, setHeroImageLoaded] = useState(false);
 
   useEffect(() => {
-    const loadFonts = () => {
-      import('@fontsource/libre-baskerville/400.css');
-      import('@fontsource/libre-baskerville/700.css');
-      import('@fontsource/source-sans-3/400.css');
-      import('@fontsource/source-sans-3/600.css');
-      import('@fontsource/source-sans-3/700.css');
-    };
-    const scheduleFonts = () => setTimeout(loadFonts, 3000);
-    if (document.readyState === 'complete') {
-      const fontTimer = scheduleFonts();
-      return () => clearTimeout(fontTimer);
-    }
-    window.addEventListener('load', scheduleFonts, { once: true });
-    return () => window.removeEventListener('load', scheduleFonts);
-  }, []);
-
-  useEffect(() => {
     const enableCms = () => setCmsEnabled(true);
     if (typeof requestIdleCallback !== 'undefined') {
       const cmsId = requestIdleCallback(enableCms, { timeout: 8000 });
@@ -203,7 +186,7 @@ const HomePage = () => {
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [selectedAdmin, selectedGalleryPhoto]);
 
-  const academicYear = school_stats?.academic_year || new Date().getFullYear();
+  const academicYear = new Date().getFullYear();
 
   return (
     <PublicLayout>
@@ -364,8 +347,10 @@ const HomePage = () => {
                       loading="eager"
                     />
                   </div>
-                  <p className="home-intro-rector-name">{administrators[1].name}</p>
-                  <p className="home-intro-rector-title">{administrators[1].title}</p>
+                  <div className="home-intro-rector-info">
+                    <p className="home-intro-rector-name">{administrators[1].name}</p>
+                    <p className="home-intro-rector-title">{administrators[1].title}</p>
+                  </div>
                 </div>
               )}
               <div className="home-intro-content">

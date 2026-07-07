@@ -11,8 +11,6 @@
   overflow-x: hidden;
   box-sizing: border-box;
   isolation: isolate;
-  font-family: 'Franklin Gothic Book', 'Franklin Gothic', system-ui, -apple-system, 'Segoe UI',
-    sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
@@ -62,10 +60,10 @@
 /* Policy cards */
 .privacy-policy-page--immersive .policy-surface {
   background: #ffffff;
-  border: 1px solid rgba(15, 23, 42, 0.14);
+  border: 1px solid rgba(15, 23, 42, 0.08);
   border-radius: var(--public-surface-radius-lg, 12px);
   overflow: hidden;
-  box-shadow: none;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   width: 100%;
   max-width: 100%;
   margin: 0;
@@ -268,7 +266,7 @@
   font-size: clamp(1.15rem, 3.2vw, 1.45rem);
   font-weight: 800;
   margin: 0 0 0.55rem;
-  letter-spacing: -0.02em;
+  letter-spacing: -0.03em;
   line-height: 1.2;
 }
 
@@ -279,7 +277,7 @@
   margin-top: 1rem;
   margin-bottom: 0.45rem;
   padding-bottom: 0.3rem;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.08);
+  border-bottom: 1px solid var(--public-hairline, rgba(15, 23, 42, 0.04));
   line-height: 1.25;
 }
 

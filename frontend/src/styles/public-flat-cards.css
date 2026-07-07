@@ -1,17 +1,66 @@
-/**
- * Public cards — subtle depth, no left accent, clean surfaces.
- */
-
 :root {
-  --public-card-border-color: rgba(15, 23, 42, 0.14);
+  --public-card-border-color: rgba(15, 23, 42, 0.08);
   --public-card-border: 1px solid var(--public-card-border-color);
-  --public-card-shadow: 0 1px 3px rgba(15, 23, 42, 0.06);
-  --public-card-shadow-hover: 0 4px 12px rgba(15, 23, 42, 0.08);
+  --public-card-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --public-card-shadow-hover: 0 4px 12px rgba(15, 23, 42, 0.06);
+  --public-surface-tier-1: #f8f6f3;
+  --public-surface-tier-2: #f5f3ef;
+  --public-surface-tier-3: #faf8f5;
+  --public-hairline: rgba(15, 23, 42, 0.04);
 }
 
-/* —— No coloured left accent stripe on any public card or hero —— */
+/* Unified card transition */
+.card-transition {
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+}
+
+/* Unified hover lift */
+.card-hover {
+  box-shadow: var(--public-card-shadow-hover);
+  transform: translateY(-2px);
+  border-color: rgba(15, 23, 42, 0.14);
+}
+
+/* Button transition */
+.btn-transition {
+  transition: box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+}
+
+/* Button hover lift */
+.btn-hover {
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
+  transform: translateY(-1px);
+}
+
+/* ---- Tabular numbers for data displays ---- */
+
 .public-immersive-shell :is(
-    .public-cms-hero,
+    .necta-stat-num,
+    .fees-table td,
+    .fees-table th,
+    [class*="-stat-"] [class*="-num"],
+    [class*="-stat-"] [class*="-number"],
+    [class*="-amount"],
+    [class*="-count"]
+  ),
+.public-layout .public-main :is(
+    .necta-stat-num,
+    .fees-table td,
+    .fees-table th,
+    [class*="-stat-"] [class*="-num"],
+    [class*="-stat-"] [class*="-number"],
+    [class*="-amount"],
+    [class*="-count"]
+  ) {
+  font-variant-numeric: tabular-nums;
+}
+
+/* ---- Border-left enforcement ---- */
+
+/* Note: .public-cms-hero is intentionally excluded from border-left
+   enforcement so it can keep its 4px navy accent bar. */
+
+.public-immersive-shell :is(
     [class*='--stripe-'],
     [class*='-surface--hero'],
     [class*='-surface--cms'],
@@ -35,7 +84,6 @@
     .necta-stat-card
   ),
 .public-layout .public-main :is(
-    .public-cms-hero,
     [class*='--stripe-'],
     [class*='-surface--hero'],
     [class*='-surface--cms'],
@@ -72,7 +120,8 @@
   border-left-color: var(--public-card-border-color) !important;
 }
 
-/* —— Card shells with subtle shadow + transition —— */
+/* ---- Card shadows + transition (non-shell context) ---- */
+
 .public-layout .public-main :is(
     .about-card,
     .about-hero,
@@ -113,7 +162,8 @@
   ),
 .necta-results .necta-card {
   box-shadow: var(--public-card-shadow);
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  will-change: transform;
 }
 
 .public-layout .public-main :is(
@@ -130,9 +180,11 @@
   ) {
   box-shadow: var(--public-card-shadow-hover);
   transform: translateY(-2px);
+  border-color: rgba(15, 23, 42, 0.14);
 }
 
-/* Immersive public pages — subtle hover lift */
+/* ---- Card shadows + transition (shell context) ---- */
+
 .public-immersive-shell :is(
     .public-cms-hero,
     .public-cms-card,
@@ -163,7 +215,8 @@
     .admissions-contact-list li
   ) {
   box-shadow: var(--public-card-shadow);
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  will-change: transform;
 }
 
 .public-immersive-shell :is(
@@ -176,9 +229,11 @@
   ) {
   box-shadow: var(--public-card-shadow-hover);
   transform: translateY(-2px);
+  border-color: rgba(15, 23, 42, 0.14);
 }
 
-/* Apply page: flat panels with subtle shadow */
+/* ---- Admissions apply page ---- */
+
 .admissions-apply-page :is(
     .admissions-apply-card,
     .logged-in-as,
@@ -188,12 +243,12 @@
     .admissions-apply-hint,
     .admissions-apply-confirm,
     .admissions-apply-toolbar__logout,
-    .admissions-apply-confirm__btn,
     .primary,
     .admissions-apply-mode-bar__btn
   ) {
   box-shadow: var(--public-card-shadow);
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  will-change: transform;
 }
 
 .admissions-apply-page :is(
@@ -204,7 +259,8 @@
   transform: translateY(-1px);
 }
 
-/* Buttons across all public pages — subtle shadow, hover lift */
+/* ---- Button shadows ---- */
+
 .public-layout .public-main .admissions-apply-button,
 .admissions-apply-page .admissions-apply-submit,
 .admissions-apply-page .admissions-apply-back,
@@ -220,8 +276,9 @@
 .public-layout .public-main .report-term-btn,
 .public-layout .public-main .back-button,
 .public-layout .public-main .gallery-retry-btn {
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   transition: box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
+  will-change: transform;
 }
 
 .public-layout .public-main .admissions-apply-button:hover,
@@ -239,24 +296,30 @@
 .public-layout .public-main .report-term-btn:not(.active):hover,
 .public-layout .public-main .back-button:hover,
 .public-layout .public-main .gallery-retry-btn:hover {
-  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.1);
+  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
   transform: translateY(-1px);
 }
+
+/* ---- Status badge override ---- */
 
 .admissions-apply-page .logged-in-as__status.status-badge {
   box-shadow: none !important;
   text-shadow: none !important;
 }
 
+/* ---- Content card ---- */
+
 .public-layout .public-main .content-card,
 .public-immersive-shell .content-card {
   box-shadow: var(--public-card-shadow);
   border: 1px solid var(--public-card-border-color);
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  will-change: transform;
 }
 
 .public-layout .public-main .content-card:hover,
 .public-immersive-shell .content-card:hover {
   box-shadow: var(--public-card-shadow-hover);
   transform: translateY(-1px);
+  border-color: rgba(15, 23, 42, 0.14);
 }
