@@ -1,10 +1,15 @@
 -- Up Migration
 -- Common list/report paths: student by class + term-aware comments/scores when those columns exist.
 
-CREATE INDEX IF NOT EXISTS idx_scores_adm_class ON public.individual_scores (adm_no, level, stream, year);
-
 DO $$
 BEGIN
+  IF EXISTS (
+    SELECT 1 FROM information_schema.tables
+    WHERE table_schema = 'public' AND table_name = 'individual_scores'
+  ) THEN
+    EXECUTE 'CREATE INDEX IF NOT EXISTS idx_scores_adm_class ON public.individual_scores (adm_no, level, stream, year)';
+  END IF;
+
   IF EXISTS (
     SELECT 1 FROM information_schema.columns
     WHERE table_schema = 'public' AND table_name = 'students' AND column_name = 'term'
