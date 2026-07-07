@@ -1118,12 +1118,16 @@ async function initDatabase() {
     console.log('✅ Pre-Form One Students indexes and updated_at trigger ensured');
 
     // Seed the default admin user (creates or updates password hash)
-    await seedAdminUser();
+    try {
+      await seedAdminUser();
+    } catch (seedError) {
+      console.warn('⚠️ Admin user seed skipped:', seedError.message);
+    }
 
     console.log('\n✅ Database schema initialized successfully!');
   } catch (error) {
-    console.error('❌ Error initializing database schema:', error);
-    process.exit(1);
+    console.error('❌ Error initializing database schema:', error.message);
+    throw error;
   }
 }
 
