@@ -256,10 +256,24 @@ const AdminSidebar = () => {
     }
   }, [location.pathname]);
 
-  // Scroll active item into view
+  // Scroll active item into view — delayed to avoid jumping during accordion animation
   useEffect(() => {
-    const activeItem = navRef.current?.querySelector('.nav-item.active, .mobile-nav-item.active');
-    activeItem?.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    const navEl = navRef.current;
+    if (!navEl) return;
+    const scrollPos = navEl.scrollTop;
+    const timer = setTimeout(() => {
+      const activeItem = navEl.querySelector('.nav-item.active, .mobile-nav-item.active');
+      if (activeItem) {
+        const navRect = navEl.getBoundingClientRect();
+        const itemRect = activeItem.getBoundingClientRect();
+        const itemTop = itemRect.top - navRect.top + navEl.scrollTop;
+        const itemBottom = itemTop + itemRect.height;
+        if (itemTop < navEl.scrollTop || itemBottom > navEl.scrollTop + navRect.height) {
+          activeItem.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+        }
+      }
+    }, 350);
+    return () => clearTimeout(timer);
   }, [location.pathname]);
 
   // Keyboard navigation
@@ -334,10 +348,17 @@ const AdminSidebar = () => {
       <aside className={`admin-sidebar ${sidebarCollapsed ? 'collapsed' : ''} ${mobileMenuOpen ? 'mobile-open' : ''} ${keepNavSectionsOpen ? 'always-open-nav' : ''}`}>
         <div className="sidebar-header">
           <div className="sidebar-logo">
-            <i className="fas fa-shield-alt"></i>
-            {!sidebarCollapsed && <span>{sidebarTitle}</span>}
+            <span className="sidebar-logo__icon">
+              <i className="fas fa-graduation-cap"></i>
+            </span>
+            {!sidebarCollapsed && (
+              <span className="sidebar-logo__text">
+                <span className="sidebar-logo__title">ARUCASE</span>
+                <span className="sidebar-logo__subtitle">{sidebarTitle}</span>
+              </span>
+            )}
           </div>
-          <button 
+          <button
             className="sidebar-toggle"
             onClick={() => setSidebarCollapsed(!sidebarCollapsed)}
             aria-label="Toggle sidebar"
@@ -439,39 +460,31 @@ const AdminSidebar = () => {
           </div>
         </nav>
 
-        {/* User Info & Logout — round buttons */}
+        {/* User Info & Logout */}
         <div className="sidebar-footer">
-          <div
-            className={`sidebar-footer__actions${sidebarCollapsed ? ' sidebar-footer__actions--collapsed' : ''}`}
-          >
-            <span
-              className="sidebar-footer__round-btn sidebar-footer__round-btn--user"
-              title={user?.full_name || user?.username || 'Admin'}
-            >
-              {sidebarCollapsed ? (
-                <i className="fas fa-user" aria-hidden="true" />
-              ) : (
-                <span className="sidebar-footer__round-btn-label">
-                  {user?.username || 'admin'}
-                </span>
-              )}
-            </span>
-            <span
-              className="sidebar-footer__round-btn sidebar-footer__round-btn--role"
-              title={user?.role || 'Administrator'}
-            >
-              {sidebarCollapsed ? (
-                <i className="fas fa-user-shield" aria-hidden="true" />
-              ) : (
-                <span className="sidebar-footer__round-btn-label">
-                  {user?.role || 'Administrator'}
-                </span>
-              )}
-            </span>
-            <SidebarOnlinePresence collapsed={sidebarCollapsed} />
+          {!sidebarCollapsed && (
+            <div className="sidebar-user-card">
+              <div className="sidebar-user-card__avatar">
+                <i className="fas fa-user"></i>
+              </div>
+              <div className="sidebar-user-card__info">
+                <span className="sidebar-user-card__name">{user?.full_name || user?.username || 'Admin'}</span>
+                <span className="sidebar-user-card__role">{user?.role || 'Administrator'}</span>
+              </div>
+            </div>
+          )}
+          {sidebarCollapsed && (
+            <div className="sidebar-user-card sidebar-user-card--collapsed">
+              <div className="sidebar-user-card__avatar">
+                <i className="fas fa-user"></i>
+              </div>
+            </div>
+          )}
+          <div className="sidebar-footer__actions">
+            {!sidebarCollapsed && <SidebarOnlinePresence collapsed={sidebarCollapsed} />}
             <button
               type="button"
-              className="logout-btn logout-btn--round"
+              className="sidebar-logout-btn"
               onClick={handleLogout}
               title="Logout"
             >
