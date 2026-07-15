@@ -14,7 +14,7 @@ require('dotenv').config({ path: path.join(repoRoot, '.env') });
 require('dotenv').config({ path: path.join(backendRoot, '.env') });
 
 const backupsDir = path.join(backendRoot, 'backups');
-const DEFAULT_MAX_FILES = 20;
+const DEFAULT_MAX_FILES = 50;
 const DEFAULT_RETENTION_DAYS = 60;
 let cachedPgTools = null;
 

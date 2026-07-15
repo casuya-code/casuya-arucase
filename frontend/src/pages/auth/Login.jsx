@@ -133,6 +133,10 @@ const Login = () => {
             </div>
             <p className="login-eyebrow">Arusha Catholic Seminary</p>
             <h1 id={titleId}>Matumizi ya Ofisi tu.</h1>
+            <div className="login-badge">
+              <i className="fas fa-lock" aria-hidden="true"></i>
+              <span>Staff Access Only</span>
+            </div>
           </header>
 
           <form
@@ -211,32 +215,33 @@ const Login = () => {
               </div>
             </div>
 
-            <button
-              type="submit"
-              className="login-submit"
-              disabled={loading}
-              aria-busy={loading}
-            >
-              {loading ? (
-                <>
-                  <i className="fas fa-spinner fa-spin" aria-hidden="true" />
-                  <span>Inaingia…</span>
-                  <span className="sr-only">Tafadhali subiri</span>
-                </>
-              ) : (
-                <>
-                  <i className="fas fa-sign-in-alt" aria-hidden="true" />
-                  <span>Ingia</span>
-                </>
-              )}
-            </button>
+            <div className="login-actions">
+              <button
+                type="submit"
+                className="login-submit"
+                disabled={loading}
+                aria-busy={loading}
+              >
+                {loading ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin" aria-hidden="true" />
+                    <span>Inaingia…</span>
+                    <span className="sr-only">Tafadhali subiri</span>
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-sign-in-alt" aria-hidden="true" />
+                    <span>Ingia</span>
+                  </>
+                )}
+              </button>
+              <Link to="/" className="login-back-btn">
+                <i className="fas fa-arrow-left" aria-hidden="true" />
+                <span>Tovuti ya Umma</span>
+              </Link>
+            </div>
           </form>
         </main>
-
-        <Link to="/" className="back-button">
-          <i className="fas fa-arrow-left" aria-hidden="true" />
-          <span>Rudi kwenye tovuti ya umma</span>
-        </Link>
       </div>
     </div>
   );

@@ -3805,8 +3805,7 @@ const backupRestoreUpload = multer({
 
 router.get('/database-backups', requireRole('admin', 'superadmin'), async (req, res) => {
   try {
-    pruneBackups();
-    const backups = listBackups(20).map((item) => ({
+    const backups = listBackups().map((item) => ({
       name: item.name,
       sizeBytes: item.sizeBytes,
       createdAt: item.createdAt,
@@ -3820,7 +3819,7 @@ router.get('/database-backups', requireRole('admin', 'superadmin'), async (req, 
         hour: 2,
       },
       retention: {
-        maxFiles: 20,
+        maxFiles: 50,
       },
       backups,
     });
@@ -3833,7 +3832,6 @@ router.get('/database-backups', requireRole('admin', 'superadmin'), async (req, 
 router.post('/database-backups/run', requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const backup = await createBackup({ verify: true });
-    pruneBackups();
     return res.status(201).json({
       message: 'Backup created successfully',
       backup: {
