@@ -1,7 +1,7 @@
 /**
  * All Forms Averages - Cross-form Performance Comparison
  */
-import { useMemo } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import AdminLayout from '../../components/layout/AdminLayout';
@@ -36,6 +36,11 @@ const AllFormsAverages = () => {
     },
   });
   
+  // Form pagination
+  const [currentFormIndex, setCurrentFormIndex] = useState(0);
+  const [currentMonthPage, setCurrentMonthPage] = useState(1);
+  const MONTHS_PER_PAGE = 3;
+
   // Process data to match Python version structure (memoized)
   const processedFormsData = useMemo(() => {
     try {
@@ -48,6 +53,7 @@ const AllFormsAverages = () => {
         monthYear: avg.monthYear || `${avg.month} ${avg.year}`,
         average: avg.class_average || avg.average || 0,
         student_count: avg.student_count || 0,
+        score_count: avg.score_count || 0,
       }));
       
       // If no monthly_data but we have subject_averages, calculate monthly averages from subjects
@@ -85,6 +91,7 @@ const AllFormsAverages = () => {
                 monthYear: monthData.monthYear || `${monthData.month || ''} ${monthData.year || 0}`.trim(),
                 average: isNaN(avg) || !isFinite(avg) ? 0 : avg,
                 student_count: isNaN(studentCount) || !isFinite(studentCount) ? 0 : studentCount,
+                score_count: isNaN(studentCount) || !isFinite(studentCount) ? 0 : studentCount * subjectValues.length,
               };
             } catch (error) {
               console.error(`Error processing month data for ${form.level}:`, error);
@@ -169,7 +176,7 @@ const AllFormsAverages = () => {
         subject_averages: form.subject_averages || [],
         overall_average: overallAvg,
         overall_student_count: overallStudentCount,
-        overall_score_count: finalMonthlyData.reduce((sum, m) => sum + (m.student_count || 0), 0),
+        overall_score_count: finalMonthlyData.reduce((sum, m) => sum + (m.score_count || m.student_count || 0), 0),
       };
       }).filter(form => form !== null);
     } catch (error) {
@@ -177,7 +184,17 @@ const AllFormsAverages = () => {
       return [];
     }
   }, [formsData]);
-  
+
+  // Reset form index and month page when data changes
+  useEffect(() => {
+    setCurrentFormIndex(0);
+    setCurrentMonthPage(1);
+  }, [processedFormsData.length]);
+
+  // Reset month page when form changes
+  useEffect(() => {
+    setCurrentMonthPage(1);
+  }, [currentFormIndex]);
 
   return (
     <AdminLayout>
@@ -236,50 +253,70 @@ const AllFormsAverages = () => {
                   </table>
                 </div>
 
+                {/* Form Navigation */}
+                {processedFormsData.length > 1 && (
+                  <div className="form-navigation">
+                    <button type="button" className="excel-btn small" 
+                      disabled={currentFormIndex <= 0}
+                      onClick={() => setCurrentFormIndex(i => i - 1)}>
+                      <i className="fas fa-angle-left"></i> Prev Form
+                    </button>
+                    <span className="pagination-info">
+                      {processedFormsData[currentFormIndex]?.level || 'Form'} ({currentFormIndex + 1} of {processedFormsData.length})
+                    </span>
+                    <button type="button" className="excel-btn small"
+                      disabled={currentFormIndex >= processedFormsData.length - 1}
+                      onClick={() => setCurrentFormIndex(i => i + 1)}>
+                      Next Form <i className="fas fa-angle-right"></i>
+                    </button>
+                  </div>
+                )}
+
                 {/* Monthly Data Tables */}
                 <div className="monthly-tables">
                   <h3>Monthly Breakdown by Form</h3>
-                  {processedFormsData.map((form) => (
-                    <div key={form.level} className="form-monthly-table">
-                      <h4>{form.level} - Monthly Averages</h4>
-                      <table className="excel-table">
-                        <thead>
-                          <tr>
-                            <th>Month & Year</th>
-                            <th>Average Score</th>
-                            <th>Student Count</th>
-                            <th>Total Scores</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {form.monthly_data && form.monthly_data.length > 0 ? (
-                            form.monthly_data.map((monthData) => (
-                              <tr key={`${form.level}-${monthData.monthYear}`}>
-                                <td><strong>{monthData.monthYear}</strong></td>
-                                <td>{monthData.average.toFixed(1)}</td>
-                                <td>{monthData.student_count}</td>
-                                <td>{monthData.score_count}</td>
-                              </tr>
-                            ))
-                          ) : (
+                  {processedFormsData[currentFormIndex] && (() => {
+                    const form = processedFormsData[currentFormIndex];
+                    return (
+                      <div key={form.level} className="form-monthly-table">
+                        <h4>{form.level} - Monthly Averages</h4>
+                        <table className="excel-table">
+                          <thead>
                             <tr>
-                              <td colSpan="4" className="no-monthly-data">No monthly data available</td>
+                              <th>Month & Year</th>
+                              <th>Average Score</th>
+                              <th>Student Count</th>
+                              <th>Total Scores</th>
                             </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  ))}
+                          </thead>
+                          <tbody>
+                            {form.monthly_data && form.monthly_data.length > 0 ? (
+                              form.monthly_data.map((monthData) => (
+                                <tr key={`${form.level}-${monthData.monthYear}`}>
+                                  <td><strong>{monthData.monthYear}</strong></td>
+                                  <td>{monthData.average.toFixed(1)}</td>
+                                  <td>{monthData.student_count}</td>
+                                  <td>{monthData.score_count}</td>
+                                </tr>
+                              ))
+                            ) : (
+                              <tr>
+                                <td colSpan="4" className="no-monthly-data">No monthly data available</td>
+                              </tr>
+                            )}
+                          </tbody>
+                        </table>
+                      </div>
+                    );
+                  })()}
                 </div>
 
                 <div className="charts-section">
                   {/* Monthly Trend Charts - Line Chart for Each Form */}
                   <h3 className="section-title">Monthly Average Trends by Form</h3>
-                  {processedFormsData.map((form) => {
-                    if (!form.monthly_data || form.monthly_data.length === 0) return null;
-                    
+                  {processedFormsData[currentFormIndex] && processedFormsData[currentFormIndex].monthly_data && processedFormsData[currentFormIndex].monthly_data.length > 0 && (() => {
+                    const form = processedFormsData[currentFormIndex];
                     const sortedMonthly = sortMonthlyData(form.monthly_data);
-                    
                     return (
                       <div key={`trend-${form.level}`} className="chart-container chart-section-container">
                         <h4 className="chart-title">{form.level} - Monthly Average Trend</h4>
@@ -309,15 +346,12 @@ const AllFormsAverages = () => {
                         </div>
                       </div>
                     );
-                  })}
+                  })()}
 
-                  <h3 className="section-title">Subject Performance Charts by Form</h3>
-                  
                   {/* Individual Monthly Test Charts - One chart per month/test */}
                   <h3 className="section-title">Individual Monthly Test Charts - Subject Breakdown</h3>
-                  {processedFormsData.map((form) => {
-                    if (!form.subject_averages || form.subject_averages.length === 0) return null;
-                    
+                  {processedFormsData[currentFormIndex] && processedFormsData[currentFormIndex].subject_averages && processedFormsData[currentFormIndex].subject_averages.length > 0 && (() => {
+                    const form = processedFormsData[currentFormIndex];
                     // Sort months chronologically
                     const sortedMonths = form.subject_averages.slice().sort((a, b) => {
                       const monthOrder = { 
@@ -332,12 +366,18 @@ const AllFormsAverages = () => {
                       return (monthOrder[getMonth(a.monthYear)] || 99) - (monthOrder[getMonth(b.monthYear)] || 99);
                     });
                     
+                    const totalMonthPages = Math.ceil(sortedMonths.length / MONTHS_PER_PAGE);
+                    const paginatedMonths = sortedMonths.slice(
+                      (currentMonthPage - 1) * MONTHS_PER_PAGE,
+                      currentMonthPage * MONTHS_PER_PAGE
+                    );
+                    
                     return (
                       <div key={`monthly-tests-${form.level}`}>
                         <h4 className="chart-title" style={{ marginTop: '30px', marginBottom: '20px' }}>
                           {form.level} - Individual Monthly Test Charts
                         </h4>
-                        {sortedMonths.map((monthData) => {
+                        {paginatedMonths.map((monthData) => {
                           if (!monthData.subjects || Object.keys(monthData.subjects).length === 0) return null;
                           
                           const subjects = Object.keys(monthData.subjects).sort();
@@ -430,16 +470,34 @@ const AllFormsAverages = () => {
                             </div>
                           );
                         })}
+                        {/* Month pagination */}
+                        {totalMonthPages > 1 && (
+                          <div className="form-navigation" style={{ marginTop: '20px' }}>
+                            <button type="button" className="excel-btn small"
+                              disabled={currentMonthPage <= 1}
+                              onClick={() => setCurrentMonthPage(p => p - 1)}>
+                              <i className="fas fa-angle-left"></i> Prev Month
+                            </button>
+                            <span className="pagination-info">
+                              Page {currentMonthPage} of {totalMonthPages}
+                            </span>
+                            <button type="button" className="excel-btn small"
+                              disabled={currentMonthPage >= totalMonthPages}
+                              onClick={() => setCurrentMonthPage(p => p + 1)}>
+                              Next Month <i className="fas fa-angle-right"></i>
+                            </button>
+                          </div>
+                        )}
                       </div>
                     );
-                  })}
+                  })()}
 
                   {/* Subject Charts for each Form - Combined View */}
                   <h3 className="section-title">Subject Performance Charts by Form (All Months Combined)</h3>
                   
                   {/* Subject Charts for each Form */}
-                  {processedFormsData.map((form) => {
-                    if (!form.subject_averages || form.subject_averages.length === 0) return null;
+                  {processedFormsData[currentFormIndex] && processedFormsData[currentFormIndex].subject_averages && processedFormsData[currentFormIndex].subject_averages.length > 0 && (() => {
+                    const form = processedFormsData[currentFormIndex];
                     
                     // Get all unique subjects across all months for this form
                     const allSubjects = new Set();
@@ -559,7 +617,7 @@ const AllFormsAverages = () => {
                         </div>
                       </div>
                     );
-                  })}
+                  })()}
                   
                   {/* Cross-Form Comparison Charts */}
                   <h3 className="section-title">Cross-Form Comparison Charts</h3>

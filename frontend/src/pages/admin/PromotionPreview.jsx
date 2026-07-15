@@ -16,6 +16,8 @@ const PromotionPreview = ({ formLevel }) => {
   
   const [excludedAdmNos, setExcludedAdmNos] = useState([]);
   const [selectedStream, setSelectedStream] = useState('');
+  const PAGE_SIZE = 25;
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Normalize form level
   const normalizedLevel = (formLevel
@@ -51,6 +53,10 @@ const PromotionPreview = ({ formLevel }) => {
     if (previewData?.excluded_adm_nos) {
       setExcludedAdmNos(previewData.excluded_adm_nos);
     }
+  }, [previewData]);
+
+  useEffect(() => {
+    setCurrentPage(1);
   }, [previewData]);
 
   // Execute promotion mutation
@@ -98,6 +104,11 @@ const PromotionPreview = ({ formLevel }) => {
   };
 
   const getBackPath = () => `/admin/promotion/${formLevel}/years`;
+  const totalPages = Math.ceil((previewData?.students?.length || 0) / PAGE_SIZE);
+  const paginatedStudents = previewData?.students?.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  ) || [];
 
   return (
     <AdminLayout>
@@ -191,7 +202,7 @@ const PromotionPreview = ({ formLevel }) => {
                         </tr>
                       </thead>
                       <tbody>
-                        {previewData.students?.map((student, index) => {
+                        {paginatedStudents.map((student, index) => {
                           const isExcluded = excludedAdmNos.includes(student.adm_no);
                           return (
                             <tr key={student.adm_no} className={isExcluded ? 'excluded-row' : ''}>
@@ -202,7 +213,7 @@ const PromotionPreview = ({ formLevel }) => {
                                   onChange={() => handleToggleExclude(student.adm_no)}
                                 />
                               </td>
-                              <td>{index + 1}</td>
+                              <td>{((currentPage - 1) * PAGE_SIZE) + index + 1}</td>
                               <td>{student.adm_no}</td>
                               <td>{student.first_name}</td>
                               <td>{student.middle_name || '-'}</td>
@@ -220,6 +231,25 @@ const PromotionPreview = ({ formLevel }) => {
                         })}
                       </tbody>
                     </table>
+                    <div className="pagination-controls">
+                      <button
+                        className="pagination-btn"
+                        onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                        disabled={currentPage === 1}
+                      >
+                        <i className="fas fa-chevron-left"></i> Previous
+                      </button>
+                      <span className="pagination-info">
+                        Page {currentPage} of {totalPages || 1} ({previewData?.students?.length || 0} students)
+                      </span>
+                      <button
+                        className="pagination-btn"
+                        onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                        disabled={currentPage === totalPages || totalPages === 0}
+                      >
+                        Next <i className="fas fa-chevron-right"></i>
+                      </button>
+                    </div>
                   </div>
                 </div>
 

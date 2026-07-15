@@ -23,6 +23,8 @@ const PreFormOneRegistration = () => {
   const [sortBy, setSortBy] = useState('admission_number');
   const [sortOrder, setSortOrder] = useState('asc');
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 25;
 
   // Load students from database on component mount
   useEffect(() => {
@@ -45,6 +47,11 @@ const PreFormOneRegistration = () => {
 
     loadStudents();
   }, [year]);
+
+  // Reset to page 1 when students list changes (e.g. after add/delete/CSV upload)
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [students]);
 
   // Filter and sort students
   const filteredAndSortedStudents = useMemo(() => {
@@ -388,6 +395,12 @@ const PreFormOneRegistration = () => {
     URL.revokeObjectURL(url);
   };
 
+  const totalPages = Math.ceil(filteredAndSortedStudents.length / ITEMS_PER_PAGE);
+  const paginatedStudents = filteredAndSortedStudents.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
   return (
     <AdminLayout>
     <div className="preform-one-registration-route registration-form-page-container">
@@ -574,6 +587,7 @@ const PreFormOneRegistration = () => {
               <table className="students-table">
                 <thead>
                   <tr>
+                    <th>#</th>
                     <th>Admission No</th>
                     <th>Serial No</th>
                     <th>Name</th>
@@ -581,8 +595,9 @@ const PreFormOneRegistration = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredAndSortedStudents.map((student, index) => (
+                  {paginatedStudents.map((student, index) => (
                     <tr key={student.id || `student-${index}`}>
+                      <td>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</td>
                       <td>{student.admission_number || 'N/A'}</td>
                       <td>{student.serial_number || 'N/A'}</td>
                       <td>{`${student.first_name || ''} ${student.middle_name || ''} ${student.surname || ''}`.trim() || 'N/A'}</td>
@@ -625,6 +640,29 @@ const PreFormOneRegistration = () => {
                     ))}
                 </tbody>
               </table>
+              {totalPages > 1 && (
+                <div className="pagination-controls">
+                  <button
+                    className="excel-btn secondary small"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <i className="fas fa-chevron-left"></i>
+                    Prev
+                  </button>
+                  <span className="pagination-info">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    className="excel-btn secondary small"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next
+                    <i className="fas fa-chevron-right"></i>
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

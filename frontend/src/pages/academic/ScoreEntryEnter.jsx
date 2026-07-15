@@ -51,6 +51,8 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
   
   const [scores, setScores] = useState({});
   const [saveTimeouts, setSaveTimeouts] = useState({});
+  const PAGE_SIZE = 25;
+  const [currentPage, setCurrentPage] = useState(1);
 
   // Form V/VI combination to subjects mapping
   const combinationSubjects = {
@@ -280,6 +282,10 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
   const filteredStudents = isFormVOrVILevel && isTogetherMode && students && students.length > 0
     ? students.filter(s => doesCombinationTakeSubject(s.stream, subjectCode))
     : students || [];
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [filteredStudents]);
 
   // Fetch existing scores for this subject and month
   // For Form V-VI, use apiYear (academic year start) instead of display year
@@ -624,6 +630,12 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
 
   const subject = subjects && subjects.length > 0 ? subjects.find(s => s.subject_code === subjectCode || s.subject_abbreviation === subjectCode) : null;
 
+  const totalPages = Math.ceil((filteredStudents?.length || 0) / PAGE_SIZE);
+  const paginatedStudents = filteredStudents?.slice(
+    (currentPage - 1) * PAGE_SIZE,
+    currentPage * PAGE_SIZE
+  ) || [];
+
   if (noAccess) {
     return <Navigate to="/admin/score-entry" replace />;
   }
@@ -750,11 +762,11 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
                         </tr>
                       </thead>
                       <tbody>
-                        {filteredStudents.map((student, index) => {
+                        {paginatedStudents.map((student, index) => {
                           const studentScore = scores[student.adm_no];
                           return (
                             <tr key={student.adm_no}>
-                              <td data-label="No."><span className="score-entry-cell-value">{index + 1}</span></td>
+                              <td data-label="No."><span className="score-entry-cell-value">{((currentPage - 1) * PAGE_SIZE) + index + 1}</span></td>
                               <td data-label="Adm No"><span className="score-entry-cell-value">{student.adm_no}</span></td>
                               <td data-label="First Name"><span className="score-entry-cell-value">{student.first_name}</span></td>
                               <td data-label="Middle Name"><span className="score-entry-cell-value">{student.middle_name || '-'}</span></td>
@@ -784,16 +796,36 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
                     </table>
                 </div>
 
+                <div className="pagination-controls">
+                  <button
+                    className="pagination-btn"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <i className="fas fa-chevron-left"></i> Previous
+                  </button>
+                  <span className="pagination-info">
+                    Page {currentPage} of {totalPages || 1} ({filteredStudents?.length || 0} students)
+                  </span>
+                  <button
+                    className="pagination-btn"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                  >
+                    Next <i className="fas fa-chevron-right"></i>
+                  </button>
+                </div>
+
                 {/* Mobile Card View (same style as Huduma) */}
                 <div className="mobile-students-list">
-                  {filteredStudents.map((student, index) => {
+                  {paginatedStudents.map((student, index) => {
                     const studentScore = scores[student.adm_no];
                     return (
                       <div key={student.adm_no} className="mobile-student-card">
                         <div className="mobile-student-card-header">
                           <div className="student-info">
                             <div className="student-name">
-                              {index + 1}. {student.first_name} {student.middle_name || ''} {student.surname}
+                              {((currentPage - 1) * PAGE_SIZE) + index + 1}. {student.first_name} {student.middle_name || ''} {student.surname}
                             </div>
                             <div className="student-adm">Adm No: {student.adm_no}</div>
                           </div>
@@ -825,6 +857,26 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
                       </div>
                     );
                   })}
+                </div>
+
+                <div className="pagination-controls">
+                  <button
+                    className="pagination-btn"
+                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <i className="fas fa-chevron-left"></i> Previous
+                  </button>
+                  <span className="pagination-info">
+                    Page {currentPage} of {totalPages || 1} ({filteredStudents?.length || 0} students)
+                  </span>
+                  <button
+                    className="pagination-btn"
+                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages || totalPages === 0}
+                  >
+                    Next <i className="fas fa-chevron-right"></i>
+                  </button>
                 </div>
 
                 <div className="bulk-actions">

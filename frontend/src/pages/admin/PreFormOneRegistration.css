@@ -580,6 +580,22 @@
   text-align: center;
 }
 
+.preform-one-registration-route .pagination-controls{
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.75rem, 2vw, 1rem);
+  padding: clamp(1rem, 2vw, 1.25rem);
+  border-top: 1px solid #e2e8f0;
+  background: #ffffff;
+}
+
+.preform-one-registration-route .pagination-info{
+  font-size: clamp(0.8125rem, 1.5vw, 0.9375rem);
+  color: #374151;
+  font-weight: 500;
+}
+
 
 
 @media (hover: none) and (pointer: coarse) {.preform-one-registration-route .tab-button:active, .preform-one-registration-route .template-button:active, .preform-one-registration-route .register-button:active, .preform-one-registration-route .upload-label:active, .preform-one-registration-route .load-button:active, .preform-one-registration-route .delete-button:active{

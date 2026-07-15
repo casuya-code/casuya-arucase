@@ -39,6 +39,8 @@ const PreFormOneInterviewResults = () => {
 
   const [subjectScores, setSubjectScores] = useState({});
   const [scoresLoading, setScoresLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const PER_PAGE = 20;
   const [filter, setFilter] = useState({
     year: year || '',
     month: 'all',
@@ -234,6 +236,15 @@ const PreFormOneInterviewResults = () => {
       return compareNames(a, b);
     });
   }, [students, displayResults]);
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortedStudents.length]);
+
+  const paginatedStudents = useMemo(
+    () => sortedStudents.slice(0, currentPage * PER_PAGE),
+    [sortedStudents, currentPage]
+  );
 
   const { data: schoolLogoData } = useQuery({
     queryKey: ['school-logo'],
@@ -543,8 +554,9 @@ const PreFormOneInterviewResults = () => {
             </p>
 
             <div className="results-mobile-list" aria-label="Interview results by student">
-              {sortedStudents.map((student, index) => {
-                const ctx = buildRowContext(student, index);
+              {paginatedStudents.map((student, index) => {
+                const globalIndex = (currentPage - 1) * PER_PAGE + index;
+                const ctx = buildRowContext(student, globalIndex);
                 const { result, studentSubjectScores, gradeRowClass, avgValue, sn, fullName, parish } =
                   ctx;
 
@@ -640,8 +652,9 @@ const PreFormOneInterviewResults = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {sortedStudents.map((student, index) => {
-                      const ctx = buildRowContext(student, index);
+                    {paginatedStudents.map((student, index) => {
+                      const globalIndex = (currentPage - 1) * PER_PAGE + index;
+                      const ctx = buildRowContext(student, globalIndex);
                       const {
                         result,
                         studentSubjectScores,
@@ -683,6 +696,28 @@ const PreFormOneInterviewResults = () => {
                   </tbody>
                 </table>
               </div>
+            </div>
+
+            <div className="pagination-controls">
+              <button
+                type="button"
+                className="pagination-btn"
+                disabled={currentPage === 1}
+                onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              >
+                <i className="fas fa-chevron-left"></i> Prev
+              </button>
+              <span className="pagination-info">
+                {currentPage} / {Math.ceil(sortedStudents.length / PER_PAGE) || 1}
+              </span>
+              <button
+                type="button"
+                className="pagination-btn"
+                disabled={currentPage >= Math.ceil(sortedStudents.length / PER_PAGE)}
+                onClick={() => setCurrentPage((p) => p + 1)}
+              >
+                Next <i className="fas fa-chevron-right"></i>
+              </button>
             </div>
 
             <div className="back-margin">

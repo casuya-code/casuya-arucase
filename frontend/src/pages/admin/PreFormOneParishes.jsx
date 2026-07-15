@@ -17,6 +17,8 @@ const PreFormOneParishes = () => {
   const [editingParish, setEditingParish] = useState('');
   const [editingId, setEditingId] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 25;
 
   // Load registered students from database on component mount
   useEffect(() => {
@@ -37,6 +39,11 @@ const PreFormOneParishes = () => {
 
     loadRegisteredStudents();
   }, [year]);
+
+  // Reset to page 1 when students data or filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [students, searchTerm, filterParish, sortBy, sortOrder]);
 
   // Generate admission number
   const _generateAdmissionNumber = (serialNumber) => {
@@ -340,6 +347,17 @@ const PreFormOneParishes = () => {
     URL.revokeObjectURL(url);
   };
 
+  // Pagination logic
+  const totalPages = Math.ceil(filteredAndSortedStudents.length / ITEMS_PER_PAGE);
+  const paginatedStudents = filteredAndSortedStudents.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
+
+  const handlePageChange = (page) => {
+    setCurrentPage(page);
+  };
+
   return (
     <AdminLayout>
     <div className="preform-one-registration-route registration-form-page-container">
@@ -523,6 +541,7 @@ const PreFormOneParishes = () => {
               <table className="students-table">
                 <thead>
                   <tr>
+                    <th>#</th>
                     <th>Admission No</th>
                     <th>Serial No</th>
                     <th>Name</th>
@@ -532,8 +551,9 @@ const PreFormOneParishes = () => {
                   </tr>
                 </thead>
                 <tbody>
-                  {filteredAndSortedStudents.map((student, index) => (
+                  {paginatedStudents.map((student, index) => (
                     <tr key={student.id || `student-${index}`}>
+                      <td>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</td>
                       <td>{student.admission_number || 'N/A'}</td>
                       <td>{student.serial_number || 'N/A'}</td>
                       <td>{`${student.first_name || ''} ${student.middle_name || ''} ${student.surname || ''}`.trim() || 'N/A'}</td>
@@ -569,6 +589,35 @@ const PreFormOneParishes = () => {
                   ))}
                 </tbody>
               </table>
+              {totalPages > 1 && (
+                <div className="pagination-controls">
+                  <button
+                    className="excel-btn secondary small"
+                    onClick={() => handlePageChange(currentPage - 1)}
+                    disabled={currentPage === 1}
+                  >
+                    <i className="fas fa-chevron-left"></i> Previous
+                  </button>
+                  <div className="pagination-pages">
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
+                      <button
+                        key={page}
+                        className={`excel-btn small ${page === currentPage ? 'primary' : 'secondary'}`}
+                        onClick={() => handlePageChange(page)}
+                      >
+                        {page}
+                      </button>
+                    ))}
+                  </div>
+                  <button
+                    className="excel-btn secondary small"
+                    onClick={() => handlePageChange(currentPage + 1)}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next <i className="fas fa-chevron-right"></i>
+                  </button>
+                </div>
+              )}
             </div>
           )}
         </div>

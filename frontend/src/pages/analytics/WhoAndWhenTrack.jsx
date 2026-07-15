@@ -67,6 +67,8 @@ const WhoAndWhenTrack = () => {
   });
   
   const [expandedCategory, setExpandedCategory] = useState(null);
+  const [categoryPages, setCategoryPages] = useState({});
+  const ITEMS_PER_CATEGORY = 10;
 
   // Update URL params when filters change
   useEffect(() => {
@@ -113,6 +115,11 @@ const WhoAndWhenTrack = () => {
       return failureCount < 2;
     },
   });
+
+  // Reset pagination when categories data changes
+  useEffect(() => {
+    setCategoryPages({});
+  }, [whoAndWhenData]);
 
   const categories = whoAndWhenData?.categories || {
     highPerformers: [],
@@ -220,6 +227,10 @@ const WhoAndWhenTrack = () => {
 
   const renderCategorySection = (config) => {
     const isExpanded = expandedCategory === config.key;
+    const categoryStudents = config.students;
+    const catPage = categoryPages[config.key] || 1;
+    const catTotalPages = Math.ceil(categoryStudents.length / ITEMS_PER_CATEGORY);
+    const paginatedStudents = categoryStudents.slice((catPage - 1) * ITEMS_PER_CATEGORY, catPage * ITEMS_PER_CATEGORY);
     const studentCount = config.students.length;
 
     return (
@@ -237,7 +248,7 @@ const WhoAndWhenTrack = () => {
             </div>
           </div>
           <div className="category-header-right">
-            <span className="student-count-badge">{studentCount} {studentCount === 1 ? 'Student' : 'Students'}</span>
+            <span className="student-count-badge">{studentCount} {studentCount === 1 ? 'Student' : 'Students'}{catTotalPages > 1 ? ` (Page ${catPage} of ${catTotalPages})` : ''}</span>
             <i className={`fas fa-chevron-${isExpanded ? 'up' : 'down'}`}></i>
           </div>
         </div>
@@ -251,7 +262,7 @@ const WhoAndWhenTrack = () => {
               </div>
             ) : (
               <div className="students-list">
-                {config.students.map((studentData, _index) => (
+                {paginatedStudents.map((studentData, _index) => (
                   <div key={studentData.student.admNo} className="student-card">
                     <div className="student-header">
                       <div className="student-info">
@@ -295,6 +306,19 @@ const WhoAndWhenTrack = () => {
                     </div>
                   </div>
                 ))}
+              </div>
+            )}
+            {catTotalPages > 1 && (
+              <div className="category-pagination">
+                <button type="button" className="excel-btn small" disabled={catPage <= 1}
+                  onClick={() => setCategoryPages(p => ({ ...p, [config.key]: catPage - 1 }))}>
+                  <i className="fas fa-angle-left"></i> Prev
+                </button>
+                <span className="pagination-info">Page {catPage} of {catTotalPages}</span>
+                <button type="button" className="excel-btn small" disabled={catPage >= catTotalPages}
+                  onClick={() => setCategoryPages(p => ({ ...p, [config.key]: catPage + 1 }))}>
+                  Next <i className="fas fa-angle-right"></i>
+                </button>
               </div>
             )}
           </div>

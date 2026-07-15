@@ -674,6 +674,7 @@ router.get('/all-forms-averages', async (req, res) => {
               month,
               AVG(average) as class_average,
               COUNT(*) as student_count,
+              COUNT(*) as score_count,
               COUNT(DISTINCT stream) as stream_count,
               'monthly_results' as source
             FROM monthly_results
@@ -688,6 +689,7 @@ router.get('/all-forms-averages', async (req, res) => {
               month,
               AVG(score) as class_average,
               COUNT(DISTINCT adm_no) as student_count,
+              COUNT(*) as score_count,
               1 as stream_count,
               'individual' as source
             FROM individual_scores
@@ -708,6 +710,7 @@ router.get('/all-forms-averages', async (req, res) => {
             month,
             MAX(class_average) as class_average,
             MAX(student_count) as student_count,
+            MAX(score_count) as score_count,
             MAX(stream_count) as stream_count
           FROM combined
           GROUP BY year, month
@@ -720,6 +723,7 @@ router.get('/all-forms-averages', async (req, res) => {
           monthYear: `${row.month} ${row.year}`,
           class_average: parseFloat(row.class_average) || 0,
           student_count: parseInt(row.student_count) || 0,
+          score_count: parseInt(row.score_count) || 0,
           stream_count: parseInt(row.stream_count) || 0,
         }));
         

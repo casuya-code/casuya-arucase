@@ -2,7 +2,7 @@
  * Pre-Form One Continuing Reports Page
  * Generate and manage continuing reports
  */
-import React, { useState } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
@@ -17,6 +17,8 @@ const PreFormOneContinuingReports = () => {
   const { year } = useParams();
   const { isAuthenticated } = useAuth();
   const [isGenerating, setIsGenerating] = useState({});
+  const [currentPage, setCurrentPage] = useState(1);
+  const PER_PAGE = 25;
 
   // Fetch students
   const { data: students = [], isLoading: studentsLoading } = useQuery({
@@ -111,13 +113,26 @@ const PreFormOneContinuingReports = () => {
   };
 
   // Sort students by name
-  const sortedStudents = [...students].sort((a, b) => {
-    if (a.first_name !== b.first_name) return a.first_name.localeCompare(b.first_name);
-    if ((a.middle_name || '') !== (b.middle_name || '')) {
-      return (a.middle_name || '').localeCompare(b.middle_name || '');
-    }
-    return a.surname.localeCompare(b.surname);
-  });
+  const sortedStudents = useMemo(
+    () =>
+      [...students].sort((a, b) => {
+        if (a.first_name !== b.first_name) return a.first_name.localeCompare(b.first_name);
+        if ((a.middle_name || '') !== (b.middle_name || '')) {
+          return (a.middle_name || '').localeCompare(b.middle_name || '');
+        }
+        return a.surname.localeCompare(b.surname);
+      }),
+    [students]
+  );
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortedStudents.length]);
+
+  const paginatedStudents = useMemo(
+    () => sortedStudents.slice(0, currentPage * PER_PAGE),
+    [sortedStudents, currentPage]
+  );
 
   return (
     <AdminLayout>
@@ -164,7 +179,8 @@ const PreFormOneContinuingReports = () => {
                     <i className="fas fa-users"></i> Student Continuing Reports - {year}
                   </h3>
                   <div className="students-list">
-                    {sortedStudents.map((student, index) => {
+                    {paginatedStudents.map((student, index) => {
+                      const globalIndex = (currentPage - 1) * PER_PAGE + index;
                       const result = continuingResults[admissionKey(student.admission_number)];
                       const hasReport =
                         result &&
@@ -175,7 +191,7 @@ const PreFormOneContinuingReports = () => {
                         <div key={student.id} className="student-report-card">
                           <div className="student-info">
                             <div className="student-details">
-                              <span className="student-number">{index + 1}</span>
+                              <span className="student-number">{globalIndex + 1}</span>
                               <div className="student-name">
                                 <strong>
                                   {student.first_name} {student.middle_name || ''} {student.surname}
@@ -224,6 +240,28 @@ const PreFormOneContinuingReports = () => {
                         </div>
                       );
                     })}
+                  </div>
+
+                  <div className="pagination-controls">
+                    <button
+                      type="button"
+                      className="pagination-btn"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    >
+                      <i className="fas fa-chevron-left"></i> Prev
+                    </button>
+                    <span className="pagination-info">
+                      {currentPage} / {Math.ceil(sortedStudents.length / PER_PAGE) || 1}
+                    </span>
+                    <button
+                      type="button"
+                      className="pagination-btn"
+                      disabled={currentPage >= Math.ceil(sortedStudents.length / PER_PAGE)}
+                      onClick={() => setCurrentPage((p) => p + 1)}
+                    >
+                      Next <i className="fas fa-chevron-right"></i>
+                    </button>
                   </div>
                 </div>
 
