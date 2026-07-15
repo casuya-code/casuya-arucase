@@ -11,7 +11,6 @@ import '../../utils/chartConfig'; // Register Chart.js components
 import { 
   sortMonthlyData,
   getCommonChartOptions,
-  _exportToCSV
 } from '../../utils/analyticsUtils';
 import './AnalyticsTrack.css';
 
@@ -528,29 +527,6 @@ const AllFormsAverages = () => {
                                     },
                                   },
                                 },
-                                annotation: {
-                                  annotations: {
-                                    line55: {
-                                      type: 'line',
-                                      yMin: 55,
-                                      yMax: 55,
-                                      borderColor: 'red',
-                                      borderWidth: 2,
-                                      borderDash: [5, 5],
-                                      label: {
-                                        display: true,
-                                        content: '55%',
-                                        position: 'end',
-                                        backgroundColor: 'red',
-                                        color: 'white',
-                                        font: {
-                                          size: 12,
-                                          weight: 'bold'
-                                        }
-                                      }
-                                    }
-                                  }
-                                }
                               },
                               scales: {
                                 y: {
