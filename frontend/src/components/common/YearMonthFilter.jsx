@@ -51,7 +51,7 @@ const YearMonthFilter = ({
         month: selectedMonth
       });
     }
-  }, [selectedYear, selectedMonth]);
+  }, [selectedYear, selectedMonth, onFilterChange]);
 
   const handleYearChange = (e) => {
     setSelectedYear(e.target.value);

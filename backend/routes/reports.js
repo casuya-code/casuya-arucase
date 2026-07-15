@@ -315,7 +315,7 @@ router.get('/individual/:form/:stream/:year/:term/:admNo', requireModule('indivi
       ].filter(Boolean); // Remove null/undefined values
       
       months.forEach((month) => {
-        const result = monthlyResult.rows.find(
+        const result = deduplicatedMonthlyResults.find(
           (r) => subjectCodesToMatch.includes(r.subject_code) && r.month === month
         );
         monthScores[month] = result ? parseFloat(result.score || 0) : 0;
@@ -359,7 +359,7 @@ router.get('/individual/:form/:stream/:year/:term/:admNo', requireModule('indivi
         debug_photo_lookup: debugPhotoLookup
       },
       subjects: subjectsResult.rows,
-      monthly_results: monthlyResult.rows,
+      monthly_results: deduplicatedMonthlyResults,
       comments: commentsRows,
       tabia_mwenendo: tabiaRows,
       subject_rankings: subjectRankings,
@@ -915,7 +915,7 @@ router.get('/bulk/:form/:year/:term/pdf', requireModule('bulk_report'), async (r
       decodedForm,
       stream,
       parseInt(year),
-      term,
+      normalizedTerm,
       students,
       apiUrl,
       authToken
@@ -928,11 +928,10 @@ router.get('/bulk/:form/:year/:term/pdf', requireModule('bulk_report'), async (r
     console.error('[BULK PDF] Error:', error);
     console.error('[BULK PDF] Error stack:', error.stack);
     console.error('[BULK PDF] Error details:', {
-      form: decodedForm,
-      stream: stream,
-      year: year,
-      term: term,
-      studentsCount: students ? students.length : 'undefined'
+      form: req.params.form,
+      stream: req.query.stream,
+      year: req.params.year,
+      term: req.params.term,
     });
     return sendError(res, error, 500);
   }
@@ -973,15 +972,28 @@ async function getReportData(form, stream, year, term, admNo) {
   // Normalize stream: NA -> A
   const normalizedStream = normalizeStream(stream);
   
+  // Normalize term to match database format
+  let normalizedTerm = term;
+  if (term) {
+    const t = decodeURIComponent(String(term).replace(/\+/g, ' ')).trim();
+    if (/^Term\s+I$/i.test(t) || /^Term\s+1$/i.test(t)) normalizedTerm = 'First Term';
+    else if (/^Term\s+II$/i.test(t) || /^Term\s+2$/i.test(t)) normalizedTerm = 'Second Term';
+    else normalizedTerm = t;
+  }
+  
   const studentResult = await query(
     'SELECT * FROM students WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4',
     [admNo, form, normalizedStream, year]
   );
   
-  const scoresResult = await query(
-    'SELECT * FROM individual_scores WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4',
-    [admNo, form, normalizedStream, year]
-  );
+  let scoresQuery = 'SELECT * FROM individual_scores WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5';
+  let scoresParams = [admNo, form, normalizedStream, 'NA', year];
+  if (normalizedTerm) {
+    scoresQuery += ' AND term = $6';
+    scoresParams.push(normalizedTerm);
+  }
+  
+  const scoresResult = await query(scoresQuery, scoresParams);
   
   const subjectsResult = await query(
     'SELECT * FROM subjects WHERE level = $1 AND stream = $2 AND year = $3',

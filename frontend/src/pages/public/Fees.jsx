@@ -18,7 +18,7 @@ const Fees = () => (
       const prepared = prepareSchoolFeeHtml(page);
       return { html: prepared.html, variant: prepared.variant };
     }}
-    cmsClassName="content-card fees-surface fees-surface--cms"
+    cmsClassName="fees-surface fees-surface--cms"
   />
 );
 

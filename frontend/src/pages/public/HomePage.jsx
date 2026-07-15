@@ -113,6 +113,7 @@ const HomePage = () => {
   const contactWhatsapp = settingValue(settings, 'contact_whatsapp');
   const contactAddress = settingValue(settings, 'contact_address');
   const socialLocation = settingValue(settings, 'social_location');
+  const hasContactInfo = contactPhone || contactEmail || contactWhatsapp || contactAddress;
   const { data: homepageCmsData } = usePublicPage('homepage', { enabled: cmsEnabled });
   const homepageCms = homepageCmsData?.data?.page;
   const hasHomepageCms = hasPublishedPage(homepageCms);
@@ -223,7 +224,7 @@ const HomePage = () => {
                               height={540}
                               sizes="(max-width: 480px) 100vw, (max-width: 768px) 100vw, 960px"
                               loading={isActive ? 'eager' : 'lazy'}
-                              fetchPriority={isActive ? 'high' : 'low'}
+                              fetchpriority={isActive ? 'high' : 'low'}
                               decoding={index === 0 ? 'sync' : 'async'}
                               onError={() => handleImageError(imageUrl)}
                               onLoad={() => {
@@ -583,18 +584,18 @@ const HomePage = () => {
         )}
 
         {/* —— Leadership —— */}
-        <section className="administration-section home-band--white" aria-labelledby="home-leadership-heading">
-          <div className="administration-container">
-            <header className="administration-header">
-              <h2 id="home-leadership-heading" className="administration-title">
-                <i className="fas fa-user-tie administration-title-icon" aria-hidden />
-                Uongozi wa Shule
-              </h2>
-              <p className="administration-subtitle">
-                School leadership · Wafahamu viongozi wa seminari
-              </p>
-            </header>
-            {administrators?.length > 0 ? (
+        {administrators?.length > 0 && (
+          <section className="administration-section home-band--white" aria-labelledby="home-leadership-heading">
+            <div className="administration-container">
+              <header className="administration-header">
+                <h2 id="home-leadership-heading" className="administration-title">
+                  <i className="fas fa-user-tie administration-title-icon" aria-hidden />
+                  Uongozi wa Shule
+                </h2>
+                <p className="administration-subtitle">
+                  School leadership · Wafahamu viongozi wa seminari
+                </p>
+              </header>
               <div className="administrators-grid">
                 {administrators.map((admin) => (
                   <article key={admin.id} className="admin-card admin-card--named">
@@ -639,27 +640,23 @@ const HomePage = () => {
                   </article>
                 ))}
               </div>
-            ) : (
-              <div className="administrators-empty">
-                <p>Taarifa za uongozi zitapatikana hivi karibuni.</p>
-              </div>
-            )}
-          </div>
-        </section>
+            </div>
+          </section>
+        )}
 
         {/* —— FAQ —— */}
-        <section className="home-faq home-band--light" aria-labelledby="home-faq-heading">
-          <div className="home-section-inner home-faq__inner">
-            <header className="home-section-header">
-              <h2 id="home-faq-heading" className="home-section-title">
-                <i className="fas fa-question-circle" aria-hidden />
-                Maswali Yanayoulizwa Mara kwa Mara
-              </h2>
-              <p className="home-section-subtitle">
-                Frequently asked questions · Majibu ya haraka
-              </p>
-            </header>
-            {displayFaqs.length > 0 ? (
+        {displayFaqs.length > 0 && (
+          <section className="home-faq home-band--light" aria-labelledby="home-faq-heading">
+            <div className="home-section-inner home-faq__inner">
+              <header className="home-section-header">
+                <h2 id="home-faq-heading" className="home-section-title">
+                  <i className="fas fa-question-circle" aria-hidden />
+                  Maswali Yanayoulizwa Mara kwa Mara
+                </h2>
+                <p className="home-section-subtitle">
+                  Frequently asked questions · Majibu ya haraka
+                </p>
+              </header>
               <div className="home-faq-list">
                 {displayFaqs.map((faq, index) => (
                   <div
@@ -689,69 +686,83 @@ const HomePage = () => {
                   </div>
                 ))}
               </div>
-            ) : (
-              <p className="home-faq-empty">
-                Maswali yataongezwa hapa hivi karibuni. Wasiliana nasi kwa msaada.
+              <p className="home-faq-help">
+                <i className="fas fa-info-circle" aria-hidden />
+                Haujapata jibu?{' '}
+                <Link to="/contact">Wasiliana nasi</Link>
+                {' · '}
+                <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
               </p>
-            )}
-            <p className="home-faq-help">
-              <i className="fas fa-info-circle" aria-hidden />
-              Haujapata jibu?{' '}
-              <Link to="/contact">Wasiliana nasi</Link>
-              {' · '}
-              <a href={`mailto:${contactEmail}`}>{contactEmail}</a>
-            </p>
-          </div>
-        </section>
+            </div>
+          </section>
+        )}
 
         {/* —— Contact strip —— */}
-        <section className="home-contact-strip home-band--light" aria-label="Mawasiliano">
-          <div className="home-section-inner">
-            <header className="home-section-header">
-              <h2 className="home-section-title">
-                <i className="fas fa-headset" aria-hidden />
-                Wasiliana Nasi
-              </h2>
-              <p className="home-section-subtitle">Get in touch · Tupo Oldonyosambu, Arusha</p>
-            </header>
-            <div className="home-contact-grid">
-              <a href={`tel:${contactPhone.replace(/\s/g, '')}`} className="home-contact-card">
-                <i className="fas fa-phone" aria-hidden />
-                <span className="home-contact-label">Simu / Phone</span>
-                <span className="home-contact-value">{contactPhone}</span>
-              </a>
-              <a href={`mailto:${contactEmail}`} className="home-contact-card">
-                <i className="fas fa-envelope" aria-hidden />
-                <span className="home-contact-label">Barua pepe / Email</span>
-                <span className="home-contact-value">{contactEmail}</span>
-              </a>
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="home-contact-card"
-              >
-                <i className="fab fa-whatsapp" aria-hidden />
-                <span className="home-contact-label">WhatsApp</span>
-                <span className="home-contact-value">Ujumbe wa haraka</span>
-              </a>
-              <a
-                href={socialLocation}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="home-contact-card"
-              >
-                <i className="fas fa-map-marker-alt" aria-hidden />
-                <span className="home-contact-label">Eneo / Location</span>
-                <span className="home-contact-value">{contactAddress}</span>
-              </a>
+        {hasContactInfo && (
+          <section className="home-contact-strip home-band--light" aria-label="Mawasiliano">
+            <div className="home-section-inner">
+              <header className="home-section-header">
+                <h2 className="home-section-title">
+                  <i className="fas fa-headset" aria-hidden />
+                  Wasiliana Nasi
+                </h2>
+                <p className="home-section-subtitle">Get in touch · Tupo Oldonyosambu, Arusha</p>
+              </header>
+              <div className="home-contact-grid">
+                <a href={`tel:${contactPhone.replace(/\s/g, '')}`} className="home-contact-card">
+                  <span className="home-contact-card-icon home-contact-card-icon--phone">
+                    <i className="fas fa-phone" aria-hidden />
+                  </span>
+                  <span className="home-contact-card-text">
+                    <span className="home-contact-label">Simu / Phone</span>
+                    <span className="home-contact-value">{contactPhone}</span>
+                  </span>
+                </a>
+                <a href={`mailto:${contactEmail}`} className="home-contact-card">
+                  <span className="home-contact-card-icon home-contact-card-icon--email">
+                    <i className="fas fa-envelope" aria-hidden />
+                  </span>
+                  <span className="home-contact-card-text">
+                    <span className="home-contact-label">Barua pepe / Email</span>
+                    <span className="home-contact-value">{contactEmail}</span>
+                  </span>
+                </a>
+                <a
+                  href={whatsappUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="home-contact-card"
+                >
+                  <span className="home-contact-card-icon home-contact-card-icon--whatsapp">
+                    <i className="fab fa-whatsapp" aria-hidden />
+                  </span>
+                  <span className="home-contact-card-text">
+                    <span className="home-contact-label">WhatsApp</span>
+                    <span className="home-contact-value">Ujumbe wa haraka</span>
+                  </span>
+                </a>
+                <a
+                  href={socialLocation}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="home-contact-card"
+                >
+                  <span className="home-contact-card-icon home-contact-card-icon--location">
+                    <i className="fas fa-map-marker-alt" aria-hidden />
+                  </span>
+                  <span className="home-contact-card-text">
+                    <span className="home-contact-label">Eneo / Location</span>
+                    <span className="home-contact-value">{contactAddress}</span>
+                  </span>
+                </a>
+              </div>
+              <Link to="/contact" className="home-contact-page-link">
+                Ukurasa kamili wa mawasiliano
+                <i className="fas fa-arrow-right" aria-hidden />
+              </Link>
             </div>
-            <Link to="/contact" className="home-contact-page-link">
-              Ukurasa kamili wa mawasiliano
-              <i className="fas fa-arrow-right" aria-hidden />
-            </Link>
-          </div>
-        </section>
+          </section>
+        )}
 
         {/* —— Modals —— */}
         {selectedAdmin && (

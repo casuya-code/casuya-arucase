@@ -41,7 +41,8 @@ export const SocketProvider = ({ children }) => {
       const { io } = await import('socket.io-client');
       if (cancelled) return;
 
-      const token = localStorage.getItem('token');
+      let token = null;
+      try { token = localStorage.getItem('token'); } catch (_) { /* storage blocked */ }
       newSocket = io(wsUrl, {
         // Polling first — more reliable on Railway / proxies; upgrades to websocket when available
         transports: ['polling', 'websocket'],

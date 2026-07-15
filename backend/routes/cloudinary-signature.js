@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const cloudinary = require('cloudinary').v2;
 const { sendError } = require('../utils/safeError');
+const { requireAuth } = require('../middleware/auth');
 
 // Configure Cloudinary with backend credentials
 cloudinary.config({
@@ -12,7 +13,7 @@ cloudinary.config({
 });
 
 // Generate Cloudinary signature for frontend uploads
-router.post('/signature', async (req, res) => {
+router.post('/signature', requireAuth, async (req, res) => {
   try {
     const { folder, public_id, timestamp } = req.body;
     
@@ -34,7 +35,7 @@ router.post('/signature', async (req, res) => {
       signature: signature,
       timestamp: timestamp,
       cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
-      api_key: process.env.CLOUDINARY_API_KEY, // Only for frontend widget use
+      api_key: process.env.CLOUDINARY_API_KEY,
       folder: folder
     });
     

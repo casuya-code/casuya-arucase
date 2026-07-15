@@ -79,7 +79,7 @@ export default function PublicCmsPage({
   afterHero = null,
   prepareHtml = null,
   cmsClassName,
-  proseClassName = 'public-cms-body public-cms-body--prose content-card',
+  proseClassName = 'public-cms-body public-cms-body--prose',
   hashScroll = false,
   showPageHero = false,
   heroVariant = 'default',

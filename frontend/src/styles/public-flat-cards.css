@@ -1,24 +1,22 @@
 :root {
-  --public-card-border-color: rgba(15, 23, 42, 0.08);
+  --public-card-border-color: rgba(15, 23, 42, 0.03);
   --public-card-border: 1px solid var(--public-card-border-color);
-  --public-card-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  --public-card-shadow-hover: 0 4px 12px rgba(15, 23, 42, 0.06);
+  --public-card-shadow: none;
+  --public-card-shadow-hover: none;
   --public-surface-tier-1: #f8f6f3;
   --public-surface-tier-2: #f5f3ef;
   --public-surface-tier-3: #faf8f5;
-  --public-hairline: rgba(15, 23, 42, 0.04);
+  --public-hairline: rgba(15, 23, 42, 0.03);
 }
 
 /* Unified card transition */
 .card-transition {
-  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+  transition: none;
 }
 
 /* Unified hover lift */
 .card-hover {
-  box-shadow: var(--public-card-shadow-hover);
-  transform: translateY(-2px);
-  border-color: rgba(15, 23, 42, 0.14);
+  transform: none;
 }
 
 /* Button transition */
@@ -146,7 +144,7 @@
     .student-report-md-card,
     .student-report-md-fallback,
     .student-report-card--prose.content-card,
-    .student-report-surface--cms.content-card,
+    .student-report-surface--cms,
     .months-selection,
     .results-view,
     .report-year-bar,
@@ -162,8 +160,6 @@
   ),
 .necta-results .necta-card {
   box-shadow: var(--public-card-shadow);
-  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
-  will-change: transform;
 }
 
 .public-layout .public-main :is(
@@ -178,9 +174,8 @@
     .necta-card:not(.necta-card--note):not(.necta-card--loading):hover,
     .student-report-card:hover
   ) {
-  box-shadow: var(--public-card-shadow-hover);
-  transform: translateY(-2px);
-  border-color: rgba(15, 23, 42, 0.14);
+  box-shadow: none;
+  transform: none;
 }
 
 /* ---- Card shadows + transition (shell context) ---- */
@@ -215,8 +210,6 @@
     .admissions-contact-list li
   ) {
   box-shadow: var(--public-card-shadow);
-  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
-  will-change: transform;
 }
 
 .public-immersive-shell :is(
@@ -227,9 +220,8 @@
     .contact-card:hover,
     .admissions-card:hover
   ) {
-  box-shadow: var(--public-card-shadow-hover);
-  transform: translateY(-2px);
-  border-color: rgba(15, 23, 42, 0.14);
+  box-shadow: none;
+  transform: none;
 }
 
 /* ---- Admissions apply page ---- */
@@ -247,16 +239,14 @@
     .admissions-apply-mode-bar__btn
   ) {
   box-shadow: var(--public-card-shadow);
-  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
-  will-change: transform;
 }
 
 .admissions-apply-page :is(
     .admissions-apply-toolbar__logout:hover,
     .admissions-apply-confirm__btn:hover:not(:disabled)
   ) {
-  box-shadow: var(--public-card-shadow-hover);
-  transform: translateY(-1px);
+  box-shadow: none;
+  transform: none;
 }
 
 /* ---- Button shadows ---- */
@@ -276,9 +266,8 @@
 .public-layout .public-main .report-term-btn,
 .public-layout .public-main .back-button,
 .public-layout .public-main .gallery-retry-btn {
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-  transition: box-shadow 0.2s ease, transform 0.2s ease, background 0.2s ease, border-color 0.2s ease;
-  will-change: transform;
+  box-shadow: none;
+  transition: background 0.2s ease, border-color 0.2s ease;
 }
 
 .public-layout .public-main .admissions-apply-button:hover,
@@ -296,8 +285,7 @@
 .public-layout .public-main .report-term-btn:not(.active):hover,
 .public-layout .public-main .back-button:hover,
 .public-layout .public-main .gallery-retry-btn:hover {
-  box-shadow: 0 3px 8px rgba(15, 23, 42, 0.08);
-  transform: translateY(-1px);
+  transform: none;
 }
 
 /* ---- Status badge override ---- */
@@ -313,13 +301,4 @@
 .public-immersive-shell .content-card {
   box-shadow: var(--public-card-shadow);
   border: 1px solid var(--public-card-border-color);
-  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
-  will-change: transform;
-}
-
-.public-layout .public-main .content-card:hover,
-.public-immersive-shell .content-card:hover {
-  box-shadow: var(--public-card-shadow-hover);
-  transform: translateY(-1px);
-  border-color: rgba(15, 23, 42, 0.14);
 }

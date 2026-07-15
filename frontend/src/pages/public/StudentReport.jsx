@@ -20,7 +20,7 @@ const StudentReport = () => (
       const raw = prepareStudentReportHtml(page);
       return { html: DOMPurify.sanitize(raw.html), variant: raw.variant };
     }}
-    cmsClassName="content-card student-report-surface student-report-surface--cms"
+    cmsClassName="student-report-surface student-report-surface--cms"
   />
 );
 

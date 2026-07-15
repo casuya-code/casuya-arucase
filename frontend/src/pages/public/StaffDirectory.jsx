@@ -100,51 +100,42 @@ export default function StaffDirectory() {
   }
 
   if ((staffProfiles || []).length === 0) {
-    return (
-      <div className="staff-empty">
-        <i className="fas fa-users" aria-hidden />
-        Hakuna wasifu wa watumishi kwa sasa. Ongeza katika Admin → Staff Profiles.
-      </div>
-    );
+    return null;
   }
 
   return (
     <>
-      <section
-        className="content-card staff-surface staff-surface--directory-teachers"
-        aria-labelledby="staff-teachers-heading"
-      >
-        <h3 id="staff-teachers-heading" className="staff-section-card__title">
-          Walimu
-        </h3>
-        {teachers.length === 0 ? (
-          <div className="staff-empty staff-empty--compact">Hakuna wasifu wa walimu kwa sasa.</div>
-        ) : (
+      {teachers.length > 0 && (
+        <section
+          className="content-card staff-surface staff-surface--directory-teachers"
+          aria-labelledby="staff-teachers-heading"
+        >
+          <h3 id="staff-teachers-heading" className="staff-section-card__title">
+            Walimu
+          </h3>
           <div className="staff-grid-public">
             {teachers.map((p) => (
               <StaffProfileCard key={p.id} profile={p} getPhotoUrl={getPhotoUrl} teaching />
             ))}
           </div>
-        )}
-      </section>
+        </section>
+      )}
 
-      <section
-        className="content-card staff-surface staff-surface--directory-non"
-        aria-labelledby="staff-non-teachers-heading"
-      >
-        <h3 id="staff-non-teachers-heading" className="staff-section-card__title">
-          Watumishi wasio walimu
-        </h3>
-        {nonTeaching.length === 0 ? (
-          <div className="staff-empty staff-empty--compact">Hakuna wasifu wa watumishi wasio walimu kwa sasa.</div>
-        ) : (
+      {nonTeaching.length > 0 && (
+        <section
+          className="content-card staff-surface staff-surface--directory-non"
+          aria-labelledby="staff-non-teachers-heading"
+        >
+          <h3 id="staff-non-teachers-heading" className="staff-section-card__title">
+            Watumishi wasio walimu
+          </h3>
           <div className="staff-grid-public">
             {nonTeaching.map((p) => (
               <StaffProfileCard key={p.id} profile={p} getPhotoUrl={getPhotoUrl} />
             ))}
           </div>
-        )}
-      </section>
+        </section>
+      )}
     </>
   );
 }

@@ -147,7 +147,6 @@ const Authority = lazy(() => import('./pages/admin/Authority'));
 const PassIdManagement = lazy(() => import('./pages/admin/PassIdManagement'));
 
 // Administration (lazy)
-const Users = lazy(() => import('./pages/admin/Users'));
 const Promotion = lazy(() => import('./pages/admin/Promotion'));
 const PromotionSelectClass = lazy(() => import('./pages/admin/PromotionSelectClass'));
 const PromotionPreview = lazy(() => import('./pages/admin/PromotionPreview'));
@@ -2158,11 +2157,6 @@ function App() {
             <Route path="/admin/branding/authority" element={<ProtectedRoute><Authority /></ProtectedRoute>} />
             <Route path="/admin/pass-ids" element={<ProtectedRoute><PassIdManagement /></ProtectedRoute>} />
             <Route path="/admin/pass-ids/:form" element={<ProtectedRoute><PassIdManagement /></ProtectedRoute>} />
-
-            {/* Administration Routes */}
-            {/* User Management */}
-            <Route path="/admin/users" element={<ProtectedRoute requiredAdmin><Users /></ProtectedRoute>} />
-            
 
             {/* Student Promotion */}
             <Route path="/admin/promotion" element={<ProtectedRoute><Promotion /></ProtectedRoute>} />

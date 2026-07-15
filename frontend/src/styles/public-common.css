@@ -27,21 +27,20 @@
 .content-card {
   background: white;
   border-radius: 6px;
-  border: 1px solid rgba(15, 23, 42, 0.08);
+  border: 1px solid var(--public-card-border-color);
   padding: 1.25rem;
-  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+  box-shadow: var(--public-card-shadow);
   width: 100%;
   max-width: 100%;
   margin: 0;
   box-sizing: border-box;
   white-space: pre-wrap;
   word-wrap: break-word;
-  transition: box-shadow 0.25s ease, transform 0.25s ease;
 }
 
 .content-card:hover {
-  box-shadow: 0 4px 12px rgba(15, 23, 42, 0.06);
-  transform: translateY(-1px);
+  box-shadow: var(--public-card-shadow);
+  transform: none;
 }
 
 .content-card h1 {

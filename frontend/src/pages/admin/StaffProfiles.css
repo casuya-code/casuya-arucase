@@ -1,12 +1,35 @@
+/* Staff Profiles — admin theme with card frames, accent colors, and polished buttons */
+
+.staff-profiles-page {
+  --staff-photo-size: clamp(68px, 12vw, 96px);
+  --staff-photo-outer-padding: 3px;
+  --staff-empty-accent: #1a5490;
+  --staff-empty-accent-soft: color-mix(in srgb, #1a5490 12%, white);
+  --staff-empty-surface: linear-gradient(165deg, #fafbff 0%, #f3f6fb 45%, #eef2f8 100%);
+  --staff-blue: #1a5490;
+  --staff-blue-light: #3b82f6;
+  --staff-green: #059669;
+  --staff-red: #dc2626;
+  --staff-gray: #6b7280;
+  --staff-line: #d1d5db;
+  --staff-line-soft: #e5e7eb;
+}
+
 .staff-form-hint {
   margin: 0.35rem 0 0;
   font-size: 0.75rem;
   line-height: 1.35;
-  color: #6b7280;
+  color: var(--staff-gray);
 }
 
 .staff-form .form-group--full {
   flex: 1 1 100%;
+}
+
+/* ── Card frame ── */
+.staff-profiles-page .excel-card {
+  border-top: 3px solid var(--staff-blue);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
 }
 
 .staff-profiles-page .excel-card-header {
@@ -14,13 +37,24 @@
   align-items: center;
   gap: 0.5rem;
   flex-wrap: wrap;
+  background: #ffffff;
+  color: #111827;
+  border-bottom: 1px solid var(--staff-line);
+}
+
+.staff-profiles-page .excel-card-header i {
+  color: var(--staff-blue);
+  font-size: 1.25rem;
 }
 
 .staff-page-title {
   flex: 1;
   min-width: 180px;
+  font-weight: 600;
+  color: #111827;
 }
 
+/* ── Stat cards ── */
 .staff-stats {
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -29,19 +63,25 @@
 }
 
 .staff-stat {
-  border: 1px solid #e5e7eb;
+  border: 1px solid var(--staff-line);
+  border-left-width: 4px;
   border-radius: 0;
   padding: 0.45rem 0.6rem;
   font-size: 0.82rem;
   font-weight: 800;
-  background: #f9fafb;
+  background: #ffffff;
   color: #1f2937;
   display: grid;
   gap: 0.05rem;
 }
 
+.staff-stat:nth-child(1) { border-left-color: var(--staff-gray); }
+.staff-stat:nth-child(2) { border-left-color: var(--staff-blue-light); }
+.staff-stat:nth-child(3) { border-left-color: #8b5cf6; }
+.staff-stat:nth-child(4) { border-left-color: var(--staff-green); }
+
 .staff-stat small {
-  color: #6b7280;
+  color: var(--staff-gray);
   font-size: 0.72rem;
   font-weight: 700;
 }
@@ -51,6 +91,7 @@
   color: #111827;
 }
 
+/* ── Toolbar / search ── */
 .staff-profiles-page .staff-toolbar {
   display: flex;
   flex-direction: column;
@@ -58,15 +99,403 @@
   margin-bottom: 1rem;
 }
 
-.staff-profiles-page {
-  --staff-photo-size: clamp(68px, 12vw, 96px);
-  --staff-photo-outer-padding: 3px;
-  --staff-empty-accent: var(--primary-color, #1a5490);
-  --staff-empty-accent-soft: color-mix(in srgb, var(--staff-empty-accent) 12%, white);
-  --staff-empty-surface: linear-gradient(165deg, #fafbff 0%, #f3f6fb 45%, #eef2f8 100%);
+.staff-profiles-page .staff-toolbar .excel-input {
+  border: 1px solid var(--staff-line);
+  background: #ffffff;
+  color: #111827;
+  min-height: 44px;
+  padding: 0 0.75rem;
 }
 
-/* Empty / error panels (scoped; no dependency on Administrators.css) */
+.staff-profiles-page .staff-toolbar .excel-input:focus {
+  border-color: var(--staff-blue-light) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+  outline: none;
+}
+
+/* ── Filter tabs ── */
+.staff-type-filters {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.45rem;
+}
+
+.staff-filter-tab {
+  border: 1px solid var(--staff-line);
+  background: #ffffff;
+  border-radius: 0;
+  min-height: 44px;
+  padding: 0.45rem 0.55rem;
+  font-weight: 600;
+  color: #111827;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  position: relative;
+}
+
+.staff-filter-tab:hover {
+  border-color: var(--staff-blue-light);
+  color: var(--staff-blue);
+}
+
+.staff-filter-tab:focus-visible {
+  outline: 2px solid var(--staff-blue-light);
+  outline-offset: 2px;
+}
+
+.staff-filter-tab.is-active {
+  border-color: var(--staff-blue-light);
+  background: #f0f5ff;
+  color: var(--staff-blue);
+  font-weight: 700;
+}
+
+.staff-filter-tab.is-active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--staff-blue-light);
+}
+
+/* ── Staff card grid ── */
+.staff-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 0.9rem;
+}
+
+.staff-card-admin {
+  border: 1px solid var(--staff-line);
+  border-top: 3px solid var(--staff-blue);
+  border-radius: 0;
+  background: #ffffff;
+  padding: 0.9rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  transition: box-shadow 0.15s ease, transform 0.15s ease;
+}
+
+.staff-card-admin:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  transform: translateY(-1px);
+}
+
+.staff-card-top {
+  display: grid;
+  grid-template-columns: var(--staff-photo-size) 1fr;
+  gap: 0.75rem;
+}
+
+/* ── Photo frame ── */
+.staff-photo-frame {
+  width: var(--staff-photo-size);
+  aspect-ratio: 1 / 1;
+  padding: 0;
+  position: relative;
+  border-radius: 0;
+  background: var(--staff-blue-light);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  overflow: hidden;
+  display: block;
+
+  --mat-inset: clamp(3px, 1vw, 5px);
+  --photo-inset: clamp(6px, 1.5vw, 9px);
+}
+
+.staff-photo-frame::before {
+  content: '';
+  position: absolute;
+  inset: var(--mat-inset);
+  background: #ffffff;
+  border-radius: 0;
+  box-shadow: inset 0 0 0 1px var(--staff-line-soft);
+}
+
+.staff-photo-inner {
+  position: absolute;
+  inset: var(--photo-inset);
+  border-radius: 0;
+  border: 0;
+  object-fit: contain;
+  display: block;
+  background: #ffffff;
+  box-shadow: inset 0 0 0 1px var(--staff-line);
+}
+
+.staff-photo-placeholder {
+  display: grid;
+  place-items: center;
+  color: var(--staff-gray);
+  font-size: 1.35rem;
+  background: #ffffff;
+}
+
+.staff-card-top h3 {
+  margin: 0;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #111827;
+}
+
+.staff-card-top p {
+  margin: 0.15rem 0 0.35rem;
+  color: var(--staff-gray);
+  font-size: 0.9rem;
+}
+
+/* ── Chip badges ── */
+.chip-row {
+  display: inline-flex;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.chip {
+  border-radius: 0;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border: none;
+}
+
+.chip.teacher {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.chip.non-teacher {
+  background: #ede9fe;
+  color: #6d28d9;
+}
+
+.chip.active {
+  background: #d1fae5;
+  color: #047857;
+}
+
+.chip.inactive {
+  background: #fee2e2;
+  color: #b91c1c;
+}
+
+.staff-meta {
+  margin-top: 0.65rem;
+  display: grid;
+  gap: 0.2rem;
+  color: #374151;
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.staff-meta strong {
+  font-weight: 600;
+  color: #111827;
+}
+
+/* ── Card action buttons ── */
+.staff-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: auto;
+  padding-top: 0.65rem;
+  flex-wrap: wrap;
+  align-items: center;
+  border-top: 1px solid var(--staff-line-soft);
+}
+
+.staff-actions .excel-btn.small {
+  flex: 1 1 auto;
+  justify-content: center;
+  min-height: 40px;
+}
+
+.staff-actions .excel-btn.small:hover {
+  filter: brightness(1.1);
+}
+
+/* ── Form layout ── */
+.staff-form .form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.75rem;
+}
+
+.staff-form .form-section-title {
+  margin: 0.25rem 0 0.1rem;
+  font-weight: 800;
+  color: var(--staff-blue);
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.staff-form .form-group label {
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.88rem;
+}
+
+.staff-form .excel-input {
+  border: 1px solid var(--staff-line);
+  background: #ffffff;
+  color: #111827;
+  min-height: 44px;
+}
+
+.staff-form .excel-input:focus {
+  border-color: var(--staff-blue-light) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+  outline: none;
+}
+
+.staff-form select.excel-input {
+  padding: 0 0.55rem;
+}
+
+.checkbox-line {
+  display: flex;
+  align-items: end;
+  padding-top: 0.25rem;
+}
+
+.checkbox-line label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+}
+
+.checkbox-line input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  accent-color: var(--staff-blue-light);
+  cursor: pointer;
+}
+
+/* ── Modal ── */
+.staff-profiles-page .modal-content.large {
+  width: min(980px, 95vw);
+  max-height: 92vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.staff-profiles-page .modal-header {
+  border-bottom: 2px solid var(--staff-blue);
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.staff-profiles-page .modal-header h3 {
+  margin: 0;
+  font-weight: 700;
+  color: var(--staff-blue);
+  font-size: 1.1rem;
+}
+
+.staff-profiles-page .modal-close {
+  width: 2.25rem;
+  height: 2.25rem;
+  display: grid;
+  place-items: center;
+  background: transparent;
+  border: 1px solid var(--staff-line);
+  color: var(--staff-gray);
+  cursor: pointer;
+  font-size: 1rem;
+  transition: all 0.15s ease;
+}
+
+.staff-profiles-page .modal-close:hover {
+  background: #fee2e2;
+  color: var(--staff-red);
+  border-color: var(--staff-red);
+}
+
+.staff-profiles-page .staff-form {
+  overflow: auto;
+  padding: 1.25rem;
+}
+
+/* ── Upload area ── */
+.staff-upload-trigger {
+  width: 100%;
+  justify-content: center;
+  min-height: 44px;
+  background: #f9fafb !important;
+  color: #111827 !important;
+  border: 1px dashed var(--staff-line) !important;
+}
+
+.staff-upload-trigger:hover {
+  background: #f0f5ff !important;
+  border-color: var(--staff-blue-light) !important;
+  color: var(--staff-blue) !important;
+}
+
+.upload-area {
+  border: 1px dashed var(--staff-line);
+  padding: 0.5rem;
+  background: #f9fafb;
+  min-height: 120px;
+  display: grid;
+  place-items: center;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.upload-area:hover {
+  border-color: var(--staff-blue-light);
+}
+
+.photo-preview {
+  max-height: 160px;
+  object-fit: contain;
+  border: 1px solid var(--staff-line);
+}
+
+/* ── Form actions ── */
+.staff-profiles-page .form-actions {
+  position: sticky;
+  bottom: 0;
+  background: #ffffff;
+  padding: 0.75rem 0 0;
+  border-top: 1px solid var(--staff-line);
+  margin-top: 0.5rem;
+  z-index: 2;
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+}
+
+.staff-profiles-page .form-actions .excel-btn {
+  min-height: 44px;
+  padding-left: 1.5rem;
+  padding-right: 1.5rem;
+  justify-content: center;
+}
+
+.staff-profiles-page .form-actions .excel-btn.secondary {
+  background: #ffffff;
+  color: var(--staff-blue);
+  border: 1px solid var(--staff-line);
+}
+
+.staff-profiles-page .form-actions .excel-btn.secondary:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: var(--staff-blue-light);
+}
+
+/* ── Empty states ── */
 .staff-profiles-page .staff-empty-panel {
   text-align: center;
   padding: clamp(1.75rem, 4vw, 2.75rem) clamp(1rem, 3vw, 2rem);
@@ -142,7 +571,7 @@
   font-weight: 700;
   padding-left: 1.35rem;
   padding-right: 1.35rem;
-  box-shadow: 0 4px 14px color-mix(in srgb, var(--staff-empty-accent) 35%, transparent);
+  box-shadow: 0 4px 14px rgba(26, 84, 144, 0.35);
 }
 
 .staff-profiles-page .staff-empty-filter-actions {
@@ -214,13 +643,8 @@
 }
 
 @keyframes staff-empty-float {
-  0%,
-  100% {
-    transform: translateY(0);
-  }
-  50% {
-    transform: translateY(-5px);
-  }
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
 }
 
 /* Quick-start hint cards */
@@ -241,19 +665,17 @@
   align-items: center;
   padding: 0.75rem 0.85rem;
   border: 1px solid #e2e8f0;
+  border-left: 3px solid var(--staff-blue-light);
   background: #fff;
   cursor: pointer;
   text-align: left;
   font: inherit;
   color: inherit;
-  transition:
-    border-color 0.18s ease,
-    box-shadow 0.18s ease,
-    transform 0.18s ease;
+  transition: all 0.18s ease;
 }
 
 .staff-profiles-page .staff-empty-hint-card:hover {
-  border-color: color-mix(in srgb, var(--staff-empty-accent) 45%, #e2e8f0);
+  border-color: var(--staff-blue-light);
   box-shadow: 0 8px 22px rgba(15, 23, 42, 0.08);
   transform: translateY(-2px);
 }
@@ -296,200 +718,6 @@
   line-height: 1.35;
 }
 
-.staff-type-filters {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 0.45rem;
-}
-
-.staff-filter-tab {
-  border: 1px solid var(--border-color);
-  background: #fff;
-  border-radius: 0;
-  min-height: 42px;
-  padding: 0.45rem 0.55rem;
-  font-weight: 600;
-  color: var(--text-color);
-  cursor: pointer;
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-}
-
-.staff-filter-tab:hover {
-  border-color: var(--text-muted);
-}
-
-.staff-filter-tab:focus-visible {
-  outline: 2px solid var(--primary-color);
-  outline-offset: 2px;
-}
-
-.staff-filter-tab.is-active {
-  border-color: var(--primary-color);
-  background: var(--light-color);
-  color: var(--primary-color);
-  box-shadow: inset 0 0 0 1px var(--primary-color);
-}
-
-.staff-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-  gap: 0.9rem;
-}
-
-.staff-card-admin {
-  border: 1px solid #e5e7eb;
-  border-radius: 0;
-  background: #fff;
-  padding: 0.9rem;
-  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.03);
-  display: flex;
-  flex-direction: column;
-}
-
-.staff-card-top {
-  display: grid;
-  grid-template-columns: var(--staff-photo-size) 1fr;
-  gap: 0.75rem;
-}
-
-.staff-photo-frame {
-  width: var(--staff-photo-size);
-  aspect-ratio: 1 / 1;
-  padding: 0;
-  position: relative;
-  border-radius: 0;
-  background: #e5e7eb; /* outer frame */
-  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
-  overflow: hidden;
-  display: block;
-
-  --mat-inset: clamp(4px, 1.25vw, 7px);
-  --photo-inset: clamp(7px, 1.8vw, 11px);
-}
-
-.staff-photo-frame::before {
-  content: '';
-  position: absolute;
-  inset: var(--mat-inset);
-  background: #ffffff; /* inner mat */
-  border-radius: 0;
-  box-shadow: inset 0 0 0 2px #f3f4f6; /* subtle inner border */
-}
-
-.staff-photo-inner {
-  position: absolute;
-  inset: var(--photo-inset);
-  border-radius: 0;
-  border: 0;
-  object-fit: contain;
-  display: block;
-  background: #ffffff;
-  box-shadow: inset 0 0 0 1px #d1d5db; /* thin border around the photo */
-}
-
-.staff-photo-placeholder {
-  display: grid;
-  place-items: center;
-  color: #6b7280;
-  font-size: 1.35rem;
-  background: #ffffff;
-}
-
-.staff-card-top h3 {
-  margin: 0;
-  font-size: 1rem;
-}
-
-.staff-card-top p {
-  margin: 0.15rem 0 0.35rem;
-  color: #4b5563;
-}
-
-.chip-row {
-  display: inline-flex;
-  gap: 0.35rem;
-  flex-wrap: wrap;
-}
-
-.chip {
-  border-radius: 0;
-  padding: 0.2rem 0.6rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  border: 1px solid var(--border-color);
-  background: #fff;
-  color: var(--text-color);
-}
-
-.staff-meta {
-  margin-top: 0.65rem;
-  display: grid;
-  gap: 0.2rem;
-  color: #1f2937;
-  font-size: 0.9rem;
-  min-height: 108px;
-}
-
-.staff-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-top: auto;
-  padding-top: 0.65rem;
-  flex-wrap: wrap;
-  align-items: center;
-}
-
-.staff-actions .excel-btn.small {
-  flex: 1 1 auto;
-  justify-content: center;
-  min-height: 40px;
-}
-
-.staff-form .form-row {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 0.75rem;
-}
-
-.staff-form .form-section-title {
-  margin: 0.25rem 0 0.1rem;
-  font-weight: 900;
-  color: var(--primary-color);
-}
-
-.checkbox-line {
-  display: flex;
-  align-items: end;
-}
-
-.staff-profiles-page .modal-content.large {
-  width: min(980px, 95vw);
-  max-height: 92vh;
-  overflow: hidden;
-  display: flex;
-  flex-direction: column;
-}
-
-.staff-profiles-page .staff-form {
-  overflow: auto;
-  padding-bottom: 0.2rem;
-}
-
-.staff-upload-trigger {
-  width: 100%;
-  justify-content: center;
-  min-height: 42px;
-}
-
-.staff-profiles-page .form-actions {
-  position: sticky;
-  bottom: 0;
-  background: #fff;
-  padding-top: 0.65rem;
-  border-top: 1px solid #eef2f7;
-  z-index: 2;
-}
-
 @media (prefers-reduced-motion: reduce) {
   .staff-profiles-page .staff-empty-hero-badge--a,
   .staff-profiles-page .staff-empty-hero-badge--b {
@@ -501,41 +729,33 @@
   .staff-form .form-row {
     grid-template-columns: 1fr;
   }
-
   .staff-profiles-page .staff-empty-hint-cards {
     grid-template-columns: 1fr;
   }
-
   .staff-stats {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
-
   .staff-grid {
     grid-template-columns: 1fr;
     gap: 0.7rem;
   }
-
   .staff-card-admin {
     padding: 0.8rem;
     border-radius: 0;
   }
-
   .staff-actions .excel-btn.small {
     flex: 1 1 120px;
     min-height: 44px;
   }
-
   .staff-profiles-page .header-actions {
     width: 100%;
     display: flex;
   }
-
   .staff-profiles-page .header-actions .excel-btn {
     width: 100%;
     min-height: 46px;
     justify-content: center;
   }
-
   .staff-profiles-page .modal-content.large {
     width: 100vw;
     max-width: 100vw;
@@ -543,7 +763,6 @@
     height: 100vh;
     border-radius: 0;
   }
-
   .staff-profiles-page .modal-header {
     position: sticky;
     top: 0;
@@ -552,4 +771,3 @@
     border-bottom: 1px solid #eef2f7;
   }
 }
-

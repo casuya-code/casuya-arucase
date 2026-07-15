@@ -4,11 +4,12 @@ import api from '../services/api';
 /** Staff app areas that may use httpOnly cookies without a localStorage JWT. */
 function shouldRestoreStaffSession(pathname) {
   if (pathname === '/login' || pathname === '/student-login') return false;
-  if (localStorage.getItem('token')) return true;
+  try { if (localStorage.getItem('token')) return true; } catch (_) { /* storage blocked */ }
   return (
     pathname.startsWith('/admin') ||
     pathname.startsWith('/students/') ||
-    pathname.startsWith('/reports/')
+    pathname.startsWith('/reports/') ||
+    pathname.startsWith('/analytics/')
   );
 }
 
@@ -83,7 +84,8 @@ export const AuthProvider = ({ children }) => {
   const [loading, setLoading] = useState(true);
 
   const playLogoutSound = () => {
-    const isMuted = localStorage.getItem('uiSoundsMuted') === 'true';
+    let isMuted = false;
+    try { isMuted = localStorage.getItem('uiSoundsMuted') === 'true'; } catch (_) { /* storage blocked */ }
     if (isMuted) return;
 
     import('howler').then(({ Howl }) => {
@@ -125,8 +127,8 @@ export const AuthProvider = ({ children }) => {
       .then((response) => {
         if (cancelled) return;
         if (response?.status === 401 || response?.status === 403) {
-          localStorage.removeItem('token');
-          localStorage.removeItem('user');
+          try { localStorage.removeItem('token'); } catch (_) { /* storage blocked */ }
+          try { localStorage.removeItem('user'); } catch (_) { /* storage blocked */ }
           setUser(null);
           return;
         }
@@ -135,8 +137,8 @@ export const AuthProvider = ({ children }) => {
       })
       .catch(() => {
         if (cancelled) return;
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        try { localStorage.removeItem('token'); } catch (_) { /* storage blocked */ }
+        try { localStorage.removeItem('user'); } catch (_) { /* storage blocked */ }
         setUser(null);
       })
       .finally(() => {
@@ -174,8 +176,8 @@ export const AuthProvider = ({ children }) => {
       window.__verifyingToken = false;
 
       if (response.status === 401 || response.status === 403) {
-        localStorage.removeItem('token');
-        localStorage.removeItem('user');
+        try { localStorage.removeItem('token'); } catch (_) { /* storage blocked */ }
+        try { localStorage.removeItem('user'); } catch (_) { /* storage blocked */ }
         setUser(null);
         return false;
       }
@@ -185,8 +187,8 @@ export const AuthProvider = ({ children }) => {
     } catch (error) {
       window.__verifyingToken = false;
       console.error('Token verification failed:', error);
-      localStorage.removeItem('token');
-      localStorage.removeItem('user');
+      try { localStorage.removeItem('token'); } catch (_) { /* storage blocked */ }
+      try { localStorage.removeItem('user'); } catch (_) { /* storage blocked */ }
       setUser(null);
       return false;
     }
@@ -247,7 +249,7 @@ export const AuthProvider = ({ children }) => {
           
           // Store token in localStorage for fallback
           if (token) {
-            localStorage.setItem('token', token);
+            try { localStorage.setItem('token', token); } catch (_) { /* storage blocked */ }
           }
           
           setUser(user);
@@ -286,8 +288,8 @@ export const AuthProvider = ({ children }) => {
       }
     }
     // Clear token from localStorage (for fallback auth)
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    try { localStorage.removeItem('token'); } catch (_) { /* storage blocked */ }
+    try { localStorage.removeItem('user'); } catch (_) { /* storage blocked */ }
     setUser(null);
     window.location.href = '/login';
   };

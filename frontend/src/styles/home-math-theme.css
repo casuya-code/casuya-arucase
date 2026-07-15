@@ -8,9 +8,13 @@
   --home-primary: #1a5490;
   --home-primary-deep: #0f2d52;
   --home-primary-mid: #234a73;
+  --home-primary-light: #3b82c4;
   --home-accent: #c9a227;
   --home-accent-deep: #9a7b1a;
   --home-accent-soft: #f5ecd4;
+  --home-accent-gradient: linear-gradient(135deg, #c9a227, #b8922a);
+  --home-primary-gradient: linear-gradient(135deg, #1a5490, #2563eb);
+  --home-primary-gradient-deep: linear-gradient(135deg, #0f2d52, #1a5490);
   --home-ink: #0f172a;
   --home-ink-body: #334155;
   --home-ink-muted: #64748b;
@@ -18,9 +22,11 @@
   --home-surface: #ffffff;
   --home-surface-band: #f5f3ef;
   --home-surface-elevated: #faf8f5;
+  --home-surface-warm: #fdfcfa;
   --home-border: rgba(15, 23, 42, 0.08);
   --home-border-weak: rgba(15, 23, 42, 0.04);
   --home-border-strong: rgba(15, 23, 42, 0.16);
+  --home-glow-accent: 0 0 20px rgba(201, 162, 39, 0.15);
 
   --home-space-1: var(--fibonacci-8, 8px);
   --home-space-2: var(--fibonacci-13, 13px);
@@ -31,12 +37,15 @@
   --home-grid-gap: var(--home-space-3);
   --home-card-pad: var(--home-space-4);
   --home-section-pad-y: clamp(var(--home-space-4), 5vw, var(--home-space-5));
-  --home-radius: var(--home-space-2);
-  --home-radius-sm: var(--home-space-1);
+  --home-radius: 12px;
+  --home-radius-sm: 8px;
+  --home-radius-pill: 9999px;
 
   --home-frame-border: 1px solid var(--home-border);
-  --home-frame-shadow: 0 1px 2px rgba(15, 45, 82, 0.06);
-  --home-frame-shadow-hover: 0 4px 14px rgba(15, 45, 82, 0.1);
+  --home-frame-shadow: 0 1px 3px rgba(15, 45, 82, 0.06), 0 1px 2px rgba(15, 45, 82, 0.04);
+  --home-frame-shadow-hover: 0 8px 25px rgba(15, 45, 82, 0.1), 0 2px 6px rgba(15, 45, 82, 0.06);
+  --home-frame-shadow-elevated: 0 12px 40px rgba(15, 45, 82, 0.12), 0 3px 8px rgba(15, 45, 82, 0.06);
+  --home-frame-shadow-active: 0 2px 8px rgba(15, 45, 82, 0.08);
 
   --home-font-display: var(--font-display, 'Libre Baskerville', Georgia, 'Times New Roman', serif);
   --home-font-ui: var(--font-ui, 'Source Sans 3', system-ui, 'Segoe UI', sans-serif);
@@ -50,19 +59,55 @@
 
   font-family: var(--home-font-ui);
   color: var(--home-ink-body);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-/* Subtle Fibonacci stripe on band sections */
+/* Subtle mesh gradient + Fibonacci stripe on band sections */
 .homepage.home-band--light,
 .homepage .home-band--light {
   background-color: var(--home-surface-band);
-  background-image: repeating-linear-gradient(
-    90deg,
-    transparent,
-    transparent 20px,
-    rgba(26, 84, 144, 0.025) 20px,
-    rgba(26, 84, 144, 0.025) 21px
-  );
+  background-image:
+    radial-gradient(ellipse at 20% 50%, rgba(201, 162, 39, 0.03) 0%, transparent 60%),
+    radial-gradient(ellipse at 80% 50%, rgba(26, 84, 144, 0.03) 0%, transparent 60%),
+    repeating-linear-gradient(
+      90deg,
+      transparent,
+      transparent 20px,
+      rgba(26, 84, 144, 0.02) 20px,
+      rgba(26, 84, 144, 0.02) 21px
+    );
+}
+
+/* Section divider: gold accent line between bands */
+.homepage .home-band--light,
+.homepage .home-band--white {
+  position: relative;
+}
+
+.homepage .home-band--light + .home-band--light,
+.homepage .home-band--white + .home-band--white,
+.homepage .home-band--light + .home-band--white,
+.homepage .home-band--white + .home-band--light {
+  margin-top: 0;
+}
+
+/* Subtle gold bar at section bottom for visual rhythm */
+.homepage > section:not(.main-content):not(.home-contact-strip) {
+  position: relative;
+}
+
+.homepage > section:not(.main-content):not(.home-contact-strip)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(60px, 20%);
+  height: 1.5px;
+  background: var(--home-accent-gradient);
+  opacity: 0.15;
+  border-radius: 9999px;
 }
 
 .homepage.home-band--white,
@@ -120,7 +165,9 @@
   box-shadow: var(--home-frame-shadow);
   background: var(--home-surface);
   border-radius: var(--home-radius-sm);
-  transition: box-shadow 0.25s ease, border-color 0.25s ease, transform 0.25s ease;
+  transition: box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              border-color 0.3s cubic-bezier(0.22, 1, 0.36, 1),
+              transform 0.3s cubic-bezier(0.22, 1, 0.36, 1);
 }
 
 .homepage .home-framed-card:hover,
@@ -129,18 +176,31 @@
 .homepage .home-quicklink-card:hover,
 .homepage .home-program-card:hover,
 .homepage .home-announce-item:hover,
-.homepage .home-faq-item:hover,
+.homepage .home-contact-card:hover,
 .homepage .home-gallery-item:hover,
 .homepage .admin-card--named:hover {
   box-shadow: var(--home-frame-shadow-hover);
   border-color: var(--home-border-strong);
-  transform: translateY(-2px);
+  transform: translateY(-3px);
 }
 
-/* Stats — unified gold accent */
+/* Stats — unified accent */
 .homepage .home-stats-section {
   padding: var(--home-section-pad-y) 0;
   border-bottom: 1px solid var(--home-border-weak);
+  position: relative;
+}
+
+.homepage .home-stats-section::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(120px, 30%);
+  height: 2px;
+  background: var(--home-accent-gradient);
+  opacity: 0.3;
 }
 
 .homepage .home-stat-card {
@@ -311,23 +371,42 @@
 }
 
 .homepage .home-admissions-steps li span {
-  background: var(--home-primary);
+  background: var(--home-accent-gradient);
   color: #fff;
+  box-shadow: 0 2px 8px rgba(201, 162, 39, 0.25);
 }
 
 .homepage .home-admissions-cta .home-admissions-btn {
   color: var(--home-primary-deep);
   border-color: var(--home-primary);
+  font-weight: 700;
+  letter-spacing: 0.02em;
 }
 
 .homepage .home-admissions-cta .home-admissions-btn:hover {
   background: var(--home-accent-soft);
   border-color: var(--home-primary-mid);
   color: var(--home-primary-deep);
+  box-shadow: var(--home-frame-shadow-hover);
+  transform: translateY(-1px);
+}
+
+.homepage .home-admissions-cta .home-admissions-btn:active {
+  transform: translateY(0);
+  box-shadow: var(--home-frame-shadow-active);
 }
 
 .homepage .home-admissions-cta .home-admissions-btn--primary {
-  color: var(--home-primary-deep);
+  color: #fff;
+  background: var(--home-accent-gradient);
+  border-color: var(--home-accent-deep);
+  box-shadow: 0 2px 8px rgba(201, 162, 39, 0.3);
+}
+
+.homepage .home-admissions-cta .home-admissions-btn--primary:hover {
+  background: linear-gradient(135deg, #d4b44a, #c9a227);
+  border-color: var(--home-accent-deep);
+  box-shadow: 0 4px 14px rgba(201, 162, 39, 0.35);
 }
 
 .homepage .home-admissions-cta .home-admissions-btn--phone {
@@ -450,7 +529,7 @@
   background: linear-gradient(
     135deg,
     var(--home-primary-mid) 0%,
-    var(--home-primary) 45%,
+    var(--home-primary) 40%,
     var(--home-primary-deep) 100%
   );
 }
@@ -465,14 +544,23 @@
 }
 
 .homepage .hero-cta--primary {
-  background: var(--home-accent);
-  color: var(--home-primary-deep);
+  background: var(--home-accent-gradient);
+  color: #fff;
   border-color: var(--home-accent);
   border-radius: 9999px;
+  box-shadow: 0 2px 10px rgba(201, 162, 39, 0.3);
+  font-weight: 800;
 }
 
 .homepage .hero-cta--primary:hover {
-  background: #e8c96a;
+  background: linear-gradient(135deg, #d4b44a, #c9a227);
+  box-shadow: 0 4px 20px rgba(201, 162, 39, 0.45);
+  transform: translateY(-2px) scale(1.02);
+}
+
+.homepage .hero-cta:hover:not(.hero-cta--primary):not(.hero-cta--ghost) {
+  border-color: var(--home-accent);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.25), 0 0 0 1px rgba(201, 162, 39, 0.15);
 }
 
 .homepage .carousel-indicator.active {

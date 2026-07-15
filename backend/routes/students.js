@@ -657,7 +657,7 @@ router.get('/scores/template', async (req, res) => {
       const lookupStream = isFormVOrVI ? normalizedStream : 'A';
       const subjRes = await query(
         'SELECT subject_code, subject_abbreviation FROM subjects WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND (subject_code = $5 OR subject_abbreviation = $5) LIMIT 1',
-        [normalizedLevel, normalizedStream, 'NA', yearNum, subject_code]
+        [normalizedLevel, lookupStream, 'NA', yearNum, subject_code]
       );
       if (subjRes.rows.length > 0 && subjRes.rows[0] && (subjRes.rows[0].subject_code || subjRes.rows[0].subject_abbreviation)) {
         subjectCodesToSearch = [subjRes.rows[0].subject_code, subjRes.rows[0].subject_abbreviation].filter(Boolean);
@@ -1036,9 +1036,10 @@ router.get('/class-grades', async (req, res) => {
 });
 
 // Get single student
-router.get('/:admNo', async (req, res) => {
+router.get('/:admNo', async (req, res, next) => {
   try {
     const { admNo } = req.params;
+    if (['debt'].includes(admNo)) return next();
     let { level, stream, year } = req.query;
     
     // Normalize level to uppercase
@@ -1289,13 +1290,13 @@ router.delete('/parishes', async (req, res) => {
     let existing;
     if (uniqueStreams.length === 1) {
       existing = await query(
-        `SELECT id, parish_name FROM student_parishes 
+        `SELECT id, parish_name, stream FROM student_parishes 
          WHERE level = $1 AND stream = $2 AND year = $3 AND student_index = $4`,
         [level, uniqueStreams[0], parseInt(year), studentIndexNum]
       );
     } else {
       existing = await query(
-        `SELECT id, parish_name FROM student_parishes 
+        `SELECT id, parish_name, stream FROM student_parishes 
          WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND student_index = $5`,
         [level, uniqueStreams[0], uniqueStreams[1], parseInt(year), studentIndexNum]
       );
@@ -1568,9 +1569,10 @@ router.delete('/class', requireRole('admin', 'superadmin'), async (req, res) => 
 });
 
 // Delete student
-router.delete('/:admNo', async (req, res) => {
+router.delete('/:admNo', async (req, res, next) => {
   try {
     const { admNo } = req.params;
+    if (['comments', 'monthly-results', 'debt'].includes(admNo)) return next();
     let { level, stream, year } = req.query;
     
     // Normalize level to uppercase
@@ -2148,10 +2150,11 @@ router.post('/parishes', async (req, res) => {
         if (level) {
           level = decodeURIComponent(String(level).replace(/\+/g, ' ')).trim().toUpperCase();
         }
+        const normalizedRetryStream = normalizeStream(stream);
         
         const existing = await query(
           `SELECT id FROM student_parishes WHERE level = $1 AND stream = $2 AND year = $3 AND student_index = $4`,
-          [level, stream, parseInt(year), parseInt(student_index)]
+          [level, normalizedRetryStream, parseInt(year), parseInt(student_index)]
         );
         
         let result;
@@ -2161,14 +2164,14 @@ router.post('/parishes', async (req, res) => {
              SET parish_name = $1
              WHERE level = $2 AND stream = $3 AND year = $4 AND student_index = $5
              RETURNING *`,
-            [parish_name.trim(), level, stream, parseInt(year), parseInt(student_index)]
+            [parish_name.trim(), level, normalizedRetryStream, parseInt(year), parseInt(student_index)]
           );
         } else {
           result = await query(
             `INSERT INTO student_parishes (level, stream, year, student_index, parish_name)
              VALUES ($1, $2, $3, $4, $5)
              RETURNING *`,
-            [level, stream, parseInt(year), parseInt(student_index), parish_name.trim()]
+            [level, normalizedRetryStream, parseInt(year), parseInt(student_index), parish_name.trim()]
           );
         }
         

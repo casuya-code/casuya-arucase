@@ -18,13 +18,9 @@ const NetworkStatusBanner = () => {
     updateStatus();
 
     const cleanup = monitorNetworkChanges(updateStatus);
-    window.addEventListener('online', updateStatus);
-    window.addEventListener('offline', updateStatus);
 
     return () => {
       cleanup();
-      window.removeEventListener('online', updateStatus);
-      window.removeEventListener('offline', updateStatus);
     };
   }, []);
 

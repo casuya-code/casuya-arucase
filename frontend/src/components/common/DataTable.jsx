@@ -112,7 +112,8 @@ const DataTable = ({
     const rows = sortedData.map(row =>
       columns.map(col => {
         const value = col.accessor ? col.accessor(row) : row[col.key];
-        return `"${value || ''}"`;
+        const escaped = String(value || '').replace(/"/g, '""');
+        return `"${escaped}"`;
       }).join(',')
     );
     
@@ -192,7 +193,7 @@ const DataTable = ({
             ) : (
               paginatedData.map((row, index) => (
                 <tr
-                  key={index}
+                  key={row.id || row.admNo || row.adm_no || index}
                   onClick={() => onRowClick && onRowClick(row, index)}
                   className={selectedRows.has(index) ? 'selected' : ''}
                 >

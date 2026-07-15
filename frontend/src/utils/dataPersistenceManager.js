@@ -355,7 +355,9 @@ class DataPersistenceManager {
     // Save all data in memory to persistent storage
     if (this.memoryStore) {
       this.memoryStore.forEach((data, key) => {
-        const [subjectId, scoreType] = key.split('_');
+        const firstUnderscore = key.indexOf('_');
+        const subjectId = key.substring(0, firstUnderscore);
+        const scoreType = key.substring(firstUnderscore + 1);
         this.saveToLocalStorage(subjectId, scoreType, data);
         this.saveToSessionStorage(subjectId, scoreType, data);
       });

@@ -7,6 +7,21 @@ import { settingValue } from '../../utils/publicPageContent';
 import { FOOTER_COPYRIGHT_NAME, resolveFooterCopyrightName } from '../../utils/footerCopyright';
 import './PublicFooter.css';
 
+const FOOTER_NAV_COLUMNS = [
+  {
+    heading: 'Shule',
+    paths: ['/about', '/staff', '/announcements', '/gallery'],
+  },
+  {
+    heading: 'Elimu',
+    paths: ['/admissions', '/admissions/apply', '/student-life', '/student-report'],
+  },
+  {
+    heading: 'Taarifa',
+    paths: ['/necta-results', '/school-fee', '/contact', '/privacy-policy'],
+  },
+];
+
 const PublicFooter = () => {
   const [visitorStatsEnabled, setVisitorStatsEnabled] = useState(false);
 
@@ -45,7 +60,7 @@ const PublicFooter = () => {
         return { stats: { daily: 0, weekly: 0, total: 0 } };
       }
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
+    staleTime: 5 * 60 * 1000,
     enabled: visitorStatsEnabled,
   });
 
@@ -78,121 +93,98 @@ const PublicFooter = () => {
     total: 0
   };
 
-  // Map backend stats to frontend format
   const displayStats = {
     daily: stats.today || 0,
     weekly: stats.week || 0,
     total: stats.total || 0
   };
 
-  const footerNavLinks = PUBLIC_INDEXABLE_NAV_LINKS.filter((link) => link.path !== '/');
+  const linkMap = Object.fromEntries(
+    PUBLIC_INDEXABLE_NAV_LINKS.filter((l) => l.path !== '/').map((l) => [l.path, l])
+  );
+
+  const socialLinks = [
+    { url: socialYoutube, cls: 'youtube', icon: 'fab fa-youtube', label: 'YouTube' },
+    { url: contactEmail ? `mailto:${contactEmail}` : '', cls: 'email', icon: 'fas fa-envelope', label: 'Email' },
+    { url: whatsappUrl, cls: 'whatsapp', icon: 'fab fa-whatsapp', label: 'WhatsApp' },
+    { url: socialLocation, cls: 'location', icon: 'fas fa-map-marker-alt', label: 'Location' },
+    { url: socialFacebook, cls: 'facebook', icon: 'fab fa-facebook', label: 'Facebook' },
+    { url: socialInstagram, cls: 'instagram', icon: 'fab fa-instagram', label: 'Instagram' },
+    { url: socialTwitter, cls: 'twitter', icon: 'fab fa-x-twitter', label: 'X' },
+  ].filter((s) => s.url);
 
   return (
-    <>
-      <nav className="public-footer-sitemap" aria-label="Kurasa kuu za tovuti">
-        <ul className="public-footer-sitemap__list">
-          {footerNavLinks.map((link) => (
-            <li key={link.path}>
-              <Link to={link.path}>{link.nameSw}</Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
+    <footer className="site-footer" role="contentinfo">
+      <div className="site-footer__inner">
+        {/* Main footer: nav columns + social */}
+        <div className="site-footer__main">
+          <nav className="site-footer__nav" aria-label="Kurasa kuu za tovuti">
+            {FOOTER_NAV_COLUMNS.map((col) => (
+              <div className="site-footer__nav-col" key={col.heading}>
+                <h3 className="site-footer__nav-heading">{col.heading}</h3>
+                <ul className="site-footer__nav-list">
+                  {col.paths.map((path) => {
+                    const link = linkMap[path];
+                    if (!link) return null;
+                    return (
+                      <li key={path}>
+                        <Link to={link.path}>{link.nameSw}</Link>
+                      </li>
+                    );
+                  })}
+                </ul>
+              </div>
+            ))}
+          </nav>
 
-      {/* Social Media Footer */}
-      <footer className="social-footer">
-        <div className="social-footer-content">
-          {footerSocialLabel || socialYoutube || contactEmail || whatsappUrl || socialLocation ? (
-            <span className="social-label">{footerSocialLabel || 'Ungana Nasi'}</span>
-          ) : null}
-          <div className="social-icons">
-            {socialYoutube ? (
-              <a
-                href={socialYoutube}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="youtube"
-                title="YouTube"
-              >
-                <i className="fab fa-youtube" />
-              </a>
-            ) : null}
-            {contactEmail ? (
-              <a href={`mailto:${contactEmail}`} className="email" title="Email">
-                <i className="fas fa-envelope" />
-              </a>
-            ) : null}
-            {whatsappUrl ? (
-              <a
-                href={whatsappUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="whatsapp"
-                title="WhatsApp"
-              >
-                <i className="fab fa-whatsapp" />
-              </a>
-            ) : null}
-            {socialLocation ? (
-              <a
-                href={socialLocation}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="location"
-                title="Our Location"
-              >
-                <i className="fas fa-map-marker-alt" />
-              </a>
-            ) : null}
-            {socialFacebook ? (
-              <a href={socialFacebook} target="_blank" rel="noopener noreferrer" className="facebook" title="Facebook">
-                <i className="fab fa-facebook" />
-              </a>
-            ) : null}
-            {socialInstagram ? (
-              <a href={socialInstagram} target="_blank" rel="noopener noreferrer" className="instagram" title="Instagram">
-                <i className="fab fa-instagram" />
-              </a>
-            ) : null}
-            {socialTwitter ? (
-              <a href={socialTwitter} target="_blank" rel="noopener noreferrer" className="twitter" title="X">
-                <i className="fab fa-x-twitter" />
-              </a>
-            ) : null}
+          <div className="site-footer__social">
+            <span className="site-footer__social-label">{footerSocialLabel || 'Ungana Nasi'}</span>
+            <div className="site-footer__social-icons">
+              {socialLinks.map((s) => (
+                <a
+                  key={s.cls}
+                  href={s.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className={`site-footer__social-icon site-footer__social-icon--${s.cls}`}
+                  title={s.label}
+                  aria-label={s.label}
+                >
+                  <i className={s.icon} />
+                </a>
+              ))}
+            </div>
           </div>
         </div>
-      </footer>
 
-      {/* Copyright Footer */}
-      <footer className="copyright-footer">
-        <div className="copyright-footer-container">
-          <p className="copyright-text">
-            {footerCopyright ? (
-              <>
-                &copy; <span id="current-year">{new Date().getFullYear()}</span> {footerCopyright}
-              </>
-            ) : (
-              <>
-                &copy; <span id="current-year">{new Date().getFullYear()}</span>{' '}
-                {schoolName || FOOTER_COPYRIGHT_NAME}. Haki zote zimehifadhiwa.
-              </>
-            )}
-            {' '}
-            <Link to="/privacy-policy" className="privacy-link">
-              Sera ya Faragha
-            </Link>
+        {/* Divider */}
+        <div className="site-footer__divider" />
+
+        {/* Bottom bar: copyright + visitor stats */}
+        <div className="site-footer__bottom">
+          <p className="site-footer__copyright">
+            &copy; <span>{new Date().getFullYear()}</span>{' '}
+            {footerCopyright || schoolName || FOOTER_COPYRIGHT_NAME}
+            <span className="site-footer__dot">·</span>
+            <Link to="/privacy-policy" className="site-footer__privacy-link">Sera ya Faragha</Link>
           </p>
-          <p className="visitor-stats">
-            <span className="visitor-label">Wageni:</span>
-            <span className="visitor-value">Leo: {displayStats.daily}</span>
-            <span className="footer-separator">|</span>
-            <span className="visitor-value">Wiki Hii: {displayStats.weekly}</span>
-            <span className="footer-separator">|</span>
-            <span className="visitor-total">Jumla: {displayStats.total}</span>
-          </p>
+          <div className="site-footer__stats">
+            <span className="site-footer__stat">
+              <span className="site-footer__stat-label">Leo</span>
+              <span className="site-footer__stat-value">{displayStats.daily}</span>
+            </span>
+            <span className="site-footer__stat">
+              <span className="site-footer__stat-label">Wiki hii</span>
+              <span className="site-footer__stat-value">{displayStats.weekly}</span>
+            </span>
+            <span className="site-footer__stat">
+              <span className="site-footer__stat-label">Jumla</span>
+              <span className="site-footer__stat-value">{displayStats.total}</span>
+            </span>
+          </div>
         </div>
-      </footer>
-    </>
+      </div>
+    </footer>
   );
 };
 

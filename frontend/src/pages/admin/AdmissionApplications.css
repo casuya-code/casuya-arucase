@@ -1,11 +1,18 @@
-/* Admissions applications — white background, normal-weight black text, gray dividers */
+/* Admissions applications — admin theme with color-coded status and actions */
 
 .admissions-apps-page {
   --adm-line: #d1d5db;
   --adm-line-soft: #e5e7eb;
+  --adm-blue: #1e3a8a;
+  --adm-blue-light: #3b82f6;
+  --adm-green: #059669;
+  --adm-green-light: #10b981;
+  --adm-red: #dc2626;
+  --adm-red-light: #ef4444;
+  --adm-gray: #6b7280;
   font-family: Arial, Helvetica, sans-serif;
   background: #ffffff;
-  color: #000000;
+  color: #111827;
   font-weight: 400;
   max-width: 1400px;
   margin: 0 auto;
@@ -38,13 +45,13 @@
 .admissions-apps-page .page-title h1 {
   margin: 0;
   font-size: clamp(1.25rem, 2.8vw, 1.5rem);
-  font-weight: 400;
-  color: #000000;
+  font-weight: 700;
+  color: var(--adm-blue);
 }
 
 .admissions-apps-page .page-title p {
   margin: 0;
-  color: #000000;
+  color: var(--adm-gray);
   font-size: 0.95rem;
   line-height: 1.45;
   font-weight: 400;
@@ -75,10 +82,11 @@
 .admissions-stat {
   background: #ffffff;
   border: 1px solid var(--adm-line);
+  border-left-width: 4px;
   border-radius: 0;
   padding: 0.55rem 0.75rem;
-  font-weight: 400;
-  color: #000000;
+  font-weight: 600;
+  color: #111827;
   font-size: 0.9rem;
   text-align: center;
   display: flex;
@@ -86,6 +94,11 @@
   justify-content: center;
   min-height: 44px;
 }
+
+.admissions-stat:nth-child(1) { border-left-color: var(--adm-gray); }
+.admissions-stat:nth-child(2) { border-left-color: var(--adm-blue-light); }
+.admissions-stat:nth-child(3) { border-left-color: var(--adm-green); }
+.admissions-stat:nth-child(4) { border-left-color: var(--adm-red); }
 
 .admissions-filters {
   display: flex;
@@ -114,33 +127,52 @@
   border-radius: 0;
   padding: 0.5rem 0.65rem;
   font-weight: 400;
-  color: #000000;
+  color: #111827;
   cursor: pointer;
   min-height: 48px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   gap: 0.35rem;
-  transition: background 0.15s ease;
+  transition: all 0.15s ease;
+  position: relative;
 }
 
 .admissions-apps-page .status-chip:hover {
-  background: #fafafa;
+  background: #f9fafb;
+  border-color: var(--adm-blue-light);
+  color: var(--adm-blue);
 }
 
 .admissions-apps-page .status-chip.active {
-  background: #f3f4f6;
-  color: #000000;
-  border-color: var(--adm-line);
+  background: #f0f5ff;
+  color: var(--adm-blue);
+  border-color: var(--adm-blue-light);
+  font-weight: 600;
 }
 
-.admissions-apps-page .status-chip.active .count {
-  color: #000000;
+.admissions-apps-page .status-chip.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  right: 0;
+  height: 2px;
+  background: var(--adm-blue-light);
 }
 
 .admissions-apps-page .status-chip .count {
-  font-weight: 400;
-  color: #000000;
+  font-weight: 600;
+  color: inherit;
+  background: #f3f4f6;
+  padding: 0.1rem 0.45rem;
+  border-radius: 0;
+  font-size: 0.8rem;
+}
+
+.admissions-apps-page .status-chip.active .count {
+  background: #dbeafe;
+  color: var(--adm-blue);
 }
 
 .admissions-search {
@@ -155,13 +187,20 @@
   min-height: 48px;
   border: 1px solid var(--adm-line) !important;
   background: #ffffff !important;
-  color: #000000 !important;
+  color: #111827 !important;
   border-radius: 0;
   font-weight: 400;
+  padding: 0 0.75rem;
+}
+
+.admissions-search .excel-input:focus {
+  border-color: var(--adm-blue-light) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+  outline: none;
 }
 
 .admissions-search .excel-input::placeholder {
-  color: #6b7280;
+  color: var(--adm-gray);
 }
 
 .admissions-layout {
@@ -188,6 +227,15 @@
   display: flex;
   flex-direction: column;
   min-height: 280px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+}
+
+.admissions-apps-page .apps-list-panel {
+  border-top: 3px solid var(--adm-blue);
+}
+
+.admissions-apps-page .detail-panel {
+  border-top: 3px solid var(--adm-green);
 }
 
 .admissions-apps-page .panel-header {
@@ -207,14 +255,14 @@
 }
 
 .admissions-apps-page .panel-header .title {
-  font-weight: 400;
-  color: #000000;
+  font-weight: 600;
+  color: #111827;
   font-size: 1.05rem;
 }
 
 .admissions-apps-page .panel-header .subtitle {
   font-size: 0.9rem;
-  color: #000000;
+  color: var(--adm-gray);
   font-weight: 400;
 }
 
@@ -235,8 +283,10 @@
   cursor: pointer;
   display: grid;
   gap: 0.4rem;
-  color: #000000;
+  color: #111827;
   font-weight: 400;
+  transition: all 0.15s ease;
+  position: relative;
 }
 
 .admissions-apps-page .app-row:last-child {
@@ -244,12 +294,22 @@
 }
 
 .admissions-apps-page .app-row:hover {
-  background: #fafafa;
+  background: #f9fafb;
 }
 
 .admissions-apps-page .app-row.selected {
-  background: #ffffff;
-  box-shadow: inset 3px 0 0 0 var(--adm-line);
+  background: #f0f5ff;
+  box-shadow: inset 3px 0 0 0 var(--adm-blue-light);
+}
+
+.admissions-apps-page .app-row.selected::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 3px;
+  background: var(--adm-blue-light);
 }
 
 .admissions-apps-page .app-row-top {
@@ -269,46 +329,55 @@
 }
 
 .admissions-apps-page .app-name {
-  font-weight: 400;
-  color: #000000;
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.95rem;
 }
 
 .admissions-apps-page .status-pill {
   display: inline-flex;
   align-items: center;
   gap: 0.35rem;
-  padding: 0.3rem 0.65rem;
+  padding: 0.25rem 0.6rem;
   border-radius: 0;
-  font-weight: 400;
-  font-size: 0.78rem;
-  text-transform: none;
-  letter-spacing: normal;
-  background: #ffffff;
-  color: #000000;
-  border: 1px solid var(--adm-line);
+  font-weight: 600;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  border: none;
 }
 
-.admissions-apps-page .pill-pending,
-.admissions-apps-page .pill-approved,
+.admissions-apps-page .pill-pending {
+  background: #dbeafe;
+  color: #1d4ed8;
+}
+
+.admissions-apps-page .pill-approved {
+  background: #d1fae5;
+  color: #047857;
+}
+
 .admissions-apps-page .pill-rejected {
-  border-color: var(--adm-line);
+  background: #fee2e2;
+  color: #b91c1c;
 }
 
 .admissions-apps-page .app-meta {
-  color: #000000;
-  font-size: 0.9rem;
+  color: var(--adm-gray);
+  font-size: 0.85rem;
   line-height: 1.45;
   font-weight: 400;
 }
 
 .admissions-apps-page .app-meta-label {
-  font-weight: 400;
-  color: #000000;
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.8rem;
 }
 
 .admissions-apps-page .apps-empty {
   padding: 1.5rem 1.1rem;
-  color: #000000;
+  color: var(--adm-gray);
   text-align: center;
   font-weight: 400;
   border-top: 1px solid var(--adm-line-soft);
@@ -330,8 +399,8 @@
 .admissions-apps-page .detail-section h2 {
   margin: 0;
   font-size: 1rem;
-  font-weight: 400;
-  color: #000000;
+  font-weight: 600;
+  color: #111827;
   padding-bottom: 0.35rem;
   border-bottom: 1px solid var(--adm-line);
 }
@@ -356,17 +425,17 @@
 }
 
 .admissions-apps-page .kv .k {
-  font-size: 0.8rem;
-  color: #000000;
-  font-weight: 400;
-  text-transform: none;
-  letter-spacing: normal;
+  font-size: 0.75rem;
+  color: var(--adm-gray);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 
 .admissions-apps-page .kv .v {
   margin-top: 0.25rem;
   font-weight: 400;
-  color: #000000;
+  color: #111827;
   word-break: break-word;
   line-height: 1.4;
 }
@@ -375,8 +444,8 @@
   padding: 0.95rem;
   border: 1px solid var(--adm-line);
   border-radius: 0;
-  background: #ffffff;
-  color: #000000;
+  background: #f9fafb;
+  color: #111827;
   line-height: 1.55;
   white-space: pre-wrap;
   font-weight: 400;
@@ -385,27 +454,38 @@
 .admissions-apps-page .feedback-label {
   display: grid;
   gap: 0.45rem;
-  font-weight: 400;
-  color: #000000;
+  font-weight: 600;
+  color: #111827;
+  font-size: 0.95rem;
 }
 
 .admissions-apps-page .feedback-label small {
   font-weight: 400;
-  color: #000000;
+  color: var(--adm-gray);
+  font-size: 0.8rem;
 }
 
 .admissions-apps-page .feedback-label .excel-input,
 .admissions-apps-page .detail-body textarea.excel-input {
   border: 1px solid var(--adm-line) !important;
   background: #ffffff !important;
-  color: #000000 !important;
+  color: #111827 !important;
   border-radius: 0;
   min-height: 120px;
   font-weight: 400;
+  padding: 0.75rem;
+  font-size: 0.9rem;
+}
+
+.admissions-apps-page .feedback-label .excel-input:focus,
+.admissions-apps-page .detail-body textarea.excel-input:focus {
+  border-color: var(--adm-blue-light) !important;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.15) !important;
+  outline: none;
 }
 
 .admissions-apps-page .feedback-label .excel-input::placeholder {
-  color: #6b7280;
+  color: var(--adm-gray);
 }
 
 .admissions-apps-page .detail-actions {
@@ -426,33 +506,57 @@
   width: 100%;
   margin: 0;
   box-sizing: border-box;
-  min-height: 52px;
+  min-height: 44px;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  font-weight: 400;
+  font-weight: 600;
+  font-size: 0.9rem;
   border-radius: 0;
-  border: 1px solid var(--adm-line) !important;
-  background: #ffffff !important;
-  color: #000000 !important;
   padding: 0.65rem 1rem;
-  transition: background 0.15s ease;
+  transition: all 0.15s ease;
+  cursor: pointer;
+  border: none;
 }
 
 .admissions-apps-page .detail-actions > .btn:hover:not(:disabled) {
-  background: #fafafa !important;
+  filter: brightness(1.1);
+}
+
+.admissions-apps-page .detail-actions > .btn:active:not(:disabled) {
+  filter: brightness(0.95);
 }
 
 .admissions-apps-page .detail-actions > .btn-primary {
-  border-color: var(--adm-line) !important;
+  background: var(--adm-green);
+  color: #ffffff;
+}
+
+.admissions-apps-page .detail-actions > .btn-primary:hover:not(:disabled) {
+  background: var(--adm-green-light);
 }
 
 .admissions-apps-page .detail-actions > .btn-danger {
-  border-color: var(--adm-line) !important;
+  background: var(--adm-red);
+  color: #ffffff;
+}
+
+.admissions-apps-page .detail-actions > .btn-danger:hover:not(:disabled) {
+  background: var(--adm-red-light);
+}
+
+.admissions-apps-page .detail-actions > .btn:nth-child(3) {
+  background: var(--adm-gray);
+  color: #ffffff;
+}
+
+.admissions-apps-page .detail-actions > .btn:nth-child(3):hover:not(:disabled) {
+  background: #4b5563;
 }
 
 .admissions-apps-page .detail-actions > .btn:disabled {
-  opacity: 0.55;
+  opacity: 0.5;
+  cursor: not-allowed;
 }
 
 .admissions-apps-page .detail-actions .detail-hint {
@@ -460,15 +564,31 @@
   margin: 0;
   padding-top: 0.35rem;
   text-align: center;
+  font-size: 0.85rem;
+  color: var(--adm-gray);
 }
 
 .admissions-apps-page .detail-actions.detail-actions-delete {
   grid-template-columns: 1fr;
   margin-top: 0.35rem;
+  border-top: 1px solid var(--adm-line-soft);
+  padding-top: 1rem;
+}
+
+.admissions-apps-page .detail-actions.detail-actions-delete > .btn-danger {
+  background: #ffffff;
+  color: var(--adm-red);
+  border: 1px solid var(--adm-red);
+  font-weight: 400;
+}
+
+.admissions-apps-page .detail-actions.detail-actions-delete > .btn-danger:hover:not(:disabled) {
+  background: #fef2f2;
+  color: var(--adm-red);
 }
 
 .admissions-apps-page .detail-hint {
-  color: #000000;
+  color: var(--adm-gray);
   font-size: 0.9rem;
   font-weight: 400;
 }

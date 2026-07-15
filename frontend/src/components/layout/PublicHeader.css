@@ -387,9 +387,21 @@
   margin-top: clamp(15px, 3vw, 25px);
   border: none;
   border-radius: 0;
-  background: linear-gradient(135deg, #1e3a8a 0%, #1a5490 55%, #2563eb 100%);
-  border-bottom: 2px solid rgba(201, 162, 39, 0.5);
+  background: linear-gradient(135deg, #1e3a8a 0%, #1a5490 50%, #2563eb 100%);
+  border-bottom: none;
   box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+  position: relative;
+}
+
+.navigation::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 10%;
+  width: 80%;
+  height: 3px;
+  background: linear-gradient(90deg, transparent 0%, rgba(201, 162, 39, 0.6) 20%, rgba(201, 162, 39, 0.6) 80%, transparent 100%);
+  border-radius: 9999px;
   -webkit-backdrop-filter: none;
   backdrop-filter: none;
 }

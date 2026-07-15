@@ -269,10 +269,15 @@ export default function Chatbot() {
                 onPointerDown={handlePanelHeaderDown}
                 aria-label="Buruta dirisha"
               >
-                <h2 className="chatbot-title">
-                  <i className="fas fa-comments" aria-hidden="true" />
-                  ARUCASE
-                </h2>
+                <div className="chatbot-title">
+                  <span className="chatbot-title-icon">
+                    <i className="fas fa-graduation-cap" aria-hidden="true" />
+                  </span>
+                  <span className="chatbot-title-text">
+                    <span>ARUCASE</span>
+                    <span className="chatbot-title-sub">Msaidizi wa Mtandaoni</span>
+                  </span>
+                </div>
                 <button
                   type="button"
                   className="chatbot-close"
