@@ -343,6 +343,52 @@
   margin: 0;
 }
 
+/* Pagination Controls */
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+  padding: clamp(1rem, 3vw, 1.5rem) 0;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 1rem;
+  flex-wrap: wrap;
+}
+
+.pagination-btn {
+  padding: clamp(0.625rem, 2vw, 0.875rem) clamp(1rem, 3vw, 1.5rem);
+  border: 1px solid #d1d5db;
+  border-radius: 0;
+  background: white;
+  color: #374151;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 44px;
+  touch-action: manipulation;
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: #f3f4f6;
+  border-color: #9ca3af;
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.pagination-info {
+  color: #6b7280;
+  font-size: clamp(0.875rem, 2.5vw, 1rem);
+  font-weight: 500;
+  white-space: nowrap;
+}
+
 /* Responsive Breakpoints */
 @media (max-width: 768px) {
   .debts-mgmt-page-container {
@@ -412,6 +458,16 @@
     min-height: 48px;
     padding: 0.55rem 0.875rem;
     font-size: clamp(0.875rem, 2.5vw, 0.9375rem);
+  }
+
+  .pagination-controls {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+
+  .pagination-btn {
+    min-height: 48px;
+    flex: 1;
   }
 }
 

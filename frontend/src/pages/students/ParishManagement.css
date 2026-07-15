@@ -490,6 +490,35 @@
   }
 }
 
+/* Pagination */
+.parish-pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: clamp(0.5rem, 1.5vw, 0.75rem);
+  padding: clamp(0.75rem, 2vw, 1rem) 0;
+}
+
+.parish-pagination .parish-btn {
+  background: #374151;
+  color: white;
+}
+
+.parish-pagination .parish-btn:hover:not(:disabled) {
+  background: #1f2937;
+}
+
+.parish-pagination .parish-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.parish-pagination-info {
+  font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+  color: #374151;
+  font-weight: 500;
+}
+
 @media (min-width: 1200px) {
   .parish-mgmt-page-container {
     max-width: 1600px;

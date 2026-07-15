@@ -413,6 +413,67 @@
 
 
 
+/* Pagination controls */
+.preform-one-results-page-container .pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.25rem 1rem;
+  margin: 0.5rem 0;
+  background: #fff;
+  border: 1px solid #e5e7eb;
+  border-radius: 0;
+}
+
+.preform-one-results-page-container .pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  border: 1px solid #d1d5db;
+  border-radius: 0;
+  background: #fff;
+  color: #374151;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.preform-one-results-page-container .pagination-btn:hover:not(:disabled) {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.preform-one-results-page-container .pagination-btn:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.preform-one-results-page-container .pagination-info {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  color: #374151;
+  white-space: nowrap;
+}
+
+@media (max-width: 768px) {
+  .preform-one-results-page-container .pagination-controls {
+    gap: 0.5rem;
+    padding: 1rem 0.75rem;
+  }
+
+  .preform-one-results-page-container .pagination-btn {
+    padding: 0.625rem 0.875rem;
+    font-size: 0.75rem;
+  }
+
+  .preform-one-results-page-container .pagination-info {
+    font-size: 0.75rem;
+  }
+}
+
 /* Card title in header (replaces raw text in flex row) */
 .preform-one-results-page-container .excel-card-title {
   margin: 0;
@@ -878,7 +939,8 @@
   .preform-one-results-page-container .print-button-container,
   .preform-one-results-page-container .back-margin,
   .preform-one-results-page-container .results-mobile-list,
-  .preform-one-results-page-container .results-table-scroll-hint {
+  .preform-one-results-page-container .results-table-scroll-hint,
+  .preform-one-results-page-container .pagination-controls {
     display: none !important;
   }
 

@@ -23,6 +23,8 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
   const [showModal, setShowModal] = useState(false);
   const [uploading, setUploading] = useState(false);
   const [selectedTerm, setSelectedTerm] = useState('First Term');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 25;
   const fileInputRef = useRef(null);
 
   // Extract parameters from URL
@@ -143,6 +145,18 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
   });
   
   const students = studentsData;
+
+  // Reset to page 1 when students data changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [studentsData]);
+
+  // Paginate students
+  const totalPages = Math.ceil(students.length / ITEMS_PER_PAGE);
+  const paginatedStudents = students.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   // Fetch parishes for this class
   const { data: parishesData = {}, isLoading: parishesLoading, error: parishesError } = useQuery({
@@ -707,6 +721,7 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
                 </p>
               </div>
             ) : (
+              <>
               <div className="parish-mgmt-table-container">
                 <table className="parish-mgmt-table">
                   <thead>
@@ -722,8 +737,8 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {students.map((student, index) => {
-                      // Get parish name for this student (using array index which should match student_index)
+                    {paginatedStudents.map((student, i) => {
+                      const index = (currentPage - 1) * ITEMS_PER_PAGE + i;
                       const parish = getParishName(index);
                       
                       return (
@@ -769,7 +784,31 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
                   </tbody>
                 </table>
               </div>
+              </>
             )}
+              {totalPages > 1 && (
+                <div className="parish-pagination">
+                  <button
+                    type="button"
+                    className="parish-btn small"
+                    onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+                    disabled={currentPage === 1}
+                  >
+                    <i className="fas fa-chevron-left"></i> Prev
+                  </button>
+                  <span className="parish-pagination-info">
+                    Page {currentPage} of {totalPages}
+                  </span>
+                  <button
+                    type="button"
+                    className="parish-btn small"
+                    onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+                    disabled={currentPage === totalPages}
+                  >
+                    Next <i className="fas fa-chevron-right"></i>
+                  </button>
+                </div>
+              )}
           </div>
         </div>
 

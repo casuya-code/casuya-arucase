@@ -40,6 +40,8 @@ const RegistrationForm = () => {
   const [isUploading, setIsUploading] = useState(false);
   const [showBulkDeleteModal, setShowBulkDeleteModal] = useState(false);
   const [bulkDeletePhrase, setBulkDeletePhrase] = useState('');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 25;
 
   // Update term in formData when URL term parameter changes
   useEffect(() => {
@@ -155,6 +157,11 @@ const RegistrationForm = () => {
       toast.error(studentsError.expirationMessage || 'Your session has expired. Please log in again.');
     }
   }, [studentsError]);
+
+  // Reset pagination to page 1 when students data changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [students]);
 
   const resetFormData = useCallback(() => {
     setFormData({
@@ -500,6 +507,10 @@ const RegistrationForm = () => {
       ? `/admin/students/registration/${formPath}/stream/${stream}/year/${year}/term/${term}/actions`
       : `/admin/students/registration/${formPath}/year/${year}/stream/${stream}/actions`;
   }, [normalizedLevel, stream, year, term]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(students.length / ITEMS_PER_PAGE);
+  const paginatedStudents = students.slice((currentPage - 1) * ITEMS_PER_PAGE, currentPage * ITEMS_PER_PAGE);
 
   if (isFormVOrVI && term && !termPairValid) {
     return null;
@@ -886,9 +897,9 @@ const RegistrationForm = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {students.map((student, index) => (
+                    {paginatedStudents.map((student, index) => (
                       <tr key={`${student.adm_no}-${student.level}-${student.stream}-${student.year}`}>
-                        <td>{index + 1}</td>
+                        <td>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</td>
                         <td>
                           <button
                             type="button"
@@ -950,6 +961,44 @@ const RegistrationForm = () => {
             )}
           </div>
         </div>
+
+        {students.length > 0 && totalPages > 1 && (
+          <div className="pagination-controls">
+            <button
+              type="button"
+              className="form-btn small"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(1)}
+            >
+              <i className="fas fa-angle-double-left"></i>
+            </button>
+            <button
+              type="button"
+              className="form-btn small"
+              disabled={currentPage === 1}
+              onClick={() => setCurrentPage(p => p - 1)}
+            >
+              <i className="fas fa-angle-left"></i>
+            </button>
+            <span className="pagination-info">Page {currentPage} of {totalPages}</span>
+            <button
+              type="button"
+              className="form-btn small"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(p => p + 1)}
+            >
+              <i className="fas fa-angle-right"></i>
+            </button>
+            <button
+              type="button"
+              className="form-btn small"
+              disabled={currentPage === totalPages}
+              onClick={() => setCurrentPage(totalPages)}
+            >
+              <i className="fas fa-angle-double-right"></i>
+            </button>
+          </div>
+        )}
       </div>
     </AdminLayout>
   );

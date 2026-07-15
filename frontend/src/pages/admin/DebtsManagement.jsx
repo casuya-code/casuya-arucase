@@ -18,6 +18,8 @@ const DebtsManagement = ({ formLevel }) => {
   const [editingIndex, setEditingIndex] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [uploading, setUploading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 25;
   const fileInputRef = useRef(null);
 
   // Normalize form level to uppercase (consistent with backend and other components)
@@ -84,6 +86,18 @@ const DebtsManagement = ({ formLevel }) => {
   });
   
   const students = studentsData;
+
+  // Reset to page 1 when students data changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [studentsData]);
+
+  // Pagination calculations
+  const totalPages = Math.ceil(students.length / ITEMS_PER_PAGE);
+  const paginatedStudents = students.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   // Fetch existing debt records
   const { data: existingDebt = {}, isLoading: debtLoading, error: debtError } = useQuery({
@@ -464,14 +478,14 @@ const DebtsManagement = ({ formLevel }) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {students.map((student, index) => {
+                      {paginatedStudents.map((student, index) => {
                         const studentIndex = getStudentIndex(student);
                         const debt = existingDebt[studentIndex];
                         const isEditing = editingIndex === studentIndex;
                         
                         return (
                           <tr key={student.adm_no}>
-                            <td>{index + 1}</td>
+                            <td>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</td>
                             <td>{student.adm_no}</td>
                             <td>{student.first_name}</td>
                             <td>{student.middle_name || '-'}</td>
@@ -552,9 +566,32 @@ const DebtsManagement = ({ formLevel }) => {
                   </table>
                 </div>
 
+                {/* Desktop Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="pagination-controls">
+                    <button
+                      className="pagination-btn"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                    >
+                      <i className="fas fa-chevron-left"></i> Prev
+                    </button>
+                    <span className="pagination-info">
+                      Page {currentPage} of {totalPages} ({students.length} students)
+                    </span>
+                    <button
+                      className="pagination-btn"
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                    >
+                      Next <i className="fas fa-chevron-right"></i>
+                    </button>
+                  </div>
+                )}
+
                 {/* Mobile Card View */}
                 <div className="mobile-students-list">
-                  {students.map((student, index) => {
+                  {paginatedStudents.map((student, index) => {
                     const studentIndex = getStudentIndex(student);
                     const debt = existingDebt[studentIndex];
                     const isEditing = editingIndex === studentIndex;
@@ -564,7 +601,7 @@ const DebtsManagement = ({ formLevel }) => {
                         <div className="mobile-student-card-header">
                           <div className="student-info">
                             <div className="student-name">
-                              {index + 1}. {student.first_name} {student.middle_name || ''} {student.surname}
+                              {(currentPage - 1) * ITEMS_PER_PAGE + index + 1}. {student.first_name} {student.middle_name || ''} {student.surname}
                             </div>
                             <div className="student-adm">Adm No: {student.adm_no}</div>
                           </div>
@@ -654,6 +691,29 @@ const DebtsManagement = ({ formLevel }) => {
                     );
                   })}
                 </div>
+
+                {/* Mobile Pagination Controls */}
+                {totalPages > 1 && (
+                  <div className="pagination-controls">
+                    <button
+                      className="pagination-btn"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(currentPage - 1)}
+                    >
+                      <i className="fas fa-chevron-left"></i> Prev
+                    </button>
+                    <span className="pagination-info">
+                      Page {currentPage} of {totalPages} ({students.length} students)
+                    </span>
+                    <button
+                      className="pagination-btn"
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(currentPage + 1)}
+                    >
+                      Next <i className="fas fa-chevron-right"></i>
+                    </button>
+                  </div>
+                )}
 
                 <div className="csv-section">
                   <h3><i className="fas fa-file-csv"></i> CSV Bulk Operations</h3>

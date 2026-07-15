@@ -419,3 +419,25 @@
   }
 }
 
+.pagination-controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 1rem 0;
+  border-top: 1px solid #e5e7eb;
+  margin-top: 1rem;
+}
+
+.pagination-info {
+  font-size: 0.85rem;
+  color: #64748b;
+  font-weight: 500;
+  padding: 0 0.5rem;
+}
+
+.pagination-controls .form-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+

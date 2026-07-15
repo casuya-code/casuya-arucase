@@ -37,6 +37,7 @@ const PreFormOneContinuingResults = () => {
   const isAuthenticated = isAuth();
   const queryClient = useQueryClient();
 
+  const [currentPage, setCurrentPage] = useState(1);
   const [subjectScores, setSubjectScores] = useState({});
   const [scoresLoading, setScoresLoading] = useState(false);
   const [filter, setFilter] = useState({
@@ -44,6 +45,7 @@ const PreFormOneContinuingResults = () => {
     month: 'all',
   });
 
+  const ITEMS_PER_PAGE = 20;
   const reportYear = filter.year || year;
 
   useEffect(() => {
@@ -74,6 +76,10 @@ const PreFormOneContinuingResults = () => {
     enabled: isAuthenticated && !!reportYear,
     retry: false,
   });
+
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [students.length]);
 
   const { data: subjects = [], isLoading: subjectsLoading } = useQuery({
     queryKey: ['preform-one-continuing-subjects', reportYear],
@@ -235,6 +241,12 @@ const PreFormOneContinuingResults = () => {
     });
   }, [students, displayResults]);
 
+  const totalPages = Math.ceil(sortedStudents.length / ITEMS_PER_PAGE);
+  const paginatedStudents = useMemo(() => {
+    const start = (currentPage - 1) * ITEMS_PER_PAGE;
+    return sortedStudents.slice(start, start + ITEMS_PER_PAGE);
+  }, [sortedStudents, currentPage]);
+
   const { data: schoolLogoData } = useQuery({
     queryKey: ['school-logo'],
     queryFn: async () => {
@@ -373,7 +385,7 @@ const PreFormOneContinuingResults = () => {
   const calcPending =
     calculateResultsMutation.isPending ?? calculateResultsMutation.isLoading;
 
-  const buildRowContext = (student, index) => {
+  const buildRowContext = (student, index, offset = 0) => {
     const adm = admissionKey(student.admission_number);
     const result = displayResults[adm] || {};
     const studentSubjectScores = subjectScores[adm] || {};
@@ -393,7 +405,7 @@ const PreFormOneContinuingResults = () => {
       studentSubjectScores,
       gradeRowClass,
       avgValue,
-      sn: index + 1,
+      sn: offset + index + 1,
       fullName,
       parish: student.parish || '-',
     };
@@ -543,8 +555,8 @@ const PreFormOneContinuingResults = () => {
             </p>
 
             <div className="results-mobile-list" aria-label="Continuing results by student">
-              {sortedStudents.map((student, index) => {
-                const ctx = buildRowContext(student, index);
+              {paginatedStudents.map((student, index) => {
+                const ctx = buildRowContext(student, index, (currentPage - 1) * ITEMS_PER_PAGE);
                 const { result, studentSubjectScores, gradeRowClass, avgValue, sn, fullName, parish } =
                   ctx;
 
@@ -617,6 +629,30 @@ const PreFormOneContinuingResults = () => {
               })}
             </div>
 
+            {totalPages > 1 && (
+              <div className="pagination-controls">
+                <button
+                  type="button"
+                  className="pagination-btn"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => p - 1)}
+                >
+                  <i className="fas fa-chevron-left"></i> Prev
+                </button>
+                <span className="pagination-info">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  type="button"
+                  className="pagination-btn"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((p) => p + 1)}
+                >
+                  Next <i className="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            )}
+
             <div className="results-table-container results-table-desktop">
               <div className="results-table-wrapper">
                 <table className="compact-results-table">
@@ -640,8 +676,8 @@ const PreFormOneContinuingResults = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {sortedStudents.map((student, index) => {
-                      const ctx = buildRowContext(student, index);
+                    {paginatedStudents.map((student, index) => {
+                      const ctx = buildRowContext(student, index, (currentPage - 1) * ITEMS_PER_PAGE);
                       const {
                         result,
                         studentSubjectScores,
@@ -684,6 +720,30 @@ const PreFormOneContinuingResults = () => {
                 </table>
               </div>
             </div>
+
+            {totalPages > 1 && (
+              <div className="pagination-controls">
+                <button
+                  type="button"
+                  className="pagination-btn"
+                  disabled={currentPage === 1}
+                  onClick={() => setCurrentPage((p) => p - 1)}
+                >
+                  <i className="fas fa-chevron-left"></i> Prev
+                </button>
+                <span className="pagination-info">
+                  Page {currentPage} of {totalPages}
+                </span>
+                <button
+                  type="button"
+                  className="pagination-btn"
+                  disabled={currentPage === totalPages}
+                  onClick={() => setCurrentPage((p) => p + 1)}
+                >
+                  Next <i className="fas fa-chevron-right"></i>
+                </button>
+              </div>
+            )}
 
             <div className="back-margin">
               <Link to={`/admin/pre-form-one/${reportYear}`} className="excel-btn">

@@ -3,7 +3,7 @@
  * Allows uploading, viewing, and deleting student photos
  * Uses special academic year logic for Form 5 & 6 streams
  */
-import { useState, useRef, useEffect } from 'react';
+import { useState, useRef, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '../../utils/toast';
@@ -46,6 +46,8 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
   const [failedImages, setFailedImages] = useState(new Set());
   const [photosVersion, setPhotosVersion] = useState(0); // Increment on upload/delete to bust image cache
   const [selectedTerm, setSelectedTerm] = useState(term || 'First Term');
+  const [currentPage, setCurrentPage] = useState(1);
+  const ITEMS_PER_PAGE = 20;
 
   const fileInputRef = useRef(null);
   const videoRef = useRef(null);
@@ -189,6 +191,18 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
   
   // Use sorted students
   const students = studentsData;
+
+  // Reset pagination to page 1 when students data changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [studentsData]);
+
+  // Paginate students
+  const totalPages = Math.ceil(students.length / ITEMS_PER_PAGE);
+  const paginatedStudents = students.slice(
+    (currentPage - 1) * ITEMS_PER_PAGE,
+    currentPage * ITEMS_PER_PAGE
+  );
 
   // Fetch photos for this class - works for ALL forms (FORM I-VI) and ALL years
   const { data: photosData = {} } = useQuery({
@@ -595,13 +609,13 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
                       </tr>
                     </thead>
                     <tbody>
-                      {students.map((student, index) => {
+                      {paginatedStudents.map((student, index) => {
                         // Get student index based on sorted position (for photo lookup)
                         const studentIndex = getStudentIndex(student);
                         const photoFilename = hasPhoto(studentIndex);
                         return (
                           <tr key={`${student.adm_no}-${student.level}-${student.stream}-${student.year}`}>
-                            <td>{index + 1}</td>
+                            <td>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</td>
                             <td>{student.adm_no}</td>
                             <td>{student.first_name}</td>
                             <td>{student.middle_name || '-'}</td>
@@ -673,6 +687,44 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
                     </tbody>
                   </table>
                 </div>
+
+                {students.length > 0 && totalPages > 1 && (
+                  <div className="photos-mgmt-pagination">
+                    <button
+                      type="button"
+                      className="photo-btn small"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(1)}
+                    >
+                      <i className="fas fa-angle-double-left"></i>
+                    </button>
+                    <button
+                      type="button"
+                      className="photo-btn small"
+                      disabled={currentPage === 1}
+                      onClick={() => setCurrentPage(p => p - 1)}
+                    >
+                      <i className="fas fa-angle-left"></i>
+                    </button>
+                    <span className="photos-mgmt-pagination-info">Page {currentPage} of {totalPages}</span>
+                    <button
+                      type="button"
+                      className="photo-btn small"
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(p => p + 1)}
+                    >
+                      <i className="fas fa-angle-right"></i>
+                    </button>
+                    <button
+                      type="button"
+                      className="photo-btn small"
+                      disabled={currentPage === totalPages}
+                      onClick={() => setCurrentPage(totalPages)}
+                    >
+                      <i className="fas fa-angle-double-right"></i>
+                    </button>
+                  </div>
+                )}
 
                 {/* Download Photo Entry Form */}
                 <div className="download-section">
