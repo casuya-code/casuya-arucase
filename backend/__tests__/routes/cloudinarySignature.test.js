@@ -8,12 +8,20 @@ jest.mock('../../config/database', () => ({
 }));
 
 const request = require('supertest');
+const jwt = require('jsonwebtoken');
 const { app } = require('../../server');
+const { JWT_SECRET } = require('../../middleware/auth');
+
+function makeToken() {
+  return jwt.sign({ user_id: 'testuser', role: 'admin' }, JWT_SECRET);
+}
 
 describe('POST /api/cloudinary/signature', () => {
   it('rejects missing folder parameter', async () => {
+    const token = makeToken();
     const res = await request(app)
       .post('/api/cloudinary/signature')
+      .set('Cookie', `accessToken=${token}`)
       .send({ timestamp: Date.now() })
       .expect(400);
 
@@ -21,8 +29,10 @@ describe('POST /api/cloudinary/signature', () => {
   });
 
   it('rejects missing timestamp parameter', async () => {
+    const token = makeToken();
     const res = await request(app)
       .post('/api/cloudinary/signature')
+      .set('Cookie', `accessToken=${token}`)
       .send({ folder: 'uploads' })
       .expect(400);
 
@@ -30,8 +40,10 @@ describe('POST /api/cloudinary/signature', () => {
   });
 
   it('rejects empty body', async () => {
+    const token = makeToken();
     const res = await request(app)
       .post('/api/cloudinary/signature')
+      .set('Cookie', `accessToken=${token}`)
       .send({})
       .expect(400);
 
