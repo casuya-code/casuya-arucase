@@ -477,41 +477,28 @@ app.use('/static', express.static(path.join(__dirname, 'static'), {
   }
 }));
 
-// Health check
-app.get('/health', async (req, res) => {
-  try {
-    const { query, pool } = require('./config/database');
-    await query('SELECT 1');
+// Health check — respond immediately to keep Railway healthcheck happy.
+// Background checks (DB, Cloudinary) run asynchronously and log any issues.
+app.get('/health', (req, res) => {
+  res.json({ status: 'healthy', timestamp: new Date().toISOString() });
 
-    // Check Cloudinary status
-    let cloudinaryStatus = 'unknown';
+  // Non-blocking background health probes
+  (async () => {
+    try {
+      const { query, pool } = require('./config/database');
+      await query('SELECT 1');
+    } catch (err) {
+      console.error('[health] Database check failed:', err.message);
+    }
+  })();
+
+  (async () => {
     try {
       await cloudinary.api.ping();
-      cloudinaryStatus = 'connected';
-    } catch (error) {
-      cloudinaryStatus = 'disconnected';
+    } catch (err) {
+      console.error('[health] Cloudinary check failed:', err.message);
     }
-
-    res.json({
-      status: 'healthy',
-      database: 'connected',
-      cloudinary: cloudinaryStatus,
-      pool: {
-        total: pool.totalCount,
-        idle: pool.idleCount,
-        waiting: pool.waitingCount
-      },
-      timestamp: new Date().toISOString()
-    });
-  } catch (error) {
-    res.status(503).json({
-      status: 'unhealthy',
-      database: 'disconnected',
-      cloudinary: 'unknown',
-      error: error.message,
-      timestamp: new Date().toISOString()
-    });
-  }
+  })();
 });
 
 // Database health check endpoint
@@ -754,5 +741,5 @@ server.listen(PORT, LISTEN_HOST, () => {
 });
 }
 
-module.exports = { app, io };
+module.exports = { app, io, server, PORT, LISTEN_HOST };
 

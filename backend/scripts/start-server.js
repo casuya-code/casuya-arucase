@@ -93,7 +93,14 @@ async function main() {
       process.exit(0);
     });
 
-    require('../server.js');
+    const { server, PORT, LISTEN_HOST } = require('../server.js');
+
+    // server.js skips listen() when loaded via require() (it checks require.main !== module).
+    // We must start listening here for Railway to detect the open port.
+    server.listen(PORT, LISTEN_HOST, () => {
+      console.log(`🚀 Server running on http://${LISTEN_HOST}:${PORT}`);
+      console.log(`📡 Environment: ${process.env.NODE_ENV || 'development'}`);
+    });
   } catch (error) {
     console.error('❌ Failed to start server:', error);
     console.error('Stack:', error.stack);
