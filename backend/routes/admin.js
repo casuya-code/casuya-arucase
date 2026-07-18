@@ -2804,22 +2804,22 @@ async function ensureWebsiteSettingsTable() {
   await query(`
     CREATE TABLE IF NOT EXISTS website_settings (
       id INTEGER PRIMARY KEY DEFAULT 1,
-      school_name VARCHAR(255),
-      tagline VARCHAR(255),
+      school_name TEXT,
+      tagline TEXT,
       banner_text TEXT,
       contact_address TEXT,
-      contact_phone VARCHAR(50),
-      contact_email VARCHAR(255),
-      contact_whatsapp VARCHAR(50),
-      social_youtube VARCHAR(255),
-      social_facebook VARCHAR(255),
-      social_instagram VARCHAR(255),
-      social_twitter VARCHAR(255),
+      contact_phone TEXT,
+      contact_email TEXT,
+      contact_whatsapp TEXT,
+      social_youtube TEXT,
+      social_facebook TEXT,
+      social_instagram TEXT,
+      social_twitter TEXT,
       social_location TEXT,
-      office_weekdays VARCHAR(255),
-      office_saturday VARCHAR(255),
-      office_sunday VARCHAR(255),
-      office_holidays VARCHAR(255),
+      office_weekdays TEXT,
+      office_saturday TEXT,
+      office_sunday TEXT,
+      office_holidays TEXT,
       updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
@@ -2831,23 +2831,23 @@ async function ensureWebsiteSettingsTable() {
 }
 
 const DEPARTMENT_CONTACT_EXTRA_COLUMNS = [
-  ['admissions_email', 'VARCHAR(255)'],
-  ['academics_email', 'VARCHAR(255)'],
-  ['bursar_email', 'VARCHAR(255)'],
-  ['alumni_email', 'VARCHAR(255)'],
-  ['parents_email', 'VARCHAR(255)'],
-  ['footer_social_label', 'VARCHAR(255)'],
+  ['admissions_email', 'TEXT'],
+  ['academics_email', 'TEXT'],
+  ['bursar_email', 'TEXT'],
+  ['alumni_email', 'TEXT'],
+  ['parents_email', 'TEXT'],
+  ['footer_social_label', 'TEXT'],
   ['footer_copyright', 'TEXT'],
-  ['contact_info_heading', 'VARCHAR(255)'],
-  ['office_hours_heading', 'VARCHAR(255)'],
-  ['department_contacts_heading', 'VARCHAR(255)'],
-  ['map_heading', 'VARCHAR(255)'],
-  ['social_heading', 'VARCHAR(255)'],
+  ['contact_info_heading', 'TEXT'],
+  ['office_hours_heading', 'TEXT'],
+  ['department_contacts_heading', 'TEXT'],
+  ['map_heading', 'TEXT'],
+  ['social_heading', 'TEXT'],
 ];
 
 const VARCHAR_TO_TEXT_COLUMNS = [
-  'school_name', 'tagline', 'contact_email', 'social_youtube',
-  'social_facebook', 'social_instagram', 'social_twitter',
+  'school_name', 'tagline', 'contact_email', 'contact_phone', 'contact_whatsapp',
+  'social_youtube', 'social_facebook', 'social_instagram', 'social_twitter',
   'office_weekdays', 'office_saturday', 'office_sunday', 'office_holidays',
   'admissions_email', 'academics_email', 'bursar_email', 'alumni_email',
   'parents_email', 'footer_social_label', 'contact_info_heading',
@@ -2863,9 +2863,13 @@ async function ensureDepartmentContactColumns() {
     );
   }
   for (const col of VARCHAR_TO_TEXT_COLUMNS) {
-    await query(
-      `ALTER TABLE website_settings ALTER COLUMN ${col} TYPE TEXT`
-    );
+    try {
+      await query(
+        `ALTER TABLE website_settings ALTER COLUMN ${col} TYPE TEXT`
+      );
+    } catch (alterErr) {
+      console.warn(`[department-contacts] ALTER ${col} to TEXT skipped:`, alterErr.message);
+    }
   }
   try {
     await query(`
