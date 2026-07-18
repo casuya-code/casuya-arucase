@@ -2973,7 +2973,17 @@ router.post('/department-contacts', requireRole('admin', 'superadmin'), async (r
     const existing = await query('SELECT id FROM website_settings WHERE id = 1');
     
     if (existing.rows.length > 0) {
-      const setClause = SITE_CONTACT_FIELDS.map((key, i) => `${key} = $${i + 1}`).join(',\n         ');
+      const setClauses = [];
+      for (let i = 0; i < SITE_CONTACT_FIELDS.length; i++) {
+        const key = SITE_CONTACT_FIELDS[i];
+        const value = values[i];
+        if (typeof value === 'string' && value.length <= 255) {
+          setClauses.push(`${key} = $${i + 1}`);
+        } else {
+          setClauses.push(`${key} = $${i + 1}::text`);
+        }
+      }
+      const setClause = setClauses.join(',\n         ');
       await query(
         `UPDATE website_settings SET 
          ${setClause},
