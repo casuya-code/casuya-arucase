@@ -2862,7 +2862,7 @@ async function ensureDepartmentContactColumns() {
           OR TRIM(footer_copyright) = ''
           OR footer_copyright ~* '^jimbo[[:space:]]+kuu'
           OR footer_copyright ~* '^seminari[[:space:]]+ya[[:space:]]+kikatoliki[[:space:]]+arusha'
-        )
+        );
     `);
   } catch (footerErr) {
     console.warn('[department-contacts] footer_copyright cleanup skipped:', footerErr.message);
