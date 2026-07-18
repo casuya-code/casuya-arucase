@@ -51,10 +51,6 @@ export const useSound = () => {
     return saved === 'true';
   });
 
-  const _initAudio = useCallback(() => {
-    initializeAudio().catch(() => {});
-  }, []);
-
   const playSound = useCallback((soundName) => {
     if (isMuted) return;
 
@@ -78,7 +74,7 @@ export const useSound = () => {
 
     Object.values(soundInstances).forEach((sound) => {
       if (sound) {
-        sound.volume(newMutedState ? 0 : 0.3);
+        sound.volume(newMutedState ? 0 : 1);
       }
     });
   }, [isMuted]);

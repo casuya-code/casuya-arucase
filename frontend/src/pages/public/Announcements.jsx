@@ -54,9 +54,9 @@ const Announcements = () => {
   if (isLoading) {
     return (
       <PublicLayout>
-        <div className="announcements-page announcements-page--immersive public-immersive-shell">
-          <div className="public-immersive-shell__inner">
-            <div className="content-card announcements-surface announcements-surface--hero">
+        <div className="ann-page-static">
+          <div className="ann-page-static__inner">
+            <div className="ann-surface ann-surface--hero">
               <SkeletonLoader type="text" lines={1} width="45%" height="1.75rem" className="mb-2" />
               <SkeletonLoader type="text" lines={2} width="90%" />
             </div>
@@ -77,24 +77,20 @@ const Announcements = () => {
 
   return (
     <PublicLayout>
-      <div className="announcements-page announcements-page--immersive public-immersive-shell">
-        <div className="public-immersive-shell__inner">
-          <header className="public-cms-hero">
-            <div className="public-cms-hero__inner">
-              <div className="public-cms-hero__text">
-                <p className="public-cms-hero__eyebrow">Seminari ya Kikatoliki Arusha</p>
-                <h1 className="public-cms-hero__title public-cms-hero__title--with-icon">
-                  <i className="fas fa-bullhorn" aria-hidden />
-                  Matangazo
-                </h1>
-                <p className="public-cms-hero__lead">
-                  Habari na matangazo mapya — tafuta au chuja kwa mwaka.
-                </p>
-              </div>
+      <div className="ann-page-static">
+        <div className="ann-page-static__inner">
+          <header className="ann-hero">
+            <div className="ann-hero__inner">
+              <h1 className="ann-hero__title">
+                Matangazo
+              </h1>
+              <p className="ann-hero__lead">
+                Habari na matangazo mapya — tafuta au chuja kwa mwaka.
+              </p>
             </div>
           </header>
 
-          <section className="content-card announcements-surface announcements-surface--filters">
+          <section className="ann-surface ann-surface--filters">
             <div className="announcements-filters">
               <div className="announcement-input-wrap">
                 <i className="fas fa-search" aria-hidden="true" />
@@ -131,13 +127,13 @@ const Announcements = () => {
           </section>
 
           {isError ? (
-            <div className="content-card announcements-surface announcements-surface--notice">
+            <div className="ann-surface ann-surface--notice">
               <p className="announcements-notice__text">
                 Imeshindikana kupakia matangazo kwa sasa. Tafadhali jaribu tena baadaye.
               </p>
             </div>
           ) : filteredAnnouncements.length === 0 ? (
-            <div className="content-card announcements-surface announcements-surface--notice">
+            <div className="ann-surface ann-surface--notice">
               <p className="announcements-notice__text">
                 Hakuna matangazo kwa sasa. Tafadhali tembelea tena baadaye.
               </p>
@@ -148,7 +144,7 @@ const Announcements = () => {
                 <li
                   key={ann.id}
                   id={ann.id != null ? String(ann.id) : undefined}
-                  className={`announcement-card announcement-card--stripe-${idx % 4}`}
+                  className="ann-card"
                 >
                   <div className="announcement-head">
                     <strong className="announcement-title">{ann.title || 'Tangazo'}</strong>

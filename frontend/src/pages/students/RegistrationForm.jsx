@@ -660,7 +660,7 @@ const RegistrationForm = () => {
                     </select>
                   </div>
                 </div>
-                <div className="form-field form-actions-field">
+                <div className="form-actions-row">
                   <button
                     type="submit"
                     className="form-btn primary"
@@ -670,9 +670,7 @@ const RegistrationForm = () => {
                     <i className={`fas ${isFormSubmitting ? 'fa-spinner fa-spin' : editingStudent ? 'fa-save' : 'fa-plus'}`}></i>
                     <span className="btn-text">{isFormSubmitting ? (editingStudent ? 'Saving...' : 'Adding...') : (editingStudent ? 'Save' : 'Add')}</span>
                   </button>
-                </div>
-                {editingStudent && (
-                  <div className="form-field form-actions-field">
+                  {editingStudent && (
                     <button
                       type="button"
                       className="form-btn secondary"
@@ -682,9 +680,7 @@ const RegistrationForm = () => {
                       <i className="fas fa-times"></i>
                       <span className="btn-text">Cancel</span>
                     </button>
-                  </div>
-                )}
-                <div className="form-field form-actions-field">
+                  )}
                   <Link to={getBackPath()} className="form-btn secondary">
                     <i className="fas fa-arrow-left"></i>
                     <span className="btn-text">Back</span>

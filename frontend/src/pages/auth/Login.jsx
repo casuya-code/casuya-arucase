@@ -1,4 +1,4 @@
-import { useState, useId, useEffect } from 'react';
+import { useState, useId, useEffect, useRef, useCallback } from 'react';
 import { loadFontAwesome } from '../../utils/loadFontAwesome';
 import { useNavigate, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -12,6 +12,8 @@ import KeyringIcon from '../../components/icons/KeyringIcon';
 import './Login.css';
 
 const DEFAULT_LOGO = '/uploads/photos/9749b4af-7e1c-454b-a482-37a0f64162f1.jpg';
+const MAX_USERNAME_LEN = 64;
+const MAX_PASSWORD_LEN = 128;
 
 const Login = () => {
   const [username, setUsername] = useState('');
@@ -19,6 +21,9 @@ const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [formError, setFormError] = useState('');
+  const [rateLimitInfo, setRateLimitInfo] = useState(null);
+  const [lockoutSeconds, setLockoutSeconds] = useState(0);
+  const lockoutTimerRef = useRef(null);
   const formId = useId();
   const errorId = `${formId}-error`;
   const titleId = `${formId}-title`;
@@ -28,6 +33,41 @@ const Login = () => {
 
   useEffect(() => {
     loadFontAwesome().catch(() => {});
+  }, []);
+
+  // Lockout countdown timer
+  useEffect(() => {
+    if (lockoutSeconds <= 0) {
+      if (lockoutTimerRef.current) clearInterval(lockoutTimerRef.current);
+      return;
+    }
+    lockoutTimerRef.current = setInterval(() => {
+      setLockoutSeconds((prev) => {
+        if (prev <= 1) {
+          clearInterval(lockoutTimerRef.current);
+          setRateLimitInfo(null);
+          return 0;
+        }
+        return prev - 1;
+      });
+    }, 1000);
+    return () => {
+      if (lockoutTimerRef.current) clearInterval(lockoutTimerRef.current);
+    };
+  }, [lockoutSeconds]);
+
+  const formatLockoutTime = useCallback((secs) => {
+    if (secs >= 3600) {
+      const h = Math.floor(secs / 3600);
+      const m = Math.floor((secs % 3600) / 60);
+      return m > 0 ? `${h} saa ${m} dakika` : `${h} saa`;
+    }
+    if (secs >= 60) {
+      const m = Math.floor(secs / 60);
+      const s = secs % 60;
+      return s > 0 ? `${m} dakika ${s} sekundi` : `${m} dakika`;
+    }
+    return `${secs} sekundi`;
   }, []);
 
   /** Already signed in — skip showing the form again. */
@@ -78,7 +118,13 @@ const Login = () => {
       return;
     }
 
+    if (lockoutSeconds > 0) {
+      reportError(`Subiri ${formatLockoutTime(lockoutSeconds)} kabla ya kujaribu tena.`);
+      return;
+    }
+
     setFormError('');
+    setRateLimitInfo(null);
     setLoading(true);
     try {
       const result = await login(user, pass);
@@ -96,10 +142,42 @@ const Login = () => {
         navigate('/admin');
         return;
       }
+
+      // Parse rate limit info from the error response
+      const errData = result.errorData || result;
+      if (errData?.rateLimitInfo) {
+        setRateLimitInfo(errData.rateLimitInfo);
+      }
+
+      // Handle 429 lockout
+      if (result.isRateLimit && result.retryAfter) {
+        setLockoutSeconds(result.retryAfter);
+        reportError(`Kodi imefikiwa. Subiri ${formatLockoutTime(result.retryAfter)} kabla ya kujaribu tena.`);
+        return;
+      }
+
+      // Show remaining attempts warning
+      const rli = errData?.rateLimitInfo;
+      if (rli && rli.attempts !== undefined && rli.maxAttempts) {
+        const remaining = rli.maxAttempts - rli.attempts;
+        if (remaining > 0 && remaining <= 3) {
+          setRateLimitInfo({ ...rli, remaining });
+        }
+      }
+
+      // Handle lockout from 429 in error response
+      if (result.lockoutSeconds) {
+        setLockoutSeconds(result.lockoutSeconds);
+      }
+
       reportError(result.error || 'Imeshindwa kuingia. Angalia jina la mtumiaji na nenosiri kisha jaribu tena.');
     } catch (err) {
       let msg = 'Hitilafu imetokea. Tafadhali jaribu tena.';
-      if (err?.name === 'TypeError' && String(err?.message || '').includes('fetch')) {
+      if (err?.response?.status === 429) {
+        const retryAfter = err.response?.data?.retryAfter || err.response?.data?.remainingTime || 900;
+        setLockoutSeconds(retryAfter);
+        msg = `Kodi imefikiwa. Subiri ${formatLockoutTime(retryAfter)} kabla ya kujaribu tena.`;
+      } else if (err?.name === 'TypeError' && String(err?.message || '').includes('fetch')) {
         msg = 'Hitilafu ya mtandao. Angalia muunganisho wako kisha jaribu tena.';
       } else if (err?.code === 'ECONNABORTED') {
         msg = 'Ombi limechelewa. Tafadhali jaribu tena.';
@@ -148,9 +226,29 @@ const Login = () => {
           >
             {formError ? (
               <div id={errorId} className="form-error" role="alert">
-                {formError}
+                <i className="fas fa-exclamation-circle" aria-hidden="true" />
+                <span>{formError}</span>
               </div>
             ) : null}
+
+            {lockoutSeconds > 0 && (
+              <div className="login-lockout-banner" role="alert">
+                <i className="fas fa-shield-alt" aria-hidden="true" />
+                <div className="login-lockout-text">
+                  <span className="login-lockout-label">Uminisho wa usalama umewashwa</span>
+                  <span className="login-lockout-timer">{formatLockoutTime(lockoutSeconds)}</span>
+                </div>
+              </div>
+            )}
+
+            {rateLimitInfo && lockoutSeconds <= 0 && rateLimitInfo.remaining !== undefined && rateLimitInfo.remaining > 0 && (
+              <div className="login-attempts-warning" role="status">
+                <i className="fas fa-exclamation-triangle" aria-hidden="true" />
+                <span>
+                  Majaribio {rateLimitInfo.remaining} yaliyobaki kabla ya kufungwa.
+                </span>
+              </div>
+            )}
 
             <div className="form-group">
               <label htmlFor="username">Jina la mtumiaji</label>
@@ -171,6 +269,7 @@ const Login = () => {
                   autoFocus
                   required
                   disabled={loading}
+                  maxLength={MAX_USERNAME_LEN}
                   className="input-with-icon-field"
                   aria-invalid={Boolean(formError)}
                 />
@@ -195,6 +294,7 @@ const Login = () => {
                     autoComplete="current-password"
                     required
                     disabled={loading}
+                    maxLength={MAX_PASSWORD_LEN}
                     className="input-with-icon-field"
                     aria-invalid={Boolean(formError)}
                   />

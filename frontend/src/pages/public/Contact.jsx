@@ -1,21 +1,12 @@
-/**
- * Contact — prose from Public Pages (contact slug); phones/emails/hours from Site & Contacts.
- */
 import { useQuery } from '@tanstack/react-query';
 import PublicLayout from '../../components/layout/PublicLayout';
 import Loading from '../../components/common/Loading';
 import { publicAPI } from '../../services/public';
 import { getGoogleMapsEmbedSrc } from '../../utils/googleMapsEmbed';
-import { PublicCmsEmpty, PublicCmsPreparedBlock, usePublicPage } from '../../components/public/PublicCmsPage';
-import PublicPageHero from '../../components/public/PublicPageHero';
-import { hasPublishedPage, settingValue } from '../../utils/publicPageContent';
+import { settingValue } from '../../utils/publicPageContent';
 import './Contact.css';
 
 const Contact = () => {
-  const { data: contactPageData, isLoading: cmsLoading } = usePublicPage('contact');
-  const contactPage = contactPageData?.data?.page;
-  const hasContactCms = hasPublishedPage(contactPage);
-
   const { data: settings, isLoading: settingsLoading } = useQuery({
     queryKey: ['homepage'],
     queryFn: async () => {
@@ -25,7 +16,7 @@ const Contact = () => {
     staleTime: 10 * 60 * 1000,
   });
 
-  if (cmsLoading || settingsLoading) {
+  if (settingsLoading) {
     return (
       <PublicLayout>
         <Loading message="Inapakia ukurasa wa mawasiliano..." />
@@ -64,24 +55,24 @@ const Contact = () => {
 
   return (
     <PublicLayout>
-      <div className="contact-page public-immersive-shell">
-        <div className="public-immersive-shell__inner">
-          <PublicPageHero
-            page={contactPage}
-            fallbackTitle="Mawasiliano"
-            settings={settings}
-            variant="contact"
-          />
+      <div className="contact-page-static">
+        <div className="contact-page-static__inner">
+          <header className="c-hero">
+            <div className="c-hero__inner">
+              <h1 className="c-hero__title">Mawasiliano</h1>
+              <p className="c-hero__lead">
+                Wasiliana nasi kwa simu, barua pepe, au WhatsApp — ofisi yetu iko chini na ramani.
+              </p>
+            </div>
+          </header>
 
-          {hasContactCms ? (
-            <PublicCmsPreparedBlock
-              page={contactPage}
-              themeKey="contact"
-              proseClassName="contact-card contact-card--cms"
-            />
-          ) : (
-            <PublicCmsEmpty pageLabel="Mawasiliano" />
-          )}
+          <section className="c-intro-card">
+            <h2 className="c-intro-card__title">Wasiliana Nasi</h2>
+            <p className="c-intro-card__text">
+              Tunakaribisha mawasiliano kutoka kwa wanafunzi watarajiwa, wazazi, wahitimu, na
+              marafiki wa seminari.
+            </p>
+          </section>
 
           {hasContactInfo ? (
             <section className="contact-card" aria-labelledby="contact-info-heading">

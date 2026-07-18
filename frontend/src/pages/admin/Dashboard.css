@@ -95,7 +95,7 @@
 .dashboard-surface-card {
   background: #ffffff;
   border: 1px solid #c9cdd4;
-  border-radius: clamp(0.625rem, 2vw, 0.875rem);
+  border-radius: 0;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
   width: 100%;
   min-width: 0;
@@ -154,6 +154,94 @@
 
 .welcome-text h2 i {
   color: #000000;
+}
+
+/* Welcome user meta — name + role chips */
+.welcome-user-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+  flex-wrap: wrap;
+}
+
+.welcome-user-name,
+.welcome-user-role {
+  display: inline-block;
+  padding: 0.2rem 0.6rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  border-radius: 0;
+}
+
+.welcome-user-name {
+  background: #0f172a;
+  color: #ffffff;
+}
+
+.welcome-user-role {
+  background: #01a72b;
+  color: #ffffff;
+}
+
+/* Welcome actions — mute + logout buttons */
+.welcome-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* Mute toggle button inside welcome header */
+.welcome-mute-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  background: #ffffff;
+  color: #01a72b;
+  border: 2px solid #01a72b;
+  border-radius: 0;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background 0.15s ease, color 0.15s ease;
+}
+
+.welcome-mute-btn:hover {
+  background: #01a72b;
+  color: #ffffff;
+}
+
+.welcome-mute-btn:active {
+  transform: scale(0.95);
+}
+
+/* Logout button in welcome header */
+.welcome-logout-btn {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.5rem 1rem;
+  background: #ef4444;
+  color: #ffffff;
+  border: 2px solid #dc2626;
+  border-radius: 0;
+  font-size: 0.85rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease, transform 0.12s ease;
+}
+
+.welcome-logout-btn:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+}
+
+.welcome-logout-btn:active {
+  transform: scale(0.97);
 }
 
 /* Main Grid Layout */
@@ -248,28 +336,35 @@
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
 }
 
-/* Yearly student table (exercise box style) */
+/* Yearly student table — sharp, colorful, well-arranged */
 .year-table-container {
   margin-bottom: 0;
 }
 
 .year-table-container.dashboard-surface-card {
   padding: 1.125rem 1.25rem 1.25rem;
+  border-left: 5px solid #01a72b;
+}
+
+.year-table-container--forms.dashboard-surface-card {
+  border-left-color: #2563eb;
 }
 
 .year-table-header {
   font-size: clamp(0.9375rem, 2vw, 1.0625rem);
   font-weight: 700;
-  color: #000000;
+  color: #ffffff;
   margin: 0 0 0.75rem;
-  padding-bottom: 0.625rem;
-  border-bottom: 1px solid #d8dce3;
+  padding: 0.65rem 0.85rem;
+  background: #0f172a;
+  border-radius: 0;
+  letter-spacing: 0.02em;
 }
 
 .year-table {
   display: grid;
-  border: 1px solid #c9cdd4;
-  border-radius: clamp(0.5rem, 1.5vw, 0.625rem);
+  border: 2px solid #0f172a;
+  border-radius: 0;
   overflow: hidden;
   background: #ffffff;
   min-width: 100%;
@@ -285,16 +380,16 @@
 }
 
 .year-table-row:not(:last-child) .year-table-cell {
-  border-bottom: 1px solid #dfe3e8;
+  border-bottom: 1px solid #e2e8f0;
 }
 
 .year-table-row--head {
-  background: #f4f5f7;
+  background: #0f172a;
 }
 
 .year-table-cell {
   padding: 0.7rem 0.85rem;
-  border-right: 1px solid #dfe3e8;
+  border-right: 1px solid #e2e8f0;
   font-size: clamp(0.875rem, 1.6vw, 0.9375rem);
   display: flex;
   align-items: center;
@@ -308,47 +403,79 @@
   font-weight: 700;
   text-transform: uppercase;
   font-size: clamp(0.6875rem, 1.2vw, 0.75rem);
-  letter-spacing: 0.04em;
-  color: #000000;
+  letter-spacing: 0.06em;
+  color: #ffffff;
 }
 
 .year-table-cell--year {
   font-weight: 600;
-  color: #000000;
+  color: #0f172a;
 }
 
 .year-table-cell--count {
   font-variant-numeric: tabular-nums;
   justify-content: flex-end;
-  color: #000000;
-  font-weight: 600;
+  color: #01a72b;
+  font-weight: 700;
+  font-size: clamp(0.95rem, 2vw, 1.1rem);
 }
 
 .year-table-cell--count::after {
   content: ' students';
   font-weight: 500;
-  color: #4b5563;
+  color: #64748b;
   margin-left: 0.25rem;
+  font-size: 0.78rem;
 }
 
 .year-table-cell--count-no-suffix {
   font-variant-numeric: tabular-nums;
   justify-content: flex-end;
-  color: #000000;
-  font-weight: 600;
+  color: #0f172a;
+  font-weight: 700;
+}
+
+.year-table-row:not(.year-table-row--head):not(.year-table-row--footer):nth-child(even) {
+  background: #f8fafc;
+}
+
+.year-table-row:not(.year-table-row--head):not(.year-table-row--footer):hover {
+  background: #f1f5f9;
 }
 
 .year-table-row--footer {
-  background-color: #f4f5f7;
+  background-color: #0f172a;
 }
 
 .year-table-row--footer .year-table-cell {
   border-bottom: none;
-  font-weight: 600;
+  font-weight: 700;
+  color: #ffffff;
 }
 
-.year-table-row:not(.year-table-row--head):not(.year-table-row--footer) {
-  background: #ffffff;
+/* Forms table uses blue accent */
+.year-table--forms {
+  border-color: #2563eb;
+}
+
+.year-table-container--forms .year-table-header {
+  background: #2563eb;
+}
+
+.year-table--forms .year-table-cell--head {
+  background: #1d4ed8;
+}
+
+.year-table--forms .year-table-row--head {
+  background: #1d4ed8;
+}
+
+.year-table--forms .year-table-row--footer {
+  background: #1d4ed8;
+}
+
+.year-table--forms .year-table-cell--count-no-suffix {
+  color: #2563eb;
 }
 
 @media (max-width: 768px) {
@@ -423,6 +550,25 @@
   }
 }
 
+/* Stat cells responsive arrangement */
+@media (max-width: 1024px) {
+  .stats-grid-summary {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .stats-grid-summary {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+
+  .stat-cell {
+    min-height: 84px;
+    padding: 0.85rem 0.9rem;
+  }
+}
+
 /* Admin dashboard: mute matches gray card chrome (teacher view keeps default .mute-toggle-btn) */
 .dashboard-layout .mute-toggle-btn {
   color: #000000;
@@ -437,120 +583,129 @@
   border-color: #9ca3af;
 }
 
-/* Stat Cards */
-.stat-card {
+/* Stat Cells — sharp corners, vivid colour accents, well-arranged grid */
+.stats-grid-summary {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 1rem;
+  margin: 0 0 1.5rem;
+}
+
+.stat-cell {
+  position: relative;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 0.85rem;
+  text-align: left;
   background: #ffffff;
-  border: 2px solid #e2e8f0;
+  border: 1px solid #e2e8f0;
+  border-left: 5px solid var(--cell-accent, #01a72b);
   border-radius: 0;
-  padding: 1rem;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  transition: all 0.3s ease;
-  text-align: center;
+  padding: 1rem 1.1rem;
+  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.07);
+  min-height: 96px;
+  overflow: hidden;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.stat-cell::after {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: var(--cell-accent, #01a72b);
+}
+
+.stat-cell:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.14);
+}
+
+.stat-cell-icon {
+  flex: 0 0 auto;
+  width: 46px;
+  height: 46px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+  color: var(--cell-accent, #01a72b);
+  background: var(--cell-soft, rgba(1, 167, 43, 0.12));
+  border-radius: 0;
+}
+
+.stat-cell-body {
+  min-width: 0;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  min-height: 110px;
+  gap: 0.1rem;
 }
 
-.stat-card:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  border-color: #01a72b;
+.stat-cell-number {
+  font-size: clamp(1.6rem, 3.6vw, 2.1rem);
+  font-weight: 800;
+  color: #0f172a;
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
 }
 
-.stat-card-featured {
-  background: linear-gradient(135deg, #01a72b 0%, #028a23 100%);
-  color: #ffffff;
-  border-color: #01a72b;
-}
-
-.stat-card-featured .stat-number,
-.stat-card-featured .stat-label,
-.stat-card-featured .stat-description {
-  color: #ffffff;
-}
-
-.stat-card-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  margin-bottom: 0.75rem;
-}
-
-.stat-icon {
-  width: 40px;
-  height: 40px;
-  border-radius: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
-  color: #01a72b;
-  background: rgba(1, 167, 43, 0.1);
-}
-
-.stat-icon-primary {
-  background: rgba(255, 255, 255, 0.2);
-  color: #ffffff;
-}
-
-.stat-card-featured .stat-trend {
-  color: rgba(255, 255, 255, 0.85);
-}
-
-.stat-icon-academic {
-  background: rgba(59, 130, 246, 0.1);
-  color: #3b82f6;
-}
-
-.stat-trend {
-  color: rgba(255, 255, 255, 0.8);
-  font-size: 1.25rem;
-}
-
-.stat-number {
-  font-size: clamp(1.75rem, 5vw, 2.5rem);
+.stat-cell-label {
+  font-size: clamp(0.8rem, 2vw, 0.95rem);
   font-weight: 700;
-  color: #1e293b;
-  margin: clamp(0.5rem, 2vw, 0.75rem) 0;
+  color: #334155;
   line-height: 1.2;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
 }
 
-.stat-number-primary {
-  font-size: clamp(2rem, 6vw, 3rem);
+.stat-cell-desc {
+  font-size: 0.72rem;
+  color: #64748b;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Colour variants — sharp, distinct accents */
+.stat-cell--green {
+  --cell-accent: #01a72b;
+  --cell-soft: rgba(1, 167, 43, 0.12);
+}
+
+.stat-cell--blue {
+  --cell-accent: #2563eb;
+  --cell-soft: rgba(37, 99, 235, 0.12);
+}
+
+.stat-cell--purple {
+  --cell-accent: #7c3aed;
+  --cell-soft: rgba(124, 58, 237, 0.12);
+}
+
+.stat-cell--orange {
+  --cell-accent: #ea580c;
+  --cell-soft: rgba(234, 88, 12, 0.12);
+}
+
+/* Keep the year table rows tinted to match the accent palette */
+.year-table-row--head {
+  background: #0f172a;
+}
+
+.year-table-row--head .year-table-cell--head {
   color: #ffffff;
 }
 
-.stat-label {
-  font-size: clamp(1rem, 3vw, 1.125rem);
-  font-weight: 600;
-  color: #475569;
-  margin-top: clamp(0.25rem, 1vw, 0.5rem);
-  line-height: 1.5;
+.year-table-row--footer {
+  background-color: #f1f5f9;
 }
 
-.stat-description {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.9);
-  margin-top: 0.25rem;
-}
-
-.stat-progress {
-  width: 100%;
-  height: 4px;
-  background: #e2e8f0;
-  border-radius: 0;
+/* Sharp academic table section spacing */
+.dashboard-section + .dashboard-section {
   margin-top: 0.5rem;
-  overflow: hidden;
-}
-
-.stat-progress-bar {
-  height: 100%;
-  background: linear-gradient(90deg, #01a72b 0%, #028a23 100%);
-  border-radius: 0;
-  transition: width 0.3s ease;
 }
 
 /* ===========================================

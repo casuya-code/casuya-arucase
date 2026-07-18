@@ -109,24 +109,20 @@ const Gallery = () => {
   // Content will appear progressively as it loads
 
   const pageShell = (children) => (
-    <div className="gallery-page gallery-page--immersive public-immersive-shell">
-      <div className="public-immersive-shell__inner">{children}</div>
+    <div className="gallery-page-static">
+      <div className="gallery-page-static__inner">{children}</div>
     </div>
   );
 
   const hero = (
-    <header className="public-cms-hero">
-      <div className="public-cms-hero__inner">
-        <div className="public-cms-hero__text">
-          <p className="public-cms-hero__eyebrow">Seminari ya Kikatoliki Arusha</p>
-          <h1 className="public-cms-hero__title public-cms-hero__title--with-icon">
-            <i className="fas fa-images" aria-hidden />
-            Galeria ya Picha
-          </h1>
-          <p className="public-cms-hero__lead">
-            Tazama mkusanyiko wa picha zinazoonesha maisha ya Seminari ya Kikatoliki Arusha.
-          </p>
-        </div>
+    <header className="g-hero">
+      <div className="g-hero__inner">
+        <h1 className="g-hero__title">
+          Galeria ya Picha
+        </h1>
+        <p className="g-hero__lead">
+          Tazama mkusanyiko wa picha zinazoonesha maisha ya Seminari ya Kakatoliki Arusha.
+        </p>
       </div>
     </header>
   );
@@ -137,7 +133,7 @@ const Gallery = () => {
         {pageShell(
           <>
             {hero}
-            <div className="content-card gallery-surface gallery-surface--notice">
+            <div className="g-surface g-surface--notice">
               <div className="gallery-error-inner">
                 <i className="fas fa-exclamation-circle" aria-hidden />
                 <p>Imeshindikana kupakia picha za galeria. Angalia mtandao wako kisha ujaribu tena.</p>
@@ -159,7 +155,7 @@ const Gallery = () => {
           {hero}
 
           {categories.length > 1 && (
-            <div className="content-card gallery-surface gallery-surface--filters">
+            <div className="g-surface g-surface--filters">
               <div className="gallery-filters" role="toolbar" aria-label="Chuja kategoria">
                 {categories.map((category) => (
                   <button
@@ -187,7 +183,7 @@ const Gallery = () => {
           {isLoading && filteredPhotos.length === 0 ? (
             <SkeletonLoader type="gallery" />
           ) : filteredPhotos.length === 0 ? (
-            <div className="content-card gallery-surface gallery-surface--notice">
+            <div className="g-surface g-surface--notice">
               <div className="gallery-empty-inner">
                 <i className="fas fa-images" aria-hidden />
                 <p>Galeria bado haina picha. Tafadhali tembelea tena baadaye.</p>

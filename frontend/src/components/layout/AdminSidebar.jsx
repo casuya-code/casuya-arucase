@@ -1,8 +1,6 @@
 import { useState, useEffect, useRef } from 'react';
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
-import SidebarOnlinePresence from './SidebarOnlinePresence';
-import SidebarUserPhoto from './SidebarUserPhoto';
 import './AdminSidebar.css';
 
 /** Matches routes that use `requiredAdmin` (subjects, etc.) — not all leadership roles. */
@@ -34,7 +32,7 @@ const AdminSidebar = () => {
     setExpandedCategories(navigationItems.map((_, i) => i));
   }, []);
 
-  const { logout, user } = useAuth();
+  const { user, logout } = useAuth();
 
   const isAdminLike = user?.role && ADMIN_LIKE_ROLES.includes(user.role);
   const keepNavSectionsOpen = !isAdminLike;
@@ -318,10 +316,6 @@ const AdminSidebar = () => {
     setMobileMenuOpen(false);
   }, [location.pathname]);
 
-  const handleLogout = () => {
-    logout();
-  };
-
   return (
     <>
       {/* Mobile Menu Toggle Button */}
@@ -366,8 +360,6 @@ const AdminSidebar = () => {
             <i className={`fas ${sidebarCollapsed ? 'fa-angle-right' : 'fa-angle-left'}`}></i>
           </button>
         </div>
-
-        <SidebarUserPhoto collapsed={sidebarCollapsed} />
 
         <nav className="sidebar-nav" ref={navRef} onKeyDown={handleNavKeyDown}>
           {/* Desktop Navigation - Grouped by Category */}
@@ -460,38 +452,39 @@ const AdminSidebar = () => {
           </div>
         </nav>
 
-        {/* User Info & Logout */}
         <div className="sidebar-footer">
-          {!sidebarCollapsed && (
-            <div className="sidebar-user-card">
-              <div className="sidebar-user-card__avatar">
-                <i className="fas fa-user"></i>
+          {!sidebarCollapsed ? (
+            <>
+              <div className="sidebar-user-card">
+                <div className="sidebar-user-card__avatar">
+                  {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
+                </div>
+                <div className="sidebar-user-card__info">
+                  <span className="sidebar-user-card__name">{user?.full_name || 'User'}</span>
+                  <span className="sidebar-user-card__role">{user?.role || ''}</span>
+                </div>
               </div>
-              <div className="sidebar-user-card__info">
-                <span className="sidebar-user-card__name">{user?.full_name || user?.username || 'Admin'}</span>
-                <span className="sidebar-user-card__role">{user?.role || 'Administrator'}</span>
+              <div className="sidebar-footer__actions">
+                <button onClick={logout} className="sidebar-logout-btn" title="Logout">
+                  <i className="fas fa-sign-out-alt"></i>
+                  <span>Logout</span>
+                </button>
               </div>
-            </div>
+            </>
+          ) : (
+            <>
+              <div className="sidebar-user-card sidebar-user-card--collapsed" title={user?.full_name || 'User'}>
+                <div className="sidebar-user-card__avatar">
+                  {user?.full_name ? user.full_name.charAt(0).toUpperCase() : 'U'}
+                </div>
+              </div>
+              <div className="sidebar-footer__actions">
+                <button onClick={logout} className="sidebar-logout-btn" title="Logout">
+                  <i className="fas fa-sign-out-alt"></i>
+                </button>
+              </div>
+            </>
           )}
-          {sidebarCollapsed && (
-            <div className="sidebar-user-card sidebar-user-card--collapsed">
-              <div className="sidebar-user-card__avatar">
-                <i className="fas fa-user"></i>
-              </div>
-            </div>
-          )}
-          <div className="sidebar-footer__actions">
-            {!sidebarCollapsed && <SidebarOnlinePresence collapsed={sidebarCollapsed} />}
-            <button
-              type="button"
-              className="sidebar-logout-btn"
-              onClick={handleLogout}
-              title="Logout"
-            >
-              <i className="fas fa-sign-out-alt" aria-hidden="true" />
-              {!sidebarCollapsed && <span>Logout</span>}
-            </button>
-          </div>
         </div>
       </aside>
     </>

@@ -206,13 +206,15 @@ export const AuthProvider = ({ children }) => {
         return {
           success: false,
           error: pickAuthErrorMessage(data, status === 403 ? 'Access denied.' : 'Invalid credentials.'),
+          isRateLimit: data?.rateLimitInfo?.lockoutLevel > 0,
+          errorData: data,
         };
       }
 
       // Handle 2xx responses that indicate failure (e.g. code 403 in body)
       if (data && (data.code === 403 || data.success === false)) {
         const msg = pickAuthErrorMessage(data, 'Access denied.');
-        return { success: false, error: msg };
+        return { success: false, error: msg, errorData: data };
       }
 
       const user = data?.user;
@@ -234,11 +236,13 @@ export const AuthProvider = ({ children }) => {
             return {
               success: false,
               error: pickAuthErrorMessage(fallbackData, fbStatus === 403 ? 'Access denied.' : 'Invalid credentials.'),
+              isRateLimit: fallbackData?.rateLimitInfo?.lockoutLevel > 0,
+              errorData: fallbackData,
             };
           }
 
           if (fallbackData && (fallbackData.code === 403 || fallbackData.success === false)) {
-            return { success: false, error: pickAuthErrorMessage(fallbackData, 'Access denied.') };
+            return { success: false, error: pickAuthErrorMessage(fallbackData, 'Access denied.'), errorData: fallbackData };
           }
 
           const user = fallbackData?.user;
@@ -269,6 +273,10 @@ export const AuthProvider = ({ children }) => {
       return {
         success: false,
         error: msg && String(msg).trim() ? String(msg).trim() : 'Login failed. Please try again.',
+        isRateLimit: error?.isRateLimit || error?.response?.status === 429,
+        retryAfter: error?.response?.data?.retryAfter || error?.response?.data?.remainingTime || null,
+        lockoutSeconds: error?.response?.status === 429 ? (error?.response?.data?.retryAfter || error?.response?.data?.remainingTime || null) : null,
+        errorData: body,
       };
     }
   };

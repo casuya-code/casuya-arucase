@@ -35,7 +35,7 @@ const MODULE_GUIDELINES = [
 const ADMIN_LIKE_ROLES = ['admin', 'superadmin', 'rector', 'vice_rector', 'academic_master'];
 
 const Dashboard = () => {
-  const { user } = useAuth();
+  const { user, logout } = useAuth();
   const { isMuted, toggleMute } = useSound();
   const isAdmin = user?.role && ADMIN_LIKE_ROLES.includes(user.role);
 
@@ -75,6 +75,64 @@ const Dashboard = () => {
       return modules.includes(guideline.module);
     });
   }, [userPermissions.modules]);
+
+  // Derived summary numbers for the colourful stat cells (computed for every render)
+  const totalStudents = useMemo(() => {
+    if (!Array.isArray(stats.students_by_year)) return 0;
+    return stats.students_by_year.reduce((sum, s) => sum + (s.count || 0), 0);
+  }, [stats.students_by_year]);
+
+  const totalForms = useMemo(() => {
+    if (!Array.isArray(stats.students_by_year_and_form)) return 0;
+    const forms = ['form_i', 'form_ii', 'form_iii', 'form_iv', 'form_v', 'form_vi'];
+    return stats.students_by_year_and_form.reduce((sum, row) => {
+      return sum + forms.reduce((fSum, f) => fSum + (row[f] || 0), 0);
+    }, 0);
+  }, [stats.students_by_year_and_form]);
+
+  const yearCount = Array.isArray(stats.students_by_year)
+    ? new Set(stats.students_by_year.map((s) => s.year)).size
+    : 0;
+
+  const latestYear = useMemo(() => {
+    if (!Array.isArray(stats.students_by_year) || stats.students_by_year.length === 0) return null;
+    return [...stats.students_by_year].sort((a, b) => b.year - a.year)[0];
+  }, [stats.students_by_year]);
+
+  const statCells = [
+    {
+      key: 'total',
+      icon: 'fa-users',
+      color: 'green',
+      number: totalStudents,
+      label: 'Total Students',
+      description: 'Across all years & terms',
+    },
+    {
+      key: 'forms',
+      icon: 'fa-layer-group',
+      color: 'blue',
+      number: totalForms,
+      label: 'Form Enrolments',
+      description: 'I – VI registrations',
+    },
+    {
+      key: 'years',
+      icon: 'fa-calendar-alt',
+      color: 'purple',
+      number: yearCount,
+      label: 'Academic Years',
+      description: 'Distinct years on record',
+    },
+    {
+      key: 'latest',
+      icon: 'fa-star',
+      color: 'orange',
+      number: latestYear ? latestYear.count : 0,
+      label: `Latest (${latestYear ? latestYear.year : '—'})`,
+      description: latestYear ? latestYear.term : 'No data',
+    },
+  ];
 
   if (isLoading) {
     return (
@@ -178,15 +236,29 @@ const Dashboard = () => {
                   <i className="fas fa-graduation-cap" aria-hidden="true"></i>{' '}
                   Welcome, {user?.full_name || user?.username || 'Administrator'}
                 </h2>
+                <div className="welcome-user-meta">
+                  <span className="welcome-user-name">{user?.full_name || user?.username || 'Administrator'}</span>
+                  <span className="welcome-user-role">{user?.role || 'admin'}</span>
+                </div>
               </div>
-              <button
-                onClick={toggleMute}
-                className="mute-toggle-btn"
-                aria-label={isMuted ? 'Unmute sounds' : 'Mute sounds'}
-                title={isMuted ? 'Unmute sounds' : 'Mute sounds'}
-              >
-                <i className={`fas ${isMuted ? 'fa-volume-mute' : 'fa-volume-up'}`}></i>
-              </button>
+              <div className="welcome-actions">
+                <button
+                  onClick={toggleMute}
+                  className="welcome-mute-btn"
+                  aria-label={isMuted ? 'Unmute sounds' : 'Mute sounds'}
+                  title={isMuted ? 'Unmute sounds' : 'Mute sounds'}
+                >
+                  <i className={`fas ${isMuted ? 'fa-volume-mute' : 'fa-volume-up'}`}></i>
+                </button>
+                <button
+                  onClick={logout}
+                  className="welcome-logout-btn"
+                  title="Logout"
+                >
+                  <i className="fas fa-sign-out-alt" aria-hidden="true"></i>
+                  <span>Logout</span>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -199,9 +271,26 @@ const Dashboard = () => {
               <h3 className="section-title">
                 <i className="fas fa-users" aria-hidden="true"></i> Student Statistics
               </h3>
+
+              {/* Colourful sharp stat cells */}
+              <div className="stats-grid stats-grid-summary">
+                {statCells.map((cell) => (
+                  <div key={cell.key} className={`stat-cell stat-cell--${cell.color}`}>
+                    <div className="stat-cell-icon">
+                      <i className={`fas ${cell.icon}`} aria-hidden="true"></i>
+                    </div>
+                    <div className="stat-cell-body">
+                      <div className="stat-cell-number">{cell.number}</div>
+                      <div className="stat-cell-label">{cell.label}</div>
+                      <div className="stat-cell-desc">{cell.description}</div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+
               {/* Exercise-box style table for per-year statistics */}
               {Array.isArray(stats.students_by_year) && stats.students_by_year.length > 0 && (
-                <div className="year-table-container dashboard-surface-card">
+                <div className="year-table-container dashboard-surface-card year-table-container--yearly">
                   <div className="year-table-header">Yearly Student Distribution</div>
                   <div className="year-table">
                     <div className="year-table-row year-table-row--head">
@@ -256,7 +345,7 @@ const Dashboard = () => {
                 );
 
                 return (
-                  <div className="year-table-container dashboard-surface-card">
+                  <div className="year-table-container dashboard-surface-card year-table-container--forms">
                     <div className="year-table-header">Form-wise Student Distribution (per Year)</div>
                     <div className="year-table-scroll">
                     <div

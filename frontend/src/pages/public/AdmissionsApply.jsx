@@ -457,19 +457,16 @@ const AdmissionsApply = () => {
 
   return (
     <PublicLayout>
-      <div className="admissions-apply-page public-immersive-shell">
-        <div className="public-immersive-shell__inner admissions-apply-page__inner">
-          <header className="public-cms-hero admissions-apply-hero">
-            <div className="public-cms-hero__inner">
-              <div className="public-cms-hero__text">
-                <h1 className="public-cms-hero__title public-cms-hero__title--with-icon">
-                  <i className="fas fa-file-signature" aria-hidden />
-                  Maombi ya Udahili
-                </h1>
-                <p className="public-cms-hero__lead admissions-apply-hero__lead">{APPLY_HERO_LEAD}</p>
+      <div className="admissions-apply-page-static">
+        <div className="admissions-apply-page-static__inner">
+          <header className="aa-hero">
+            <div className="aa-hero__inner">
+              <div className="aa-hero__text">
+                <h1 className="aa-hero__title">Maombi ya Udahili</h1>
+                <p className="aa-hero__lead">{APPLY_HERO_LEAD}</p>
               </div>
-              <div className="public-cms-hero__cta">
-                <Link to="/admissions" className="public-cms-hero__btn">
+              <div className="aa-hero__actions">
+                <Link to="/admissions" className="aa-hero__btn">
                   <i className="fas fa-arrow-left" aria-hidden />
                   Rudi Udahili
                 </Link>
