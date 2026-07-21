@@ -127,9 +127,10 @@ async function initDatabase() {
         -- for Form I-IV results (e.g. Sc, Ss, Ui).
         com VARCHAR(50),
         year INTEGER NOT NULL,
+        term VARCHAR(20) DEFAULT 'First Term',
         status VARCHAR(50) DEFAULT 'PENDING',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(adm_no, level, stream, year)
+        UNIQUE(adm_no, level, stream, year, term)
       )
     `);
     console.log('✅ Students table created');
@@ -152,6 +153,33 @@ async function initDatabase() {
     // Ensure term column exists on existing deployments (required by routes/students.js).
     await query(`ALTER TABLE students ADD COLUMN IF NOT EXISTS term VARCHAR(20) DEFAULT 'First Term';`);
     console.log('✅ Students table term column ensured');
+
+    // Ensure unique constraint includes term (migrates old 4-column constraint).
+    await query(`
+      DO $$
+      BEGIN
+        IF EXISTS (
+          SELECT 1 FROM pg_constraint
+          WHERE conrelid = 'students'::regclass
+            AND contype = 'u'
+            AND conname = 'students_adm_no_level_stream_year_key'
+        ) THEN
+          ALTER TABLE students DROP CONSTRAINT students_adm_no_level_stream_year_key;
+        END IF;
+
+        IF NOT EXISTS (
+          SELECT 1 FROM pg_constraint
+          WHERE conrelid = 'students'::regclass
+            AND contype = 'u'
+            AND conname = 'students_adm_no_level_stream_year_term_key'
+        ) THEN
+          ALTER TABLE students
+          ADD CONSTRAINT students_adm_no_level_stream_year_term_key
+          UNIQUE(adm_no, level, stream, year, term);
+        END IF;
+      END $$;
+    `);
+    console.log('✅ Students table unique constraint updated to include term');
     
     // Create indexes for students (scale: 2000+ students with photos/data across years)
     await query('CREATE INDEX IF NOT EXISTS idx_students_class ON students(level, stream, year)');

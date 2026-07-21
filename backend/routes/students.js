@@ -63,7 +63,11 @@ function getTermFromMonth(month, level) {
 
   if (firstTermMonths.includes(monthStr)) return 'First Term';
   if (secondTermMonths.includes(monthStr)) return 'Second Term';
-  return 'First Term';
+  // Non-assessment months (Jan, Jun, Jul, Dec) are between terms — reject.
+  throw new Error(
+    `Month "${monthStr}" is not a valid assessment month for ${normalizedLevel}. ` +
+    `Valid months: ${[...firstTermMonths, ...secondTermMonths].join(', ')}`
+  );
 }
 
 // Level variants so DELETE matches "FORM III" and "FORM 3" (and Form III, etc.) in DB

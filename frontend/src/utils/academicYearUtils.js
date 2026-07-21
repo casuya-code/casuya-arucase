@@ -103,31 +103,29 @@ export const getAcademicYearRange = (year) => {
 /**
  * Form V/VI year cards from {@link FORM_V_VI_MIN_YEAR} through current + {@link SCHOOL_YEAR_PICKER_AHEAD}.
  * Each cohort adds a start-year card (Jul–Dec) and end-year card (Jan–Jun) when in range.
+ * A calendar year (e.g. 2026) can appear twice: as the end-year of one cohort
+ * (2025–2026, Second Term) and as the start-year of the next cohort (2026–2027, First Term).
  * @returns {Array} - Array of available academic year objects
  */
 export const getFormVVIYears = () => {
   const currentYear = getCurrentCalendarYear();
   const maxDisplayYear = currentYear + SCHOOL_YEAR_PICKER_AHEAD;
   const years = [];
-  const seen = new Set();
 
   for (let startYear = FORM_V_VI_MIN_YEAR; startYear <= maxDisplayYear; startYear++) {
     const academicYear = getAcademicYearRange(startYear);
     const endYear = startYear + 1;
 
-    if (!seen.has(startYear)) {
-      years.push({
-        year: startYear,
-        ...academicYear,
-        cohortStartYear: startYear,
-        isEndYear: false,
-        role: 'cohort-start',
-        displayLabel: `${startYear} (${academicYear.displayRange})`,
-      });
-      seen.add(startYear);
-    }
+    years.push({
+      year: startYear,
+      ...academicYear,
+      cohortStartYear: startYear,
+      isEndYear: false,
+      role: 'cohort-start',
+      displayLabel: `${startYear} (${academicYear.displayRange})`,
+    });
 
-    if (!seen.has(endYear) && endYear <= maxDisplayYear) {
+    if (endYear <= maxDisplayYear) {
       years.push({
         year: endYear,
         ...academicYear,
@@ -136,11 +134,10 @@ export const getFormVVIYears = () => {
         role: 'cohort-end',
         displayLabel: `${endYear} (${academicYear.displayRange})`,
       });
-      seen.add(endYear);
     }
   }
 
-  return years.sort((a, b) => b.year - a.year);
+  return years.sort((a, b) => b.year - a.year || (a.isEndYear ? 1 : -1));
 };
 
 /**
@@ -181,13 +178,24 @@ export const getCurrentTerm = (date = new Date()) => {
 
 /**
  * Lookup a year card from getFormVVIYears() by calendar year.
+ * When a year has two cards (e.g. 2026 as cohort-end AND cohort-start),
+ * returns the card matching the current term (Jul–Dec → start, Jan–Jun → end).
  * @param {number} displayYear
  * @returns {object|undefined}
  */
 export const getFormVVICardByYear = (displayYear) => {
   const y = parseInt(displayYear, 10);
   if (isNaN(y)) return undefined;
-  return getFormVVIYears().find((card) => card.year === y);
+  const cards = getFormVVIYears().filter((card) => card.year === y);
+  if (cards.length === 0) return undefined;
+  if (cards.length === 1) return cards[0];
+  // Multiple cards — prefer the one matching current term
+  const currentTerm = getCurrentTerm();
+  for (const card of cards) {
+    if (currentTerm.term === 'First Term' && !card.isEndYear) return card;
+    if (currentTerm.term === 'Second Term' && card.isEndYear) return card;
+  }
+  return cards[0];
 };
 
 /**
@@ -249,72 +257,83 @@ export const normalizeFormVVITerm = (term) => {
 
 /**
  * Valid DB pairs: cohort-start year + First Term, cohort-end year + Second Term.
- * e.g. 2025 + First Term, 2026 + Second Term — not 2026 + First Term.
+ * A year may have both roles (e.g. 2026 is end of 2025–2026 + start of 2026–2027),
+ * in which case both term pairs are valid.
  */
 export const isValidFormVVITermPair = (displayYear, term) => {
   const y = parseInt(displayYear, 10);
   const normalized = normalizeFormVVITerm(term);
   if (isNaN(y) || !normalized) return false;
-  const card = getFormVVICardByYear(y);
-  if (!card) return false;
-  if (card.isEndYear) return normalized === 'Second Term';
-  return normalized === 'First Term';
+  const cards = getFormVVIYears().filter((card) => card.year === y);
+  if (cards.length === 0) return false;
+  return cards.some((card) => {
+    if (card.isEndYear) return normalized === 'Second Term';
+    return normalized === 'First Term';
+  });
 };
 
 export const getFormVVITermInvalidReason = (displayYear, term) => {
   const y = parseInt(displayYear, 10);
   const normalized = normalizeFormVVITerm(term);
-  const card = getFormVVICardByYear(y);
-  if (isNaN(y) || !card) {
+  const cards = getFormVVIYears().filter((card) => card.year === y);
+  if (isNaN(y) || cards.length === 0) {
     return `Year ${displayYear} is not a valid Form V/VI year.`;
   }
-  if (card.isEndYear && normalized !== 'Second Term') {
+  // If ANY card accepts this pair, it's valid
+  if (cards.some((card) => {
+    if (card.isEndYear) return normalized === 'Second Term';
+    return normalized === 'First Term';
+  })) return '';
+  // All cards reject — show rejection from the first card's perspective
+  const card = cards[0];
+  if (card.isEndYear) {
     return (
       `Year ${y} is the Jan–Jun calendar year for cohort ${card.displayRange}. ` +
-      `Choose Second Term (not ${normalized || term || 'this term'}).`
+      `For this cohort, Jul–Dec ${y} would be Form VI, not Form V. Choose Second Term.`
     );
   }
-  if (!card.isEndYear && normalized !== 'First Term') {
-    return (
-      `Year ${y} is the Jul–Dec calendar year for cohort ${card.displayRange}. ` +
-      `Choose First Term (not ${normalized || term || 'this term'}).`
-    );
-  }
-  return '';
+  return (
+    `Year ${y} is the Jul–Dec calendar year for cohort ${card.displayRange}. ` +
+    `For this cohort, Jan–Jun ${y + 1} would be Second Term. Choose First Term.`
+  );
 };
 
 export const getFormVVITermChoices = (displayYear) => {
   const y = parseInt(displayYear, 10);
-  const card = getFormVVICardByYear(y);
-  const cohortStart = card?.cohortStartYear ?? (card?.isEndYear ? y - 1 : y);
-  const cohortRange = `${cohortStart} - ${cohortStart + 1}`;
+  const cards = getFormVVIYears().filter((card) => card.year === y);
+  const hasEndYearCard = cards.some((c) => c.isEndYear);
+  const hasStartYearCard = cards.some((c) => !c.isEndYear);
+
+  const currentTerm = getCurrentTerm();
+  const isFirstTermCurr = currentTerm.term === 'First Term' && y === currentTerm.academicYearStart;
+  const isSecondTermCurr = currentTerm.term === 'Second Term' && y === currentTerm.academicYearEnd;
 
   const first = {
     term: 'First Term',
     title: 'First Term',
     subtitle: `July – December ${y}`,
-    description: card?.isEndYear
-      ? `Not used for year ${y} — intake Term I is Jul–Dec ${cohortStart}`
-      : `Cohort ${cohortRange} · Term I (Jul – Dec ${y})`,
-    recommended: !card?.isEndYear,
-    valid: !card?.isEndYear,
-    invalidReason: card?.isEndYear
-      ? getFormVVITermInvalidReason(y, 'First Term')
-      : '',
+    description: hasEndYearCard
+      ? `First Term for the new ${y}–${y + 1} cohort (Form VI / new Form V)`
+      : `Cohort ${y} - ${y + 1} · Term I (Jul – Dec ${y})`,
+    recommended: isFirstTermCurr || (!hasEndYearCard && !isSecondTermCurr),
+    valid: hasStartYearCard || isFirstTermCurr,
+    invalidReason: (hasStartYearCard || isFirstTermCurr)
+      ? ''
+      : getFormVVITermInvalidReason(y, 'First Term'),
   };
 
   const second = {
     term: 'Second Term',
     title: 'Second Term',
     subtitle: `January – June ${y}`,
-    description: card?.isEndYear
-      ? `Cohort ${cohortRange} · Term II (Jan – Jun ${y})`
-      : `Not used for year ${y} — Term II for this cohort is under year ${y + 1}`,
-    recommended: !!card?.isEndYear,
-    valid: !!card?.isEndYear,
-    invalidReason: !card?.isEndYear
-      ? getFormVVITermInvalidReason(y, 'Second Term')
-      : '',
+    description: hasEndYearCard
+      ? `Cohort ${y - 1} - ${y} · Term II (Jan – Jun ${y})`
+      : `Second Term is under year ${y + 1} for this cohort`,
+    recommended: isSecondTermCurr || (hasEndYearCard && !isFirstTermCurr),
+    valid: hasEndYearCard || isSecondTermCurr,
+    invalidReason: (hasEndYearCard || isSecondTermCurr)
+      ? ''
+      : getFormVVITermInvalidReason(y, 'Second Term'),
   };
 
   return [first, second];

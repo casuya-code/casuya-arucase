@@ -2,7 +2,7 @@
  * Score Entry Page - Actual score input interface
  * Non-admin without access to this class is redirected to score entry.
  */
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef, useMemo } from 'react';
 import { useParams, Link, Navigate, useNavigate } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '../../utils/toast';
@@ -50,7 +50,8 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
   const { getAllowedScoreEntryMonths, hasClass, isAdminLike, hasModule } = useAuth();
   
   const [scores, setScores] = useState({});
-  const [saveTimeouts, setSaveTimeouts] = useState({});
+  const saveTimeoutsRef = useRef({});
+  const scoresInitialized = useRef(false);
   const PAGE_SIZE = 25;
   const [currentPage, setCurrentPage] = useState(1);
 
@@ -339,12 +340,30 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
           filteredScores[admNo] = existingScores[admNo];
         }
       });
-      // Only update if scores actually changed to prevent loops when scores is in deps
-      setScores(prev => {
-        const prevStr = JSON.stringify(prev);
-        const newStr = JSON.stringify(filteredScores);
-        return prevStr === newStr ? prev : filteredScores;
-      });
+
+      if (!scoresInitialized.current) {
+        // First load: initialize scores from server
+        scoresInitialized.current = true;
+        setScores(prev => {
+          const prevStr = JSON.stringify(prev);
+          const newStr = JSON.stringify(filteredScores);
+          return prevStr === newStr ? prev : filteredScores;
+        });
+      } else {
+        // Subsequent refetches: merge server scores with local edits
+        // Keep user's local value for any score they've modified
+        setScores(prev => {
+          const merged = { ...filteredScores };
+          Object.keys(prev).forEach(admNo => {
+            if (prev[admNo] !== undefined && prev[admNo] !== filteredScores[admNo]) {
+              merged[admNo] = prev[admNo];
+            }
+          });
+          const prevStr = JSON.stringify(prev);
+          const newStr = JSON.stringify(merged);
+          return prevStr === newStr ? prev : merged;
+        });
+      }
     } else if (students.length > 0) {
       // Initialize empty scores object for all students when no existing scores
       // Check if we need to initialize by comparing student count
@@ -359,6 +378,28 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
       }
     }
   }, [existingScores, students, scores]);
+
+  // Detect unsaved score changes (local scores differ from server)
+  const hasUnsavedChanges = useMemo(() => {
+    if (!scoresInitialized.current) return false;
+    return Object.entries(scores).some(([admNo, localScore]) => {
+      const local = localScore ?? '';
+      const server = existingScores[admNo] ?? '';
+      return local !== server;
+    });
+  }, [scores, existingScores]);
+
+  // Block browser refresh/close when there are unsaved changes
+  useEffect(() => {
+    const handleBeforeUnload = (e) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   // Save score mutation
   const saveScoreMutation = useMutation({
@@ -409,8 +450,8 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
     setScores(newScores);
 
     // Clear existing timeout for this student
-    if (saveTimeouts[admNo]) {
-      clearTimeout(saveTimeouts[admNo]);
+    if (saveTimeoutsRef.current[admNo]) {
+      clearTimeout(saveTimeoutsRef.current[admNo]);
     }
 
     // Auto-save after 3 seconds of inactivity
@@ -423,19 +464,15 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
       }
     }, 3000);
 
-    setSaveTimeouts(prev => ({ ...prev, [admNo]: timeout }));
+    saveTimeoutsRef.current[admNo] = timeout;
   };
 
   // Handle blur - save immediately when clicking on another input
   const handleScoreBlur = (admNo, value) => {
     // Clear the timeout since we're saving now
-    if (saveTimeouts[admNo]) {
-      clearTimeout(saveTimeouts[admNo]);
-      setSaveTimeouts(prev => {
-        const newTimeouts = { ...prev };
-        delete newTimeouts[admNo];
-        return newTimeouts;
-      });
+    if (saveTimeoutsRef.current[admNo]) {
+      clearTimeout(saveTimeoutsRef.current[admNo]);
+      delete saveTimeoutsRef.current[admNo];
     }
 
     // Validate and clamp score to 0-100 range
@@ -593,6 +630,9 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
   const handleBackToMonths = (e) => {
     e.preventDefault();
     e.stopPropagation();
+    if (hasUnsavedChanges && !window.confirm('You have unsaved score changes. Leave anyway?')) {
+      return;
+    }
     const backPath = getBackPath();
     console.log('Back to Months clicked, navigating to:', backPath);
     navigate(backPath, { replace: false });
@@ -857,26 +897,6 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
                       </div>
                     );
                   })}
-                </div>
-
-                <div className="pagination-controls">
-                  <button
-                    className="pagination-btn"
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    <i className="fas fa-chevron-left"></i> Previous
-                  </button>
-                  <span className="pagination-info">
-                    Page {currentPage} of {totalPages || 1} ({filteredStudents?.length || 0} students)
-                  </span>
-                  <button
-                    className="pagination-btn"
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages || totalPages === 0}
-                  >
-                    Next <i className="fas fa-chevron-right"></i>
-                  </button>
                 </div>
 
                 <div className="bulk-actions">

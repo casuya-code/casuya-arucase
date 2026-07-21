@@ -598,3 +598,43 @@
   color: #6b7280;
   font-weight: 500;
 }
+
+.unsaved-changes-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.unsaved-changes-dialog {
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  padding: clamp(1.5rem, 3vw, 2rem);
+  max-width: 420px;
+  width: 90%;
+  text-align: center;
+}
+
+.unsaved-changes-dialog p {
+  margin: 0 0 1.5rem 0;
+  color: #111827;
+  font-size: clamp(0.9rem, 2vw, 1rem);
+  font-weight: 500;
+}
+
+.unsaved-changes-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: center;
+}
+
+.unsaved-changes-actions .excel-btn {
+  flex: none;
+  min-width: 100px;
+}

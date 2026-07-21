@@ -1771,6 +1771,13 @@ router.get('/promotion/preview', async (req, res) => {
     // Normalize case to match DB values consistently.
     const normalizedLevel = level.toString().trim().toUpperCase();
     const normalizedStream = stream.toString().trim().toUpperCase();
+
+    // FORM V and FORM VI promotions must use the term-aware system.
+    if (normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI') {
+      return res.status(400).json({
+        message: 'FORM V/VI promotions must use the Form V/VI promotion endpoint (/students/form-vvi/promotion/preview)',
+      });
+    }
     
     // Get students from source class
     const studentsResult = await query(
@@ -1779,18 +1786,15 @@ router.get('/promotion/preview', async (req, res) => {
     );
     
     // Determine next level and stream
+    // NOTE: FORM V and FORM VI promotions are handled exclusively by
+    // the term-aware system in utils/formVVIPromotion.js (routes/students.js).
+    // This old O-Level system only handles FORM I → IV.
     const getNextLevel = (currentLevel) => {
       const progression = {
-        // Carry forward the stream for FORM I-III.
-        // UI selects A/B for these levels, and the students table is expected to store A/B streams.
         'FORM I': { next: 'FORM II', stream: normalizedStream, requiresSelection: false },
         'FORM II': { next: 'FORM III', stream: normalizedStream, requiresSelection: false },
         'FORM III': { next: 'FORM IV', stream: normalizedStream, requiresSelection: false },
         'FORM IV': { next: 'FORM V', stream: null, requiresSelection: true },
-        'FORM V': { next: 'FORM VI', stream: normalizedStream, requiresSelection: false },
-        // Normalize: keep A/B (or current stream) instead of forcing 'NA'
-        // so the students table always has a real stream value.
-        'FORM VI': { next: 'GRADUATED', stream: normalizedStream, requiresSelection: false },
       };
       return progression[currentLevel] || { next: null, stream: normalizedStream, requiresSelection: false };
     };
@@ -1838,6 +1842,14 @@ router.post('/promotion/execute', async (req, res) => {
     const normalizedFromStream = from_stream.toString().trim().toUpperCase();
     const normalizedToLevel = to_level.toString().trim().toUpperCase();
     const normalizedToStream = to_stream.toString().trim().toUpperCase();
+
+    // FORM V and FORM VI promotions must use the term-aware system.
+    if (normalizedFromLevel === 'FORM V' || normalizedFromLevel === 'FORM VI' ||
+        normalizedToLevel === 'FORM V' || normalizedToLevel === 'FORM VI') {
+      return res.status(400).json({
+        message: 'FORM V/VI promotions must use the Form V/VI promotion endpoint (/students/form-vvi/promotion/execute)',
+      });
+    }
     
     // Check if promotion already executed
     const existingPromotion = await query(
@@ -1872,11 +1884,11 @@ router.post('/promotion/execute', async (req, res) => {
       // Batch insert all students to new class
       for (const student of studentsToPromote) {
         await client.query(
-          `INSERT INTO students (adm_no, first_name, middle_name, surname, sex, level, stream, year, status)
-           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9)
-           ON CONFLICT (adm_no, level, stream, year) DO NOTHING`,
+          `INSERT INTO students (adm_no, first_name, middle_name, surname, sex, level, stream, year, term, status)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+           ON CONFLICT (adm_no, level, stream, year, term) DO NOTHING`,
           [student.adm_no, student.first_name, student.middle_name || null, student.surname, student.sex,
-           normalizedToLevel, normalizedToStream, parseInt(to_year), 'PENDING']
+           normalizedToLevel, normalizedToStream, parseInt(to_year), student.term || 'First Term', 'PENDING']
         );
       }
       
