@@ -407,18 +407,21 @@ export const AuthProvider = ({ children }) => {
   };
 
   /**
-   * Admin module allowlist: null = unrestricted (no configured list / 'all');
+   * Admin module allowlist: null = unrestricted (unconfigured/legacy, or explicit 'all');
    * otherwise the array of modules SUPERADMIN allocated to this admin.
+   * An empty array means NO modules (fail closed) — not unrestricted.
    */
   const getAdminAllowedModules = () => {
     if (!isAdminLike()) return null;
     const perms = getParsedPermissions();
+    // No permissions object at all -> unconfigured legacy admin -> unrestricted.
+    if (Object.keys(perms).length === 0) return null;
     const modules = Array.isArray(perms.modules) ? perms.modules : [];
-    if (modules.length === 0 || modules.includes('all')) return null;
-    return modules;
+    if (modules.includes('all')) return null; // explicit full access
+    return modules; // empty array => no access
   };
 
-  /** True if user has the given module. Superadmin always true; admins follow their SUPERADMIN-set allowlist (empty = all). */
+  /** True if user has the given module. Superadmin always true; admins follow their SUPERADMIN-set allowlist (unconfigured/'all' = full access). */
   const hasModule = (moduleId) => {
     const role = user?.role?.toLowerCase?.() ?? user?.role;
     if (role === 'superadmin') return true;

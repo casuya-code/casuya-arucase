@@ -7,8 +7,10 @@
  * Admin allowlist semantics (matches frontend hasModule and AdminSidebar):
  *   - superadmin -> unrestricted (always allowed)
  *   - admin      -> allowed modules come from users.permissions.modules
- *                   null / missing / empty array = unrestricted (backwards compatible)
- *                   array = only those modules (or 'all')
+ *                   null / missing / unconfigured = unrestricted (legacy backwards compatible)
+ *                   [] (empty array) = NO access (fail closed)
+ *                   array = only those modules
+ *                   ['all'] = unrestricted (explicit full access)
  * Non-admin module checks also resolve fresh from the DB here; the JWT is only
  * a fallback so behavior never regresses when the lookup is unavailable.
  */

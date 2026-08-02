@@ -1677,9 +1677,14 @@ router.post('/users', requireModule('user_management'), requireRole('admin', 'su
     let finalPermissions = permissions;
     try {
       // Non-superadmin admins may only grant modules that SUPERADMIN allocated to them.
+      // null or ['all'] = unrestricted actor -> keep the requested modules verbatim.
+      // Empty array = actor has no modules allocated -> deny (cannot grant what they lack).
       if (currentUserRole === 'admin' && finalPermissions && Array.isArray(finalPermissions.modules)) {
         const actingAllowed = await getAdminAllowedModules(req.user.user_id);
-        if (Array.isArray(actingAllowed) && actingAllowed.length > 0 && !actingAllowed.includes('all')) {
+        if (Array.isArray(actingAllowed) && !actingAllowed.includes('all')) {
+          if (actingAllowed.length === 0) {
+            return res.status(403).json({ message: 'You have no modules allocated, so you cannot grant module access' });
+          }
           finalPermissions = {
             ...finalPermissions,
             modules: finalPermissions.modules.filter((m) => actingAllowed.includes(m)),

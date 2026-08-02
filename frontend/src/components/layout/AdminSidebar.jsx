@@ -32,7 +32,7 @@ const AdminSidebar = () => {
     setExpandedCategories(navigationItems.map((_, i) => i));
   }, []);
 
-  const { user, logout, refreshUser } = useAuth();
+  const { user, logout, refreshUser, getAdminAllowedModules } = useAuth();
 
   const isAdminLike = user?.role && ADMIN_LIKE_ROLES.includes(user.role);
 
@@ -78,16 +78,13 @@ const AdminSidebar = () => {
   const defaultAnalyticsForm = 'FORM I';
 
   const isSuperAdmin = isAdminLike && user.role.toLowerCase() === 'superadmin';
-  // Admin allowlist set by SUPERADMIN. null = unrestricted (see everything).
-  const adminAllowedModules = (() => {
-    if (!isAdminLike || isSuperAdmin) return null;
-    if (userModules.length === 0 || userModules.includes('all')) return null;
-    return userModules;
-  })();
+  // Admin allowlist set by SUPERADMIN (from AuthContext, fresh via /auth/me).
+  // null = unrestricted (unconfigured/legacy or explicit 'all'); [] = no access (fail closed).
+  const adminAllowedModules = isSuperAdmin ? null : getAdminAllowedModules();
 
   // Check if current user can see a given navigation item
   // - Superadmin: see everything
-  // - Admin: restricted to the allowlist SUPERADMIN set (empty/unconfigured = everything)
+  // - Admin: restricted to the allowlist SUPERADMIN set (unconfigured/'all' = everything, empty = nothing)
   // - Non-admin: must have the item's moduleId, any of moduleIds, or 'all' if provided
   const canSeeItem = (item) => {
     if (!user) return false;

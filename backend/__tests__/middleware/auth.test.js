@@ -211,9 +211,21 @@ describe('auth middleware', () => {
       expect(nextFn).toHaveBeenCalled();
     });
 
-    it('passes for admin with empty allowlist (backwards compatible)', async () => {
+    it('rejects for admin with empty allowlist (fail closed)', async () => {
       mockReq.user = { user_id: 'admin1', role: 'admin', permissions: {} };
       getAdminAllowedModules.mockResolvedValue([]);
+
+      const middleware = requireModule('academic');
+      await middleware(mockReq, mockRes, nextFn);
+
+      expect(mockRes.status).toHaveBeenCalledWith(403);
+      expect(mockRes.json).toHaveBeenCalledWith({ message: 'Insufficient permissions' });
+      expect(nextFn).not.toHaveBeenCalled();
+    });
+
+    it('passes for admin whose allowlist is explicit all', async () => {
+      mockReq.user = { user_id: 'admin1', role: 'admin', permissions: {} };
+      getAdminAllowedModules.mockResolvedValue(['all']);
 
       const middleware = requireModule('academic');
       await middleware(mockReq, mockRes, nextFn);

@@ -127,10 +127,13 @@ const requireModule = (moduleId) => {
     }
     if (role === 'admin') {
       const allowed = await getAdminAllowedModules(req.user.user_id);
-      if (!Array.isArray(allowed) || allowed.length === 0) {
+      // null = unconfigured/legacy admin (or lookup error) -> unrestricted (backwards compatible).
+      // Empty array = explicitly configured with no modules -> no access (fail closed).
+      // Explicit ['all'] = full access.
+      if (allowed === null || (Array.isArray(allowed) && allowed.includes('all'))) {
         return next();
       }
-      if (allowed.includes('all') || allowed.includes(moduleId)) {
+      if (Array.isArray(allowed) && allowed.includes(moduleId)) {
         return next();
       }
       return res.status(403).json({ message: 'Insufficient permissions' });

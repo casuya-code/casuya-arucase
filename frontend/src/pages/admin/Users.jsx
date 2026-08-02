@@ -17,6 +17,18 @@ import './Users.css';
 // Non-admin roles that get custom permissions (modules, classes, subjects)
 const ROLES_WITH_PERMISSIONS = ['teacher', 'secretary', 'priest', 'discipline'];
 
+// Roles sharing a permission schema. Switching within a family preserves current
+// permissions (so editing an admin never wipes assigned modules); switching between
+// families resets them.
+const PERMISSION_FAMILY = {
+  teacher: 'custom',
+  secretary: 'custom',
+  priest: 'custom',
+  discipline: 'custom',
+  admin: 'admin',
+  superadmin: 'admin',
+};
+
 // Class options for assignment (match reference: FORM I–IV and FORM V/VI streams)
 const CLASS_OPTIONS = [
   'FORM I', 'FORM II', 'FORM III', 'FORM IV',
@@ -267,11 +279,12 @@ const Users = () => {
   }, [deleteMutation]);
 
   const handleRoleChange = useCallback((role) => {
-    setFormData((prev) => ({
-      ...prev,
-      role,
-      ...(ROLES_WITH_PERMISSIONS.includes(role) ? {} : { permissions: defaultPermissions() }),
-    }));
+    setFormData((prev) => {
+      const prevFamily = PERMISSION_FAMILY[prev.role] || 'custom';
+      const nextFamily = PERMISSION_FAMILY[role] || 'custom';
+      if (prevFamily === nextFamily) return { ...prev, role };
+      return { ...prev, role, permissions: defaultPermissions() };
+    });
   }, []);
 
   const toggleClassSubject = useCallback((className, subjectName, checked) => {
@@ -514,13 +527,9 @@ const Users = () => {
       label: 'Modules Access',
       render: (value, user) => {
         const userModules = getUserModules(user);
-        const role = (user.role || '').toLowerCase();
-        const isAdminLike = role === 'admin' || role === 'superadmin';
         if (userModules.length === 0) {
-          // Admin/superadmin with an empty (or missing) allowlist is unrestricted.
-          if (isAdminLike) {
-            return <span className="module-badge all-modules">All Modules (Unrestricted)</span>;
-          }
+          // Admin with an empty allowlist has no module access (fail closed);
+          // an unconfigured legacy admin displays 'all' instead.
           return <span className="text-muted">None assigned</span>;
         }
         if (userModules[0] === 'All Modules') {
@@ -865,17 +874,30 @@ const Users = () => {
                               <i className="fas fa-shield-alt"></i> Admin Module Access
                             </h4>
                             <p className="permissions-hint">
-                              Choose which sidebar modules this admin may use. Leave all unchecked for unrestricted access. This admin can only grant non-admin users the modules selected here.
+                              Choose which sidebar modules this admin may use. Leave all unchecked for <strong>no access</strong>, tick &quot;All modules&quot; for full access, or select specific modules. This admin can only grant non-admin users the modules selected here.
                             </p>
                             <div className="permissions-block">
                               <label className="permissions-block-label">Sidebar Modules</label>
+                              <div className="permissions-all-row">
+                                <label className="permission-check-label">
+                                  <input
+                                    type="checkbox"
+                                    checked={(formData.permissions.modules || []).includes('all')}
+                                    onChange={(e) => toggleModule('all', e.target.checked)}
+                                  />
+                                  <span><i className="fas fa-shield-alt"></i> All modules (full access)</span>
+                                </label>
+                              </div>
                               <div className="permissions-modules-grid">
                                 {ADMIN_MODULES.map((mod) => {
-                                  const selected = (formData.permissions.modules || []).includes(mod.id);
+                                  const modules = formData.permissions.modules || [];
+                                  const isAll = modules.includes('all');
+                                  const selected = isAll || modules.includes(mod.id);
                                   return (
                                     <label key={mod.id} className={`permission-check-label ${selected ? 'permission-check-label--selected' : ''}`}>
                                       <input
                                         type="checkbox"
+                                        disabled={isAll}
                                         checked={selected}
                                         onChange={(e) => toggleModule(mod.id, e.target.checked)}
                                       />
