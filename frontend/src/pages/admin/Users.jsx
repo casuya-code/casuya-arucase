@@ -635,6 +635,7 @@ const Users = () => {
                     <DataTable
                       data={users}
                       columns={columns}
+                      pagination={false}
                     />
                   </div>
                 )}
