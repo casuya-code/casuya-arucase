@@ -1,4 +1,5 @@
 import { useMemo } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import AdminLayout from '../../components/layout/AdminLayout';
 import SkeletonLoader from '../../components/common/SkeletonLoader';
@@ -9,27 +10,27 @@ import './Dashboard.css';
 
 // Module guidelines for non-admin users (static data outside component)
 const MODULE_GUIDELINES = [
-  { module: 'student_registration', icon: 'fa-user-plus', title: 'Student Registration', description: 'Register new students accurately. Enter complete information including names, forms, streams, and registration numbers. Verify all data before saving.' },
-  { module: 'student_photo', icon: 'fa-camera', title: 'Student Photo', description: 'Upload clear, passport-size student photos. Ensure proper lighting and professional appearance. Photos are used in reports and official documents.' },
-  { module: 'student_parishes', icon: 'fa-place-of-worship', title: 'Student Parishes', description: 'Assign students to their respective parishes. Maintain accurate parish records for spiritual guidance and communication with home parishes.' },
-  { module: 'subjects', icon: 'fa-book', title: 'Subjects', description: 'Manage subject configurations for different form levels. Ensure all required subjects are properly set up for academic tracking and reporting.' },
-  { module: 'individual_scores', icon: 'fa-graduation-cap', title: 'Individual Subject Score', description: 'Enter student scores accurately for each subject. Double-check marks before saving. These scores directly affect student reports and academic standing.' },
-  { module: 'subject_teachers', icon: 'fa-chalkboard-teacher', title: 'Subject Teachers', description: 'Assign teachers to their subjects and classes. Maintain current teaching assignments to ensure proper responsibility tracking.' },
-  { module: 'marks_config', icon: 'fa-calendar-alt', title: 'Month Selection & Marks Config', description: 'Configure monthly assessment periods and grading criteria. Set up marking schemes to maintain consistent evaluation standards across all forms.' },
-  { module: 'sala_comments', icon: 'fa-comments', title: 'Sala Comments', description: 'Provide meaningful feedback on students\' prayer life and spiritual participation. Be constructive, encouraging, and specific in your observations.' },
-  { module: 'huduma_comments', icon: 'fa-hands-helping', title: 'Huduma', description: 'Evaluate students\' service to the community. Comment on their willingness to help, teamwork, and contribution to school activities.' },
-  { module: 'tabia_comments', icon: 'fa-user-check', title: 'Tabia Comments', description: 'Assess students\' behavior and character. Provide honest, fair comments that help students grow morally and socially.' },
-  { module: 'michezo_comments', icon: 'fa-running', title: 'Michezo Comments', description: 'Comment on students\' sports and physical activities participation. Recognize athletic achievements and encourage active, healthy lifestyles.' },
-  { module: 'mwalimu_taaluma_comments', icon: 'fa-user-graduate', title: 'Mwalimu wa Taaluma Comments', description: 'As the academic teacher, provide brief, specific academic guidance. Focus on study habits, class participation, and areas for improvement.' },
-  { module: 'mkuu_shule_comments', icon: 'fa-crown', title: 'Mkuu wa Shule Comments', description: 'As headmaster, provide overall assessment and direction. Offer balanced, authoritative guidance that considers all aspects of student development.' },
-  { module: 'taaluma_comments', icon: 'fa-book-open', title: 'Taaluma Comments', description: 'Provide comprehensive academic feedback. Comment on intellectual growth, academic strengths, and areas requiring focused attention.' },
-  { module: 'tabia_mwenendo_comments', icon: 'fa-balance-scale', title: 'Tabia na Mwenendo', description: 'Evaluate behavior and conduct comprehensively. Use the rating system consistently: A (Excellent), B (Good), C (Satisfactory), D (Needs Improvement).' },
-  { module: 'monthly_results', icon: 'fa-clipboard-list', title: 'Arucase Monthly Results', description: 'Enter and review monthly academic results. Ensure all assessments are recorded promptly and accurately for timely student progress tracking.' },
-  { module: 'individual_debt', icon: 'fa-money-bill-wave', title: 'Individual Debt', description: 'Track student fee payments and outstanding balances. Handle financial information with confidentiality and sensitivity.' },
-  { module: 'individual_report', icon: 'fa-file-alt', title: 'Individual Student Report', description: 'Generate comprehensive student report cards. Review all information before printing. Reports represent the school\'s official assessment.' },
-  { module: 'bulk_report', icon: 'fa-copy', title: 'Student Bulk Report', description: 'Generate reports for entire classes efficiently. Verify that all student data is complete before bulk generation to avoid incomplete reports.' },
-  { module: 'news_announcements', icon: 'fa-newspaper', title: 'News & Announcements', description: 'Post important school news and public announcements. Write clearly and professionally as these are visible to parents and the public.' },
-  { module: 'fees_announcements', icon: 'fa-money-bill-wave', title: 'Fees Announcements', description: 'Communicate fee-related information to students and parents. Be clear about amounts, deadlines, and payment methods.' },
+  { module: 'student_registration', icon: 'fa-user-plus', title: 'Student Registration', path: '/admin/students/registration', description: 'Register new students accurately. Enter complete information including names, forms, streams, and registration numbers. Verify all data before saving.' },
+  { module: 'student_photo', icon: 'fa-camera', title: 'Student Photo', path: '/admin/students/photos', description: 'Upload clear, passport-size student photos. Ensure proper lighting and professional appearance. Photos are used in reports and official documents.' },
+  { module: 'student_parishes', icon: 'fa-place-of-worship', title: 'Student Parishes', path: '/admin/students/parishes', description: 'Assign students to their respective parishes. Maintain accurate parish records for spiritual guidance and communication with home parishes.' },
+  { module: 'subjects', icon: 'fa-book', title: 'Subjects', path: '/admin/subjects', description: 'Manage subject configurations for different form levels. Ensure all required subjects are properly set up for academic tracking and reporting.' },
+  { module: 'individual_scores', icon: 'fa-graduation-cap', title: 'Individual Subject Score', path: '/admin/score-entry', description: 'Enter student scores accurately for each subject. Double-check marks before saving. These scores directly affect student reports and academic standing.' },
+  { module: 'subject_teachers', icon: 'fa-chalkboard-teacher', title: 'Subject Teachers', path: '/admin/teachers', description: 'Assign teachers to their subjects and classes. Maintain current teaching assignments to ensure proper responsibility tracking.' },
+  { module: 'marks_config', icon: 'fa-calendar-alt', title: 'Month Selection & Marks Config', path: '/admin/marks-config', description: 'Configure monthly assessment periods and grading criteria. Set up marking schemes to maintain consistent evaluation standards across all forms.' },
+  { module: 'sala_comments', icon: 'fa-comments', title: 'Sala Comments', path: '/admin/sala', description: 'Provide meaningful feedback on students\' prayer life and spiritual participation. Be constructive, encouraging, and specific in your observations.' },
+  { module: 'huduma_comments', icon: 'fa-hands-helping', title: 'Huduma', path: '/admin/huduma', description: 'Evaluate students\' service to the community. Comment on their willingness to help, teamwork, and contribution to school activities.' },
+  { module: 'tabia_comments', icon: 'fa-user-check', title: 'Tabia Comments', path: '/admin/tabia', description: 'Assess students\' behavior and character. Provide honest, fair comments that help students grow morally and socially.' },
+  { module: 'michezo_comments', icon: 'fa-running', title: 'Michezo Comments', path: '/admin/michezo', description: 'Comment on students\' sports and physical activities participation. Recognize athletic achievements and encourage active, healthy lifestyles.' },
+  { module: 'mwalimu_taaluma_comments', icon: 'fa-user-graduate', title: 'Mwalimu wa Taaluma Comments', path: '/admin/mwalimu-comments', description: 'As the academic teacher, provide brief, specific academic guidance. Focus on study habits, class participation, and areas for improvement.' },
+  { module: 'mkuu_shule_comments', icon: 'fa-crown', title: 'Mkuu wa Shule Comments', path: '/admin/mkuu-comments', description: 'As headmaster, provide overall assessment and direction. Offer balanced, authoritative guidance that considers all aspects of student development.' },
+  { module: 'taaluma_comments', icon: 'fa-book-open', title: 'Taaluma Comments', path: '/admin/taaluma', description: 'Provide comprehensive academic feedback. Comment on intellectual growth, academic strengths, and areas requiring focused attention.' },
+  { module: 'tabia_mwenendo_comments', icon: 'fa-balance-scale', title: 'Tabia na Mwenendo', path: '/admin/tabia-mwenendo', description: 'Evaluate behavior and conduct comprehensively. Use the rating system consistently: A (Excellent), B (Good), C (Satisfactory), D (Needs Improvement).' },
+  { module: 'monthly_results', icon: 'fa-clipboard-list', title: 'Arucase Monthly Results', path: '/admin/results/monthly', description: 'Enter and review monthly academic results. Ensure all assessments are recorded promptly and accurately for timely student progress tracking.' },
+  { module: 'individual_debt', icon: 'fa-money-bill-wave', title: 'Individual Debt', path: '/admin/debts', description: 'Track student fee payments and outstanding balances. Handle financial information with confidentiality and sensitivity.' },
+  { module: 'individual_report', icon: 'fa-file-alt', title: 'Individual Student Report', path: '/reports/individual', description: 'Generate comprehensive student report cards. Review all information before printing. Reports represent the school\'s official assessment.' },
+  { module: 'bulk_report', icon: 'fa-copy', title: 'Student Bulk Report', path: '/reports/bulk', description: 'Generate reports for entire classes efficiently. Verify that all student data is complete before bulk generation to avoid incomplete reports.' },
+  { module: 'news_announcements', icon: 'fa-newspaper', title: 'News & Announcements', path: '/admin/news', description: 'Post important school news and public announcements. Write clearly and professionally as these are visible to parents and the public.' },
+  { module: 'fees_announcements', icon: 'fa-money-bill-wave', title: 'Fees Announcements', path: '/admin/fees', description: 'Communicate fee-related information to students and parents. Be clear about amounts, deadlines, and payment methods.' },
 ];
 
 const ADMIN_LIKE_ROLES = ['admin', 'superadmin', 'rector', 'vice_rector', 'academic_master'];
@@ -193,13 +194,13 @@ const Dashboard = () => {
             <div className="guidelines-grid">
               {availableGuidelines.length > 0 ? (
                 availableGuidelines.map((guideline, index) => (
-                  <div key={index} className="guideline-card">
+                  <Link key={index} to={guideline.path} className="guideline-card">
                     <div className="guideline-icon">
                       <i className={`fas ${guideline.icon}`} aria-hidden="true"></i>
                     </div>
                     <h3>{guideline.title}</h3>
                     <p>{guideline.description}</p>
-                  </div>
+                  </Link>
                 ))
               ) : (
                 <div className="guideline-card">
