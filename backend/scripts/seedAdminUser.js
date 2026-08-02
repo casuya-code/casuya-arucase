@@ -13,8 +13,9 @@ const { query } = require('../config/database');
 const ADMIN_USERNAME = 'admin';
 const ADMIN_PASSWORD = process.env.SEED_ADMIN_PASSWORD;
 const ADMIN_FULL_NAME = 'Administrator';
-const ADMIN_ROLE = 'admin';
+const ADMIN_ROLE = 'superadmin';
 const ADMIN_STATUS = 'active';
+const ADMIN_PERMISSIONS = JSON.stringify({ modules: ['all'] });
 
 async function seedAdminUser() {
   try {
@@ -36,22 +37,23 @@ async function seedAdminUser() {
     if (existing.rows.length === 0) {
       // User does not exist — create it
       await query(
-        `INSERT INTO users (username, password_hash, full_name, role, status)
-         VALUES ($1, $2, $3, $4, $5)`,
-        [ADMIN_USERNAME, passwordHash, ADMIN_FULL_NAME, ADMIN_ROLE, ADMIN_STATUS]
+        `INSERT INTO users (username, password_hash, full_name, role, status, permissions)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [ADMIN_USERNAME, passwordHash, ADMIN_FULL_NAME, ADMIN_ROLE, ADMIN_STATUS, ADMIN_PERMISSIONS]
       );
       console.log('✅ Admin user created successfully');
     } else {
-      // User exists — update the password hash so it always matches the intended password
+      // User exists — update the password hash and ensure superadmin role
       await query(
         `UPDATE users
          SET password_hash = $1,
              full_name     = $2,
              role          = $3,
              status        = $4,
+             permissions   = $5,
              updated_at    = CURRENT_TIMESTAMP
-         WHERE username = $5`,
-        [passwordHash, ADMIN_FULL_NAME, ADMIN_ROLE, ADMIN_STATUS, ADMIN_USERNAME]
+         WHERE username = $6`,
+        [passwordHash, ADMIN_FULL_NAME, ADMIN_ROLE, ADMIN_STATUS, ADMIN_PERMISSIONS, ADMIN_USERNAME]
       );
       console.log('✅ Admin user password hash updated successfully');
     }
