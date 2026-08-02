@@ -37,7 +37,7 @@ const FormVVIYearGrid = ({
               {years.map((yearObj) => (
                 <Link
                   key={`${yearObj.year}-${yearObj.role}`}
-                  to={getYearLink(yearObj.year)}
+                  to={getYearLink(yearObj.year, yearObj.term)}
                   className="year-selection-card-item"
                   aria-label={`${yearObj.displayRange} ${actionLabel || ''}`}
                   title={yearObj.fullDisplay}
@@ -46,6 +46,20 @@ const FormVVIYearGrid = ({
                   <div className="year-selection-label">
                     {yearObj.displayLabel || `(${yearObj.displayRange})`}
                   </div>
+                  {yearObj.badge ? (
+                    <span
+                      className={`form-vvi-year-badge form-vvi-year-badge--${yearObj.badgeType}`}
+                    >
+                      {yearObj.badge}
+                    </span>
+                  ) : null}
+                  {yearObj.status && yearObj.status !== 'current' ? (
+                    <span
+                      className={`form-vvi-year-status form-vvi-year-status--${yearObj.status}`}
+                    >
+                      {yearObj.status === 'past' ? 'Ended' : 'Upcoming'}
+                    </span>
+                  ) : null}
                   {actionLabel ? (
                     <div className="year-selection-sublabel">{actionLabel}</div>
                   ) : null}

@@ -618,10 +618,12 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
     // Always encode subject code to handle special characters like forward slashes
     const encodedSubjectCode = encodeURIComponent(subjectCode);
     if (isTogetherMode) {
-      return `/admin/score-entry/${formLevelParam}/together/year/${year}/subject/${encodedSubjectCode}/months`;
+      const termSlug = encodeURIComponent(currentTerm || (params.term ? decodeURIComponent(params.term) : 'First Term'));
+      return `/admin/score-entry/${formLevelParam}/together/year/${year}/term/${termSlug}/subject/${encodedSubjectCode}/months`;
     }
     if (normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI') {
-      return `/admin/score-entry/${formLevelParam}/stream/${stream}/year/${year}/subject/${encodedSubjectCode}/months`;
+      const termSlug = encodeURIComponent(currentTerm || (params.term ? decodeURIComponent(params.term) : 'First Term'));
+      return `/admin/score-entry/${formLevelParam}/stream/${stream}/year/${year}/term/${termSlug}/subject/${encodedSubjectCode}/months`;
     } else {
       return `/admin/score-entry/${formLevelParam}/year/${year}/stream/${stream}/subject/${encodedSubjectCode}/months`;
     }

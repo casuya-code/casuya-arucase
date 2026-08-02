@@ -27,7 +27,30 @@ export const O_LEVEL_MIN_YEAR = FORM_V_VI_MIN_YEAR;
 export const SCHOOL_YEAR_PICKER_AHEAD = 1;
 
 /** Calendar year for “current year” highlights on year picker cards. */
+/** Calendar year for “current year” highlights on year picker cards. */
 export const getCurrentCalendarYear = () => new Date().getFullYear();
+
+/**
+ * Term availability status for a Form V/VI card as of today.
+ * @param {{term: 'First Term'|'Second Term', year: number}} card
+ * @returns {'past'|'current'|'future'}
+ */
+export const getFormVVITermStatus = ({ term, year }) => {
+  const now = new Date();
+  const currentYear = now.getFullYear();
+  const month = now.getMonth() + 1; // 1-12
+
+  const isFirstTerm = term === 'First Term';
+  const startYM = isFirstTerm ? { year, month: 7 } : { year, month: 1 };
+  const endYM = isFirstTerm ? { year, month: 12 } : { year, month: 6 };
+
+  const current = { year: currentYear, month };
+
+  const before = (a, b) => a.year < b.year || (a.year === b.year && a.month < b.month);
+  if (before(current, startYM)) return 'future';
+  if (before(endYM, current)) return 'past';
+  return 'current';
+};
 
 /**
  * Calendar years in O-Level pickers: from {@link O_LEVEL_MIN_YEAR} through current + ahead (newest first).
@@ -122,6 +145,10 @@ export const getFormVVIYears = () => {
       cohortStartYear: startYear,
       isEndYear: false,
       role: 'cohort-start',
+      term: 'First Term',
+      badge: 'Term I · New cohort',
+      badgeType: 'start',
+      status: getFormVVITermStatus({ term: 'First Term', year: startYear }),
       displayLabel: `${startYear} (${academicYear.displayRange})`,
     });
 
@@ -132,12 +159,21 @@ export const getFormVVIYears = () => {
         cohortStartYear: startYear,
         isEndYear: true,
         role: 'cohort-end',
+        term: 'Second Term',
+        badge: 'Term II · Continuing',
+        badgeType: 'end',
+        status: getFormVVITermStatus({ term: 'Second Term', year: endYear }),
         displayLabel: `${endYear} (${academicYear.displayRange})`,
       });
     }
   }
 
-  return years.sort((a, b) => b.year - a.year || (a.isEndYear ? 1 : -1));
+  // Newest first; for two cards of the same year, show the Term I (new cohort) card first.
+  return years.sort((a, b) => {
+    if (b.year !== a.year) return b.year - a.year;
+    if (a.isEndYear !== b.isEndYear) return a.isEndYear ? 1 : -1;
+    return 0;
+  });
 };
 
 /**
@@ -244,6 +280,17 @@ export const getFormVVIYearSelectionHelpText = () => {
  * @returns {Array<{ term: string, title: string, subtitle: string, description: string, recommended: boolean }>}
  */
 /** Normalize URL/DB term labels for Form V/VI validation. */
+/** Assessment months that belong to each Form V/VI term (db/score-entry). */
+export const FORM_VVI_FIRST_TERM_MONTHS = ['August', 'September', 'October', 'November'];
+export const FORM_VVI_SECOND_TERM_MONTHS = ['February', 'March', 'April', 'May'];
+
+/** Months a given Form V/VI term card should scope score entry to. */
+export const getFormVVIMonthsForTerm = (term) => {
+  const normalized = normalizeFormVVITerm(term);
+  if (normalized === 'Second Term') return FORM_VVI_SECOND_TERM_MONTHS;
+  return FORM_VVI_FIRST_TERM_MONTHS;
+};
+
 export const normalizeFormVVITerm = (term) => {
   const t = term != null ? String(term).trim() : '';
   if (/^Term\s+I$/i.test(t) || /^Term\s+1$/i.test(t) || /^First\s+Term$/i.test(t)) {

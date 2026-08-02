@@ -5,14 +5,11 @@
 import { Link, useParams, useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { useAuth } from '../../context/AuthContext';
+import { normalizeFormVVITerm, getFormVVIMonthsForTerm } from '../../utils/academicYearUtils';
 import './ScoreEntryMonthSelection.css';
 
-const FORM_VVI_MONTHS = [
-  'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November'
-];
-
 const ScoreEntryMonthSelectionTogether = () => {
-  const { formLevel, year, subjectCode: subjectCodeParam } = useParams();
+  const { formLevel, year, subjectCode: subjectCodeParam, term } = useParams();
   const navigate = useNavigate();
   const { getAllowedScoreEntryMonths } = useAuth();
 
@@ -24,19 +21,26 @@ const ScoreEntryMonthSelectionTogether = () => {
   // Decode subject code
   const subjectCode = subjectCodeParam ? decodeURIComponent(subjectCodeParam) : '';
 
+  // Resolve term: scope this form V/VI term's OWN months (old code showed all terms).
+  const decodedTerm = term ? decodeURIComponent(term) : '';
+  const currentTerm = normalizeFormVVITerm(decodedTerm);
+
   // Get allowed months (non-admin may be restricted)
   const allowedMonths = getAllowedScoreEntryMonths();
-  const allMonths = allowedMonths === null ? FORM_VVI_MONTHS : FORM_VVI_MONTHS.filter((m) => allowedMonths.includes(m));
+  const termMonths = getFormVVIMonthsForTerm(currentTerm);
+  const allMonths = allowedMonths === null
+    ? termMonths
+    : termMonths.filter((m) => allowedMonths.includes(m));
 
   const getBackPath = () => {
     const _encodedSubjectCode = encodeURIComponent(subjectCode);
-    return `/admin/score-entry/${formLevel}/together/year/${year}/subjects`;
+    return `/admin/score-entry/${formLevel}/together/year/${year}/term/${encodeURIComponent(currentTerm)}/subjects`;
   };
 
   const getMonthDetailPath = (month) => {
     const encodedSubjectCode = encodeURIComponent(subjectCode);
     const encodedMonth = encodeURIComponent(month);
-    return `/admin/score-entry/${formLevel}/together/year/${year}/subject/${encodedSubjectCode}/month/${encodedMonth}/enter`;
+    return `/admin/score-entry/${formLevel}/together/year/${year}/term/${encodeURIComponent(currentTerm)}/subject/${encodedSubjectCode}/month/${encodedMonth}/enter`;
   };
 
   return (
@@ -45,7 +49,7 @@ const ScoreEntryMonthSelectionTogether = () => {
         <div className="excel-card">
           <div className="excel-card-header">
             <i className="fas fa-calendar-alt"></i>
-            Select Month for Score Entry
+            {year} · {currentTerm} - Select Month for Score Entry
             <div className="header-actions">
               <Link to={getBackPath()} className="excel-btn small secondary">
                 <i className="fas fa-arrow-left"></i> Back to Subjects

@@ -10,8 +10,9 @@ import { studentsAPI } from '../../services/students';
 import './ScoreEntrySubjectSelection.css';
 
 const ScoreEntrySubjectSelectionTogether = () => {
-  const { formLevel, year } = useParams();
+  const { formLevel, year, term } = useParams();
   const { isAdminLike } = useAuth();
+  const decodedTerm = term ? decodeURIComponent(term) : '';
 
   // Normalize form level
   const normalizedForm = formLevel
@@ -56,7 +57,7 @@ const ScoreEntrySubjectSelectionTogether = () => {
 
   const getSubjectDetailPath = (subjectCode) => {
     const encodedSubjectCode = encodeURIComponent(subjectCode);
-    return `/admin/score-entry/${formLevel}/together/year/${year}/subject/${encodedSubjectCode}/months`;
+    return `/admin/score-entry/${formLevel}/together/year/${year}/term/${encodeURIComponent(decodedTerm)}/subject/${encodedSubjectCode}/months`;
   };
 
   return (
@@ -65,7 +66,7 @@ const ScoreEntrySubjectSelectionTogether = () => {
         <div className="excel-card">
           <div className="excel-card-header">
             <i className="fas fa-layer-group"></i>
-            {normalizedForm} (All Streams Together) {year} - Select Subject
+            {normalizedForm} (All Streams Together) {year} · {decodedTerm} - Select Subject
             <div className="header-actions">
               <Link to={getBackPath()} className="excel-btn small secondary">
                 <i className="fas fa-arrow-left"></i> Back

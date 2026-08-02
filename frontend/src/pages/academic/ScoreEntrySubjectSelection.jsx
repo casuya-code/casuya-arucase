@@ -8,11 +8,13 @@ import { useQuery } from '@tanstack/react-query';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { useAuth } from '../../context/AuthContext';
 import { studentsAPI } from '../../services/students';
+import { normalizeFormVVITerm } from '../../utils/academicYearUtils';
 import './ScoreEntrySubjectSelection.css';
 
 const ScoreEntrySubjectSelection = ({ formLevel }) => {
-  const { year, stream } = useParams();
+  const { year, stream, term } = useParams();
   const { getAllowedSubjectsForClass, hasClass, isAdminLike } = useAuth();
+  const decodedTerm = term ? decodeURIComponent(term) : '';
   
   const normalizedLevel = formLevel
     ? formLevel.split('-').map(w => w.toUpperCase()).join(' ')
@@ -70,7 +72,8 @@ const ScoreEntrySubjectSelection = ({ formLevel }) => {
     // URL encode subject code to handle special characters like "/" in "A/PHY"
     const encodedSubjectCode = encodeURIComponent(subjectCode);
     if (normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI') {
-      return `/admin/score-entry/${formLevel}/stream/${stream}/year/${year}/subject/${encodedSubjectCode}/months`;
+      const termSlug = normalizeFormVVITerm(decodedTerm);
+      return `/admin/score-entry/${formLevel}/stream/${stream}/year/${year}/term/${encodeURIComponent(termSlug)}/subject/${encodedSubjectCode}/months`;
     } else {
       return `/admin/score-entry/${formLevel}/year/${year}/stream/${stream}/subject/${encodedSubjectCode}/months`;
     }
@@ -82,7 +85,7 @@ const ScoreEntrySubjectSelection = ({ formLevel }) => {
         <div className="excel-card">
           <div className="excel-card-header">
             <i className="fas fa-book"></i>
-            {normalizedLevel} {normalizedStream && normalizedStream !== 'A' ? normalizedStream : ''} {year} - Select Subject
+            {normalizedLevel} {normalizedStream && normalizedStream !== 'A' ? normalizedStream : ''} {year} {normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI' ? ` · ${normalizeFormVVITerm(decodedTerm)}` : ''} - Select Subject
             <div className="header-actions">
               <Link to={getBackPath()} className="excel-btn small secondary">
                 <i className="fas fa-arrow-left"></i> Back

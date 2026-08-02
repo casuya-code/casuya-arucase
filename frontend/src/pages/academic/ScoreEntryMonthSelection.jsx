@@ -6,12 +6,16 @@
 import { Link, useParams, Navigate, useNavigate } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { useAuth } from '../../context/AuthContext';
+import {
+  normalizeFormVVITerm,
+  getFormVVIMonthsForTerm,
+} from '../../utils/academicYearUtils';
 import './ScoreEntryMonthSelection.css';
 
 const ALL_MONTHS = ['February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November'];
 
 const ScoreEntryMonthSelection = ({ formLevel }) => {
-  const { year, stream, subjectCode: subjectCodeParam } = useParams();
+  const { year, stream, subjectCode: subjectCodeParam, term } = useParams();
   const navigate = useNavigate();
   // Decode subject code to handle URL-encoded values (e.g., "A%2FPHY" -> "A/PHY")
   const subjectCode = subjectCodeParam ? decodeURIComponent(subjectCodeParam) : '';
@@ -21,6 +25,12 @@ const ScoreEntryMonthSelection = ({ formLevel }) => {
   const normalizedLevel = formLevel
     ? formLevel.split('-').map(w => w.toUpperCase()).join(' ')
     : '';
+  
+  // For FORM V/VI, scope the months to the selected term (term carried in URL).
+  // For Form I-IV (or missing term), keep the historical behavior of all months.
+  const isFormVOrVI = normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI';
+  const decodedTerm = term ? decodeURIComponent(term) : '';
+  const scopedTerm = isFormVOrVI ? normalizeFormVVITerm(decodedTerm) : '';
   
   // Normalize stream: use 'A' as default for Form I-IV (previously 'NA')
   // Note: All "NA" stream values have been normalized to "A" in the database
@@ -42,11 +52,13 @@ const ScoreEntryMonthSelection = ({ formLevel }) => {
 
   // Restrict to allowed months for non-admin (when admin has set specific months)
   const allowedMonths = getAllowedScoreEntryMonths();
-  const allMonths = allowedMonths === null ? ALL_MONTHS : ALL_MONTHS.filter((m) => allowedMonths.includes(m));
+  const baseMonths = isFormVOrVI && scopedTerm ? getFormVVIMonthsForTerm(scopedTerm) : ALL_MONTHS;
+  const allMonths = allowedMonths === null ? baseMonths : baseMonths.filter((m) => allowedMonths.includes(m));
 
   const getBackPath = () => {
     if (normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI') {
-      return `/admin/score-entry/${formLevel}/stream/${stream}/year/${year}/subjects`;
+      const termSlug = normalizeFormVVITerm(scopedTerm);
+      return `/admin/score-entry/${formLevel}/stream/${stream}/year/${year}/term/${encodeURIComponent(termSlug)}/subjects`;
     } else {
       return `/admin/score-entry/${formLevel}/year/${year}/stream/${stream}/subjects`;
     }
@@ -54,14 +66,14 @@ const ScoreEntryMonthSelection = ({ formLevel }) => {
 
   const getMonthDetailPath = (month) => {
     // Always encode the subject code to handle forward slashes and special characters
-    // React Router decodes URL params, so we need to re-encode when building paths
     const encodedSubjectCode = encodeURIComponent(subjectCode);
     // URL encode month to handle any special characters (though month names are usually safe)
     const encodedMonth = encodeURIComponent(month);
     
     let path;
     if (formLevel.includes('form-v') || formLevel.includes('form-vi')) {
-      path = `/admin/score-entry/${formLevel}/stream/${stream}/year/${year}/subject/${encodedSubjectCode}/month/${encodedMonth}/enter`;
+      const termSlug = normalizeFormVVITerm(scopedTerm);
+      path = `/admin/score-entry/${formLevel}/stream/${stream}/year/${year}/term/${encodeURIComponent(termSlug)}/subject/${encodedSubjectCode}/month/${encodedMonth}/enter`;
     } else {
       path = `/admin/score-entry/${formLevel}/year/${year}/stream/${stream}/subject/${encodedSubjectCode}/month/${encodedMonth}/enter`;
     }
@@ -75,7 +87,7 @@ const ScoreEntryMonthSelection = ({ formLevel }) => {
         <div className="excel-card">
           <div className="excel-card-header">
             <i className="fas fa-calendar-alt"></i>
-            Select Month for Score Entry
+            {year} {isFormVOrVI && scopedTerm ? `· ${scopedTerm}` : ''} - Select Month for Score Entry
             <div className="header-actions">
               <Link to={getBackPath()} className="excel-btn small secondary">
                 <i className="fas fa-arrow-left"></i> Back to Subjects

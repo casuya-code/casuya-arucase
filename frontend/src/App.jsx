@@ -1266,7 +1266,7 @@ function App() {
               }
             />
             <Route
-              path="/admin/score-entry/form-v/stream/:stream/year/:year/subjects"
+              path="/admin/score-entry/form-v/stream/:stream/year/:year/term/:term/subjects"
               element={
                 <ProtectedRoute requiredModule="individual_scores">
                   <ScoreEntrySubjectSelection formLevel="form-v" />
@@ -1274,7 +1274,7 @@ function App() {
               }
             />
             <Route
-              path="/admin/score-entry/form-vi/stream/:stream/year/:year/subjects"
+              path="/admin/score-entry/form-vi/stream/:stream/year/:year/term/:term/subjects"
               element={
                 <ProtectedRoute requiredModule="individual_scores">
                   <ScoreEntrySubjectSelection formLevel="form-vi" />
@@ -1282,7 +1282,7 @@ function App() {
               }
             />
             <Route
-              path="/admin/score-entry/form-v/stream/:stream/year/:year/subject/:subjectCode/months"
+              path="/admin/score-entry/form-v/stream/:stream/year/:year/term/:term/subject/:subjectCode/months"
               element={
                 <ProtectedRoute requiredModule="individual_scores">
                   <ScoreEntryMonthSelection formLevel="form-v" />
@@ -1290,7 +1290,7 @@ function App() {
               }
             />
             <Route
-              path="/admin/score-entry/form-vi/stream/:stream/year/:year/subject/:subjectCode/months"
+              path="/admin/score-entry/form-vi/stream/:stream/year/:year/term/:term/subject/:subjectCode/months"
               element={
                 <ProtectedRoute requiredModule="individual_scores">
                   <ScoreEntryMonthSelection formLevel="form-vi" />
@@ -1298,7 +1298,7 @@ function App() {
               }
             />
             <Route
-              path="/admin/score-entry/form-v/stream/:stream/year/:year/subject/:subjectCode/month/:month/enter"
+              path="/admin/score-entry/form-v/stream/:stream/year/:year/term/:term/subject/:subjectCode/month/:month/enter"
               element={
                 <ProtectedRoute requiredModule="individual_scores">
                   <ScoreEntryEnter formLevel="form-v" />
@@ -1306,7 +1306,7 @@ function App() {
               }
             />
             <Route
-              path="/admin/score-entry/form-vi/stream/:stream/year/:year/subject/:subjectCode/month/:month/enter"
+              path="/admin/score-entry/form-vi/stream/:stream/year/:year/term/:term/subject/:subjectCode/month/:month/enter"
               element={
                 <ProtectedRoute requiredModule="individual_scores">
                   <ScoreEntryEnter formLevel="form-vi" />
@@ -1323,7 +1323,7 @@ function App() {
               }
             />
             <Route
-              path="/admin/score-entry/:formLevel/together/year/:year/subjects"
+              path="/admin/score-entry/:formLevel/together/year/:year/term/:term/subjects"
               element={
                 <ProtectedRoute requiredModule="individual_scores">
                   <ScoreEntrySubjectSelectionTogether />
@@ -1331,7 +1331,7 @@ function App() {
               }
             />
             <Route
-              path="/admin/score-entry/:formLevel/together/year/:year/subject/:subjectCode/months"
+              path="/admin/score-entry/:formLevel/together/year/:year/term/:term/subject/:subjectCode/months"
               element={
                 <ProtectedRoute requiredModule="individual_scores">
                   <ScoreEntryMonthSelectionTogether />
@@ -1339,7 +1339,7 @@ function App() {
               }
             />
             <Route
-              path="/admin/score-entry/:formLevel/together/year/:year/subject/:subjectCode/month/:month/enter"
+              path="/admin/score-entry/:formLevel/together/year/:year/term/:term/subject/:subjectCode/month/:month/enter"
               element={
                 <ProtectedRoute requiredModule="individual_scores">
                   <ScoreEntryEnter />

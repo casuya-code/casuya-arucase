@@ -6,7 +6,7 @@ import AdminLayout from '../../components/layout/AdminLayout';
 import { useAuth } from '../../context/AuthContext';
 import { useFormVVITogetherYearOptions } from '../../hooks/useFormVVIYearOptions';
 import { normalizeFormLevel } from '../../utils/academicYearUtils';
-import { FORM_V_VI_STREAM_CODES } from '../../utils/academicYearUtils';
+import { FORM_V_VI_STREAM_CODES, normalizeFormVVITerm } from '../../utils/academicYearUtils';
 import '../../pages/students/YearSelection.css';
 import './ScoreEntryYearSelection.css';
 
@@ -50,19 +50,36 @@ const ScoreEntryFormVVIYearSelectionTogether = () => {
                 className="year-selection-grid"
                 style={{ '--year-card-count': years.length }}
               >
-                {years.map((yearObj) => (
+                {years.map((yearObj) => {
+                  const termSlug = normalizeFormVVITerm(yearObj.term);
+                  return (
                   <Link
-                    key={`${yearObj.year}-together`}
-                    to={`/admin/score-entry/${formLevel}/together/year/${yearObj.year}/subjects`}
+                    key={`${yearObj.year}-${yearObj.role}-together`}
+                    to={`/admin/score-entry/${formLevel}/together/year/${yearObj.year}/term/${encodeURIComponent(termSlug)}/subjects`}
                     className="year-selection-card-item"
                   >
                     <div className="year-selection-number">{yearObj.year}</div>
                     <div className="year-selection-label">
                       {yearObj.displayLabel || yearObj.displayRange}
                     </div>
-                    <div className="year-selection-sublabel">All streams</div>
+                    <div className="year-selection-sublabel">All streams · {termSlug}</div>
+                    {yearObj.badge ? (
+                      <span
+                        className={`form-vvi-year-badge form-vvi-year-badge--${yearObj.badgeType}`}
+                      >
+                        {yearObj.badge}
+                      </span>
+                    ) : null}
+                    {yearObj.status && yearObj.status !== 'current' ? (
+                      <span
+                        className={`form-vvi-year-status form-vvi-year-status--${yearObj.status}`}
+                      >
+                        {yearObj.status === 'past' ? 'Ended' : 'Upcoming'}
+                      </span>
+                    ) : null}
                   </Link>
-                ))}
+                  );
+                })}
               </div>
             )}
           </div>

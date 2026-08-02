@@ -81,14 +81,22 @@ async function copyClassSubjectsAndTeachers(queryFn, from, to) {
      WHERE level = $1 AND stream = $2 AND year = $3`,
     [from.level, from.stream, from.year]
   );
-  for (const row of subRows.rows) {
+  if (subRows.rows.length > 0) {
     await queryFn(
       `INSERT INTO subjects (level, stream, year, subject_code, subject_name, subject_abbreviation)
-       SELECT $1, $2, $3, $4, $5, $6
-       WHERE NOT EXISTS (
-         SELECT 1 FROM subjects WHERE level = $1 AND stream = $2 AND year = $3 AND subject_code = $4
-       )`,
-      [to.level, to.stream, to.year, row.subject_code, row.subject_name, row.subject_abbreviation]
+       SELECT $1, $2, $3, s.subject_code, s.subject_name, s.subject_abbreviation
+       FROM subjects s
+       WHERE s.level = $7 AND s.stream = $8 AND s.year = $9
+         AND NOT EXISTS (
+           SELECT 1 FROM subjects t
+           WHERE t.level = $4 AND t.stream = $5 AND t.year = $6
+             AND t.subject_code = s.subject_code
+         )`,
+      [
+        to.level, to.stream, to.year,
+        to.level, to.stream, to.year,
+        from.level, from.stream, from.year,
+      ]
     );
   }
 
@@ -97,21 +105,21 @@ async function copyClassSubjectsAndTeachers(queryFn, from, to) {
      WHERE level = $1 AND stream = $2 AND year = $3`,
     [from.level, from.stream, from.year]
   );
-  for (const row of teachRows.rows) {
+  if (teachRows.rows.length > 0) {
     await queryFn(
       `INSERT INTO subject_teachers (level, stream, year, subject_code, teacher_name, teacher_signature)
-       SELECT $1, $2, $3, $4, $5, $6
-       WHERE NOT EXISTS (
-         SELECT 1 FROM subject_teachers
-         WHERE level = $1 AND stream = $2 AND year = $3 AND subject_code = $4
-       )`,
+       SELECT $1, $2, $3, s.subject_code, s.teacher_name, s.teacher_signature
+       FROM subject_teachers s
+       WHERE s.level = $7 AND s.stream = $8 AND s.year = $9
+         AND NOT EXISTS (
+           SELECT 1 FROM subject_teachers t
+           WHERE t.level = $4 AND t.stream = $5 AND t.year = $6
+             AND t.subject_code = s.subject_code
+         )`,
       [
-        to.level,
-        to.stream,
-        to.year,
-        row.subject_code,
-        row.teacher_name,
-        row.teacher_signature,
+        to.level, to.stream, to.year,
+        to.level, to.stream, to.year,
+        from.level, from.stream, from.year,
       ]
     );
   }

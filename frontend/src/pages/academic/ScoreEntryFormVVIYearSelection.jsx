@@ -5,7 +5,10 @@ import { useParams, Navigate } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
 import FormVVIYearGrid from '../../components/formVVI/FormVVIYearGrid';
 import { useAuth } from '../../context/AuthContext';
-import { formLevelToPathSlug } from '../../utils/academicYearUtils';
+import {
+  formLevelToPathSlug,
+  normalizeFormVVITerm,
+} from '../../utils/academicYearUtils';
 
 const ScoreEntryFormVVIYearSelection = ({ formLevel }) => {
   const { stream } = useParams();
@@ -27,9 +30,10 @@ const ScoreEntryFormVVIYearSelection = ({ formLevel }) => {
           title={`${formLevel} ${stream} - Choose Academic Year`}
           backPath={`/admin/score-entry/${formPath}/streams`}
           actionLabel="Enter Scores"
-          getYearLink={(year) =>
-            `/admin/score-entry/${formPath}/stream/${stream}/year/${year}/subjects`
-          }
+          getYearLink={(year, term) => {
+            const termSlug = normalizeFormVVITerm(term);
+            return `/admin/score-entry/${formPath}/stream/${stream}/year/${year}/term/${encodeURIComponent(termSlug)}/subjects`;
+          }}
         />
       </div>
     </AdminLayout>
