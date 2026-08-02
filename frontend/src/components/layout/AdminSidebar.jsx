@@ -32,9 +32,16 @@ const AdminSidebar = () => {
     setExpandedCategories(navigationItems.map((_, i) => i));
   }, []);
 
-  const { user, logout } = useAuth();
+  const { user, logout, refreshUser } = useAuth();
 
   const isAdminLike = user?.role && ADMIN_LIKE_ROLES.includes(user.role);
+
+  // Keep admin module allowlists fresh so SUPERADMIN re-allocations apply without re-login.
+  useEffect(() => {
+    if (isAdminLike) {
+      refreshUser().catch(() => {});
+    }
+  }, [isAdminLike, refreshUser]);
   const keepNavSectionsOpen = !isAdminLike;
   const sidebarTitle = isAdminLike ? 'Admin Panel' : 'Staff Portal';
 
@@ -70,13 +77,31 @@ const AdminSidebar = () => {
   // Default form for deep analytics links (must match `Analytics.jsx` form slugs)
   const defaultAnalyticsForm = 'FORM I';
 
+  const isSuperAdmin = isAdminLike && user.role.toLowerCase() === 'superadmin';
+  // Admin allowlist set by SUPERADMIN. null = unrestricted (see everything).
+  const adminAllowedModules = (() => {
+    if (!isAdminLike || isSuperAdmin) return null;
+    if (userModules.length === 0 || userModules.includes('all')) return null;
+    return userModules;
+  })();
+
   // Check if current user can see a given navigation item
-  // - Admin/Superadmin: see everything
+  // - Superadmin: see everything
+  // - Admin: restricted to the allowlist SUPERADMIN set (empty/unconfigured = everything)
   // - Non-admin: must have the item's moduleId, any of moduleIds, or 'all' if provided
   const canSeeItem = (item) => {
     if (!user) return false;
     if (item.path === '/admin') return true;
-    if (isAdminLike) return true;
+    if (isSuperAdmin) return true;
+
+    if (isAdminLike) {
+      if (adminAllowedModules === null) return true;
+      const ids = item.moduleIds && Array.isArray(item.moduleIds)
+        ? item.moduleIds
+        : (item.moduleId ? [item.moduleId] : []);
+      if (ids.length === 0) return true; // no moduleId -> cannot be restricted
+      return ids.some((id) => adminAllowedModules.includes(id));
+    }
 
     if (item.moduleIds && Array.isArray(item.moduleIds)) {
       return (
@@ -124,12 +149,12 @@ const AdminSidebar = () => {
     {
       category: 'Academic Management',
       items: [
-        { path: '/admin/subjects', label: 'Subjects', icon: 'fa-book' },
+        { path: '/admin/subjects', label: 'Subjects', icon: 'fa-book', moduleId: 'subject_management' },
         { path: '/admin/score-entry', label: 'Score Entry', icon: 'fa-graduation-cap', moduleId: 'individual_scores' },
         { path: '/admin/dta-monitor', label: 'DTA Monitor', icon: 'fa-history', moduleId: 'dta_monitor' },
-        { path: '/admin/teachers', label: 'Teachers', icon: 'fa-chalkboard-teacher' },
-        { path: '/admin/grades', label: 'Grades', icon: 'fa-award' },
-        { path: '/admin/marks-config', label: 'Marks Config', icon: 'fa-calendar-alt' }
+        { path: '/admin/teachers', label: 'Teachers', icon: 'fa-chalkboard-teacher', moduleId: 'teachers_management' },
+        { path: '/admin/grades', label: 'Grades', icon: 'fa-award', moduleId: 'grades' },
+        { path: '/admin/marks-config', label: 'Marks Config', icon: 'fa-calendar-alt', moduleId: 'marks_config' }
       ]
     },
     {
@@ -185,41 +210,41 @@ const AdminSidebar = () => {
     {
       category: 'School Branding',
       items: [
-        { path: '/admin/branding/logo', label: 'Logo', icon: 'fa-image' },
-        { path: '/admin/branding/stamp', label: 'Stamp', icon: 'fa-stamp' },
-        { path: '/admin/branding/authority', label: 'Authority', icon: 'fa-shield-alt' }
+        { path: '/admin/branding/logo', label: 'Logo', icon: 'fa-image', moduleId: 'school_branding' },
+        { path: '/admin/branding/stamp', label: 'Stamp', icon: 'fa-stamp', moduleId: 'school_branding' },
+        { path: '/admin/branding/authority', label: 'Authority', icon: 'fa-shield-alt', moduleId: 'school_branding' }
       ]
     },
     {
       category: 'Administration',
       items: [
-        { path: '/admin/administrators', label: 'Admin', icon: 'fa-user-shield' },
-        { path: '/admin/users', label: 'Users', icon: 'fa-users-cog' },
-        { path: '/admin/promotion', label: 'Promotion', icon: 'fa-graduation-cap' },
-        { path: '/admin/database-backups', label: 'Database Backup', icon: 'fa-database' },
+        { path: '/admin/administrators', label: 'Admin', icon: 'fa-user-shield', moduleId: 'administrators' },
+        { path: '/admin/users', label: 'Users', icon: 'fa-users-cog', moduleId: 'user_management' },
+        { path: '/admin/promotion', label: 'Promotion', icon: 'fa-graduation-cap', moduleId: 'promotion' },
+        { path: '/admin/database-backups', label: 'Database Backup', icon: 'fa-database', moduleId: 'database_backups' },
       ]
     },
     {
       category: 'AI Matters',
       items: [
-        { path: '/admin/ai-matters', label: 'AI Matters', icon: 'fa-robot' },
-        { path: '/admin/user-commands', label: 'User Commands', icon: 'fa-comments' },
+        { path: '/admin/ai-matters', label: 'AI Matters', icon: 'fa-robot', moduleId: 'ai_matters' },
+        { path: '/admin/user-commands', label: 'User Commands', icon: 'fa-comments', moduleId: 'user_commands' },
       ]
     },
     {
       category: 'Public Website',
       items: [
-        { path: '/admin/public-pages', label: 'Public Pages', icon: 'fa-globe' },
-        { path: '/admin/necta-urls', label: 'NECTA URLs', icon: 'fa-link' },
-        { path: '/admin/school-branding', label: 'School Branding', icon: 'fa-palette' },
-        { path: '/admin/announcements', label: 'Announcements', icon: 'fa-bullhorn' },
-        { path: '/admin/gallery', label: 'Gallery', icon: 'fa-images' },
-        { path: '/admin/admission-applications', label: 'Admissions Apps', icon: 'fa-file-signature' },
-        { path: '/admin/admission-letters', label: 'Admission Letters', icon: 'fa-file-pdf' },
-        { path: '/admin/staff-profiles', label: 'Staff Profiles', icon: 'fa-id-badge' },
-        { path: '/admin/pass-ids', label: 'Pass ID', icon: 'fa-key' },
-        { path: '/admin/faqs', label: 'FAQs', icon: 'fa-question-circle' },
-        { path: '/admin/department-contacts', label: 'Site & Contacts', icon: 'fa-address-book' }
+        { path: '/admin/public-pages', label: 'Public Pages', icon: 'fa-globe', moduleId: 'public_pages' },
+        { path: '/admin/necta-urls', label: 'NECTA URLs', icon: 'fa-link', moduleId: 'necta_urls' },
+        { path: '/admin/school-branding', label: 'School Branding', icon: 'fa-palette', moduleId: 'school_branding' },
+        { path: '/admin/announcements', label: 'Announcements', icon: 'fa-bullhorn', moduleId: 'announcements' },
+        { path: '/admin/gallery', label: 'Gallery', icon: 'fa-images', moduleId: 'gallery' },
+        { path: '/admin/admission-applications', label: 'Admissions Apps', icon: 'fa-file-signature', moduleId: 'admission_applications' },
+        { path: '/admin/admission-letters', label: 'Admission Letters', icon: 'fa-file-pdf', moduleId: 'admission_letters' },
+        { path: '/admin/staff-profiles', label: 'Staff Profiles', icon: 'fa-id-badge', moduleId: 'staff_profiles' },
+        { path: '/admin/pass-ids', label: 'Pass ID', icon: 'fa-key', moduleId: 'pass_ids' },
+        { path: '/admin/faqs', label: 'FAQs', icon: 'fa-question-circle', moduleId: 'faqs' },
+        { path: '/admin/department-contacts', label: 'Site & Contacts', icon: 'fa-address-book', moduleId: 'department_contacts' }
       ]
     }
   ];
@@ -258,7 +283,6 @@ const AdminSidebar = () => {
   useEffect(() => {
     const navEl = navRef.current;
     if (!navEl) return;
-    const scrollPos = navEl.scrollTop;
     const timer = setTimeout(() => {
       const activeItem = navEl.querySelector('.nav-item.active, .mobile-nav-item.active');
       if (activeItem) {

@@ -3,7 +3,7 @@
  */
 const express = require('express');
 const router = express.Router();
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireModule } = require('../middleware/auth');
 const { query } = require('../config/database');
 const { normalizeStream } = require('../utils/streamNormalizer');
 const { sendError } = require('../utils/safeError');
@@ -31,7 +31,7 @@ const MONTH_ORDER_CASE = `
 router.use(requireAuth);
 
 // Get dashboard statistics
-router.get('/dashboard/stats', async (req, res) => {
+router.get('/dashboard/stats', requireModule('analytics_view'), async (req, res) => {
   try {
     // Get student counts by form
     const studentsResult = await query(`
@@ -95,7 +95,7 @@ router.get('/dashboard/stats', async (req, res) => {
 });
 
 // Search students
-router.get('/search-students', async (req, res) => {
+router.get('/search-students', requireModule('analytics_view'), async (req, res) => {
   try {
     let { q, form } = req.query;
     
@@ -163,7 +163,7 @@ router.get('/search-students', async (req, res) => {
 });
 
 // Get student performance data
-router.get('/student/:admNo/performance', async (req, res) => {
+router.get('/student/:admNo/performance', requireModule('analytics_view'), async (req, res) => {
   try {
     const { admNo } = req.params;
     let { form, stream, year, term } = req.query;
@@ -319,7 +319,7 @@ router.get('/student/:admNo/performance', async (req, res) => {
 });
 
 // Get class performance data
-router.get('/class/performance', async (req, res) => {
+router.get('/class/performance', requireModule('analytics_view'), async (req, res) => {
   try {
     let { form, stream, year } = req.query;
     
@@ -538,7 +538,7 @@ router.get('/class/performance', async (req, res) => {
 });
 
 // Get subject performance data
-router.get('/subject/performance', async (req, res) => {
+router.get('/subject/performance', requireModule('analytics_view'), async (req, res) => {
   try {
     let { form, stream, year, subject_code } = req.query;
     
@@ -657,7 +657,7 @@ router.get('/subject/performance', async (req, res) => {
 });
 
 // Get all forms averages - monthly breakdown (optimized)
-router.get('/all-forms-averages', async (req, res) => {
+router.get('/all-forms-averages', requireModule('analytics_form_averages'), async (req, res) => {
   try {
     const forms = ['FORM I', 'FORM II', 'FORM III', 'FORM IV', 'FORM V', 'FORM VI'];
     const formsData = {};
@@ -840,7 +840,7 @@ router.get('/all-forms-averages', async (req, res) => {
 });
 
 // Get subjects for form
-router.get('/subjects/:form', async (req, res) => {
+router.get('/subjects/:form', requireModule('analytics_view'), async (req, res) => {
   try {
     const { form } = req.params;
     const { stream, year } = req.query;
@@ -905,7 +905,7 @@ router.get('/subjects/:form', async (req, res) => {
 });
 
 // Get who-and-when analytics - categorize students by performance trends
-router.get('/who-and-when', async (req, res) => {
+router.get('/who-and-when', requireModule('analytics_view'), async (req, res) => {
   try {
     let { form, stream, year } = req.query;
     
@@ -1151,7 +1151,7 @@ router.get('/who-and-when', async (req, res) => {
 });
 
 // Get solutions/recommendations based on analytics
-router.get('/solutions', async (req, res) => {
+router.get('/solutions', requireModule('analytics_solutions'), async (req, res) => {
   try {
     let { form, stream, year } = req.query;
     

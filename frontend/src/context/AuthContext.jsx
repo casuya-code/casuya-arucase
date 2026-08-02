@@ -406,9 +406,27 @@ export const AuthProvider = ({ children }) => {
     return classInAssignments(perms, className);
   };
 
-  /** True if user has the given module (admin/superadmin always have all). Used for registration, etc. */
+  /**
+   * Admin module allowlist: null = unrestricted (no configured list / 'all');
+   * otherwise the array of modules SUPERADMIN allocated to this admin.
+   */
+  const getAdminAllowedModules = () => {
+    if (!isAdminLike()) return null;
+    const perms = getParsedPermissions();
+    const modules = Array.isArray(perms.modules) ? perms.modules : [];
+    if (modules.length === 0 || modules.includes('all')) return null;
+    return modules;
+  };
+
+  /** True if user has the given module. Superadmin always true; admins follow their SUPERADMIN-set allowlist (empty = all). */
   const hasModule = (moduleId) => {
-    if (isAdminLike()) return true;
+    const role = user?.role?.toLowerCase?.() ?? user?.role;
+    if (role === 'superadmin') return true;
+    if (isAdminLike()) {
+      const allowed = getAdminAllowedModules();
+      if (allowed === null) return true;
+      return allowed.includes(moduleId);
+    }
     const perms = getParsedPermissions();
     const modules = perms.modules;
     if (!Array.isArray(modules)) return false;
@@ -427,6 +445,7 @@ export const AuthProvider = ({ children }) => {
     hasPermission,
     isAdminLike,
     getParsedPermissions,
+    getAdminAllowedModules,
     getAllowedYearsForClass,
     getAllowedSubjects,
     getAllowedSubjectsForClass,

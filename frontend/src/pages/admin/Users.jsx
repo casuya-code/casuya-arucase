@@ -11,6 +11,7 @@ import AdminLayout from '../../components/layout/AdminLayout';
 import SkeletonLoader from '../../components/common/SkeletonLoader';
 import { adminAPI } from '../../services/admin';
 import DataTable from '../../components/common/DataTable';
+import { ADMIN_MODULES } from '../../constants/adminModules';
 import './Users.css';
 
 // Non-admin roles that get custom permissions (modules, classes, subjects)
@@ -112,7 +113,15 @@ const defaultPermissions = () => ({
 });
 
 const Users = () => {
-  const { isAdminLike } = useAuth();
+  const { user: currentUser, isAdminLike, getAdminAllowedModules } = useAuth();
+  const isSuperAdmin = currentUser?.role?.toLowerCase() === 'superadmin';
+  const myAllowedModules = isAdminLike() ? getAdminAllowedModules() : null; // null = unrestricted
+  const canGrantModule = useCallback((moduleId) => {
+    if (isSuperAdmin) return true;
+    if (myAllowedModules === null) return true;
+    return myAllowedModules.includes(moduleId);
+  }, [isSuperAdmin, myAllowedModules]);
+
   const queryClient = useQueryClient();
   const modalContentRef = useRef(null);
   const modalOverlayRef = useRef(null);
@@ -174,6 +183,7 @@ const Users = () => {
   }, [subjectsData]);
 
   const showPermissions = ROLES_WITH_PERMISSIONS.includes(formData.role);
+  const showAdminModules = formData.role === 'admin';
 
   // Save user mutation
   const saveMutation = useMutation({
@@ -504,7 +514,13 @@ const Users = () => {
       label: 'Modules Access',
       render: (value, user) => {
         const userModules = getUserModules(user);
+        const role = (user.role || '').toLowerCase();
+        const isAdminLike = role === 'admin' || role === 'superadmin';
         if (userModules.length === 0) {
+          // Admin/superadmin with an empty (or missing) allowlist is unrestricted.
+          if (isAdminLike) {
+            return <span className="module-badge all-modules">All Modules (Unrestricted)</span>;
+          }
           return <span className="text-muted">None assigned</span>;
         }
         if (userModules[0] === 'All Modules') {
@@ -552,7 +568,7 @@ const Users = () => {
           >
             <i className="fas fa-edit"></i> Edit
           </button>
-          {user.username !== 'admin' && user.role !== 'superadmin' && (
+          {user.username !== 'admin' && user.role !== 'admin' && user.role !== 'superadmin' && (
             <button
               onClick={(e) => {
                 e.stopPropagation();
@@ -678,8 +694,12 @@ const Users = () => {
                       <option value="secretary">Secretary (Custom Permissions)</option>
                       <option value="priest">Priest (Custom Permissions)</option>
                       <option value="discipline">Discipline (Custom Permissions)</option>
-                      <option value="admin">Admin (Full Access)</option>
-                      <option value="superadmin">Superadmin (Full Access)</option>
+                      {isSuperAdmin && (
+                        <>
+                          <option value="admin">Admin (SUPERADMIN-assigned modules)</option>
+                          <option value="superadmin">Superadmin (Full Access)</option>
+                        </>
+                      )}
                     </select>
                   </div>
 
@@ -703,7 +723,7 @@ const Users = () => {
                               <i className="fas fa-lock"></i> User Permissions
                             </h4>
                             <p className="permissions-hint">
-                              Assign classes, subjects, and module access for this user. Admin and Superadmin have full access and do not use these settings.
+                              Assign classes, subjects, and module access for this user. Superadmin has full access and does not use these settings. Admins can only grant modules SUPERADMIN allocated to them.
                             </p>
 
                             <div className="permissions-block">
@@ -786,16 +806,20 @@ const Users = () => {
                                   <div key={group.label} className="permissions-module-group">
                                     <div className="permissions-module-group-title">{group.label}</div>
                                     <div className="permissions-modules-grid">
-                                      {group.modules.map((mod) => (
-                                        <label key={mod.id} className="permission-check-label">
-                                          <input
-                                            type="checkbox"
-                                            checked={(formData.permissions.modules || []).includes(mod.id)}
-                                            onChange={(e) => toggleModule(mod.id, e.target.checked)}
-                                          />
-                                          <span><i className={`fas ${mod.icon}`}></i> {mod.label}</span>
-                                        </label>
-                                      ))}
+                                      {group.modules.map((mod) => {
+                                        const grantable = canGrantModule(mod.id);
+                                        return (
+                                          <label key={mod.id} className={`permission-check-label ${grantable ? '' : 'permission-check-label--disabled'}`} title={grantable ? '' : 'SUPERADMIN has not allocated this module to you'}>
+                                            <input
+                                              type="checkbox"
+                                              disabled={!grantable}
+                                              checked={(formData.permissions.modules || []).includes(mod.id)}
+                                              onChange={(e) => toggleModule(mod.id, e.target.checked)}
+                                            />
+                                            <span><i className={`fas ${mod.icon}`}></i> {mod.label}</span>
+                                          </label>
+                                        );
+                                      })}
                                     </div>
                                     {group.groupKey && (
                                       <>
@@ -830,6 +854,36 @@ const Users = () => {
                                   </div>
                                 );
                               })}
+                            </div>
+                          </div>
+                        )}
+
+                        {/* Admin module access: SUPERADMIN decides which sidebar modules each admin may use */}
+                        {showAdminModules && (
+                          <div className="permissions-section">
+                            <h4 className="permissions-section-title">
+                              <i className="fas fa-shield-alt"></i> Admin Module Access
+                            </h4>
+                            <p className="permissions-hint">
+                              Choose which sidebar modules this admin may use. Leave all unchecked for unrestricted access. This admin can only grant non-admin users the modules selected here.
+                            </p>
+                            <div className="permissions-block">
+                              <label className="permissions-block-label">Sidebar Modules</label>
+                              <div className="permissions-modules-grid">
+                                {ADMIN_MODULES.map((mod) => {
+                                  const selected = (formData.permissions.modules || []).includes(mod.id);
+                                  return (
+                                    <label key={mod.id} className={`permission-check-label ${selected ? 'permission-check-label--selected' : ''}`}>
+                                      <input
+                                        type="checkbox"
+                                        checked={selected}
+                                        onChange={(e) => toggleModule(mod.id, e.target.checked)}
+                                      />
+                                      <span><i className={`fas ${mod.icon}`}></i> {mod.label}</span>
+                                    </label>
+                                  );
+                                })}
+                              </div>
                             </div>
                           </div>
                         )}

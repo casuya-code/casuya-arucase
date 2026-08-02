@@ -4,11 +4,11 @@
 const express = require('express');
 const router = express.Router();
 const { query, withTransaction } = require('../config/database');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth, requireRole, requireModule } = require('../middleware/auth');
 const { sendError } = require('../utils/safeError');
 
 // Get all score changes with filters
-router.get('/changes', requireAuth, async (req, res) => {
+router.get('/changes', requireAuth, requireModule('dta_monitor'), async (req, res) => {
   try {
     const {
       student_adm_no,
@@ -178,7 +178,7 @@ router.get('/changes', requireAuth, async (req, res) => {
 });
 
 // Delete selected audit records by id (admin only)
-router.delete('/changes/bulk', requireAuth, requireRole('admin', 'superadmin'), async (req, res) => {
+router.delete('/changes/bulk', requireAuth, requireModule('dta_monitor'), requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const ids = req.body?.ids;
     if (!Array.isArray(ids) || ids.length === 0) {
@@ -215,7 +215,7 @@ router.delete('/changes/bulk', requireAuth, requireRole('admin', 'superadmin'), 
 });
 
 // Get specific change record details
-router.get('/changes/:id', requireAuth, async (req, res) => {
+router.get('/changes/:id', requireAuth, requireModule('dta_monitor'), async (req, res) => {
   try {
     const { id } = req.params;
 
@@ -241,7 +241,7 @@ router.get('/changes/:id', requireAuth, async (req, res) => {
 });
 
 // Get statistics
-router.get('/statistics', requireAuth, async (req, res) => {
+router.get('/statistics', requireAuth, requireModule('dta_monitor'), async (req, res) => {
   try {
     // Total changes
     const totalResult = await query(
@@ -298,7 +298,7 @@ router.get('/statistics', requireAuth, async (req, res) => {
 });
 
 // Clear all DTA Monitor records (Admin only)
-router.delete('/clear', requireAuth, requireRole('admin', 'superadmin'), async (req, res) => {
+router.delete('/clear', requireAuth, requireModule('dta_monitor'), requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const { date_from, date_to } = req.query;
     

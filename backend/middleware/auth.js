@@ -2,6 +2,7 @@
  * Authentication Middleware
  */
 const jwt = require('jsonwebtoken');
+const { getAdminAllowedModules, getFreshUserCached } = require('../utils/adminModuleAccess');
 
 // Validate JWT secret key in production
 const validateJwtSecret = () => {
@@ -17,7 +18,7 @@ const validateJwtSecret = () => {
 
 const JWT_SECRET = validateJwtSecret();
 
-const requireAuth = (req, res, next) => {
+const requireAuth = async (req, res, next) => {
   try {
     // Try to get token from multiple sources for compatibility:
     // 1. accessToken cookie (enhanced login)
@@ -34,6 +35,23 @@ const requireAuth = (req, res, next) => {
 
     const decoded = jwt.verify(token, JWT_SECRET);
     req.user = decoded;
+
+    // Refresh role/status/permissions from the DB (cached) so SUPERADMIN role
+    // changes, module grants and account deactivations apply immediately instead
+    // of waiting for the JWT to expire. Fails open to the JWT claims when the
+    // lookup is unavailable (keeps current behavior).
+    const fresh = await getFreshUserCached(decoded.user_id);
+    if (fresh) {
+      if (fresh.status !== 'active') {
+        return res.status(401).json({ message: 'Account is not active' });
+      }
+      req.user = {
+        ...decoded,
+        role: fresh.role,
+        status: fresh.status,
+        permissions: fresh.permissions,
+      };
+    }
     next();
   } catch (error) {
     if (error.name === 'TokenExpiredError') {
@@ -92,21 +110,35 @@ const parsePermissionsObject = (raw) => {
   return {};
 };
 
-const isAdminLikeUser = (user) => {
-  const role = (user?.role && String(user.role).toLowerCase()) || '';
-  return role === 'admin' || role === 'superadmin';
-};
-
-/** Matches frontend hasModule: admin/superadmin, or modules includes `all` or moduleId */
+/**
+ * Matches frontend hasModule: superadmin, or admin with an unrestricted/allowlisted
+ * module set (resolved fresh from DB so SUPERADMIN allocations apply immediately),
+ * or a non-admin whose current modules (resolved fresh from DB, falling back to the
+ * JWT snapshot) include `all` or moduleId.
+ */
 const requireModule = (moduleId) => {
-  return (req, res, next) => {
+  return async (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({ message: 'Authentication required' });
     }
-    if (isAdminLikeUser(req.user)) {
+    const role = (req.user.role || '').toLowerCase();
+    if (role === 'superadmin') {
       return next();
     }
-    const perms = parsePermissionsObject(req.user.permissions);
+    if (role === 'admin') {
+      const allowed = await getAdminAllowedModules(req.user.user_id);
+      if (!Array.isArray(allowed) || allowed.length === 0) {
+        return next();
+      }
+      if (allowed.includes('all') || allowed.includes(moduleId)) {
+        return next();
+      }
+      return res.status(403).json({ message: 'Insufficient permissions' });
+    }
+    // Non-admin: prefer the user's current permissions from the DB so newly granted
+    // modules apply immediately; fall back to the JWT snapshot if unavailable.
+    const fresh = await getFreshUserCached(req.user.user_id);
+    const perms = fresh?.permissions || parsePermissionsObject(req.user.permissions);
     const modules = perms.modules;
     if (!Array.isArray(modules)) {
       return res.status(403).json({ message: 'Insufficient permissions' });

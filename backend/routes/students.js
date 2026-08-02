@@ -6,7 +6,7 @@ const router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs').promises;
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth, requireRole, requireModule } = require('../middleware/auth');
 const {
   purgeStudentsByClass,
   destroyCollectedPhotos,
@@ -886,7 +886,7 @@ router.post('/scores/bulk-upload', csvUpload.single('file'), async (req, res) =>
 // NOTE: These routes MUST come BEFORE router.get('/:admNo') to avoid route conflicts
 
 // Get marks config
-router.get('/marks-config', cacheRoutes.marksConfig, async (req, res) => {
+router.get('/marks-config', requireModule('marks_config'), cacheRoutes.marksConfig, async (req, res) => {
   try {
     const result = await query('SELECT * FROM marks_config ORDER BY month');
     
@@ -903,7 +903,7 @@ router.get('/marks-config', cacheRoutes.marksConfig, async (req, res) => {
 });
 
 // Save marks config
-router.post('/marks-config', async (req, res) => {
+router.post('/marks-config', requireModule('marks_config'), async (req, res) => {
   try {
     const { month_weights } = req.body;
     
@@ -1338,7 +1338,7 @@ router.delete('/parishes', async (req, res) => {
 
 // Delete subject
 // NOTE: This route MUST come BEFORE router.delete('/:admNo') to avoid route conflicts
-router.delete('/subjects', async (req, res) => {
+router.delete('/subjects', requireModule('subject_management'), async (req, res) => {
   try {
     let { level, stream, year, subject_code } = req.query;
     
@@ -1393,7 +1393,7 @@ router.delete('/subjects', async (req, res) => {
 
 // Delete teacher assignment
 // NOTE: This route MUST come BEFORE router.delete('/:admNo') to avoid route conflicts
-router.delete('/teachers', async (req, res) => {
+router.delete('/teachers', requireModule('teachers_management'), async (req, res) => {
   try {
     let { level, stream, year, subject_code } = req.query;
     
@@ -3172,7 +3172,7 @@ router.get('/subjects/list', async (req, res) => {
 });
 
 // Create or update subject
-router.post('/subjects', async (req, res) => {
+router.post('/subjects', requireModule('subject_management'), async (req, res) => {
   try {
     const { level, stream, year, subject_code, subject_name, subject_abbreviation } = req.body;
     
@@ -3206,7 +3206,7 @@ router.post('/subjects', async (req, res) => {
 });
 
 // Get subject teachers for a class
-router.get('/teachers/list', async (req, res) => {
+router.get('/teachers/list', requireModule('teachers_management'), async (req, res) => {
   try {
     let { level, stream, year } = req.query;
     
@@ -3282,7 +3282,7 @@ router.get('/teachers/list', async (req, res) => {
 });
 
 // Save or update subject teacher
-router.post('/teachers', async (req, res) => {
+router.post('/teachers', requireModule('teachers_management'), async (req, res) => {
   try {
     const { level, stream, year, subject_code, teacher_name, teacher_signature } = req.body;
     

@@ -920,6 +920,20 @@
   cursor: pointer;
 }
 
+.permission-check-label--disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+
+.permission-check-label--disabled input {
+  cursor: not-allowed;
+}
+
+.permission-check-label--selected span {
+  color: #1e40af;
+  font-weight: 600;
+}
+
 .permissions-module-group {
   margin-bottom: 1rem;
 }

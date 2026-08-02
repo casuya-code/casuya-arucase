@@ -246,7 +246,7 @@ function App() {
             <Route
               path="/admin/users"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="user_management">
                   <AdminUsers />
                 </ProtectedRoute>
               }
@@ -254,7 +254,7 @@ function App() {
             <Route
               path="/admin/admission-applications"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="admission_applications">
                   <AdmissionApplications />
                 </ProtectedRoute>
               }
@@ -262,7 +262,7 @@ function App() {
             <Route
               path="/admin/admission-letters"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="admission_letters">
                   <AdmissionLetters />
                 </ProtectedRoute>
               }
@@ -270,7 +270,7 @@ function App() {
             <Route
               path="/admin/school-branding"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="school_branding">
                   <AdminSchoolBranding />
                 </ProtectedRoute>
               }
@@ -279,7 +279,7 @@ function App() {
             <Route
               path="/admin/announcements"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="announcements">
                   <AdminAnnouncements />
                 </ProtectedRoute>
               }
@@ -287,7 +287,7 @@ function App() {
             <Route
               path="/admin/gallery"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="gallery">
                   <AdminGallery />
                 </ProtectedRoute>
               }
@@ -295,7 +295,7 @@ function App() {
             <Route
               path="/admin/faqs"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="faqs">
                   <AdminFAQs />
                 </ProtectedRoute>
               }
@@ -303,7 +303,7 @@ function App() {
             <Route
               path="/admin/public-pages"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="public_pages">
                   <PublicPages />
                 </ProtectedRoute>
               }
@@ -311,7 +311,7 @@ function App() {
             <Route
               path="/admin/necta-urls"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="necta_urls">
                   <NECTAUrls />
                 </ProtectedRoute>
               }
@@ -319,7 +319,7 @@ function App() {
             <Route
               path="/admin/administrators"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="administrators">
                   <AdminAdministrators />
                 </ProtectedRoute>
               }
@@ -327,7 +327,7 @@ function App() {
             <Route
               path="/admin/ai-matters"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="ai_matters">
                   <AIMatters />
                 </ProtectedRoute>
               }
@@ -335,7 +335,7 @@ function App() {
             <Route
               path="/admin/user-commands"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="user_commands">
                   <UserCommands />
                 </ProtectedRoute>
               }
@@ -343,7 +343,7 @@ function App() {
             <Route
               path="/admin/department-contacts"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="department_contacts">
                   <AdminDepartmentContacts />
                 </ProtectedRoute>
               }
@@ -351,7 +351,7 @@ function App() {
             <Route
               path="/admin/staff-profiles"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="staff_profiles">
                   <StaffProfiles />
                 </ProtectedRoute>
               }
@@ -359,7 +359,7 @@ function App() {
             <Route
               path="/admin/database-backups"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="database_backups">
                   <DatabaseBackups />
                 </ProtectedRoute>
               }
@@ -934,7 +934,7 @@ function App() {
             <Route
               path="/admin/subjects"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="subject_management">
                   <Subjects />
                 </ProtectedRoute>
               }
@@ -943,7 +943,7 @@ function App() {
             <Route
               path="/admin/subjects/form-i/years"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="subject_management">
                   <SubjectsYearSelection formLevel="FORM I" />
                 </ProtectedRoute>
               }
@@ -951,7 +951,7 @@ function App() {
             <Route
               path="/admin/subjects/form-ii/years"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="subject_management">
                   <SubjectsYearSelection formLevel="FORM II" />
                 </ProtectedRoute>
               }
@@ -959,7 +959,7 @@ function App() {
             <Route
               path="/admin/subjects/form-iii/years"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="subject_management">
                   <SubjectsYearSelection formLevel="FORM III" />
                 </ProtectedRoute>
               }
@@ -967,7 +967,7 @@ function App() {
             <Route
               path="/admin/subjects/form-iv/years"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="subject_management">
                   <SubjectsYearSelection formLevel="FORM IV" />
                 </ProtectedRoute>
               }
@@ -975,7 +975,7 @@ function App() {
             <Route
               path="/admin/subjects/form-i/year/:year"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="subject_management">
                   <SubjectsManagement formLevel="form-i" stream="NA" />
                 </ProtectedRoute>
               }
@@ -983,7 +983,7 @@ function App() {
             <Route
               path="/admin/subjects/form-ii/year/:year"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="subject_management">
                   <SubjectsManagement formLevel="form-ii" stream="NA" />
                 </ProtectedRoute>
               }
@@ -991,7 +991,7 @@ function App() {
             <Route
               path="/admin/subjects/form-iii/year/:year"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="subject_management">
                   <SubjectsManagement formLevel="form-iii" stream="NA" />
                 </ProtectedRoute>
               }
@@ -999,7 +999,7 @@ function App() {
             <Route
               path="/admin/subjects/form-iv/year/:year"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="subject_management">
                   <SubjectsManagement formLevel="form-iv" stream="NA" />
                 </ProtectedRoute>
               }
@@ -1008,7 +1008,7 @@ function App() {
             <Route
               path="/admin/subjects/form-v/streams"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="subject_management">
                   <SubjectsStreamSelection formLevel="FORM V" />
                 </ProtectedRoute>
               }
@@ -1016,7 +1016,7 @@ function App() {
             <Route
               path="/admin/subjects/form-vi/streams"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="subject_management">
                   <SubjectsStreamSelection formLevel="FORM VI" />
                 </ProtectedRoute>
               }
@@ -1024,7 +1024,7 @@ function App() {
             <Route
               path="/admin/subjects/form-v/stream/:stream/years"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="subject_management">
                   <SubjectsFormVVIYearSelection formLevel="FORM V" />
                 </ProtectedRoute>
               }
@@ -1032,7 +1032,7 @@ function App() {
             <Route
               path="/admin/subjects/form-vi/stream/:stream/years"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="subject_management">
                   <SubjectsFormVVIYearSelection formLevel="FORM VI" />
                 </ProtectedRoute>
               }
@@ -1040,7 +1040,7 @@ function App() {
             <Route
               path="/admin/subjects/form-v/stream/:stream/year/:year"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="subject_management">
                   <SubjectsManagement formLevel="form-v" />
                 </ProtectedRoute>
               }
@@ -1048,7 +1048,7 @@ function App() {
             <Route
               path="/admin/subjects/form-vi/stream/:stream/year/:year"
               element={
-                <ProtectedRoute requiredAdmin>
+                <ProtectedRoute requiredModule="subject_management">
                   <SubjectsManagement formLevel="form-vi" />
                 </ProtectedRoute>
               }
@@ -1350,7 +1350,7 @@ function App() {
             <Route
               path="/admin/teachers"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="teachers_management">
                   <Teachers />
                 </ProtectedRoute>
               }
@@ -1359,7 +1359,7 @@ function App() {
             <Route
               path="/admin/teachers/form-i/years"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="teachers_management">
                   <TeachersYearSelection formLevel="FORM I" />
                 </ProtectedRoute>
               }
@@ -1367,7 +1367,7 @@ function App() {
             <Route
               path="/admin/teachers/form-ii/years"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="teachers_management">
                   <TeachersYearSelection formLevel="FORM II" />
                 </ProtectedRoute>
               }
@@ -1375,7 +1375,7 @@ function App() {
             <Route
               path="/admin/teachers/form-iii/years"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="teachers_management">
                   <TeachersYearSelection formLevel="FORM III" />
                 </ProtectedRoute>
               }
@@ -1383,7 +1383,7 @@ function App() {
             <Route
               path="/admin/teachers/form-iv/years"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="teachers_management">
                   <TeachersYearSelection formLevel="FORM IV" />
                 </ProtectedRoute>
               }
@@ -1391,7 +1391,7 @@ function App() {
             <Route
               path="/admin/teachers/form-i/year/:year"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="teachers_management">
                   <TeachersManagement formLevel="form-i" stream="A" />
                 </ProtectedRoute>
               }
@@ -1399,7 +1399,7 @@ function App() {
             <Route
               path="/admin/teachers/form-ii/year/:year"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="teachers_management">
                   <TeachersManagement formLevel="form-ii" stream="A" />
                 </ProtectedRoute>
               }
@@ -1407,7 +1407,7 @@ function App() {
             <Route
               path="/admin/teachers/form-iii/year/:year"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="teachers_management">
                   <TeachersManagement formLevel="form-iii" stream="A" />
                 </ProtectedRoute>
               }
@@ -1415,7 +1415,7 @@ function App() {
             <Route
               path="/admin/teachers/form-iv/year/:year"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="teachers_management">
                   <TeachersManagement formLevel="form-iv" stream="A" />
                 </ProtectedRoute>
               }
@@ -1424,7 +1424,7 @@ function App() {
             <Route
               path="/admin/teachers/form-v/streams"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="teachers_management">
                   <TeachersStreamSelection formLevel="FORM V" />
                 </ProtectedRoute>
               }
@@ -1432,7 +1432,7 @@ function App() {
             <Route
               path="/admin/teachers/form-vi/streams"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="teachers_management">
                   <TeachersStreamSelection formLevel="FORM VI" />
                 </ProtectedRoute>
               }
@@ -1440,7 +1440,7 @@ function App() {
             <Route
               path="/admin/teachers/form-v/stream/:stream/years"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="teachers_management">
                   <TeachersFormVVIYearSelection formLevel="FORM V" />
                 </ProtectedRoute>
               }
@@ -1448,7 +1448,7 @@ function App() {
             <Route
               path="/admin/teachers/form-vi/stream/:stream/years"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="teachers_management">
                   <TeachersFormVVIYearSelection formLevel="FORM VI" />
                 </ProtectedRoute>
               }
@@ -1472,7 +1472,7 @@ function App() {
             <Route
               path="/admin/teachers/form-v/stream/:stream/year/:year/term/:term"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="teachers_management">
                   <TeachersManagement formLevel="form-v" />
                 </ProtectedRoute>
               }
@@ -1480,7 +1480,7 @@ function App() {
             <Route
               path="/admin/teachers/form-vi/stream/:stream/year/:year/term/:term"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="teachers_management">
                   <TeachersManagement formLevel="form-vi" />
                 </ProtectedRoute>
               }
@@ -1489,7 +1489,7 @@ function App() {
             <Route
               path="/admin/marks-config"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfig />
                 </ProtectedRoute>
               }
@@ -1498,7 +1498,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-i/years"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigYearSelection formLevel="FORM I" />
                 </ProtectedRoute>
               }
@@ -1506,7 +1506,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-ii/years"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigYearSelection formLevel="FORM II" />
                 </ProtectedRoute>
               }
@@ -1514,7 +1514,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-iii/years"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigYearSelection formLevel="FORM III" />
                 </ProtectedRoute>
               }
@@ -1522,7 +1522,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-iv/years"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigYearSelection formLevel="FORM IV" />
                 </ProtectedRoute>
               }
@@ -1530,7 +1530,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-i/year/:year/streams"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigStreamSelection formLevel="FORM I" />
                 </ProtectedRoute>
               }
@@ -1538,7 +1538,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-ii/year/:year/streams"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigStreamSelection formLevel="FORM II" />
                 </ProtectedRoute>
               }
@@ -1546,7 +1546,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-iii/year/:year/streams"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigStreamSelection formLevel="FORM III" />
                 </ProtectedRoute>
               }
@@ -1554,7 +1554,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-iv/year/:year/streams"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigStreamSelection formLevel="FORM IV" />
                 </ProtectedRoute>
               }
@@ -1562,7 +1562,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-i/year/:year/stream/:stream/terms"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigTermSelection formLevel="form-i" />
                 </ProtectedRoute>
               }
@@ -1570,7 +1570,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-ii/year/:year/stream/:stream/terms"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigTermSelection formLevel="form-ii" />
                 </ProtectedRoute>
               }
@@ -1578,7 +1578,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-iii/year/:year/stream/:stream/terms"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigTermSelection formLevel="form-iii" />
                 </ProtectedRoute>
               }
@@ -1586,7 +1586,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-iv/year/:year/stream/:stream/terms"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigTermSelection formLevel="form-iv" />
                 </ProtectedRoute>
               }
@@ -1594,7 +1594,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-i/year/:year/stream/:stream/term/:term"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigStudentSelection formLevel="form-i" />
                 </ProtectedRoute>
               }
@@ -1602,7 +1602,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-i/year/:year/stream/:stream/term/:term/student/:admNo"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <ComprehensiveStudentMarks formLevel="form-i" />
                 </ProtectedRoute>
               }
@@ -1610,7 +1610,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-ii/year/:year/stream/:stream/term/:term"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigStudentSelection formLevel="form-ii" />
                 </ProtectedRoute>
               }
@@ -1618,7 +1618,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-ii/year/:year/stream/:stream/term/:term/student/:admNo"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <ComprehensiveStudentMarks formLevel="form-ii" />
                 </ProtectedRoute>
               }
@@ -1626,7 +1626,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-iii/year/:year/stream/:stream/term/:term"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigStudentSelection formLevel="form-iii" />
                 </ProtectedRoute>
               }
@@ -1634,7 +1634,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-iii/year/:year/stream/:stream/term/:term/student/:admNo"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <ComprehensiveStudentMarks formLevel="form-iii" />
                 </ProtectedRoute>
               }
@@ -1642,7 +1642,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-iv/year/:year/stream/:stream/term/:term"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigStudentSelection formLevel="form-iv" />
                 </ProtectedRoute>
               }
@@ -1650,7 +1650,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-iv/year/:year/stream/:stream/term/:term/student/:admNo"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <ComprehensiveStudentMarks formLevel="form-iv" />
                 </ProtectedRoute>
               }
@@ -1659,7 +1659,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-v/streams"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigStreamSelection formLevel="FORM V" isFormVOrVI={true} />
                 </ProtectedRoute>
               }
@@ -1667,7 +1667,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-vi/streams"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigStreamSelection formLevel="FORM VI" isFormVOrVI={true} />
                 </ProtectedRoute>
               }
@@ -1675,7 +1675,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-v/stream/:stream/years"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigFormVVIYearSelection formLevel="FORM V" />
                 </ProtectedRoute>
               }
@@ -1683,7 +1683,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-vi/stream/:stream/years"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigFormVVIYearSelection formLevel="FORM VI" />
                 </ProtectedRoute>
               }
@@ -1691,7 +1691,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-v/stream/:stream/year/:year/terms"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigTermSelection formLevel="form-v" />
                 </ProtectedRoute>
               }
@@ -1699,7 +1699,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-vi/stream/:stream/year/:year/terms"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigTermSelection formLevel="form-vi" />
                 </ProtectedRoute>
               }
@@ -1707,7 +1707,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-v/stream/:stream/year/:year/term/:term"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigStudentSelection formLevel="form-v" />
                 </ProtectedRoute>
               }
@@ -1715,7 +1715,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-v/stream/:stream/year/:year/term/:term/student/:admNo"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <ComprehensiveStudentMarks formLevel="form-v" />
                 </ProtectedRoute>
               }
@@ -1723,7 +1723,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-vi/stream/:stream/year/:year/term/:term"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <MarksConfigStudentSelection formLevel="form-vi" />
                 </ProtectedRoute>
               }
@@ -1731,7 +1731,7 @@ function App() {
             <Route
               path="/admin/marks-config/form-vi/stream/:stream/year/:year/term/:term/student/:admNo"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="marks_config">
                   <ComprehensiveStudentMarks formLevel="form-vi" />
                 </ProtectedRoute>
               }
@@ -1740,7 +1740,7 @@ function App() {
             <Route
               path="/admin/grades"
               element={
-                <ProtectedRoute>
+                <ProtectedRoute requiredModule="grades">
                   <Grades />
                 </ProtectedRoute>
               }
@@ -2152,11 +2152,11 @@ function App() {
             <Route path="/admin/debts/form-vi/stream/:stream/year/:year/term/:term" element={<ProtectedRoute requiredModule="individual_debt"><DebtsManagement formLevel="form-vi" /></ProtectedRoute>} />
 
             {/* School Branding Routes */}
-            <Route path="/admin/branding/logo" element={<ProtectedRoute requiredAdmin={true}><Logo /></ProtectedRoute>} />
-            <Route path="/admin/branding/stamp" element={<ProtectedRoute><Stamp /></ProtectedRoute>} />
-            <Route path="/admin/branding/authority" element={<ProtectedRoute><Authority /></ProtectedRoute>} />
-            <Route path="/admin/pass-ids" element={<ProtectedRoute><PassIdManagement /></ProtectedRoute>} />
-            <Route path="/admin/pass-ids/:form" element={<ProtectedRoute><PassIdManagement /></ProtectedRoute>} />
+            <Route path="/admin/branding/logo" element={<ProtectedRoute requiredModule="school_branding"><Logo /></ProtectedRoute>} />
+            <Route path="/admin/branding/stamp" element={<ProtectedRoute requiredModule="school_branding"><Stamp /></ProtectedRoute>} />
+            <Route path="/admin/branding/authority" element={<ProtectedRoute requiredModule="school_branding"><Authority /></ProtectedRoute>} />
+            <Route path="/admin/pass-ids" element={<ProtectedRoute requiredModule="pass_ids"><PassIdManagement /></ProtectedRoute>} />
+            <Route path="/admin/pass-ids/:form" element={<ProtectedRoute requiredModule="pass_ids"><PassIdManagement /></ProtectedRoute>} />
 
             {/* Student Promotion */}
             <Route path="/admin/promotion" element={<ProtectedRoute><Promotion /></ProtectedRoute>} />

@@ -8,7 +8,8 @@ const path = require('path');
 const fs = require('fs').promises;
 const fsSync = require('fs');
 const { v4: uuidv4 } = require('uuid');
-const { requireAuth, requireRole } = require('../middleware/auth');
+const { requireAuth, requireRole, requireModule } = require('../middleware/auth');
+const { getAdminAllowedModules, clearAdminModuleCache } = require('../utils/adminModuleAccess');
 const { query, withTransaction } = require('../config/database');
 const { cacheRoutes, clearCachePattern } = require('../middleware/cache');
 const { saveUserActivity } = require('../utils/activityLogger');
@@ -298,7 +299,7 @@ async function ensureStaffProfilesTable() {
 
 // ========== ADMISSIONS APPLICATIONS (ADMIN REVIEW) ==========
 
-router.get('/admission-applications', requireRole('admin', 'superadmin'), async (req, res) => {
+router.get('/admission-applications', requireModule('admission_applications'), requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     await ensureAdmissionsTables();
     const { status } = req.query;
@@ -326,7 +327,7 @@ router.get('/admission-applications', requireRole('admin', 'superadmin'), async 
   }
 });
 
-router.post('/admission-applications/:id/status', requireRole('admin', 'superadmin'), async (req, res) => {
+router.post('/admission-applications/:id/status', requireModule('admission_applications'), requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     await ensureAdmissionsTables();
     const { id } = req.params;
@@ -349,7 +350,7 @@ router.post('/admission-applications/:id/status', requireRole('admin', 'superadm
   }
 });
 
-router.delete('/admission-applications/:id', requireRole('admin', 'superadmin'), async (req, res) => {
+router.delete('/admission-applications/:id', requireModule('admission_applications'), requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     await ensureAdmissionsTables();
     const { id } = req.params;
@@ -471,7 +472,7 @@ const admissionLettersUpload = {
   },
 };
 
-router.get('/admission-letters', requireRole('admin', 'superadmin'), async (req, res) => {
+router.get('/admission-letters', requireModule('admission_letters'), requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     await ensureAdmissionLettersTable();
     const result = await query(
@@ -489,6 +490,7 @@ router.get('/admission-letters', requireRole('admin', 'superadmin'), async (req,
 
 router.post(
   '/admission-letters',
+  requireModule('admission_letters'),
   requireRole('admin', 'superadmin'),
   admissionLettersUpload.single('pdf_file'),
   async (req, res) => {
@@ -534,7 +536,7 @@ router.post(
   }
 );
 
-router.delete('/admission-letters', requireRole('admin', 'superadmin'), async (req, res) => {
+router.delete('/admission-letters', requireModule('admission_letters'), requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     await ensureAdmissionLettersTable();
     const existing = await query('SELECT file_path FROM admission_letters WHERE id = 1');
@@ -972,14 +974,18 @@ router.get('/dashboard/stats', cacheRoutes.dashboardStats, async (req, res) => {
 
 // ========== USER MANAGEMENT ==========
 
-// Get all users (updated to include permissions)
-router.get('/users', requireRole('admin', 'superadmin'), async (req, res) => {
+// Get all users (updated to include permissions).
+// Only superadmin sees admin accounts; regular admins manage non-admin users only.
+router.get('/users', requireModule('user_management'), requireRole('admin', 'superadmin'), async (req, res) => {
   try {
+    const currentUserRole = req.user?.role?.toLowerCase();
+    const hideAdminAccounts = currentUserRole !== 'superadmin';
     const result = await query(
       `SELECT id, username, full_name, role, status, permissions, email, phone, 
        profile_picture, bio, department, position, created_at, updated_at 
        FROM users 
-       WHERE UPPER(role) != 'SUPERADMIN' 
+       WHERE UPPER(role) != 'SUPERADMIN'
+       ${hideAdminAccounts ? "AND UPPER(role) != 'ADMIN'" : ''}
        ORDER BY created_at DESC`
     );
     
@@ -1007,7 +1013,7 @@ router.get('/users', requireRole('admin', 'superadmin'), async (req, res) => {
 });
 
 // Clear cache when users are created/updated
-router.post('/users', requireRole('admin', 'superadmin'), async (req, res, next) => {
+router.post('/users', requireModule('user_management'), requireRole('admin', 'superadmin'), async (req, res, next) => {
   // Clear cache after user creation
   const originalSend = res.send;
   res.send = function(data) {
@@ -1020,7 +1026,7 @@ router.post('/users', requireRole('admin', 'superadmin'), async (req, res, next)
 });
 
 // Get public announcements (admin view - all announcements)
-router.get('/announcements', async (req, res) => {
+router.get('/announcements', requireModule('announcements'), async (req, res) => {
   try {
     const result = await query(
       'SELECT id, title, content, date, priority, type, active, created_at FROM public_announcements ORDER BY date DESC, created_at DESC'
@@ -1032,7 +1038,7 @@ router.get('/announcements', async (req, res) => {
 });
 
 // Save public announcement
-router.post('/announcements', async (req, res) => {
+router.post('/announcements', requireModule('announcements'), async (req, res) => {
   try {
     const { id, title, content, date, priority = 'normal', type = 'General Announcement', active = true } = req.body;
     
@@ -1061,7 +1067,7 @@ router.post('/announcements', async (req, res) => {
 });
 
 // Delete public announcement
-router.delete('/announcements/:id', async (req, res) => {
+router.delete('/announcements/:id', requireModule('announcements'), async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -1095,7 +1101,7 @@ router.get('/announcements/generate-id', async (req, res) => {
 // ========== SCHOOL BRANDING ==========
 
 // Get school branding (text settings)
-router.get('/school-branding', async (req, res) => {
+router.get('/school-branding', requireModule('school_branding'), async (req, res) => {
   try {
     const result = await query(
       'SELECT school_name, tagline, banner_text FROM website_settings WHERE id = 1'
@@ -1114,7 +1120,7 @@ router.get('/school-branding', async (req, res) => {
 });
 
 // Save school branding (text settings)
-router.post('/school-branding', async (req, res) => {
+router.post('/school-branding', requireModule('school_branding'), async (req, res) => {
   try {
     const school_name = (req.body?.school_name ?? req.body?.schoolName ?? '').toString().trim();
     const tagline = (req.body?.tagline ?? '').toString().trim();
@@ -1144,7 +1150,7 @@ router.post('/school-branding', async (req, res) => {
 });
 
 // Get school logo
-router.get('/school-logo', async (req, res) => {
+router.get('/school-logo', requireModule('school_branding'), async (req, res) => {
   try {
     // Check if table exists first
     const tableCheck = await query(`
@@ -1172,7 +1178,7 @@ router.get('/school-logo', async (req, res) => {
 });
 
 // Upload school logo
-router.post('/school-logo', requireRole('admin', 'superadmin'), schoolLogoUpload.single('logo_file'), async (req, res) => {
+router.post('/school-logo', requireModule('school_branding'), requireRole('admin', 'superadmin'), schoolLogoUpload.single('logo_file'), async (req, res) => {
   try {
     console.log('[SCHOOL LOGO] Route handler reached — req.file:', req.file
       ? { fieldname: req.file.fieldname, originalname: req.file.originalname, mimetype: req.file.mimetype, size: req.file.size, filename: req.file.filename, path: req.file.path }
@@ -1249,7 +1255,7 @@ router.post('/school-logo', requireRole('admin', 'superadmin'), schoolLogoUpload
 });
 
 // Get school stamp
-router.get('/school-stamp', async (req, res) => {
+router.get('/school-stamp', requireModule('school_branding'), async (req, res) => {
   try {
     const result = await query('SELECT * FROM school_stamp WHERE id = 1');
     if (result.rows.length === 0) {
@@ -1262,7 +1268,7 @@ router.get('/school-stamp', async (req, res) => {
 });
 
 // Upload school stamp
-router.post('/school-stamp', requireRole('admin', 'superadmin'), schoolStampUpload.single('stamp_file'), async (req, res) => {
+router.post('/school-stamp', requireModule('school_branding'), requireRole('admin', 'superadmin'), schoolStampUpload.single('stamp_file'), async (req, res) => {
   try {
     console.log('[SCHOOL STAMP] Route handler reached — req.file:', req.file
       ? { fieldname: req.file.fieldname, originalname: req.file.originalname, mimetype: req.file.mimetype, size: req.file.size, filename: req.file.filename, path: req.file.path }
@@ -1313,7 +1319,7 @@ router.post('/school-stamp', requireRole('admin', 'superadmin'), schoolStampUplo
 });
 
 // Get authority data
-router.get('/authority-data', async (req, res) => {
+router.get('/authority-data', requireModule('school_branding'), async (req, res) => {
   try {
     const result = await query('SELECT * FROM authority_data WHERE id = 1');
     if (result.rows.length === 0) {
@@ -1335,7 +1341,7 @@ router.get('/authority-data', async (req, res) => {
 });
 
 // Save authority data
-router.post('/authority-data', async (req, res) => {
+router.post('/authority-data', requireModule('school_branding'), async (req, res) => {
   try {
     const { name, title, signature = '', date = '' } = req.body;
 
@@ -1367,7 +1373,7 @@ router.post('/authority-data', async (req, res) => {
 });
 
 // Upload authority signature image
-router.post('/authority-data/upload-signature', requireRole('admin', 'superadmin'), authoritySignatureUpload.single('signature_file'), async (req, res) => {
+router.post('/authority-data/upload-signature', requireModule('school_branding'), requireRole('admin', 'superadmin'), authoritySignatureUpload.single('signature_file'), async (req, res) => {
   try {
     console.log('[AUTHORITY SIGNATURE] Route handler reached — req.file:', req.file
       ? { fieldname: req.file.fieldname, originalname: req.file.originalname, mimetype: req.file.mimetype, size: req.file.size, filename: req.file.filename, path: req.file.path }
@@ -1453,7 +1459,7 @@ router.post('/authority-data/upload-signature', requireRole('admin', 'superadmin
 });
 
 // Delete authority signature image
-router.post('/authority-data/delete-signature', async (req, res) => {
+router.post('/authority-data/delete-signature', requireModule('school_branding'), async (req, res) => {
   try {
     // Get existing signature Cloudinary public_id
     const result = await query('SELECT signature_image_path, cloudinary_public_id FROM authority_data WHERE id = 1');
@@ -1484,7 +1490,7 @@ router.post('/authority-data/delete-signature', async (req, res) => {
 });
 
 // Get patron saint image
-router.get('/patron-saint-image', async (req, res) => {
+router.get('/patron-saint-image', requireModule('school_branding'), async (req, res) => {
   try {
     const result = await query('SELECT patron_saint_image FROM website_settings WHERE id = 1');
     if (result.rows.length === 0) {
@@ -1498,7 +1504,7 @@ router.get('/patron-saint-image', async (req, res) => {
 });
 
 // Upload patron saint image
-router.post('/patron-saint-image', requireRole('admin', 'superadmin'), patronSaintUpload.single('patron_saint_file'), async (req, res) => {
+router.post('/patron-saint-image', requireModule('school_branding'), requireRole('admin', 'superadmin'), patronSaintUpload.single('patron_saint_file'), async (req, res) => {
   try {
     console.log('[PATRON SAINT] Route handler reached — req.file:', req.file
       ? { fieldname: req.file.fieldname, originalname: req.file.originalname, mimetype: req.file.mimetype, size: req.file.size, filename: req.file.filename, path: req.file.path }
@@ -1561,7 +1567,7 @@ router.post('/patron-saint-image', requireRole('admin', 'superadmin'), patronSai
 });
 
 // Get user by ID
-router.get('/users/:id', requireRole('admin', 'superadmin'), async (req, res) => {
+router.get('/users/:id', requireModule('user_management'), requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const { id } = req.params;
     const result = await query(
@@ -1574,6 +1580,11 @@ router.get('/users/:id', requireRole('admin', 'superadmin'), async (req, res) =>
     }
     
     const user = result.rows[0];
+    // Regular admins may not view admin/superadmin accounts
+    const currentUserRole = req.user?.role?.toLowerCase();
+    if (currentUserRole !== 'superadmin' && ['admin', 'superadmin'].includes((user.role || '').toLowerCase())) {
+      return res.status(403).json({ message: 'Insufficient permissions' });
+    }
     // Parse permissions JSON with error handling
     try {
       user.permissions = user.permissions ? JSON.parse(user.permissions) : null;
@@ -1589,7 +1600,7 @@ router.get('/users/:id', requireRole('admin', 'superadmin'), async (req, res) =>
 });
 
 // Save user (create or update)
-router.post('/users', requireRole('admin', 'superadmin'), async (req, res) => {
+router.post('/users', requireModule('user_management'), requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const { id, username, full_name, password, role, status, permissions, email, phone, bio, department, position } = req.body;
     
@@ -1608,6 +1619,11 @@ router.post('/users', requireRole('admin', 'superadmin'), async (req, res) => {
     const currentUserRole = req.user?.role?.toLowerCase();
     if (normalizedRole === 'superadmin' && currentUserRole !== 'superadmin') {
       return res.status(403).json({ message: 'Only superadmin can assign superadmin role' });
+    }
+
+    // Only superadmin may create or modify admin/superadmin accounts
+    if ((normalizedRole === 'admin' || normalizedRole === 'superadmin') && currentUserRole !== 'superadmin') {
+      return res.status(403).json({ message: 'Only superadmin can manage admin accounts' });
     }
     
     // Use normalized role
@@ -1658,8 +1674,19 @@ router.post('/users', requireRole('admin', 'superadmin'), async (req, res) => {
     
     // Serialize permissions with error handling
     let permissionsJson = null;
+    let finalPermissions = permissions;
     try {
-      permissionsJson = permissions ? JSON.stringify(permissions) : null;
+      // Non-superadmin admins may only grant modules that SUPERADMIN allocated to them.
+      if (currentUserRole === 'admin' && finalPermissions && Array.isArray(finalPermissions.modules)) {
+        const actingAllowed = await getAdminAllowedModules(req.user.user_id);
+        if (Array.isArray(actingAllowed) && actingAllowed.length > 0 && !actingAllowed.includes('all')) {
+          finalPermissions = {
+            ...finalPermissions,
+            modules: finalPermissions.modules.filter((m) => actingAllowed.includes(m)),
+          };
+        }
+      }
+      permissionsJson = finalPermissions ? JSON.stringify(finalPermissions) : null;
     } catch (stringifyError) {
       console.error('Failed to stringify permissions:', stringifyError);
       return res.status(400).json({ message: 'Invalid permissions format' });
@@ -1682,6 +1709,10 @@ router.post('/users', requireRole('admin', 'superadmin'), async (req, res) => {
         [username, passwordHash, full_name, finalRole, status || 'active', permissionsJson, email || null, phone || null, bio || null, department || null, position || null]
       );
     }
+
+    // Invalidate cached role/permissions for the target so grants, role changes
+    // and deactivations apply immediately (both admins and non-admin users).
+    clearAdminModuleCache(username);
     
     res.json({ message: `User ${id ? 'updated' : 'created'} successfully` });
   } catch (error) {
@@ -1691,20 +1722,20 @@ router.post('/users', requireRole('admin', 'superadmin'), async (req, res) => {
 });
 
 // Delete user
-router.delete('/users/:id', requireRole('admin', 'superadmin'), async (req, res) => {
+router.delete('/users/:id', requireModule('user_management'), requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const { id } = req.params;
-    const currentUserId = req.user?.id;
     
-    // Prevent deleting self
-    if (id === currentUserId) {
-      return res.status(400).json({ message: 'Cannot delete your own account' });
-    }
-    
-    // Check if user exists
-    const userResult = await query('SELECT role FROM users WHERE id = $1', [id]);
+    // Check if user exists (need username to protect against self-deletion;
+    // the JWT carries user_id (username), not a numeric id).
+    const userResult = await query('SELECT username, role FROM users WHERE id = $1', [id]);
     if (userResult.rows.length === 0) {
       return res.status(404).json({ message: 'User not found' });
+    }
+    
+    // Prevent deleting self
+    if (userResult.rows[0].username === req.user?.user_id) {
+      return res.status(400).json({ message: 'Cannot delete your own account' });
     }
     
     const role = userResult.rows[0].role;
@@ -1730,7 +1761,7 @@ router.delete('/users/:id', requireRole('admin', 'superadmin'), async (req, res)
 });
 
 // Get subjects for permission management
-router.get('/subjects-list', async (req, res) => {
+router.get('/subjects-list', requireModule('user_management'), async (req, res) => {
   try {
     const result = await query(
       'SELECT DISTINCT subject_name, subject_code, level, stream FROM subjects ORDER BY level, stream, subject_name'
@@ -1744,7 +1775,7 @@ router.get('/subjects-list', async (req, res) => {
 // ========== STUDENT PROMOTION ==========
 
 // Get promotion dashboard data
-router.get('/promotion/dashboard', async (req, res) => {
+router.get('/promotion/dashboard', requireModule('promotion'), async (req, res) => {
   try {
     // Get recent promotion sessions
     const sessionsResult = await query(
@@ -1760,7 +1791,7 @@ router.get('/promotion/dashboard', async (req, res) => {
 });
 
 // Get promotion preview data
-router.get('/promotion/preview', async (req, res) => {
+router.get('/promotion/preview', requireModule('promotion'), async (req, res) => {
   try {
     const { level, stream, year } = req.query;
     
@@ -1830,7 +1861,7 @@ router.get('/promotion/preview', async (req, res) => {
 });
 
 // Execute promotion
-router.post('/promotion/execute', async (req, res) => {
+router.post('/promotion/execute', requireModule('promotion'), async (req, res) => {
   try {
     const { from_level, from_stream, from_year, to_level, to_stream, to_year, excluded_adm_nos = [] } = req.body;
     
@@ -2027,7 +2058,7 @@ router.post('/promotion/execute', async (req, res) => {
 });
 
 // Get student promotion history
-router.get('/promotion/history/:admNo', async (req, res) => {
+router.get('/promotion/history/:admNo', requireModule('promotion'), async (req, res) => {
   try {
     const { admNo } = req.params;
     
@@ -2045,7 +2076,7 @@ router.get('/promotion/history/:admNo', async (req, res) => {
 });
 
 // Save promotion exclusion
-router.post('/promotion/exclusions', async (req, res) => {
+router.post('/promotion/exclusions', requireModule('promotion'), async (req, res) => {
   try {
     const { adm_no, level, stream, year, reason } = req.body;
     
@@ -2068,7 +2099,7 @@ router.post('/promotion/exclusions', async (req, res) => {
 });
 
 // Delete promotion exclusion
-router.delete('/promotion/exclusions', async (req, res) => {
+router.delete('/promotion/exclusions', requireModule('promotion'), async (req, res) => {
   try {
     const { adm_no, level, stream, year } = req.query;
     
@@ -2090,7 +2121,7 @@ router.delete('/promotion/exclusions', async (req, res) => {
 // ========== PUBLIC WEBSITE MANAGEMENT ==========
 
 // ========== STAFF PROFILES ==========
-router.get('/staff-profiles', async (req, res) => {
+router.get('/staff-profiles', requireModule('staff_profiles'), async (req, res) => {
   try {
     await ensureStaffProfilesTable();
     const result = await query(
@@ -2103,7 +2134,7 @@ router.get('/staff-profiles', async (req, res) => {
   }
 });
 
-router.post('/staff-profiles', requireRole('admin', 'superadmin'), staffProfileUpload, async (req, res) => {
+router.post('/staff-profiles', requireModule('staff_profiles'), requireRole('admin', 'superadmin'), staffProfileUpload, async (req, res) => {
   try {
     console.log('[STAFF PROFILE] Route handler reached — req.file:', req.file
       ? { fieldname: req.file.fieldname, originalname: req.file.originalname, mimetype: req.file.mimetype, size: req.file.size, filename: req.file.filename, path: req.file.path }
@@ -2251,7 +2282,7 @@ router.post('/staff-profiles', requireRole('admin', 'superadmin'), staffProfileU
 });
 
 // Upload staff profile photo (standalone endpoint for updating photo only)
-router.post('/staff-profiles/:id/photo', requireRole('admin', 'superadmin'), staffProfileUpload, async (req, res) => {
+router.post('/staff-profiles/:id/photo', requireModule('staff_profiles'), requireRole('admin', 'superadmin'), staffProfileUpload, async (req, res) => {
   try {
     console.log('[STAFF PHOTO] Route handler reached — req.file:', req.file
       ? { fieldname: req.file.fieldname, originalname: req.file.originalname, mimetype: req.file.mimetype, size: req.file.size, filename: req.file.filename, path: req.file.path }
@@ -2308,7 +2339,7 @@ router.post('/staff-profiles/:id/photo', requireRole('admin', 'superadmin'), sta
   }
 });
 
-router.delete('/staff-profiles/:id', async (req, res) => {
+router.delete('/staff-profiles/:id', requireModule('staff_profiles'), async (req, res) => {
   try {
     await ensureStaffProfilesTable();
     const { id } = req.params;
@@ -2356,7 +2387,7 @@ router.delete('/staff-profiles/:id', async (req, res) => {
 // ========== GALLERY ==========
 
 // Get all gallery photos
-router.get('/gallery', async (req, res) => {
+router.get('/gallery', requireModule('gallery'), async (req, res) => {
   try {
     const result = await query(
       'SELECT * FROM gallery_photos ORDER BY created_at DESC'
@@ -2369,7 +2400,7 @@ router.get('/gallery', async (req, res) => {
 
 // Upload gallery photos with multer error handling
 // runCloudinaryUpload (inside galleryPhotoUpload.array) handles errors and timeout.
-router.post('/gallery/upload', requireRole('admin', 'superadmin'), galleryPhotoUpload.array('photos', 20), async (req, res) => {
+router.post('/gallery/upload', requireModule('gallery'), requireRole('admin', 'superadmin'), galleryPhotoUpload.array('photos', 20), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ message: 'No files uploaded' });
@@ -2433,7 +2464,7 @@ router.post('/gallery/upload', requireRole('admin', 'superadmin'), galleryPhotoU
 });
 
 // Delete all gallery photos (admin only)
-router.delete('/gallery/delete-all', requireRole('admin'), async (req, res) => {
+router.delete('/gallery/delete-all', requireModule('gallery'), requireRole('admin'), async (req, res) => {
   try {
     // Step 1: Get all gallery photos from database
     const result = await query('SELECT id, path FROM gallery_photos');
@@ -2493,7 +2524,7 @@ router.delete('/gallery/delete-all', requireRole('admin'), async (req, res) => {
 });
 
 // Delete gallery photo
-router.delete('/gallery/:id', async (req, res) => {
+router.delete('/gallery/:id', requireModule('gallery'), async (req, res) => {
   try {
     const { id } = req.params;
     const photoResult = await query('SELECT path FROM gallery_photos WHERE id = $1', [id]);
@@ -2668,7 +2699,7 @@ router.delete('/alumni/:id', async (req, res) => {
 // ========== FAQs ==========
 
 // Get all FAQs
-router.get('/faqs', async (req, res) => {
+router.get('/faqs', requireModule('faqs'), async (req, res) => {
   try {
     const result = await query(
       'SELECT * FROM faqs ORDER BY display_order ASC, created_at DESC'
@@ -2692,7 +2723,7 @@ router.get('/faqs/active', async (req, res) => {
 });
 
 // Save FAQ
-router.post('/faqs', async (req, res) => {
+router.post('/faqs', requireModule('faqs'), async (req, res) => {
   try {
     const { id, question, answer, category, display_order, active = true } = req.body;
     
@@ -2734,7 +2765,7 @@ router.post('/faqs', async (req, res) => {
 });
 
 // Toggle FAQ active status
-router.post('/faqs/:id/toggle', async (req, res) => {
+router.post('/faqs/:id/toggle', requireModule('faqs'), async (req, res) => {
   try {
     const { id } = req.params;
     const { active } = req.body;
@@ -2747,7 +2778,7 @@ router.post('/faqs/:id/toggle', async (req, res) => {
 });
 
 // Delete FAQ
-router.delete('/faqs/:id', async (req, res) => {
+router.delete('/faqs/:id', requireModule('faqs'), async (req, res) => {
   try {
     const { id } = req.params;
     await query('DELETE FROM faqs WHERE id = $1', [id]);
@@ -2758,7 +2789,7 @@ router.delete('/faqs/:id', async (req, res) => {
 });
 
 // Bulk insert FAQs
-router.post('/faqs/bulk', async (req, res) => {
+router.post('/faqs/bulk', requireModule('faqs'), async (req, res) => {
   try {
     const { faqs } = req.body;
     
@@ -2970,7 +3001,7 @@ function validateSiteContactPayload(body) {
 }
 
 // Get department contacts (from website settings)
-router.get('/department-contacts', requireRole('admin', 'superadmin'), async (req, res) => {
+router.get('/department-contacts', requireModule('department_contacts'), requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     await ensureDepartmentContactColumns();
     const cols = SITE_CONTACT_FIELDS.join(', ');
@@ -2991,7 +3022,7 @@ router.get('/department-contacts', requireRole('admin', 'superadmin'), async (re
 });
 
 // Update department + site contact fields (website_settings row id=1)
-router.post('/department-contacts', requireRole('admin', 'superadmin'), async (req, res) => {
+router.post('/department-contacts', requireModule('department_contacts'), requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     await ensureDepartmentContactColumns();
     const validationErrors = validateSiteContactPayload(req.body);
@@ -3031,7 +3062,7 @@ router.post('/department-contacts', requireRole('admin', 'superadmin'), async (r
 // ========== PUBLIC PAGES ==========
 
 // Get all public pages
-router.get('/public-pages', async (req, res) => {
+router.get('/public-pages', requireModule('public_pages'), async (req, res) => {
   try {
     const result = await query('SELECT * FROM public_pages ORDER BY page_name');
     res.json({ pages: result.rows });
@@ -3041,7 +3072,7 @@ router.get('/public-pages', async (req, res) => {
 });
 
 // Get public page by name
-router.get('/public-pages/:pageName', async (req, res) => {
+router.get('/public-pages/:pageName', requireModule('public_pages'), async (req, res) => {
   try {
     const { pageName } = req.params;
     const result = await query('SELECT * FROM public_pages WHERE page_name = $1', [pageName]);
@@ -3057,7 +3088,7 @@ router.get('/public-pages/:pageName', async (req, res) => {
 });
 
 // Save public page
-router.post('/public-pages', async (req, res) => {
+router.post('/public-pages', requireModule('public_pages'), async (req, res) => {
   try {
     const rawName = String(req.body.page_name || '').trim();
     const page_name = PUBLIC_PAGE_SLUG_ALIASES[rawName] || rawName;
@@ -3096,7 +3127,7 @@ router.post('/public-pages', async (req, res) => {
 });
 
 // Delete public page content (falls back to hardcoded public page defaults)
-router.delete('/public-pages/:pageName', async (req, res) => {
+router.delete('/public-pages/:pageName', requireModule('public_pages'), async (req, res) => {
   try {
     const { pageName } = req.params;
     if (!pageName || !pageName.trim()) {
@@ -3121,7 +3152,7 @@ router.delete('/public-pages/:pageName', async (req, res) => {
 // ========== NECTA RESULTS URLS MANAGEMENT ==========
 
 // Get all NECTA result URLs
-router.get('/necta-urls', async (req, res) => {
+router.get('/necta-urls', requireModule('necta_urls'), async (req, res) => {
   try {
     const result = await query(
       'SELECT * FROM necta_result_urls ORDER BY exam_type, year DESC'
@@ -3133,7 +3164,7 @@ router.get('/necta-urls', async (req, res) => {
 });
 
 // Get NECTA URL by exam type and year
-router.get('/necta-urls/:examType/:year', async (req, res) => {
+router.get('/necta-urls/:examType/:year', requireModule('necta_urls'), async (req, res) => {
   try {
     const { examType, year } = req.params;
     const result = await query(
@@ -3150,7 +3181,7 @@ router.get('/necta-urls/:examType/:year', async (req, res) => {
 });
 
 // Save NECTA result URL
-router.post('/necta-urls', async (req, res) => {
+router.post('/necta-urls', requireModule('necta_urls'), async (req, res) => {
   try {
     const { id, exam_type, year, url, description, active = true } = req.body;
     
@@ -3211,7 +3242,7 @@ router.post('/necta-urls', async (req, res) => {
 });
 
 // Delete NECTA result URL
-router.delete('/necta-urls/:id', async (req, res) => {
+router.delete('/necta-urls/:id', requireModule('necta_urls'), async (req, res) => {
   try {
     const { id } = req.params;
     await query('DELETE FROM necta_result_urls WHERE id = $1', [id]);
@@ -3222,7 +3253,7 @@ router.delete('/necta-urls/:id', async (req, res) => {
 });
 
 // Toggle NECTA URL active status
-router.post('/necta-urls/:id/toggle', async (req, res) => {
+router.post('/necta-urls/:id/toggle', requireModule('necta_urls'), async (req, res) => {
   try {
     const { id } = req.params;
     const { active } = req.body;
@@ -3486,7 +3517,7 @@ router.get('/necta/analytics/rankings', async (req, res) => {
 // ========== ADMINISTRATORS MANAGEMENT ==========
 
 // Get all administrators (for admin panel - includes inactive)
-router.get('/administrators', async (req, res) => {
+router.get('/administrators', requireModule('administrators'), async (req, res) => {
   try {
     const result = await query(
       'SELECT * FROM administrators ORDER BY display_order, created_at'
@@ -3499,7 +3530,7 @@ router.get('/administrators', async (req, res) => {
 });
 
 // Save administrator (create or update)
-router.post('/administrators', upload.single('photo'), async (req, res) => {
+router.post('/administrators', requireModule('administrators'), upload.single('photo'), async (req, res) => {
   try {
     const { id, name, title, year_started, display_order, active } = req.body;
     
@@ -3592,7 +3623,7 @@ router.post('/administrators', upload.single('photo'), async (req, res) => {
 });
 
 // Delete administrator
-router.delete('/administrators/:id', async (req, res) => {
+router.delete('/administrators/:id', requireModule('administrators'), async (req, res) => {
   try {
     const { id } = req.params;
     
@@ -3653,7 +3684,7 @@ const generatePassId = () => {
 };
 
 // Get Pass IDs for a specific form
-router.get('/pass-ids/:form', async (req, res) => {
+router.get('/pass-ids/:form', requireModule('pass_ids'), async (req, res) => {
   try {
     const { form } = req.params;
     const { month, year } = req.query;
@@ -3706,7 +3737,7 @@ router.get('/pass-ids/:form', async (req, res) => {
 });
 
 // Generate Pass IDs for all students in a form for a specific month
-router.post('/pass-ids/generate', async (req, res) => {
+router.post('/pass-ids/generate', requireModule('pass_ids'), async (req, res) => {
   try {
     const { form, month, year } = req.body;
     
@@ -3776,7 +3807,7 @@ router.post('/pass-ids/generate', async (req, res) => {
 });
 
 // Regenerate Pass ID for a specific student
-router.post('/pass-ids/regenerate', async (req, res) => {
+router.post('/pass-ids/regenerate', requireModule('pass_ids'), async (req, res) => {
   try {
     const { adm_no, form, month, year } = req.body;
     
@@ -3834,7 +3865,7 @@ const backupRestoreUpload = multer({
   },
 });
 
-router.get('/database-backups', requireRole('admin', 'superadmin'), async (req, res) => {
+router.get('/database-backups', requireModule('database_backups'), requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const backups = listBackups().map((item) => ({
       name: item.name,
@@ -3860,7 +3891,7 @@ router.get('/database-backups', requireRole('admin', 'superadmin'), async (req, 
   }
 });
 
-router.post('/database-backups/run', requireRole('admin', 'superadmin'), async (req, res) => {
+router.post('/database-backups/run', requireModule('database_backups'), requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const backup = await createBackup({ verify: true });
     return res.status(201).json({
@@ -3881,7 +3912,7 @@ router.post('/database-backups/run', requireRole('admin', 'superadmin'), async (
   }
 });
 
-router.post('/database-backups/restore', requireRole('admin', 'superadmin'), async (req, res) => {
+router.post('/database-backups/restore', requireModule('database_backups'), requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     const filename = req.body?.filename;
     const resolved = resolveSafeBackupPath(filename);
@@ -3905,7 +3936,7 @@ router.post('/database-backups/restore', requireRole('admin', 'superadmin'), asy
   }
 });
 
-router.post('/database-backups/restore-upload', requireRole('admin', 'superadmin'), (req, res, next) => {
+router.post('/database-backups/restore-upload', requireModule('database_backups'), requireRole('admin', 'superadmin'), (req, res, next) => {
   backupRestoreUpload.single('backup_file')(req, res, (err) => {
     if (err) {
       const maxMb = Math.round(backupRestoreUploadMaxBytes / 1024 / 1024);
@@ -4017,11 +4048,12 @@ function sendBackupDownload(req, res) {
 }
 
 // Query-based download (preferred — avoids path encoding / legacy URL issues).
-router.get('/database-backups/download', requireRole('admin', 'superadmin'), sendBackupDownload);
+router.get('/database-backups/download', requireModule('database_backups'), requireRole('admin', 'superadmin'), sendBackupDownload);
 
 // Legacy URLs (cached clients / extensions): /database-backups/arucase_....dump[/download]
 router.get(
   /^\/database-backups\/(arucase_\d{4}-\d{2}-\d{2}_\d{2}-\d{2}\.dump)(?:\/download)?\/?$/i,
+  requireModule('database_backups'),
   requireRole('admin', 'superadmin'),
   (req, res) => {
     req.params.filename = req.params[0];
@@ -4031,17 +4063,20 @@ router.get(
 
 router.get(
   '/database-backups/:filename(arucase_\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}\\.dump)/download',
+  requireModule('database_backups'),
   requireRole('admin', 'superadmin'),
   sendBackupDownload
 );
 router.get(
   '/database-backups/:filename(arucase_\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}\\.dump)',
+  requireModule('database_backups'),
   requireRole('admin', 'superadmin'),
   sendBackupDownload
 );
 
 router.delete(
   '/database-backups/:filename(arucase_\\d{4}-\\d{2}-\\d{2}_\\d{2}-\\d{2}\\.dump)',
+  requireModule('database_backups'),
   requireRole('admin', 'superadmin'),
   async (req, res) => {
     try {
@@ -4067,7 +4102,7 @@ const {
   buildAiMattersDocumentsSection,
 } = require('../utils/aiMattersDocuments');
 
-router.get('/ai-matters/documents', async (req, res) => {
+router.get('/ai-matters/documents', requireModule('ai_matters'), async (req, res) => {
   try {
     await ensureAiMattersTable(query);
     const result = await query(
@@ -4080,7 +4115,7 @@ router.get('/ai-matters/documents', async (req, res) => {
   }
 });
 
-router.post('/ai-matters/upload', documentUpload.single('file'), async (req, res) => {
+router.post('/ai-matters/upload', requireModule('ai_matters'), documentUpload.single('file'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({ message: 'No file uploaded' });
@@ -4107,7 +4142,7 @@ router.post('/ai-matters/upload', documentUpload.single('file'), async (req, res
   }
 });
 
-router.delete('/ai-matters/documents/:id', async (req, res) => {
+router.delete('/ai-matters/documents/:id', requireModule('ai_matters'), async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) return res.status(400).json({ message: 'Invalid id' });
@@ -4123,7 +4158,7 @@ router.delete('/ai-matters/documents/:id', async (req, res) => {
   }
 });
 
-router.post('/ai-matters/chat', async (req, res) => {
+router.post('/ai-matters/chat', requireModule('ai_matters'), async (req, res) => {
   try {
     const { message } = req.body || {};
     if (!message || typeof message !== 'string') {
@@ -4185,7 +4220,7 @@ ${nectaSummary}`;
 
 const { ensureUserCommandsTable } = require('../utils/userCommands');
 
-router.get('/ai-matters/user-commands', async (req, res) => {
+router.get('/ai-matters/user-commands', requireModule('user_commands'), async (req, res) => {
   try {
     await ensureUserCommandsTable(query);
     const page = Math.max(1, parseInt(req.query.page, 10) || 1);
@@ -4239,7 +4274,7 @@ router.get('/ai-matters/user-commands', async (req, res) => {
   }
 });
 
-router.delete('/ai-matters/user-commands/:id', requireRole('admin', 'superadmin'), async (req, res) => {
+router.delete('/ai-matters/user-commands/:id', requireModule('user_commands'), requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     await ensureUserCommandsTable(query);
     const id = parseInt(req.params.id, 10);
@@ -4257,7 +4292,7 @@ router.delete('/ai-matters/user-commands/:id', requireRole('admin', 'superadmin'
   }
 });
 
-router.delete('/ai-matters/user-commands', requireRole('admin', 'superadmin'), async (req, res) => {
+router.delete('/ai-matters/user-commands', requireModule('user_commands'), requireRole('admin', 'superadmin'), async (req, res) => {
   try {
     await ensureUserCommandsTable(query);
     const result = await query('DELETE FROM ai_user_commands RETURNING id');

@@ -6,11 +6,11 @@
 const express = require('express');
 const router = express.Router();
 const { sendSuccess, sendError } = require('../utils/responseHelper');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireModule } = require('../middleware/auth');
 const { calculateGrade } = require('../utils/calculations');
 
 // Get system grade configuration
-router.get('/grade-config', requireAuth, async (req, res) => {
+router.get('/grade-config', requireAuth, requireModule('grades'), async (req, res) => {
   try {
     console.log('🔍 DEBUG: Getting system grade configuration');
     
@@ -80,7 +80,7 @@ router.post('/calculate-grade', requireAuth, async (req, res) => {
 });
 
 // Update system grade configuration
-router.post('/grade-config', requireAuth, async (req, res) => {
+router.post('/grade-config', requireAuth, requireModule('grades'), async (req, res) => {
   try {
     const { oLevel, aLevel } = req.body;
     

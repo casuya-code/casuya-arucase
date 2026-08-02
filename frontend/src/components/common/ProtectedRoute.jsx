@@ -52,16 +52,17 @@ const ProtectedRoute = ({
     return <Navigate to="/" replace />;
   }
 
-  // Non-admin must have at least one of these modules (e.g. registration landing)
-  if (Array.isArray(requiredAnyOfModules) && requiredAnyOfModules.length > 0 && !isAdminLike()) {
+  // Must have at least one of these modules (superadmin and unrestricted admins always pass via hasModule)
+  if (Array.isArray(requiredAnyOfModules) && requiredAnyOfModules.length > 0) {
     const allowed = requiredAnyOfModules.some((id) => hasModule(id));
     if (!allowed) {
       return <Navigate to="/admin" replace />;
     }
   }
 
-  // Non-admin without the required module (e.g. registration) cannot access
-  if (requiredModule && !isAdminLike() && !hasModule(requiredModule)) {
+  // Without the required module (e.g. registration) cannot access.
+  // Applies to restricted admins too, so SUPERADMIN allocations are enforced client-side.
+  if (requiredModule && !hasModule(requiredModule)) {
     // Redirect to admin dashboard instead of specific score entry
     return <Navigate to="/admin" replace />;
   }
