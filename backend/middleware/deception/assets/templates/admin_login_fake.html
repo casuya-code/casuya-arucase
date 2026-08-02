@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Admin Control Panel — Sign In</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, "Segoe UI", Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #eaeaea;
+    }
+    .card {
+      background: #0f3460;
+      padding: 2.5rem;
+      border-radius: 12px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      width: 100%;
+      max-width: 380px;
+    }
+    h1 { font-size: 1.4rem; margin-bottom: 0.25rem; text-align: center; }
+    p.sub { color: #9aa5c0; text-align: center; margin-bottom: 1.75rem; font-size: 0.85rem; }
+    label { display: block; font-size: 0.8rem; margin: 1rem 0 0.35rem; color: #c4ccdf; }
+    input {
+      width: 100%;
+      padding: 0.7rem 0.85rem;
+      border: 1px solid #2a4a7f;
+      border-radius: 6px;
+      background: #0b2545;
+      color: #eaeaea;
+      font-size: 0.95rem;
+    }
+    button {
+      width: 100%;
+      margin-top: 1.5rem;
+      padding: 0.75rem;
+      background: #e94560;
+      color: #fff;
+      border: none;
+      border-radius: 6px;
+      font-size: 0.95rem;
+      font-weight: 600;
+      cursor: pointer;
+    }
+    button:hover { background: #c73850; }
+    .hint { margin-top: 1.25rem; font-size: 0.75rem; color: #6d7ba3; text-align: center; }
+    .status { margin-top: 1rem; font-size: 0.85rem; text-align: center; color: #ffb4b4; }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <h1>Admin Control Panel</h1>
+    <p class="sub">Restricted area — authorized personnel only</p>
+    <form id="login-form">
+      <label for="username">Username</label>
+      <input type="text" id="username" name="username" autocomplete="off">
+      <label for="password">Password</label>
+      <input type="password" id="password" name="password" autocomplete="off">
+      <button type="submit">Sign In</button>
+    </form>
+    <div id="status" class="status"></div>
+    <div class="hint">All access attempts are logged and monitored.</div>
+  </div>
+
+  <script>
+    const form = document.getElementById("login-form");
+    const status = document.getElementById("status");
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      status.textContent = "Verifying credentials…";
+      setTimeout(() => {
+        status.textContent = "Invalid session or credentials. Access denied.";
+        form.reset();
+      }, 1800);
+    });
+  </script>
+</body>
+</html>

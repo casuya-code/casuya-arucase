@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="robots" content="noindex, nofollow">
+  <title>Backup Dashboard</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: "Segoe UI", Roboto, sans-serif;
+      background: #f4f6fa;
+      color: #1c2333;
+    }
+    header {
+      background: #1c2333;
+      color: #fff;
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    header h1 { font-size: 1.15rem; }
+    header .badge {
+      background: #2d8a4e;
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.75rem;
+    }
+    main { max-width: 960px; margin: 2rem auto; padding: 0 1rem; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 1rem; }
+    .stat {
+      background: #fff;
+      border-radius: 8px;
+      padding: 1.25rem;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+    .stat .num { font-size: 1.8rem; font-weight: 700; color: #1c2333; }
+    .stat .lbl { font-size: 0.8rem; color: #6b7592; margin-top: 0.25rem; }
+    table { width: 100%; border-collapse: collapse; background: #fff; margin-top: 1.5rem; border-radius: 8px; overflow: hidden; }
+    th, td { text-align: left; padding: 0.7rem 1rem; font-size: 0.85rem; border-bottom: 1px solid #eef0f5; }
+    th { background: #eef0f5; font-weight: 600; }
+    .restore {
+      background: #2d8a4e; color: #fff; border: none; padding: 0.4rem 0.9rem;
+      border-radius: 5px; font-size: 0.8rem; cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Backup Operations Dashboard</h1>
+    <span class="badge">Online</span>
+  </header>
+  <main>
+    <div class="grid">
+      <div class="stat"><div class="num" id="total">128</div><div class="lbl">Total Backups</div></div>
+      <div class="stat"><div class="num" id="size">84.2 GB</div><div class="lbl">Data Stored</div></div>
+      <div class="stat"><div class="num" id="age">3h</div><div class="lbl">Latest Snapshot</div></div>
+      <div class="stat"><div class="num" id="jobs">7</div><div class="lbl">Active Jobs</div></div>
+    </div>
+    <table>
+      <thead>
+        <tr><th>Job</th><th>Type</th><th>Started</th><th>Status</th><th></th></tr>
+      </thead>
+      <tbody>
+        <tr><td>db_dump_2026-08-02</td><td>PostgreSQL</td><td>02:10 UTC</td><td>Completed</td><td><button class="restore">Restore</button></td></tr>
+        <tr><td>config_backup_2026-08-02</td><td>Filesystem</td><td>01:45 UTC</td><td>Completed</td><td><button class="restore">Restore</button></td></tr>
+        <tr><td>media_archive_2026-08-01</td><td>S3</td><td>23:00 UTC</td><td>Running</td><td><button class="restore" disabled>Restore</button></td></tr>
+        <tr><td>ledger_full_2026-07-31</td><td>MySQL</td><td>22:30 UTC</td><td>Failed</td><td><button class="restore">Retry</button></td></tr>
+      </tbody>
+    </table>
+  </main>
+
+  <script>
+    document.querySelectorAll(".restore").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (btn.disabled) return;
+        btn.textContent = "Queued…";
+        setTimeout(() => { btn.textContent = "Restore"; }, 2500);
+      });
+    });
+  </script>
+</body>
+</html>

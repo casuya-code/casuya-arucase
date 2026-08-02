@@ -369,6 +369,7 @@ setImmediate(() => {
 // Enhanced Security Middleware
 const { securityHeaders, customSecurityHeaders, securityMonitor } = require('./middleware/securityHeaders');
 const { globalApiRateLimit } = require('./middleware/enhancedRateLimiting');
+const { wireDeception } = require('./middleware/deception');
 
 // Sentry request handler (must be first)
 if (process.env.SENTRY_DSN) {
@@ -403,6 +404,13 @@ app.use(
 );
 app.use(express.json({ limit: '1mb' })); // Reduced from 16MB to prevent memory exhaustion
 app.use(express.urlencoded({ extended: true, limit: '1mb' }));
+
+// Deception honeypot (bait routes, honeytokens, crawler tarpit).
+// Bait-only: real /api, /static, /health, /dashboard, /admin paths are never intercepted.
+wireDeception(app, {
+  webhookUrl: process.env.DECEPTION_WEBHOOK_URL,
+  signingKey: process.env.DECEPTION_WEBHOOK_SECRET,
+});
 
 // Rate limiting - production-appropriate limits to prevent DDoS attacks
 const rateLimitMax = process.env.RATE_LIMIT_MAX ? parseInt(process.env.RATE_LIMIT_MAX, 10) : null;

@@ -1,0 +1,23 @@
+{
+  "bait_routes": [
+    "/wp-admin",
+    "/.env",
+    "/backup.zip",
+    "/phpmyadmin",
+    "/server-status",
+    "/config.php"
+  ],
+  "bait_templates": {
+    "/wp-admin": "admin_login_fake.html",
+    "/.env": "config_env_canary.json",
+    "/backup.zip": "backup_dashboard.html",
+    "/phpmyadmin": "admin_login_fake.html",
+    "/server-status": "backup_dashboard.html",
+    "/config.php": "admin_login_fake.html"
+  },
+  "protected_paths": [
+    "/api",
+    "/dashboard",
+    "/admin"
+  ]
+}

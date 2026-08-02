@@ -1,0 +1,35 @@
+{
+  "note": "CANARY FILE — fake environment configuration. Every value is synthetic. Do not copy into real apps.",
+  "canary_id": "3f8c2a9e-d41b-4c70-8f27-6a5b9c0d1e2f",
+  "trigger": {
+    "on_read": "POST https://your-ops-team.example.com/alerts",
+    "on_modify": "POST https://your-ops-team.example.com/alerts",
+    "signed": true,
+    "signature_algorithm": "HMAC-SHA256"
+  },
+  "database": {
+    "host": "db.internal.corp.example.test",
+    "port": 5432,
+    "username": "svc_canary",
+    "password": "synthetic-only-password-7f8e9d0c",
+    "name": "corp_primary"
+  },
+  "cache": {
+    "host": "redis.internal.corp.example.test",
+    "port": 6379,
+    "password": "synthetic-only-redis-key"
+  },
+  "secrets": {
+    "jwt_signing_key": "canary-not-a-real-jwt-secret",
+    "stripe_webhook_secret": "whsec_canary_fake_only",
+    "cloudflare_api_token": "canary_fake_token_0000"
+  },
+  "features": {
+    "allow_import_export": false,
+    "enable_sso": true,
+    "sso_provider": "okta.example.test"
+  },
+  "bait_marker": {
+    "secret_marker": "IF_YOU_CAN_READ_THIS_A_WEBHOOK_ALREADY_FIRED"
+  }
+}
