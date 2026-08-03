@@ -6,6 +6,189 @@
 
 Full-featured school management system built with **Node.js/Express** backend and **React** frontend, optimized for Railway deployment with PostgreSQL.
 
+---
+
+## Cybersecurity Deception Module (Casuya-defence Integration)
+
+Arusha Catholic Seminary includes **integrated cybersecurity deception capabilities** powered by the **Casuya Deception Framework**:
+
+### 8-Layer Biological Defense Pipeline
+
+Integrated into the backend middleware, the system includes comprehensive deception mechanisms to detect and delay attackers:
+
+#### Layer 1: Token Monitor
+- Honeytoken protection for bait paths (`/.env`, `/phpmyadmin`, `/backup.zip`, etc.)
+- IP blocking and security alert webhooks
+- Dynamic junk data serving
+
+#### Layer 2: Bombardier Beetle  
+- Rate limiting with 3-tier response (429/503)
+- Exothermic discharge simulation with thermal output headers
+- Resource pool depletion tracking
+
+#### Layer 3: Mimic Octopus
+- Polymorphic signature spoofing by attacker fingerprint
+- Dynamic response profiles for scanners, crawlers, exploit kits
+- 200 OK responses with rotating variants to waste parser logic
+
+#### Layer 4: Hairy Frog
+- Sacrificial trap endpoint deployment after 50 hits
+- Fake database configuration with placeholder credentials
+- Honeypot login forms to capture attacker credentials
+
+#### Layer 5: Horned Lizard
+- Resource exhaustion via autohaemorrhaging data bursts
+- After 30 hits: dumps 1-3MB random binary data
+- Bandwidth and memory buffer exhaustion
+
+#### Layer 6: Virginia Opossum
+- Dead service emulation after 3 repeat hits
+- Random error responses (502/503/504/500/404)
+- Outdated headers to make services appear abandoned
+
+#### Layer 7: Recursive Tarpit
+- Infinite junk byte streaming (1MB chunks) at slow intervals
+- Prevents automated tools from crawling bait directories
+- Limited to 50 concurrent tarpits to prevent self-inflicted DoS
+
+#### Layer 8: Router Redirect
+- Final bait template routing system
+- Matches request to configured bait path
+- Serves corresponding HTML template with appropriate content type
+
+### Advanced Counterintelligence
+
+The framework includes advanced modules that counter experienced attackers:
+
+#### Timing Analysis Shield
+- Detects uniform request timing patterns (automated scanning)
+- Detects sequential directory enumeration
+- Applies variable jitter delays to defeat timing analysis
+
+#### Traffic Pattern Analysis
+- Identifies scanner user agents, sequential path probing
+- Detects resource overfetch patterns
+- Tracks suspicious extensions and sensitive path targeting
+
+#### Honeypot Detection Countermeasures
+- Detects when attackers are actively searching for honeypot signatures
+- Tracks sequential fingerprinting attempts
+- Identifies deception detection payloads in requests
+
+#### Deception Depth Escalation
+- Multi-stage deception that deepens based on attacker persistence
+- Stage 1: Surface bait (basic fake pages)
+- Stage 2: Deep bait (fake credentials, configs)
+- Stage 3: Adaptive bait (technology-matched responses)
+- Stage 4: Reactive camouflage (deep fake service emulation)
+
+#### False Positive Prevention
+- Whitelists localhost, private networks, and trusted user agents
+- Requires browser-like headers for non-whitelisted traffic
+- Rate limits to prevent abuse while protecting legitimate traffic
+
+### SIEM Dashboard
+
+Real-time visualization of intruder breakdown patterns across all defense layers:
+
+- **Exothermic Spike Tracker** — Bombardier Beetle activation intensity
+- **Polymorphic Disorientation Grid** — Mimic Octopus signature spoofing
+- **Structural Trauma Map** — Hairy Frog trap deployments
+- **Foul Taste Index** — Horned Lizard resource exhaustion
+- **Catatonic Deception Gauge** — Opossum dead service emulation
+- **Intruder Breakdown Tracker** — Individual attacker progression through stages 0-5
+
+API endpoints:
+- `GET /dashboard` — Serves SIEM visualization dashboard
+- `GET /api/metrics` — Real-time dashboard data
+- `GET /api/alerts` — Active biological defense alerts
+- `GET /api/footprints` — Intruder tracking data
+
+### Attack Flow
+
+```text
+Attacker Scanner
+      │
+      ├─ probes /wp-admin ──────────────────► Mimic Octopus: routed to fake admin portal (URL unchanged)
+      ├─ crawls bait directory ─────────────► Recursive Tarpit: served infinite junk folders
+      ├─ requests database_backup_fake.sql ─► Token Monitor: IP blocked + corrupted payload + webhook alert
+      ├─ rapid-fire scanning detected ──────► Bombardier Beetle: cavitation blast (429 + thermal output)
+      ├─ repeated requests from same IP ────► Bombardier Beetle: rate limited with 429/503 responses
+      ├─ scanner fingerprint detected ─────► Mimic Octopus: polymorphic signature spoofing
+      ├─ 50+ hits on same endpoint ─────────► Hairy Frog: trap endpoints deployed
+      ├─ 30+ hits persist ──────────────────► Horned Lizard: resource exhaustion data dump
+      └─ 3+ repeat hits ───────────────────► Opossum: dead service emulation
+```
+
+### Deployment Configuration
+
+Configure deception behavior in `backend/middleware/deception/config/`:
+
+#### deception_routes.json
+```json
+{
+  "bait_routes": [
+    "/wp-admin",
+    "/.env",
+    "/backup.zip",
+    "/phpmyadmin",
+    "/server-status",
+    "/config.php"
+  ],
+  "bait_templates": {
+    "/wp-admin": "admin_login_fake.html",
+    "/.env": "config_env_canary.json",
+    "/backup.zip": "backup_dashboard.html",
+    "/phpmyadmin": "admin_login_fake.html",
+    "/server-status": "backup_dashboard.html",
+    "/config.php": "admin_login_fake.html"
+  },
+  "protected_paths": [
+    "/api",
+    "/dashboard",
+    "/admin"
+  ]
+}
+```
+
+#### threshold_rules.conf
+```ini
+# Activate the tarpit after N rapid requests from one IP
+tarpit.threshold_requests = 25
+tarpit.slow_stream_bytes = 1048576
+
+# Block IPs after repeated honeytoken hits
+block.ip_repeat_hits = 3
+block.autoban_ttl_hours = 24
+
+# Webhook alert destination
+alert.webhook_url = https://your-ops-team.example.com/alerts
+alert.encryption_key = CHANGE_ME
+
+# Anti-fingerprinting (attackers detect X- headers and canned responses)
+stealth.emit_layer_headers = false
+stealth.vary_response = true
+stealth.rotation_interval_hours = 168
+```
+
+### Security Integration
+
+The deception middleware automatically integrates with the existing security stack:
+
+- **Fail-open design**: If any deception layer crashes, requests continue to the real application
+- **Dynamic protected paths**: Runtime registration of production endpoints without restart
+- **Route rotation**: Bait routes rotate every 24 hours using hash-based variations to prevent fingerprinting
+- **Advanced counterintelligence**: Timing analysis, traffic pattern detection, and false positive prevention run automatically before any defense layer engages
+
+### Testing and Validation
+
+All deception modules are thoroughly tested:
+- **Unit tests**: Comprehensive test coverage for all deception layers
+- **Security audit**: Tests for timing side-channels and vulnerability vectors
+- **CI/CD validation**: Automated deployment verification and configuration validation
+
+> The value of this deception architecture is **detection and delay**, delivered at low cost. It does not replace hardening — it only makes reconnaissance expensive enough that attackers move on to easier targets.
+
 ## Technology Stack
 
 ### Backend
