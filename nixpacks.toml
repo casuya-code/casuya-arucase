@@ -1,0 +1,12 @@
+# Root Nixpacks config — Vercel / Railway Docker build
+# Prevents secrets from being baked into the Docker image as ARG/ENV.
+# Secrets must be set as runtime environment variables in the platform dashboard.
+
+[phases.setup]
+nixPkgs = ["nodejs_20"]
+
+[phases.build]
+cmds = ["cd backend && npm ci"]
+
+[phases.run]
+ cmds = ["cd backend && node scripts/start-server.js"]
