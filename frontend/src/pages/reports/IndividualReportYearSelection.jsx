@@ -19,40 +19,43 @@ const IndividualReportYearSelection = () => {
   return (
     <AdminLayout>
       <div className="individual-report-page">
-        <div className="breadcrumb">
-          <Link to="/reports/individual">Individual Student Report</Link> &gt; {form}
-        </div>
-
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-calendar-alt"></i> Select Academic Year
+        <div className="individual-report-shell">
+          <div className="individual-report-breadcrumb">
+            <Link to="/reports/individual">Individual Student Report</Link>
+            <span className="bc-sep">&rsaquo;</span>
+            <Link to="/reports/individual">{form}</Link>
+            <span className="bc-sep">&rsaquo;</span>
+            <span className="bc-current">Year</span>
           </div>
-          <div className="excel-card-body">
-            <div className="year-grid">
+
+          <div className="individual-report-card" style={{ '--accent': '#3b82f6' }}>
+            <div className="individual-report-card-header">
+              <i className="fas fa-calendar-alt" /> Select Academic Year
+            </div>
+            <div className="individual-report-card-body">
+              <div className="individual-report-year-grid">
                 {availableYears.map((year) => (
                   <button
                     type="button"
                     key={`individual-${year}`}
                     onClick={() => handleYearClick(year)}
-                    className="year-card"
+                    className="individual-report-year-card"
+                    style={{ '--accent': year === currentYear ? '#10b981' : '#999' }}
                   >
-                    {year === currentYear ? (
-                      <i className="fas fa-check-circle year-status-icon year-current"></i>
-                    ) : (
-                      <i className="fas fa-times-circle year-status-icon year-not-current"></i>
-                    )}
-                    <div className="year-icon">
-                      <i className="fas fa-calendar"></i>
+                    <i className={`fas ${year === currentYear ? 'fa-check-circle' : 'fa-circle'} individual-report-year-status ${year === currentYear ? 'current' : 'past'}`} />
+                    <div className="individual-report-year-icon">
+                      <i className="fas fa-calendar" />
                     </div>
-                    <div className="year-title">{year}</div>
-                    <div className="year-subtitle">Academic Year {year}</div>
+                    <div className="individual-report-year-label">{year}</div>
+                    <div className="individual-report-year-sub">Academic Year {year}</div>
                   </button>
                 ))}
               </div>
-            <div className="promotion-select-actions mt-20">
-              <Link to="/reports/individual" className="excel-btn">
-                <nobr><i className="fas fa-arrow-left"></i> Back to Forms</nobr>
-              </Link>
+              <div className="individual-report-actions">
+                <Link to="/reports/individual" className="individual-report-btn individual-report-btn--secondary">
+                  <i className="fas fa-arrow-left" /> Back to Forms
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -62,5 +65,3 @@ const IndividualReportYearSelection = () => {
 };
 
 export default IndividualReportYearSelection;
-
-
