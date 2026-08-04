@@ -514,17 +514,27 @@
 .an-st-chart-wrap {
   height: 320px;
   position: relative;
+  touch-action: pan-y;
 }
 
 @media (max-width: 768px) {
   .an-st-chart-wrap {
-    height: 260px;
+    height: 280px;
+  }
+
+  .an-st-chart-card {
+    padding: 0.75rem;
   }
 }
 
 @media (max-width: 480px) {
   .an-st-chart-wrap {
-    height: 220px;
+    height: 240px;
+  }
+
+  .an-st-chart-card {
+    padding: 0.6rem;
+    border-radius: 8px;
   }
 
   .an-st-perf-header {
@@ -533,6 +543,7 @@
 
   .an-st-perf-body {
     padding: 1rem;
+    gap: 1rem;
   }
 }
 

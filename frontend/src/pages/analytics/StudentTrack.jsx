@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import AdminLayout from '../../components/layout/AdminLayout';
@@ -8,11 +8,17 @@ import '../../utils/chartConfig';
 import { normalizeFormLabel } from '../../utils/analyticsUtils';
 import './AnalyticsTrack.css';
 
+const useIsMobile = () => {
+  if (typeof window === 'undefined') return false;
+  return window.innerWidth <= 768;
+};
+
 const StudentTrack = () => {
   const { form } = useParams();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStudent, setSelectedStudent] = useState(null);
   const formLabel = normalizeFormLabel(form);
+  const isMobile = useIsMobile();
 
   const { data: searchResults = [], isLoading: searching } = useQuery({
     queryKey: ['student-search', searchQuery, formLabel],
@@ -168,8 +174,21 @@ const StudentTrack = () => {
                                 maintainAspectRatio: false,
                                 plugins: { legend: { display: false } },
                                 scales: {
-                                  y: { beginAtZero: true, max: 100, title: { display: true, text: 'Score' } },
-                                  x: { title: { display: true, text: 'Subject' }, ticks: { maxRotation: 45 } },
+                                  y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    title: { display: !isMobile, text: 'Score', font: { size: 11 } },
+                                    ticks: { font: { size: isMobile ? 9 : 11 } },
+                                    grid: { color: 'rgba(0,0,0,0.04)' },
+                                  },
+                                  x: {
+                                    title: { display: !isMobile, text: 'Subject', font: { size: 11 } },
+                                    ticks: {
+                                      maxRotation: isMobile ? 60 : 45,
+                                      font: { size: isMobile ? 9 : 11 },
+                                    },
+                                    grid: { display: false },
+                                  },
                                 },
                               }}
                             />
@@ -214,10 +233,66 @@ const StudentTrack = () => {
                               options={{
                                 responsive: true,
                                 maintainAspectRatio: false,
-                                plugins: { legend: { display: true, position: 'top' } },
+                                interaction: {
+                                  mode: 'index',
+                                  intersect: false,
+                                },
+                                plugins: {
+                                  legend: {
+                                    display: true,
+                                    position: isMobile ? 'bottom' : 'top',
+                                    labels: {
+                                      boxWidth: isMobile ? 10 : 14,
+                                      padding: isMobile ? 8 : 16,
+                                      font: { size: isMobile ? 10 : 12 },
+                                      usePointStyle: true,
+                                    },
+                                  },
+                                  tooltip: {
+                                    backgroundColor: 'rgba(0,0,0,0.8)',
+                                    titleFont: { size: isMobile ? 11 : 13 },
+                                    bodyFont: { size: isMobile ? 10 : 12 },
+                                    padding: isMobile ? 6 : 10,
+                                    cornerRadius: 8,
+                                    callbacks: {
+                                      label: (ctx) => `${ctx.dataset.label}: ${ctx.parsed.y.toFixed(1)}`,
+                                    },
+                                  },
+                                },
                                 scales: {
-                                  y: { beginAtZero: true, max: 100, title: { display: true, text: 'Score' } },
-                                  x: { title: { display: true, text: 'Month & Year' }, ticks: { maxRotation: 45, minRotation: 45 } },
+                                  y: {
+                                    beginAtZero: true,
+                                    max: 100,
+                                    title: {
+                                      display: !isMobile,
+                                      text: 'Score',
+                                      font: { size: 11 },
+                                    },
+                                    ticks: {
+                                      font: { size: isMobile ? 9 : 11 },
+                                      padding: 4,
+                                    },
+                                    grid: {
+                                      color: 'rgba(0,0,0,0.04)',
+                                    },
+                                  },
+                                  x: {
+                                    title: {
+                                      display: !isMobile,
+                                      text: 'Month & Year',
+                                      font: { size: 11 },
+                                    },
+                                    ticks: {
+                                      maxRotation: isMobile ? 60 : 45,
+                                      minRotation: isMobile ? 45 : 45,
+                                      font: { size: isMobile ? 9 : 11 },
+                                      autoSkip: false,
+                                      maxTicksLimit: isMobile ? 6 : undefined,
+                                    },
+                                    grid: {
+                                      display: false,
+                                    },
+                                  },
                                 },
                               }}
                             />
