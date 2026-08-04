@@ -1,64 +1,45 @@
-/**
- * Analytics Landing Page - Form Selection
- * Based on ANALYTICS_PACKAGE_COMPLETE.md specification
- */
 import { Link } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
 import './Analytics.css';
 
-const Analytics = () => {
-  const forms = [
-    { id: 'FORM I', label: 'FORM ONE', path: '/admin/analytics/FORM I', icon: 'fa-graduation-cap', isAdvanced: false },
-    { id: 'FORM II', label: 'FORM TWO', path: '/admin/analytics/FORM II', icon: 'fa-graduation-cap', isAdvanced: false },
-    { id: 'FORM III', label: 'FORM THREE', path: '/admin/analytics/FORM III', icon: 'fa-graduation-cap', isAdvanced: false },
-    { id: 'FORM IV', label: 'FORM FOUR', path: '/admin/analytics/FORM IV', icon: 'fa-graduation-cap', isAdvanced: false },
-    { id: 'FORM V', label: 'FORM FIVE', path: '/admin/analytics/FORM V', icon: 'fa-user-graduate', isAdvanced: true },
-    { id: 'FORM VI', label: 'FORM SIX', path: '/admin/analytics/FORM VI', icon: 'fa-user-graduate', isAdvanced: true },
-  ];
+const FORMS = [
+  { id: 'FORM I', label: 'Form I', path: '/admin/analytics/FORM I' },
+  { id: 'FORM II', label: 'Form II', path: '/admin/analytics/FORM II' },
+  { id: 'FORM III', label: 'Form III', path: '/admin/analytics/FORM III' },
+  { id: 'FORM IV', label: 'Form IV', path: '/admin/analytics/FORM IV' },
+  { id: 'FORM V', label: 'Form V', path: '/admin/analytics/FORM V', advanced: true },
+  { id: 'FORM VI', label: 'Form VI', path: '/admin/analytics/FORM VI', advanced: true },
+];
 
-  return (
-    <AdminLayout>
-      <div className="analytics-page">
-        <div className="excel-card">
-          <div className="excel-card-header excel-card-header-centered">
-            <i className="fas fa-search"></i> Select Form
-          </div>
-          <div className="excel-card-body">
-            <p className="analytics-instruction-text">
-              Select a form to view analytics and tracking
-            </p>
-            
-            {/* All Forms Averages Link - Prominent Button */}
-            <div className="all-forms-button-container">
-              <Link to="/admin/analytics/all-forms-averages" className="all-forms-button">
-                <i className="fas fa-chart-bar"></i>
-                <span>View All Forms Averages (FORM I - VI)</span>
-              </Link>
-            </div>
-            
-            <div className="form-grid">
-              {forms.map((form) => (
-                <Link
-                  key={form.id}
-                  to={form.path}
-                  className="form-card"
-                  data-form={form.id}
-                >
-                  <div className="form-icon">
-                    <i className={`fas ${form.icon}`}></i>
-                  </div>
-                  <div className="form-name">{form.label}</div>
-                  {form.isAdvanced && (
-                    <div className="form-badge">Advanced</div>
-                  )}
-                </Link>
-              ))}
-            </div>
-          </div>
+const Analytics = () => (
+  <AdminLayout>
+    <div className="an-page">
+      <div className="an-shell">
+        <header className="an-top">
+          <h1 className="an-top-title">Analytics</h1>
+          <p className="an-top-sub">Select a form to view performance tracking</p>
+        </header>
+
+        <Link to="/admin/analytics/all-forms-averages" className="an-all-btn">
+          <i className="fas fa-chart-bar" />
+          <span>All Forms Averages</span>
+          <i className="fas fa-arrow-right an-all-btn-arrow" />
+        </Link>
+
+        <div className="an-grid">
+          {FORMS.map((f) => (
+            <Link key={f.id} to={f.path} className="an-card">
+              <span className="an-card-icon">
+                <i className={`fas ${f.advanced ? 'fa-user-graduate' : 'fa-graduation-cap'}`} />
+              </span>
+              <span className="an-card-label">{f.label}</span>
+              {f.advanced && <span className="an-card-badge">A-Level</span>}
+            </Link>
+          ))}
         </div>
       </div>
-    </AdminLayout>
-  );
-};
+    </div>
+  </AdminLayout>
+);
 
 export default Analytics;

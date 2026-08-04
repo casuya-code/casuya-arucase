@@ -1,308 +1,197 @@
-/**
- * Analytics landing (/admin/analytics) — all rules scoped under .analytics-page
- * so shared class names (.excel-card, .form-card, .category-header, etc.) never leak app-wide.
- */
+/* ===========================================
+   ANALYTICS LANDING — Clean Modern Design
+   Matches dashboard aesthetic
+   =========================================== */
 
-.analytics-page {
-  padding: clamp(1rem, 4vw, 2rem);
-  max-width: 100%;
+.an-page {
+  background: #f5f5f0;
+  min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
-  margin: 0;
+  box-sizing: border-box;
 }
 
-.analytics-page .page-header {
-  margin-bottom: 2rem;
-}
-
-.analytics-page .page-header h1 {
-  margin: 0 0 0.5rem 0;
-  color: #111827;
-  font-size: 2rem;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-}
-
-.analytics-page .page-header p {
-  margin: 0;
-  color: #6b7280;
-  font-size: 1rem;
-}
-
-/* Excel Card Styles */
-.analytics-page .excel-card {
-  background: white;
-  border-radius: 0;
-  box-shadow: 0 var(--fibonacci-8) calc(var(--fibonacci-21) * 2) rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-  width: 100%;
-  max-width: 100%;
-}
-
-.analytics-page .excel-card-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: clamp(1rem, 3vw, var(--fibonacci-21));
-  font-size: clamp(1rem, 2.5vw, 1.125rem);
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: clamp(0.5rem, 1.5vw, var(--fibonacci-13));
-}
-
-.analytics-page .excel-card-body {
-  padding: clamp(1rem, 4vw, var(--fibonacci-34));
-}
-
-.analytics-page .instruction-text {
-  margin-bottom: 2rem;
-  color: #656d76;
-  text-align: center;
-  font-size: 1rem;
-}
-
-/* Analytics Page Specific Styles */
-.analytics-instruction-text {
-  margin-bottom: clamp(1.5rem, 5vw, 30px);
-  color: #656d76;
-  text-align: center;
-  font-size: clamp(0.875rem, 2vw, 1rem);
-}
-
-.analytics-page .excel-card-header-centered {
-  justify-content: center;
-}
-
-.analytics-page .all-forms-button-container {
-  margin-bottom: clamp(2rem, 5vw, 40px);
-  text-align: center;
-}
-
-/* Forms Grid */
-.analytics-page .form-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(280px, 90vw), 1fr));
-  gap: clamp(1rem, 3vw, var(--fibonacci-21));
-  width: 100%;
-}
-
-.analytics-page .form-card {
-  background: white;
-  border: 2px solid #e5e7eb;
-  border-radius: 0;
-  padding: clamp(1.5rem, 4vw, var(--fibonacci-34));
-  text-align: center;
-  cursor: pointer;
-  transition: all 0.236s;
-  position: relative;
+.an-shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2rem) clamp(0.75rem, 2.5vw, 1.5rem);
   display: flex;
   flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* --- Header --- */
+.an-top {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e0ddd5;
+}
+
+.an-top-title {
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.an-top-sub {
+  font-size: 0.85rem;
+  color: #6b6b60;
+  margin: 0.25rem 0 0;
+}
+
+/* --- All Forms Button --- */
+.an-all-btn {
+  display: flex;
   align-items: center;
-  gap: clamp(0.75rem, 2vw, 1rem);
-  width: 100%;
-  min-height: clamp(160px, 25vw, 200px);
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 0.85rem 1.25rem;
+  background: #1a1a1a;
+  color: #fff;
+  border-radius: 10px;
+  text-decoration: none;
+  font-size: 0.9rem;
+  font-weight: 600;
+  transition: all 0.15s ease;
 }
 
-.analytics-page .form-card:hover {
-  border-color: #3b82f6;
-  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.15);
-  transform: translateY(-2px);
+.an-all-btn:hover {
+  background: #333;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  color: #fff;
+  text-decoration: none;
 }
 
-.analytics-page .form-card:active {
-  transform: translateY(0);
-  box-shadow: 0 1px 4px rgba(59, 130, 246, 0.1);
+.an-all-btn:active {
+  transform: scale(0.98);
 }
 
-.analytics-page .form-card .analytics-hover-tick {
-  position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
-  color: #10b981;
-  opacity: 0;
-  transition: opacity 0.3s ease;
+.an-all-btn-arrow {
+  font-size: 0.75rem;
+  opacity: 0.6;
+  transition: transform 0.15s ease;
 }
 
-.analytics-page .form-card:hover .analytics-hover-tick {
+.an-all-btn:hover .an-all-btn-arrow {
+  transform: translateX(3px);
   opacity: 1;
 }
 
-.analytics-page .form-icon {
-  font-size: clamp(2rem, 5vw, 3rem);
-  color: #3b82f6;
+/* --- Form Cards Grid --- */
+.an-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
 }
 
-.analytics-page .form-name {
-  font-size: clamp(1rem, 2.5vw, 1.25rem);
-  font-weight: 600;
-  color: #111827;
-  margin: 0;
-}
-
-.analytics-page .form-info h3 {
-  margin: 0;
-  color: #111827;
-  font-size: 1.25rem;
-}
-
-.analytics-page .form-badge {
-  display: inline-block;
-  margin-top: 0.5rem;
-  padding: 0.25rem 0.75rem;
-  background: var(--gray-900, #1f2328);
-  color: white;
-  border-radius: 0;
-  font-size: 0.75rem;
-  font-weight: 600;
-}
-
-/* All Forms Button - Prominent Style */
-.analytics-page .all-forms-button {
-  display: inline-flex;
+.an-card {
+  display: flex;
+  flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: clamp(0.75rem, 2vw, 12px);
-  padding: clamp(1rem, 3vw, 16px) clamp(2rem, 5vw, 32px);
-  font-size: clamp(1rem, 2.5vw, 17px);
-  font-weight: 600;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
+  gap: 0.5rem;
+  padding: 1.5rem 1rem;
+  background: #fff;
+  border: 1px solid #e8e8e0;
+  border-radius: 12px;
   text-decoration: none;
-  border-radius: 0;
-  box-shadow: 0 var(--fibonacci-8) calc(var(--fibonacci-13) * 3) rgba(102, 126, 234, 0.3);
-  transition: all 0.236s;
-  max-width: 100%;
-  width: auto;
-  min-width: min(280px, 100%);
+  color: inherit;
+  transition: all 0.15s ease;
+  min-height: 120px;
+  position: relative;
 }
 
-.analytics-page .all-forms-button:active {
-  transform: translateY(0);
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
-}
-
-.analytics-page .all-forms-button:hover {
+.an-card:hover {
+  border-color: #10b981;
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.1);
   transform: translateY(-2px);
-  box-shadow: 0 6px 16px rgba(102, 126, 234, 0.4);
-  color: white;
-  text-decoration: none;
 }
 
-.analytics-page .all-forms-button i {
-  font-size: clamp(1.25rem, 3vw, 20px);
+.an-card:active {
+  transform: scale(0.98);
 }
 
-.analytics-page .form-arrow {
-  color: #9ca3af;
-  font-size: 1.5rem;
-  transition: transform 0.3s ease;
+.an-card-icon {
+  width: 44px;
+  height: 44px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #f0fdf4;
+  color: #10b981;
+  border-radius: 10px;
+  font-size: 1.1rem;
+  transition: all 0.15s ease;
 }
 
-.analytics-page .form-card:hover .form-arrow {
-  transform: translateX(4px);
+.an-card:hover .an-card-icon {
+  background: #10b981;
+  color: #fff;
 }
 
-/* Mobile Devices - 320px to 768px */
+.an-card-label {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1a1a1a;
+}
+
+.an-card-badge {
+  position: absolute;
+  top: 0.5rem;
+  right: 0.5rem;
+  padding: 0.15rem 0.45rem;
+  background: #f59e0b;
+  color: #fff;
+  font-size: 0.6rem;
+  font-weight: 700;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* ===========================================
+   RESPONSIVE
+   =========================================== */
+
 @media (max-width: 768px) {
-  .analytics-page {
-    padding: clamp(0.75rem, 3vw, 1rem);
+  .an-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
   }
 
-  .analytics-page .excel-card-body {
-    padding: clamp(1rem, 4vw, 1.5rem);
-  }
-
-  .analytics-page .form-grid {
-    grid-template-columns: 1fr;
-    gap: clamp(0.75rem, 2.5vw, 1rem);
-  }
-
-  .analytics-page .form-card {
-    padding: clamp(1rem, 3vw, 1.5rem);
-    min-height: clamp(140px, 20vw, 160px);
-  }
-
-  .analytics-page .all-forms-button {
-    padding: clamp(0.875rem, 2.5vw, 1rem) clamp(1.5rem, 4vw, 2rem);
-    font-size: clamp(0.875rem, 2.5vw, 1rem);
-    gap: clamp(0.5rem, 1.5vw, 0.75rem);
-    width: 100%;
-    justify-content: center;
-  }
-
-  .analytics-page .excel-card-header {
-    padding: clamp(0.75rem, 2.5vw, 1rem);
-    font-size: clamp(0.875rem, 2.5vw, 1rem);
-  }
-
-  .analytics-instruction-text {
-    margin-bottom: clamp(1rem, 4vw, 1.5rem);
+  .an-card {
+    padding: 1.25rem 0.75rem;
+    min-height: 100px;
   }
 }
 
-/* Extra Small Devices - 480px and below */
 @media (max-width: 480px) {
-  .analytics-page {
-    padding: clamp(0.5rem, 2.5vw, 0.75rem);
+  .an-grid {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
   }
 
-  .analytics-page .excel-card-body {
-    padding: clamp(0.75rem, 3vw, 1rem);
+  .an-card {
+    padding: 1rem 0.65rem;
+    min-height: 90px;
+    gap: 0.4rem;
   }
 
-  .analytics-page .form-card {
-    padding: clamp(0.875rem, 2.5vw, 1rem);
-    min-height: clamp(120px, 18vw, 140px);
-    gap: clamp(0.5rem, 1.5vw, 0.75rem);
+  .an-card-icon {
+    width: 36px;
+    height: 36px;
+    font-size: 0.9rem;
   }
 
-  .analytics-page .form-icon {
-    font-size: clamp(1.5rem, 4vw, 2rem);
-  }
-
-  .analytics-page .form-name {
-    font-size: clamp(0.875rem, 2.5vw, 1rem);
-  }
-
-  .analytics-page .all-forms-button {
-    padding: clamp(0.75rem, 2vw, 0.875rem) clamp(1rem, 3vw, 1.5rem);
-    font-size: clamp(0.8125rem, 2.25vw, 0.9375rem);
-    min-width: 100%;
-  }
-
-  .analytics-page .excel-card-header {
-    padding: clamp(0.625rem, 2vw, 0.75rem);
-    font-size: clamp(0.8125rem, 2.25vw, 0.9375rem);
-  }
-
-  .analytics-page .form-badge {
-    font-size: 0.6875rem;
-    padding: 0.2rem 0.625rem;
+  .an-card-label {
+    font-size: 0.8rem;
   }
 }
 
-/* Tablet Devices - 769px to 1024px */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .analytics-page .form-grid {
-    grid-template-columns: repeat(auto-fit, minmax(min(250px, 45vw), 1fr));
-    gap: clamp(1.25rem, 2.5vw, var(--fibonacci-21));
-  }
-
-  .analytics-page .form-card {
-    padding: clamp(1.25rem, 3.5vw, var(--fibonacci-34));
-  }
-}
-
-/* Large Tablets - 1025px to 1440px */
-@media (min-width: 1025px) and (max-width: 1440px) {
-  .analytics-page .form-grid {
-    grid-template-columns: repeat(auto-fit, minmax(min(260px, 40vw), 1fr));
-  }
-}
-
-/* Large Desktops - 1441px and above */
-@media (min-width: 1441px) {
-  .analytics-page .form-grid {
-    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+@media (max-width: 380px) {
+  .an-grid {
+    grid-template-columns: 1fr;
   }
 }
