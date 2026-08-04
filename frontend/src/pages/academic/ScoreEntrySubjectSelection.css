@@ -1,240 +1,186 @@
-/**
- * Score Entry Subject Selection Styles
- */
+/* Score Entry Subject Selection — Clean Modern Design */
 .score-entry-subject-selection-page-container {
-  padding: clamp(0.5rem, 1.5vw, 1rem);
-  max-width: 100vw;
-  overflow-x: hidden;
+  background: #f5f5f0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
   box-sizing: border-box;
-  background: #ffffff;
-  min-height: 0;
+  padding: clamp(1rem, 3vw, 2rem) clamp(0.75rem, 2.5vw, 1.5rem);
 }
 
-.score-entry-subject-selection-page-container .excel-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0;
-  box-shadow: none;
-  overflow: hidden;
+.score-entry-subject-selection-card {
+  max-width: 900px;
+  margin: 0 auto;
 }
 
-.score-entry-subject-selection-page-container .excel-card-header {
-  background: #ffffff;
-  color: #000000;
-  border-bottom: 1px solid #e5e7eb;
+.score-entry-subject-selection-card-header {
+  display: none;
 }
 
-.score-entry-subject-selection-page-container .excel-card-header i {
-  color: #000000;
+.score-entry-subject-selection-card-body {
+  padding: 0;
 }
 
-.score-entry-subject-selection-page-container .excel-card-body {
-  background: #ffffff;
-}
-
-.excel-btn {
-  padding: clamp(0.375rem, 1vw, 0.5rem) clamp(0.5rem, 1.5vw, 0.625rem);
-  border: none;
-  border-radius: 0;
-  cursor: pointer;
-  font-size: clamp(0.7rem, 1.5vw, 0.8rem);
-  font-weight: 500;
-  transition: background 0.2s, transform 0.15s;
-  display: inline-flex;
-  align-items: center;
-  gap: clamp(0.25rem, 0.75vw, 0.375rem);
-  text-decoration: none;
-  color: white;
-  white-space: normal;
-  min-height: clamp(28px, 6vw, 32px);
-}
-
-.excel-btn.small {
-  padding: clamp(0.375rem, 1.5vw, 0.5rem) clamp(0.5rem, 2vw, 0.75rem);
-  font-size: clamp(0.75rem, 2vw, 0.8125rem);
-  min-height: clamp(32px, 7vw, 40px);
-}
-
-.excel-btn.secondary {
-  background: #ffffff;
-  color: #000000;
-  border: 1px solid #e5e7eb;
-}
-
-.excel-btn.secondary:hover {
-  background: #ffffff;
-  border-color: #000000;
-  color: #000000;
-  text-decoration: none;
-}
-
-.excel-btn:active {
-  transform: none;
-}
-
-.excel-btn.primary {
-  background: #3b82f6;
-}
-
-.excel-btn.primary:hover {
-  background: #2563eb;
-  color: white;
-  text-decoration: none;
-}
-
-.loading-state {
+.score-entry-subject-selection-empty {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   text-align: center;
-  padding: clamp(1rem, 3vw, 2rem);
-  color: #6b7280;
+  padding: clamp(2rem, 5vw, 3.5rem) clamp(1rem, 3vw, 1.5rem);
+  margin-bottom: 1.25rem;
 }
 
-.empty-state {
-  text-align: center;
-  padding: clamp(1rem, 3vw, 2rem) clamp(0.5rem, 2vw, 1rem);
-}
-
-.empty-icon {
-  font-size: clamp(2rem, 6vw, 3rem);
-  color: #9ca3af;
+.score-entry-subject-selection-empty .empty-icon {
+  font-size: clamp(2.5rem, 6vw, 3.5rem);
+  color: #d1d1c8;
   margin-bottom: clamp(0.5rem, 1.5vw, 0.75rem);
   display: block;
 }
 
-.empty-state h3 {
+.score-entry-subject-selection-empty h3 {
   margin: 0 0 0.5rem 0;
-  color: #111827;
+  color: #1a1a1a;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  font-weight: 700;
 }
 
-.empty-state p {
-  margin: 0 0 2rem 0;
-  color: #6b7280;
+.score-entry-subject-selection-empty p {
+  margin: 0 0 1.25rem;
+  color: #6b6b60;
+  font-size: clamp(0.8rem, 1.8vw, 0.875rem);
+  line-height: 1.6;
 }
 
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: clamp(0.5rem, 1.5vw, 1rem);
-}
-
-.stat-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0;
-  padding: clamp(0.75rem, 2vw, 1rem);
-  text-decoration: none;
-  color: #000000;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
-  display: flex;
+/* Manage subjects button (shown for admins in empty state) */
+.score-entry-subject-selection-mgmt-btn {
+  display: inline-flex;
   align-items: center;
-  gap: clamp(0.5rem, 1.5vw, 0.75rem);
-  min-height: clamp(60px, 15vw, 80px);
-}
-
-.stat-card:hover {
-  border-color: #000000;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  transform: none;
-  color: #000000;
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
   text-decoration: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  white-space: nowrap;
 }
 
-.stat-icon {
-  font-size: clamp(1.25rem, 4vw, 1.5rem);
-  color: #000000;
+.score-entry-subject-selection-mgmt-btn:hover {
+  background: #15803d;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
+}
+
+/* Loading */
+.score-entry-subject-selection-page-container .loading-state {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  text-align: center;
+  padding: clamp(2rem, 5vw, 3rem);
+  color: #6b6b60;
+  font-size: 0.9rem;
+  margin-bottom: 1.25rem;
+}
+
+/* Subject grid */
+.score-entry-subject-selection-page-container .stats-grid {
+  display: grid;
+  width: 100%;
+  box-sizing: border-box;
+  gap: clamp(0.75rem, 2vw, 1rem);
+  grid-template-columns: repeat(auto-fit, minmax(min(180px, 100%), 1fr));
+  margin-bottom: 1.25rem;
+}
+
+.score-entry-subject-selection-page-container .stat-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  text-decoration: none;
+  background: #ffffff;
+  border: 1px solid #e8e8e0;
+  border-radius: 12px;
+  padding: clamp(1rem, 2.5vw, 1.5rem) clamp(0.75rem, 2vw, 1rem);
+  color: #1a1a1a;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  min-height: clamp(110px, 16vw, 140px);
+  box-sizing: border-box;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+}
+
+.score-entry-subject-selection-page-container .stat-card:active {
+  transform: scale(0.98);
+}
+
+.score-entry-subject-selection-page-container .stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border-color: #16a34a;
+}
+
+.score-entry-subject-selection-page-container .stat-icon {
+  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  color: #16a34a;
+  margin-bottom: clamp(0.5rem, 1.25vw, 0.75rem);
   flex-shrink: 0;
 }
 
-.stat-content h3 {
-  margin: 0 0 0.25rem 0 !important;
-  color: #111827 !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
-  line-height: 1.2 !important;
-  word-wrap: break-word !important;
-  overflow-wrap: break-word !important;
+.score-entry-subject-selection-page-container .stat-content {
+  min-width: 0;
 }
 
-.score-entry-subject-selection-page-container .stat-card .stat-content h3 {
-  font-size: 12px !important;
-  margin: 0 0 0.25rem 0 !important;
-  color: #111827 !important;
-  font-weight: 600 !important;
-  line-height: 1.2 !important;
-}
-
-.stats-grid .stat-card .stat-content h3 {
-  font-size: 12px !important;
-}
-
-.stat-content p {
-  margin: 0;
-  color: #000000;
-  font-size: 0.65rem;
-  line-height: 1.2;
+.score-entry-subject-selection-page-container .stat-content h3 {
+  margin: 0 0 0.25rem 0;
+  color: #1a1a1a;
+  font-size: clamp(0.8rem, 2vw, 0.9375rem);
+  font-weight: 700;
+  line-height: 1.3;
   word-wrap: break-word;
   overflow-wrap: break-word;
 }
 
-/* iPad / tablet layout */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .score-entry-subject-selection-page-container .stats-grid {
-    grid-template-columns: repeat(3, 1fr);
-  }
+.score-entry-subject-selection-page-container .stat-content p {
+  margin: 0;
+  color: #6b6b60;
+  font-size: clamp(0.65rem, 1.5vw, 0.75rem);
+  line-height: 1.3;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
 }
 
-/* Smartphone layout */
-@media (max-width: 768px) {
-  .score-entry-subject-selection-page-container {
-    padding: clamp(0.375rem, 1vw, 0.5rem);
-  }
-
-  .score-entry-subject-selection-page-container .excel-card {
-    border-radius: 0;
-    box-shadow: none;
-    overflow: visible;
-  }
-
-  .score-entry-subject-selection-page-container .excel-card-header {
-    flex-direction: column;
-    align-items: stretch;
-    gap: clamp(0.375rem, 1vw, 0.5rem);
-    padding: clamp(0.375rem, 1vw, 0.5rem);
-  }
-
-  .score-entry-subject-selection-page-container .header-actions {
-    margin-left: 0;
-  }
-
-  .score-entry-subject-selection-page-container .excel-btn {
-    width: 100%;
-    justify-content: center;
-    min-height: 32px;
-    padding: clamp(0.375rem, 1vw, 0.5rem) clamp(0.5rem, 1.25vw, 0.625rem);
-    font-size: clamp(0.6rem, 1.5vw, 0.7rem);
-  }
-
-  .score-entry-subject-selection-page-container .excel-card-body {
-    padding: clamp(0.375rem, 1vw, 0.5rem);
-  }
-
-  .score-entry-subject-selection-page-container .stats-grid {
-    grid-template-columns: repeat(2, 1fr);
-    gap: clamp(0.375rem, 1vw, 0.5rem);
-  }
-
-  .score-entry-subject-selection-page-container .stat-card {
-    padding: clamp(0.5rem, 1.5vw, 0.75rem);
-    min-height: clamp(50px, 14vw, 70px);
-  }
-
-  .score-entry-subject-selection-page-container .stat-content h3 {
-    font-size: clamp(0.75rem, 2vw, 0.875rem) !important;
-    line-height: 1.3 !important;
-  }
-
-  .score-entry-subject-selection-page-container .stat-content p {
-    font-size: clamp(0.6rem, 1.5vw, 0.7rem);
-  }
+/* Back button */
+.score-entry-subject-selection-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #fff;
+  color: #1a1a1a;
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  border: 1px solid #e8e8e0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  white-space: nowrap;
 }
 
+.score-entry-subject-selection-back-btn:hover {
+  background: #f5f5f0;
+  border-color: #d1d1c8;
+}
 
+.score-entry-subject-selection-back-btn i {
+  font-size: 0.8rem;
+}

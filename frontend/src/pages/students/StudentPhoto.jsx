@@ -20,10 +20,6 @@ const StudentPhoto = () => {
     <AdminLayout>
       <div className="photo-page-container">
         <div className="photo-card">
-          <div className="photo-card-header">
-            <i className="fas fa-camera"></i>
-            <span>Classes</span>
-          </div>
           <div className="photo-card-body">
             <div className="photo-grid">
               {forms.map((form) => (

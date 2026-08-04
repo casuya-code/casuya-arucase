@@ -84,47 +84,42 @@ const ScoreEntryMonthSelection = ({ formLevel }) => {
   return (
     <AdminLayout>
       <div className="score-entry-month-selection-page-container">
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-calendar-alt"></i>
-            {year} {isFormVOrVI && scopedTerm ? `· ${scopedTerm}` : ''} - Select Month for Score Entry
-            <div className="header-actions">
-              <Link to={getBackPath()} className="excel-btn small secondary">
-                <i className="fas fa-arrow-left"></i> Back to Subjects
-              </Link>
-            </div>
-          </div>
-          <div className="excel-card-body">
+        <div className="score-entry-month-selection-card">
+          <div className="score-entry-month-selection-card-body">
             {allMonths.length === 0 ? (
-              <div className="empty-state">
+              <div className="score-entry-month-selection-empty">
                 <p>You are not allowed to enter scores for any month. Contact an administrator to assign score entry months in User Management.</p>
               </div>
             ) : (
-            <div className="stats-grid">
-              {allMonths.map((month) => {
-                const monthPath = getMonthDetailPath(month);
-                return (
-                  <div
-                    key={month}
-                    className="stat-card"
-                    style={{ cursor: 'pointer' }}
-                    onClick={(e) => {
-                      e.preventDefault();
-                      navigate(monthPath, { replace: false });
-                    }}
-                  >
-                    <div className="stat-icon">
-                      <i className="fas fa-calendar"></i>
+              <div className="stats-grid">
+                {allMonths.map((month) => {
+                  const monthPath = getMonthDetailPath(month);
+                  return (
+                    <div
+                      key={month}
+                      className="stat-card"
+                      style={{ cursor: 'pointer' }}
+                      onClick={(e) => {
+                        e.preventDefault();
+                        navigate(monthPath, { replace: false });
+                      }}
+                    >
+                      <div className="stat-icon">
+                        <i className="fas fa-calendar"></i>
+                      </div>
+                      <div className="stat-content">
+                        <h3>{month}</h3>
+                        <p>Enter {month} scores</p>
+                      </div>
                     </div>
-                    <div className="stat-content">
-                      <h3>{month}</h3>
-                      <p>Enter {month} scores</p>
-                    </div>
-                  </div>
-                );
-              })}
-            </div>
+                  );
+                })}
+              </div>
             )}
+            <Link to={getBackPath()} className="score-entry-month-selection-back-btn">
+              <i className="fas fa-arrow-left"></i>
+              <span>Back to Subjects</span>
+            </Link>
           </div>
         </div>
       </div>

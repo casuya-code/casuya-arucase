@@ -21,23 +21,13 @@ const ScoreEntryFormVVIStreamSelection = ({ formLevel }) => {
   return (
     <AdminLayout>
       <div className="score-entry-stream-selection-page-container">
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className={`fas fa-${formLevel === 'FORM V' ? '5' : '6'}`}></i>
-            {formLevel} - Select Stream
-            <div className="header-actions">
-              <Link to={getBackPath()} className="excel-btn small secondary">
-                <i className="fas fa-arrow-left"></i> Back to Forms
-              </Link>
-            </div>
-          </div>
-          <div className="excel-card-body">
+        <div className="score-entry-stream-selection-card">
+          <div className="score-entry-stream-selection-card-body">
             {formVVIStreams.length === 0 ? (
-              <div className="empty-state">
+              <div className="score-entry-stream-selection-empty">
                 <p>You do not have access to any streams for this form. Contact an administrator to get class allocations.</p>
               </div>
             ) : (
-            <>
               <div className="stream-selection-grid">
                 {formVVIStreams.map((stream) => (
                   <Link
@@ -51,8 +41,11 @@ const ScoreEntryFormVVIStreamSelection = ({ formLevel }) => {
                   </Link>
                 ))}
               </div>
-            </>
             )}
+            <Link to={getBackPath()} className="score-entry-stream-selection-back-btn">
+              <i className="fas fa-arrow-left"></i>
+              <span>Back to Forms</span>
+            </Link>
           </div>
         </div>
       </div>

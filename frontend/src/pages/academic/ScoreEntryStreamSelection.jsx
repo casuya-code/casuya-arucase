@@ -29,17 +29,8 @@ const ScoreEntryStreamSelection = ({ formLevel }) => {
   return (
     <AdminLayout>
       <div className="score-entry-stream-selection-page-container">
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className={`fas fa-${formLevel === 'FORM I' ? '1' : formLevel === 'FORM II' ? '2' : formLevel === 'FORM III' ? '3' : '4'}`}></i>
-            {formLevel} {year} - Select Stream
-            <div className="header-actions">
-              <Link to={getBackPath()} className="excel-btn small secondary">
-                <i className="fas fa-arrow-left"></i> Back to Years
-              </Link>
-            </div>
-          </div>
-          <div className="excel-card-body">
+        <div className="score-entry-stream-selection-card">
+          <div className="score-entry-stream-selection-card-body">
             <div className="stream-selection-grid">
               {standardStreams.map((stream) => (
                 <Link
@@ -53,6 +44,10 @@ const ScoreEntryStreamSelection = ({ formLevel }) => {
                 </Link>
               ))}
             </div>
+            <Link to={getBackPath()} className="score-entry-stream-selection-back-btn">
+              <i className="fas fa-arrow-left"></i>
+              <span>Back to Years</span>
+            </Link>
           </div>
         </div>
       </div>

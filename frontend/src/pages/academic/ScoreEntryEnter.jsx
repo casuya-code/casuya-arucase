@@ -682,12 +682,12 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
     return (
       <AdminLayout>
         <div className="score-entry-enter-page-container">
-          <div className="excel-card">
-            <div className="excel-card-header">
+          <div className="score-entry-enter-card">
+            <div className="score-entry-enter-card-header">
               <i className="fas fa-exclamation-triangle"></i>
               Missing Required Parameters
             </div>
-            <div className="excel-card-body">
+            <div className="score-entry-enter-card-body">
               <p style={{ color: '#f44336', marginBottom: '20px' }}>
                 Some required parameters are missing from the URL. Please navigate back and try again.
               </p>
@@ -714,8 +714,8 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
   return (
     <AdminLayout>
       <div className="score-entry-enter-page-container">
-        <div className="excel-card">
-          <div className="excel-card-header">
+        <div className="score-entry-enter-card">
+          <div className="score-entry-enter-card-header">
             <i className="fas fa-graduation-cap"></i>
             {year} - {subject?.subject_name || subjectCode} - {month}
             {!isTogetherMode && normalizedStream && (
@@ -737,7 +737,7 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
               </button>
             </div>
           </div>
-          <div className="excel-card-body">
+          <div className="score-entry-enter-card-body">
             {!isMonthAllowed ? (
               <div className="empty-state">
                 <i className="fas fa-calendar-times"></i>
@@ -777,8 +777,8 @@ const ScoreEntryEnter = ({ formLevel: formLevelProp }) => {
             ) : (
               <>
                 {/* Desktop Table View */}
-                <div className="score-entry-student-list table-container">
-                  <table className="excel-table">
+                <div className="score-entry-student-list score-entry-table-container">
+                  <table className="score-entry-enter-table">
                       <thead>
                         <tr>
                           <th>S/N</th>

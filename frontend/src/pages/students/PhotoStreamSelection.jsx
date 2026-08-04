@@ -82,12 +82,6 @@ const PhotoStreamSelection = ({ formLevel, isFormVOrVI = false }) => {
     <AdminLayout>
       <div className="photo-stream-selection-page-container">
         <div className="photo-stream-selection-card">
-          <div className="photo-stream-selection-card-header">
-            <i className="fas fa-camera"></i>
-            <span>
-              {formLevel} {year && `- ${year}`} - Select Stream
-            </span>
-          </div>
           <div className="photo-stream-selection-card-body">
             {isFormVOrVI && formVVIStreams.length === 0 ? (
               <p className="photo-stream-selection-empty">You do not have access to any streams for this form. Contact an administrator.</p>

@@ -1,119 +1,74 @@
-/**
- * Parish Year Selection Styles
- */
+/* Parish Year Selection — Clean Modern Design */
 .parish-year-selection-page-container {
+  background: #f5f5f0;
+  min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
+  padding: clamp(1rem, 3vw, 2rem) clamp(0.75rem, 2.5vw, 1.5rem);
 }
 
 .parish-year-selection-card {
-  background: white;
-  border-radius: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .parish-year-selection-card-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 16px 20px;
-  font-size: 18px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-height: 56px;
-  box-sizing: border-box;
-  flex-wrap: wrap;
-}
-
-.parish-year-selection-card-header i {
-  font-size: 20px;
-  width: 24px;
-  text-align: center;
+  display: none;
 }
 
 .parish-year-selection-card-body {
-  padding: 16px;
-  box-sizing: border-box;
+  padding: 0;
 }
 
+.parish-year-selection-empty {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: #6b6b60;
+  font-size: 0.9rem;
+}
+
+/* Year grid */
 .parish-year-selection-grid {
   display: grid;
   width: 100%;
-  gap: 12px;
   box-sizing: border-box;
-  margin-bottom: 20px;
-  grid-template-columns: repeat(auto-fit, minmax(min(9.5rem, 100%), 1fr));
+  margin-bottom: 1.25rem;
+  gap: clamp(0.75rem, 2vw, 1rem);
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .parish-year-selection-grid[style*='--year-card-count'] {
   grid-template-columns: repeat(var(--year-card-count), minmax(0, 1fr));
 }
 
-@media (min-width: 1200px) {
-  .parish-year-selection-card-body {
-    padding: 24px 32px;
-  }
-}
-
-@media (max-width: 599px) {
-  .parish-year-selection-card-header {
-    padding: 12px 16px;
-    font-size: 16px;
-    min-height: 48px;
-    text-align: center;
-  }
-
-  .parish-year-selection-card-header i {
-    font-size: 18px;
-    width: 20px;
-  }
-
-  .parish-year-selection-card-body {
-    padding: 12px;
-  }
-
-  .parish-year-selection-grid {
-    gap: 10px;
-    margin-bottom: 16px;
-  }
-
+@media (max-width: 640px) {
   .parish-year-selection-grid[style*='--year-card-count'] {
-    grid-template-columns: repeat(auto-fit, minmax(min(8rem, calc(50% - 5px)), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(8rem, calc(50% - 0.5rem)), 1fr));
   }
-
-  .parish-year-selection-card-item {
-    padding: 1rem 0.75rem;
-    min-height: 100px;
-  }
-
-  .parish-year-selection-back-btn {
-    width: 100%;
-    justify-content: center;
-    padding: 12px 20px;
+  .parish-year-selection-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
 .parish-year-selection-card-item {
   width: 100%;
-  background: white;
-  border: 2px solid #e5e7eb;
-  border-radius: 0;
-  padding: clamp(1rem, 2.5vw, 1.25rem) clamp(0.75rem, 2vw, 1rem);
-  text-align: center;
-  text-decoration: none;
-  color: inherit;
-  transition: all 0.2s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 0.35rem;
+  text-decoration: none;
+  background: #ffffff;
+  border: 1px solid #e8e8e0;
+  border-radius: 12px;
+  padding: clamp(1rem, 2.5vw, 1.25rem) clamp(0.75rem, 2vw, 1rem);
+  text-align: center;
+  color: #1a1a1a;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   min-height: clamp(90px, 12vw, 110px);
   box-sizing: border-box;
   cursor: pointer;
@@ -121,87 +76,58 @@
   touch-action: manipulation;
 }
 
-@media (min-width: 768px) {
-  .parish-year-selection-card-item {
-    padding: 1rem 0.875rem;
-    min-height: 108px;
-  }
+.parish-year-selection-card-item[data-current-year="true"] {
+  border-color: #16a34a;
+  background: #f0fdf4;
 }
 
-@media (min-width: 1200px) {
-  .parish-year-selection-card-item {
-    padding: 1.125rem 1rem;
-    min-height: 118px;
-  }
+.parish-year-selection-card-item:active {
+  transform: scale(0.98);
 }
 
 .parish-year-selection-card-item:hover {
-  border-color: #3b82f6;
-  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.15);
   transform: translateY(-2px);
-  color: inherit;
-  text-decoration: none;
-}
-
-.parish-year-selection-card-item[data-current-year="true"] {
-  border-color: #10b981;
-  background: #f0fdf4;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border-color: #16a34a;
 }
 
 .parish-year-selection-number {
   font-size: clamp(1rem, 2.5vw, 1.25rem);
-  font-weight: 700;
+  font-weight: 800;
+  margin-bottom: clamp(0.375rem, 1vw, 0.5rem);
   line-height: 1.2;
-  color: #3b82f6;
+  color: #1a1a1a;
 }
 
 .parish-year-selection-label {
-  font-size: clamp(0.75rem, 1.8vw, 0.875rem);
+  font-size: clamp(0.75rem, 1.8vw, 0.85rem);
   font-weight: 500;
   line-height: 1.3;
-  color: #6b7280;
+  color: #6b6b60;
 }
 
-@media (min-width: 768px) {
-  .parish-year-selection-number {
-    font-size: 1.35rem;
-  }
-
-  .parish-year-selection-label {
-    font-size: 0.8125rem;
-  }
-}
-
-@media (min-width: 1200px) {
-  .parish-year-selection-number {
-    font-size: 1.5rem;
-  }
-
-  .parish-year-selection-label {
-    font-size: 0.875rem;
-  }
-}
-
+/* Back button */
 .parish-year-selection-back-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: #6b7280;
-  color: white;
+  background: #fff;
+  color: #1a1a1a;
   text-decoration: none;
-  border-radius: 0;
-  transition: background 0.2s;
-  font-weight: 500;
-  font-size: 0.9375rem;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  border: 1px solid #e8e8e0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
 .parish-year-selection-back-btn:hover {
-  background: #4b5563;
-  color: white;
-  text-decoration: none;
+  background: #f5f5f0;
+  border-color: #d1d1c8;
 }
 
 .parish-year-selection-back-btn i {
-  font-size: 14px;
+  font-size: 0.8rem;
 }

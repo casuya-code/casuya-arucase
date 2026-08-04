@@ -20,10 +20,6 @@ const Subjects = () => {
     <AdminLayout>
       <div className="subjects-page-container">
         <div className="subjects-card">
-          <div className="subjects-card-header">
-            <i className="fas fa-book"></i>
-            <span>Classes</span>
-          </div>
           <div className="subjects-card-body">
             <div className="subjects-grid">
               {forms.map((form) => (

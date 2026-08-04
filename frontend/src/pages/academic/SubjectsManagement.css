@@ -1,105 +1,83 @@
-/**
- * Subjects Management Styles
- */
+/* Subjects Management — Clean Modern Design */
 .subjects-mgmt-page-container {
-  padding: clamp(1rem, 3vw, 2rem);
-  background: #ffffff;
+  background: #f5f5f0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
   box-sizing: border-box;
+  padding: clamp(1rem, 3vw, 2rem) clamp(0.75rem, 2.5vw, 1.5rem);
 }
 
 .subjects-mgmt-card {
   background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0;
-  box-shadow: none;
+  border: 1px solid #e8e8e0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  margin-bottom: clamp(0.75rem, 2vw, 1rem);
   overflow: hidden;
-  margin-bottom: clamp(1.5rem, 3vw, 2rem);
 }
 
 .subjects-mgmt-card-header {
   background: #ffffff;
-  color: #000000;
-  border-bottom: 1px solid #e5e7eb;
-  padding: clamp(1rem, 2.5vw, 1.5rem);
+  color: #1a1a1a;
+  padding: 0.75rem 1.25rem;
+  font-size: clamp(0.85rem, 2vw, 0.95rem);
+  font-weight: 700;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  flex-wrap: wrap;
+  justify-content: space-between;
   gap: 1rem;
+  flex-wrap: wrap;
+  border-bottom: 1px solid #e8e8e0;
 }
 
 .subjects-mgmt-card-header-title {
-  font-size: clamp(1rem, 2.5vw, 1.25rem);
-  font-weight: 600;
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  gap: 0.5rem;
+  min-width: 0;
+}
+
+.subjects-mgmt-card-header-title i {
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  color: #16a34a;
 }
 
 .subjects-mgmt-header-actions {
   display: flex;
-  gap: 1rem;
+  gap: 0.5rem;
   flex-wrap: wrap;
 }
 
 .subjects-mgmt-add-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: clamp(0.625rem, 1.5vw, 0.75rem) clamp(1rem, 2.5vw, 1.5rem);
-  background: #ffffff;
-  color: #000000;
-  border: 1px solid #e5e7eb;
-  border-radius: 0;
-  font-size: clamp(0.875rem, 2vw, 1rem);
+  gap: 0.375rem;
+  padding: 0.5rem 0.875rem;
+  background: #16a34a;
+  color: #ffffff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8rem;
   font-weight: 600;
   cursor: pointer;
-  transition: border-color 0.2s ease, background 0.2s ease;
+  transition: all 0.2s ease;
   white-space: nowrap;
 }
 
 .subjects-mgmt-add-btn:hover {
-  background: #ffffff;
-  border-color: #000000;
-  transform: none;
+  background: #15803d;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
 }
 
 .subjects-mgmt-card-body {
-  padding: clamp(1rem, 3vw, 2rem);
-  background: #ffffff;
+  padding: clamp(0.75rem, 2vw, 1.25rem);
 }
 
-.loading-state {
-  text-align: center;
-  padding: clamp(2rem, 5vw, 3rem);
-  color: #6b7280;
-  font-size: clamp(0.875rem, 2vw, 1rem);
-}
-
-.subjects-mgmt-empty-state {
-  text-align: center;
-  padding: clamp(2rem, 5vw, 4rem) clamp(1rem, 3vw, 2rem);
-}
-
-.subjects-mgmt-empty-state i {
-  font-size: clamp(3rem, 8vw, 4rem);
-  color: #9ca3af;
-  margin-bottom: 1rem;
-  display: block;
-}
-
-.subjects-mgmt-empty-state h3 {
-  margin: 0 0 0.5rem 0;
-  color: #111827;
-  font-size: clamp(1.125rem, 3vw, 1.25rem);
-}
-
-.subjects-mgmt-empty-state p {
-  margin: 0 0 2rem 0;
-  color: #6b7280;
-  font-size: clamp(0.875rem, 2vw, 1rem);
-}
+/* ===========================================
+   TABLE
+   =========================================== */
 
 .subjects-mgmt-table-container {
   overflow-x: auto;
@@ -109,198 +87,251 @@
 .subjects-mgmt-table {
   width: 100%;
   border-collapse: collapse;
-  background: #ffffff;
+  font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+}
+
+.subjects-mgmt-table thead {
+  background: #f5f5f0;
 }
 
 .subjects-mgmt-table th {
-  background: #ffffff;
-  padding: clamp(0.5rem, 1.5vw, 0.75rem);
+  padding: 0.65rem 0.75rem;
   text-align: left;
-  font-weight: 600;
-  color: #000000;
-  border-bottom: 2px solid #e5e7eb;
-  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+  font-weight: 700;
+  color: #4a4a40;
+  font-size: clamp(0.68rem, 1.3vw, 0.75rem);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
   white-space: nowrap;
+  border-bottom: 2px solid #e0ddd5;
 }
 
 .subjects-mgmt-table td {
-  padding: clamp(0.5rem, 1.5vw, 0.75rem);
-  border-bottom: 1px solid #e5e7eb;
-  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid #f0f0ea;
+  color: #1a1a1a;
+  font-weight: 500;
+  vertical-align: middle;
 }
 
 .subjects-mgmt-table tbody tr:hover {
-  background: #ffffff;
+  background: #f5f5f0;
 }
 
-.subject-code {
-  display: inline-block;
-  padding: clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 1.5vw, 0.75rem);
-  background: #ffffff;
-  color: #000000;
-  border: 1px solid #e5e7eb;
-  border-radius: 0;
-  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
-  font-weight: 600;
-  word-break: break-word;
-}
-
+.subject-code,
 .subject-abbreviation {
   display: inline-block;
-  padding: clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 1.5vw, 0.75rem);
-  background: #ffffff;
-  color: #000000;
-  border: 1px solid #e5e7eb;
-  border-radius: 0;
-  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
-  font-weight: 500;
+  padding: 0.25rem 0.5rem;
+  background: #f5f5f0;
+  border: 1px solid #e8e8e0;
+  border-radius: 8px;
+  font-size: clamp(0.68rem, 1.25vw, 0.78rem);
+  font-weight: 600;
+  color: #1a1a1a;
   word-break: break-word;
 }
 
 .action-buttons {
   display: flex;
-  gap: clamp(0.25rem, 1vw, 0.5rem);
+  gap: clamp(0.25rem, 0.5vw, 0.375rem);
   flex-wrap: wrap;
 }
 
+/* ===========================================
+   BUTTONS
+   =========================================== */
+
 .excel-btn {
-  padding: clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 1.5vw, 0.75rem);
-  border: none;
-  border-radius: 0;
-  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
-  font-weight: 500;
-  cursor: pointer;
-  transition: all 0.2s;
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
+  gap: 0.375rem;
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 0.8rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
   white-space: nowrap;
+  text-decoration: none;
+  color: #ffffff;
 }
 
 .excel-btn.small {
-  padding: clamp(0.25rem, 1vw, 0.375rem) clamp(0.5rem, 1.5vw, 0.75rem);
-  font-size: clamp(0.75rem, 1.5vw, 0.8125rem);
+  padding: 0.35rem 0.5rem;
+  font-size: 0.7rem;
 }
 
 .excel-btn:not(.danger) {
-  background: #3b82f6;
-  color: white;
+  background: #16a34a;
+  color: #ffffff;
 }
 
 .excel-btn:not(.danger):hover {
-  background: #2563eb;
+  background: #15803d;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
 }
 
 .excel-btn.danger {
   background: #ef4444;
-  color: white;
+  color: #ffffff;
 }
 
 .excel-btn.danger:hover {
   background: #dc2626;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
 }
 
+/* ===========================================
+   STATES
+   =========================================== */
+
+.loading-state {
+  text-align: center;
+  padding: clamp(1.5rem, 4vw, 2.5rem) clamp(0.5rem, 1.5vw, 0.75rem);
+  color: #6b6b60;
+  font-size: 0.9rem;
+}
+
+.subjects-mgmt-empty-state {
+  text-align: center;
+  padding: clamp(2rem, 5vw, 3.5rem) clamp(1rem, 3vw, 1.5rem);
+  color: #6b6b60;
+}
+
+.subjects-mgmt-empty-state i {
+  font-size: clamp(2.5rem, 6vw, 3.5rem);
+  color: #d1d1c8;
+  margin-bottom: 0.75rem;
+  display: block;
+}
+
+.subjects-mgmt-empty-state h3 {
+  margin: 0 0 0.375rem;
+  color: #1a1a1a;
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  font-weight: 700;
+}
+
+.subjects-mgmt-empty-state p {
+  margin: 0 0 1.25rem;
+  color: #6b6b60;
+  font-size: 0.8rem;
+}
+
+/* Back button */
 .subjects-mgmt-back-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 2.5vw, 1.5rem);
-  background: #ffffff;
-  color: #000000;
+  gap: 0.375rem;
+  padding: 10px 20px;
+  background: #fff;
+  color: #1a1a1a;
   text-decoration: none;
-  border: 1px solid #e5e7eb;
-  border-radius: 0;
-  transition: border-color 0.2s ease, background 0.2s ease;
-  font-size: clamp(0.875rem, 2vw, 1rem);
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  border: 1px solid #e8e8e0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  margin-top: 0.25rem;
 }
 
 .subjects-mgmt-back-btn:hover {
-  background: #ffffff;
-  border-color: #000000;
-  color: #000000;
+  background: #f5f5f0;
+  border-color: #d1d1c8;
+  color: #1a1a1a;
   text-decoration: none;
 }
 
 .subjects-mgmt-back-btn i {
-  color: #000000;
+  font-size: 0.8rem;
 }
 
-/* Modal Styles */
+/* ===========================================
+   MODALS
+   =========================================== */
+
 .subjects-mgmt-modal-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: rgba(15, 23, 42, 0.6);
   display: flex;
   align-items: center;
   justify-content: center;
   z-index: 1000;
-  padding: clamp(0.5rem, 2vw, 1rem);
+  padding: clamp(0.5rem, 1.5vw, 0.75rem);
+  overflow-y: auto;
 }
 
 .subjects-mgmt-modal-content {
-  background: white;
-  border-radius: 0;
-  width: 100%;
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 12px 32px rgba(0,0,0,0.2);
   max-width: 600px;
+  width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 10px 25px rgba(0, 0, 0, 0.2);
+  position: relative;
 }
 
 .subjects-mgmt-modal-header {
-  padding: clamp(1rem, 2.5vw, 1.5rem);
-  border-bottom: 1px solid #e5e7eb;
+  padding: clamp(0.75rem, 2vw, 1rem);
+  border-bottom: 1px solid #e8e8e0;
   display: flex;
-  justify-content: space-between;
   align-items: center;
+  justify-content: space-between;
   gap: 1rem;
 }
 
 .subjects-mgmt-modal-header h3 {
   margin: 0;
-  color: #111827;
-  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  font-size: clamp(0.875rem, 2vw, 1rem);
+  font-weight: 700;
+  color: #1a1a1a;
   word-break: break-word;
 }
 
 .subjects-mgmt-modal-close {
   background: none;
   border: none;
-  font-size: clamp(1.25rem, 3vw, 1.5rem);
-  color: #6b7280;
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  color: #6b6b60;
   cursor: pointer;
   padding: 0;
-  width: clamp(28px, 4vw, 32px);
-  height: clamp(28px, 4vw, 32px);
+  width: clamp(28px, 6vw, 34px);
+  height: clamp(28px, 6vw, 34px);
   display: flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0;
-  transition: background 0.2s;
+  border-radius: 8px;
+  transition: all 0.2s ease;
   flex-shrink: 0;
 }
 
 .subjects-mgmt-modal-close:hover {
-  background: #f3f4f6;
+  background: #f5f5f0;
+  color: #1a1a1a;
 }
 
 .subjects-mgmt-modal-body {
-  padding: clamp(1rem, 2.5vw, 1.5rem);
+  padding: clamp(0.75rem, 2vw, 1rem);
 }
 
 .subjects-mgmt-form-group {
-  margin-bottom: clamp(1rem, 2.5vw, 1.5rem);
+  margin-bottom: clamp(0.5rem, 1.5vw, 0.75rem);
 }
 
 .subjects-mgmt-form-group label {
   display: block;
-  margin-bottom: 0.5rem;
-  color: #374151;
-  font-weight: 500;
-  font-size: clamp(0.875rem, 2vw, 1rem);
+  margin-bottom: 0.3rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  font-size: 0.8rem;
 }
 
 .subjects-mgmt-form-group .req {
@@ -315,62 +346,66 @@
 
 .form-control {
   width: 100%;
-  padding: clamp(0.625rem, 1.5vw, 0.75rem);
-  border: 1px solid #d1d5db;
-  border-radius: 0;
-  font-size: clamp(0.875rem, 2vw, 1rem);
-  transition: border-color 0.2s;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #e8e8e0;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  box-sizing: border-box;
+  color: #1a1a1a;
+  transition: all 0.2s ease;
 }
 
 .form-control:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.15);
 }
 
 .form-control:disabled {
-  background: #f3f4f6;
-  color: #6b7280;
+  background: #f5f5f0;
+  color: #6b6b60;
   cursor: not-allowed;
 }
 
 .form-help {
   display: block;
   margin-top: 0.25rem;
-  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
-  color: #6b7280;
+  font-size: 0.7rem;
+  color: #6b6b60;
 }
 
 .subjects-mgmt-modal-footer {
   display: flex;
   justify-content: flex-end;
-  gap: clamp(0.5rem, 1.5vw, 0.75rem);
-  margin-top: clamp(1rem, 2.5vw, 1.5rem);
-  padding-top: clamp(1rem, 2.5vw, 1.5rem);
-  border-top: 1px solid #e5e7eb;
+  gap: 0.5rem;
+  margin-top: clamp(0.5rem, 1.5vw, 0.75rem);
+  padding-top: clamp(0.5rem, 1.5vw, 0.75rem);
+  border-top: 1px solid #e8e8e0;
   flex-wrap: wrap;
 }
 
 .btn-primary,
 .btn-secondary {
-  padding: clamp(0.625rem, 1.5vw, 0.75rem) clamp(1rem, 2.5vw, 1.5rem);
+  padding: 0.5rem 0.75rem;
   border: none;
-  border-radius: 0;
-  font-size: clamp(0.875rem, 2vw, 1rem);
-  font-weight: 500;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
+  transition: all 0.2s ease;
   flex: 1;
-  min-width: 100px;
+  min-width: 80px;
 }
 
 .btn-primary {
-  background: #3b82f6;
+  background: #16a34a;
   color: white;
 }
 
 .btn-primary:hover:not(:disabled) {
-  background: #2563eb;
+  background: #15803d;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(22, 163, 74, 0.25);
 }
 
 .btn-primary:disabled {
@@ -379,49 +414,48 @@
 }
 
 .btn-secondary {
-  background: #6b7280;
-  color: white;
+  background: #ffffff;
+  color: #1a1a1a;
+  border: 1px solid #e8e8e0;
+  box-shadow: 0 1px 2px rgba(0,0,0,0.04);
 }
 
 .btn-secondary:hover {
-  background: #4b5563;
+  background: #f5f5f0;
+  border-color: #d1d1c8;
 }
 
-/* Mobile Responsiveness */
-@media (max-width: 599px) {
+/* ===========================================
+   RESPONSIVE
+   =========================================== */
+
+@media (max-width: 768px) {
   .subjects-mgmt-card-header {
-    flex-direction: column;
-    align-items: flex-start;
+    padding: 0.625rem 0.875rem;
+    font-size: 0.8rem;
   }
-  
-  .subjects-mgmt-header-actions {
-    width: 100%;
-  }
-  
-  .subjects-mgmt-add-btn {
-    width: 100%;
-    justify-content: center;
-  }
-  
-  .subjects-mgmt-table-container {
-    overflow-x: auto;
-    -webkit-overflow-scrolling: touch;
+
+  .subjects-mgmt-card-body {
+    padding: 0.625rem;
   }
 
   .subjects-mgmt-table {
+    font-size: clamp(0.6rem, 1.25vw, 0.7rem);
     min-width: 800px;
   }
-  
+
   .subjects-mgmt-table th,
   .subjects-mgmt-table td {
-    padding: 0.5rem 0.375rem;
+    padding: 0.4rem 0.5rem;
+    white-space: nowrap;
   }
-  
+
   .action-buttons {
     flex-direction: column;
+    gap: 0.25rem;
     width: 100%;
   }
-  
+
   .excel-btn {
     width: 100%;
     justify-content: center;
@@ -432,63 +466,44 @@
   }
 
   .subjects-mgmt-modal-content {
-    width: 100%;
-    max-height: 95vh;
-    border-radius: 0;
+    margin: 0;
+    max-width: 100%;
+    max-height: calc(100vh - 10px);
   }
-  
+
   .subjects-mgmt-modal-footer {
     flex-direction: column-reverse;
   }
-  
+
   .btn-primary,
   .btn-secondary {
     width: 100%;
   }
 }
 
-@media (min-width: 600px) and (max-width: 767px) {
-  .subjects-mgmt-table-container {
-    overflow-x: auto;
+@media (max-width: 480px) {
+  .subjects-mgmt-card-header {
+    font-size: 0.72rem;
+    padding: 0.5rem 0.625rem;
+    flex-direction: column;
+    align-items: flex-start;
   }
 
-  .subjects-mgmt-table {
-    min-width: 800px;
-  }
-  
-  .action-buttons {
-    flex-wrap: wrap;
+  .subjects-mgmt-header-actions {
+    width: 100%;
   }
 
-  .subjects-mgmt-modal-content {
-    width: 95%;
+  .subjects-mgmt-add-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .subjects-mgmt-back-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .form-control {
+    font-size: 16px;
   }
 }
-
-@media (min-width: 768px) {
-  .subjects-mgmt-table-container {
-    overflow-x: auto;
-  }
-  
-  .subjects-mgmt-modal-footer {
-    flex-direction: row;
-  }
-  
-  .btn-primary,
-  .btn-secondary {
-    flex: none;
-  }
-}
-
-@media (min-width: 1200px) {
-  .subjects-mgmt-page-container {
-    max-width: 1600px;
-    margin: 0 auto;
-  }
-  
-  .subjects-mgmt-table th,
-  .subjects-mgmt-table td {
-    padding: 1rem;
-  }
-}
-

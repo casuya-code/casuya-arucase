@@ -25,10 +25,6 @@ const SubjectsYearSelection = ({ formLevel }) => {
     <AdminLayout>
       <div className="subjects-year-selection-page-container">
         <div className="subjects-year-selection-card">
-          <div className="subjects-year-selection-card-header">
-            <i className="fas fa-book"></i>
-            <span>{formLevel} - Choose Year</span>
-          </div>
           <div className="subjects-year-selection-card-body">
             <div
               className="subjects-year-selection-grid"

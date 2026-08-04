@@ -36,10 +36,6 @@ const ParishYearSelection = ({ formLevel }) => {
     <AdminLayout>
       <div className="parish-year-selection-page-container">
         <div className="parish-year-selection-card">
-          <div className="parish-year-selection-card-header">
-            <i className="fas fa-place-of-worship"></i>
-            <span>{formLevel} - Years</span>
-          </div>
           <div className="parish-year-selection-card-body">
             {years.length === 0 ? (
               <p className="parish-year-selection-empty">You do not have access to any years for this class. Contact an administrator.</p>

@@ -48,12 +48,6 @@ const ParishStreamSelection = ({ formLevel, isFormVOrVI = false }) => {
     <AdminLayout>
       <div className="parish-stream-selection-page-container">
         <div className="parish-stream-selection-card">
-          <div className="parish-stream-selection-card-header">
-            <i className="fas fa-place-of-worship"></i>
-            <span>
-              {formLevel} {year && `- ${year}`} - Select Stream
-            </span>
-          </div>
           <div className="parish-stream-selection-card-body">
             {isFormVOrVI && formVVIStreams.length === 0 ? (
               <p className="parish-stream-selection-empty">You do not have access to any streams for this form. Contact an administrator.</p>

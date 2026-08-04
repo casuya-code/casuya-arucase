@@ -46,19 +46,10 @@ const ScoreEntryMonthSelectionTogether = () => {
   return (
     <AdminLayout>
       <div className="score-entry-month-selection-page-container">
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-calendar-alt"></i>
-            {year} · {currentTerm} - Select Month for Score Entry
-            <div className="header-actions">
-              <Link to={getBackPath()} className="excel-btn small secondary">
-                <i className="fas fa-arrow-left"></i> Back to Subjects
-              </Link>
-            </div>
-          </div>
-          <div className="excel-card-body">
+        <div className="score-entry-month-selection-card">
+          <div className="score-entry-month-selection-card-body">
             {allMonths.length === 0 ? (
-              <div className="empty-state">
+              <div className="score-entry-month-selection-empty">
                 <p>You are not allowed to enter scores for any month. Contact an administrator to assign score entry months in User Management.</p>
               </div>
             ) : (
@@ -87,6 +78,10 @@ const ScoreEntryMonthSelectionTogether = () => {
                 })}
               </div>
             )}
+            <Link to={getBackPath()} className="score-entry-month-selection-back-btn">
+              <i className="fas fa-arrow-left"></i>
+              <span>Back to Subjects</span>
+            </Link>
           </div>
         </div>
       </div>

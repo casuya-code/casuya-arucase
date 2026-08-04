@@ -32,15 +32,6 @@ const ScoreEntryFormVVIYearSelectionTogether = () => {
     <AdminLayout>
       <div className="score-entry-year-selection-page-container">
         <div className="year-selection-card">
-          <div className="year-selection-card-header">
-            <i className="fas fa-layer-group"></i>
-            <span>{normalizedForm} (All Streams) — Choose Academic Year</span>
-            <div className="header-actions">
-              <Link to="/admin/score-entry" className="excel-btn small secondary">
-                <i className="fas fa-arrow-left"></i> Back
-              </Link>
-            </div>
-          </div>
           <div className="year-selection-card-body">
             <p className="form-vvi-year-help">{helpText}</p>
             {years.length === 0 ? (
@@ -82,6 +73,10 @@ const ScoreEntryFormVVIYearSelectionTogether = () => {
                 })}
               </div>
             )}
+            <Link to="/admin/score-entry" className="year-selection-back-btn">
+              <i className="fas fa-arrow-left"></i>
+              <span>Back</span>
+            </Link>
           </div>
         </div>
       </div>

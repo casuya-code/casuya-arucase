@@ -54,15 +54,6 @@ const ScoreEntry = () => {
     <AdminLayout>
       <div className="individual-score-page-container">
         <div className="individual-score-card">
-          <div className="individual-score-card-header">
-            <div className="individual-score-card-header-title">
-              <i className="fas fa-graduation-cap"></i>
-              <span>Individual Subject Score Entrance</span>
-            </div>
-            <div className="individual-score-header-info">
-              <span>Select a form to enter subject scores</span>
-            </div>
-          </div>
           <div className="individual-score-card-body">
             {forms.length === 0 && togetherForms.length === 0 ? (
               <div className="empty-state">

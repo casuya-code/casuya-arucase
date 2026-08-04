@@ -42,23 +42,13 @@ const ScoreEntryYearSelection = ({ formLevel }) => {
   return (
     <AdminLayout>
       <div className="score-entry-year-selection-page-container">
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className={`fas fa-${formLevel === 'FORM I' ? '1' : formLevel === 'FORM II' ? '2' : formLevel === 'FORM III' ? '3' : '4'}`}></i>
-            {formLevel} - Choose Year
-            <div className="header-actions">
-              <Link to={getBackPath()} className="excel-btn small secondary">
-                <i className="fas fa-arrow-left"></i> Back to Forms
-              </Link>
-            </div>
-          </div>
-          <div className="excel-card-body">
+        <div className="score-entry-year-selection-card">
+          <div className="score-entry-year-selection-card-body">
             {years.length === 0 ? (
-              <div className="empty-state">
+              <div className="score-entry-year-selection-empty">
                 <p>You do not have access to any years for this class, or no years have been allocated to you. Contact an administrator.</p>
               </div>
             ) : (
-            <>
               <div
                 className="year-selection-grid"
                 style={{ '--year-card-count': years.length }}
@@ -81,8 +71,11 @@ const ScoreEntryYearSelection = ({ formLevel }) => {
                   </Link>
                 ))}
               </div>
-            </>
             )}
+            <Link to={getBackPath()} className="score-entry-year-selection-back-btn">
+              <i className="fas fa-arrow-left"></i>
+              <span>Back to Forms</span>
+            </Link>
           </div>
         </div>
       </div>

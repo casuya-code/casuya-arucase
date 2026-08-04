@@ -11,7 +11,15 @@ const AdminLayout = ({ children }) => {
   const { pathname } = useLocation();
   const studentRegistrationFrame =
     pathname === '/admin/students/registration' ||
-    pathname.startsWith('/admin/students/registration/');
+    pathname.startsWith('/admin/students/registration/') ||
+    pathname === '/admin/students/photos' ||
+    pathname.startsWith('/admin/students/photos/') ||
+    pathname === '/admin/students/parishes' ||
+    pathname.startsWith('/admin/students/parishes/') ||
+    pathname === '/admin/subjects' ||
+    pathname.startsWith('/admin/subjects/') ||
+    pathname === '/admin/score-entry' ||
+    pathname.startsWith('/admin/score-entry/');
   const publicPagesFrame = pathname === '/admin/public-pages';
 
   return (

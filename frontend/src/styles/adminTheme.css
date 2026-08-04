@@ -37,7 +37,6 @@
 .admin-layout .admin-main-content .parish-card-header,
 .admin-layout .admin-main-content .parish-mgmt-card-header,
 .admin-layout .admin-main-content .photos-mgmt-card-header,
-.admin-layout .admin-main-content .individual-score-card-header,
 .admin-layout .admin-main-content .form-card-header,
 .admin-layout .admin-main-content .recommendation-card-header,
 .admin-layout .admin-main-content .branding-card-header,
@@ -75,7 +74,6 @@
 .admin-layout .admin-main-content .parish-card-header i,
 .admin-layout .admin-main-content .parish-mgmt-card-header i,
 .admin-layout .admin-main-content .photos-mgmt-card-header i,
-.admin-layout .admin-main-content .individual-score-card-header i,
 .admin-layout .admin-main-content .form-card-header i,
 .admin-layout .admin-main-content .recommendation-card-header i,
 .admin-layout .admin-main-content .branding-card-header i,
@@ -113,14 +111,7 @@
 }
 
 /* Main content already has horizontal padding — drop duplicate inset on these wrappers */
-.admin-layout .admin-main-content .subjects-year-selection-page-container,
-.admin-layout .admin-main-content .subjects-stream-selection-page-container,
-.admin-layout .admin-main-content .parish-stream-selection-page-container,
-.admin-layout .admin-main-content .marks-config-page-container,
-.admin-layout .admin-main-content .score-entry-year-selection-page-container,
-.admin-layout .admin-main-content .score-entry-stream-selection-page-container,
-.admin-layout .admin-main-content .score-entry-subject-selection-page-container,
-.admin-layout .admin-main-content .score-entry-month-selection-page-container {
+.admin-layout .admin-main-content .marks-config-page-container {
   padding-left: 0;
   padding-right: 0;
   min-height: 0;
@@ -134,12 +125,7 @@
 .admin-layout .admin-main-content .bulk-report-page,
 .admin-layout .admin-main-content .report-container,
 .admin-layout .admin-main-content .marks-config-student-selection-page-container,
-.admin-layout .admin-main-content .marks-config-mgmt-page-container,
-.admin-layout .admin-main-content .score-entry-year-selection-page-container,
-.admin-layout .admin-main-content .score-entry-stream-selection-page-container,
-.admin-layout .admin-main-content .score-entry-subject-selection-page-container,
-.admin-layout .admin-main-content .score-entry-month-selection-page-container,
-.admin-layout .admin-main-content .score-entry-enter-page-container {
+.admin-layout .admin-main-content .marks-config-mgmt-page-container {
   background: #ffffff !important;
   background-image: none !important;
 }

@@ -14,10 +14,6 @@ const SubjectsStreamSelection = ({ formLevel }) => {
     <AdminLayout>
       <div className="subjects-stream-selection-page-container">
         <div className="subjects-stream-selection-card">
-          <div className="subjects-stream-selection-card-header">
-            <i className="fas fa-book"></i>
-            <span>{formLevel} - Select Stream</span>
-          </div>
           <div className="subjects-stream-selection-card-body">
             <div className="subjects-stream-selection-grid">
               {formVVIStreams.map((stream) => (

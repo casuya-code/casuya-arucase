@@ -1,132 +1,122 @@
-/**
- * Parish Stream Selection Styles
- */
+/* Parish Stream Selection — Clean Modern Design */
 .parish-stream-selection-page-container {
-  padding: clamp(1rem, 3vw, 2rem);
+  background: #f5f5f0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  box-sizing: border-box;
+  padding: clamp(1rem, 3vw, 2rem) clamp(0.75rem, 2.5vw, 1.5rem);
 }
 
 .parish-stream-selection-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0;
-  box-shadow: none;
-  overflow: hidden;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .parish-stream-selection-card-header {
-  background: #ffffff;
-  color: #000000;
-  border-bottom: 1px solid #e5e7eb;
-  padding: clamp(1rem, 2.5vw, 1.5rem);
-  font-size: clamp(1rem, 2.5vw, 1.25rem);
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  flex-wrap: wrap;
+  display: none;
 }
 
 .parish-stream-selection-card-body {
-  padding: clamp(1rem, 3vw, 2rem);
+  padding: 0;
 }
 
-/* Flex so few items (e.g. two Form I–IV streams) share the row evenly */
+.parish-stream-selection-empty {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  padding: 2.5rem 1.5rem;
+  text-align: center;
+  color: #6b6b60;
+  font-size: 0.9rem;
+}
+
+/* Stream grid */
 .parish-stream-selection-grid {
   display: flex;
   flex-wrap: wrap;
   gap: clamp(0.75rem, 2vw, 1rem);
-  margin-bottom: clamp(1rem, 2vw, 1.5rem);
   width: 100%;
   box-sizing: border-box;
+  margin-bottom: 1.25rem;
 }
 
 .parish-stream-selection-card-item {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0;
-  padding: clamp(1rem, 2.5vw, 1.5rem);
-  text-align: center;
-  text-decoration: none;
-  color: #000000;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
-  min-height: clamp(80px, 12vw, 100px);
-  flex: 1 1 220px;
-  min-width: 0;
-  box-sizing: border-box;
-  box-shadow: none;
-}
-
-.parish-stream-selection-card-item:hover {
-  border-color: #000000;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  transform: none;
-  color: #000000;
-  text-decoration: none;
-}
-
-.parish-stream-selection-name {
-  font-size: clamp(1rem, 2.5vw, 1.125rem);
-  font-weight: 600;
-  color: #000000;
-}
-
-.parish-stream-selection-code {
-  font-size: clamp(0.75rem, 1.5vw, 0.875rem);
-  color: #000000;
-}
-
-.parish-stream-selection-back-btn {
-  display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: clamp(0.625rem, 2vw, 0.75rem) clamp(1rem, 2.5vw, 1.5rem);
+  justify-content: center;
+  text-decoration: none;
   background: #ffffff;
-  color: #000000;
-  text-decoration: none;
-  border-radius: 0;
-  transition: background 0.2s ease;
-  font-size: clamp(0.875rem, 2vw, 1rem);
-  border: 1px solid #e5e7eb;
-}
-
-.parish-stream-selection-back-btn:hover {
-  background: #f9fafb;
-  color: #000000;
-  text-decoration: none;
-}
-
-.parish-stream-selection-back-btn i {
-  color: #000000;
-}
-
-.parish-stream-selection-empty {
-  color: #000000;
+  border: 1px solid #e8e8e0;
+  border-radius: 12px;
+  padding: clamp(1.25rem, 3vw, 1.75rem) clamp(1rem, 2.5vw, 1.5rem);
   text-align: center;
-  margin: 0;
+  color: #1a1a1a;
+  transition: all 0.2s ease;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  min-height: clamp(100px, 14vw, 130px);
+  box-sizing: border-box;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  touch-action: manipulation;
+  flex: 1 1 200px;
+  min-width: 0;
 }
 
-/* Single column on very narrow screens */
-@media (max-width: 480px) {
+@media (max-width: 599px) {
   .parish-stream-selection-card-item {
     flex: 1 1 100%;
   }
 }
 
-/* Slightly larger tap targets on wide screens only */
-@media (min-width: 1200px) {
-  .parish-stream-selection-card-item {
-    padding: 1.25rem 1.5rem;
-    min-height: 110px;
-  }
+.parish-stream-selection-card-item:active {
+  transform: scale(0.98);
+}
 
-  .parish-stream-selection-name {
-    font-size: 1.125rem;
-  }
+.parish-stream-selection-card-item:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border-color: #16a34a;
+}
 
-  .parish-stream-selection-code {
-    font-size: 0.9375rem;
-  }
+.parish-stream-selection-name {
+  font-size: clamp(1rem, 2.5vw, 1.25rem);
+  font-weight: 800;
+  margin-bottom: clamp(0.25rem, 0.8vw, 0.5rem);
+  line-height: 1.3;
+  color: #1a1a1a;
+}
+
+.parish-stream-selection-code {
+  font-size: clamp(0.75rem, 1.5vw, 0.85rem);
+  font-weight: 500;
+  line-height: 1.3;
+  color: #6b6b60;
+}
+
+/* Back button */
+.parish-stream-selection-back-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: #fff;
+  color: #1a1a1a;
+  text-decoration: none;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  border: 1px solid #e8e8e0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+}
+
+.parish-stream-selection-back-btn:hover {
+  background: #f5f5f0;
+  border-color: #d1d1c8;
+}
+
+.parish-stream-selection-back-btn i {
+  font-size: 0.8rem;
 }

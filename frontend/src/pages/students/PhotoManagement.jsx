@@ -538,18 +538,20 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
       <div className="photos-mgmt-page-container">
         <div className="photos-mgmt-card">
           <div className="photos-mgmt-card-header">
-            <i className="fas fa-camera"></i>
-            <span>
-              Student Photos Management - {normalizedLevel} {stream} {yearNum}
+            <div className="photos-mgmt-card-title">
+              <i className="fas fa-camera"></i>
+              <span>Student Photos Management - {normalizedLevel} {stream} {yearNum}</span>
+            </div>
+            <label className="photos-mgmt-term-field">
+              <span>Term</span>
               <select
                 value={selectedTerm}
                 onChange={(e) => setSelectedTerm(e.target.value)}
-                style={{ marginLeft: '10px', padding: '4px 8px', fontSize: '14px' }}
               >
                 <option value="First Term">First Term (Jul-Dec)</option>
                 <option value="Second Term">Second Term (Jan-Jun)</option>
               </select>
-            </span>
+            </label>
           </div>
           <div className="photos-mgmt-card-body">
             {!hasValidParams ? (

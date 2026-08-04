@@ -37,10 +37,6 @@ const StudentParishes = () => {
     <AdminLayout>
       <div className="parish-page-container">
         <div className="parish-card">
-          <div className="parish-card-header">
-            <i className="fas fa-place-of-worship"></i>
-            <span>Classes</span>
-          </div>
           <div className="parish-card-body">
             {visibleForms.length === 0 ? (
               <p className="parish-selection-empty">

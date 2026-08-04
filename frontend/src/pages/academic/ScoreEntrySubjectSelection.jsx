@@ -82,21 +82,12 @@ const ScoreEntrySubjectSelection = ({ formLevel }) => {
   return (
     <AdminLayout>
       <div className="score-entry-subject-selection-page-container">
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-book"></i>
-            {normalizedLevel} {normalizedStream && normalizedStream !== 'A' ? normalizedStream : ''} {year} {normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI' ? ` · ${normalizeFormVVITerm(decodedTerm)}` : ''} - Select Subject
-            <div className="header-actions">
-              <Link to={getBackPath()} className="excel-btn small secondary">
-                <i className="fas fa-arrow-left"></i> Back
-              </Link>
-            </div>
-          </div>
-          <div className="excel-card-body">
+        <div className="score-entry-subject-selection-card">
+          <div className="score-entry-subject-selection-card-body">
             {isLoading ? (
               <div className="loading-state">Loading subjects...</div>
             ) : subjects.length === 0 ? (
-              <div className="empty-state">
+              <div className="score-entry-subject-selection-empty">
                 <i className="fas fa-book-open empty-icon"></i>
                 <h3>No Subjects Available</h3>
                 <p>
@@ -105,7 +96,7 @@ const ScoreEntrySubjectSelection = ({ formLevel }) => {
                     : 'No subjects have been added for this class yet. Please add subjects first.'}
                 </p>
                 {isAdminLike() && (
-                  <Link to="/admin/subjects" className="excel-btn primary">
+                  <Link to="/admin/subjects" className="score-entry-subject-selection-mgmt-btn">
                     <i className="fas fa-plus"></i> Manage Subjects
                   </Link>
                 )}
@@ -129,6 +120,10 @@ const ScoreEntrySubjectSelection = ({ formLevel }) => {
                 ))}
               </div>
             )}
+            <Link to={getBackPath()} className="score-entry-subject-selection-back-btn">
+              <i className="fas fa-arrow-left"></i>
+              <span>Back</span>
+            </Link>
           </div>
         </div>
       </div>

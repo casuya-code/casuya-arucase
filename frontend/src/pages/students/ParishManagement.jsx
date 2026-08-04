@@ -626,12 +626,13 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
       <div className="parish-mgmt-page-container">
         <div className="parish-mgmt-card">
           <div className="parish-mgmt-card-header">
-            <i className="fas fa-place-of-worship" aria-hidden="true"></i>
-            <div className="parish-mgmt-card-header-content">
-              <span className="parish-mgmt-card-header-title">
-                Parishes Management - {normalizedLevel} {stream} {apiYear}
-              </span>
-              <div className="parish-mgmt-card-header-meta">
+            <div className="parish-mgmt-card-title">
+              <i className="fas fa-place-of-worship" aria-hidden="true"></i>
+              <span>Parishes Management - {normalizedLevel} {stream} {apiYear}</span>
+            </div>
+            <div className="parish-mgmt-card-header-meta">
+              <label className="parish-mgmt-term-field">
+                <span>Term</span>
                 <select
                   className="parish-term-select"
                   value={selectedTerm}
@@ -641,14 +642,14 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
                   <option value="First Term">First Term (Jul-Dec)</option>
                   <option value="Second Term">Second Term (Jan-Jun)</option>
                 </select>
-                <span className="parish-load-status">
-                  {parishesLoading ? '(Loading parishes...)' : 
-                   parishesError ? '(Error loading parishes)' :
-                   parishesData && typeof parishesData === 'object' && Object.keys(parishesData).length > 0 ? 
-                     `(${Object.keys(parishesData).length} parish${Object.keys(parishesData).length !== 1 ? 'es' : ''} loaded)` :
-                     '(No parishes loaded)'}
-                </span>
-              </div>
+              </label>
+              <span className="parish-load-status">
+                {parishesLoading ? 'Loading parishes...' : 
+                 parishesError ? 'Error loading parishes' :
+                 parishesData && typeof parishesData === 'object' && Object.keys(parishesData).length > 0 ? 
+                   `${Object.keys(parishesData).length} parish${Object.keys(parishesData).length !== 1 ? 'es' : ''} loaded` :
+                   'No parishes loaded'}
+              </span>
             </div>
           </div>
           <div className="parish-mgmt-card-body">

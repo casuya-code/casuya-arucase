@@ -36,10 +36,6 @@ const PhotoYearSelection = ({ formLevel }) => {
     <AdminLayout>
       <div className="photo-year-selection-page-container">
         <div className="photo-year-selection-card">
-          <div className="photo-year-selection-card-header">
-            <i className="fas fa-camera"></i>
-            <span>{formLevel} - Years</span>
-          </div>
           <div className="photo-year-selection-card-body">
             {years.length === 0 ? (
               <p className="photo-year-selection-empty">You do not have access to any years for this class. Contact an administrator.</p>
