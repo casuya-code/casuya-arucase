@@ -637,9 +637,9 @@ const StudentList = () => {
           onRowSelect={(rows) => setSelectedStudents(rows)}
         />
       ) : (
-        <div style={{ padding: '40px', textAlign: 'center', color: '#64748b' }}>
-          <i className="fas fa-users" style={{ fontSize: '48px', marginBottom: '16px', color: '#cbd5e1' }}></i>
-          <h3 style={{ marginBottom: '8px', color: '#1e293b' }}>No Students Found</h3>
+        <div className="student-list-empty">
+          <i className="fas fa-users"></i>
+          <h3>No Students Found</h3>
           <p>No students match your current filters. Try adjusting the filters or add new students.</p>
         </div>
       )}
