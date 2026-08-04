@@ -55,15 +55,6 @@ const CommentsTermSelection = ({ formLevel, moduleName, basePath }) => {
     <AdminLayout>
       <div className="marks-config-term-selection-page-container">
         <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-calendar-check"></i>
-            Select Term
-            <div className="header-actions">
-              <Link to={getBackPath()} className="excel-btn small secondary">
-                <i className="fas fa-arrow-left"></i> Back
-              </Link>
-            </div>
-          </div>
           <div className="excel-card-body">
             {isFormVOrVI ? (
               <FormVVITermGrid
@@ -94,6 +85,10 @@ const CommentsTermSelection = ({ formLevel, moduleName, basePath }) => {
                 ))}
               </div>
             )}
+            <Link to={getBackPath()} className="year-selection-back-btn" style={{ marginTop: '1rem' }}>
+              <i className="fas fa-arrow-left"></i>
+              <span>Back</span>
+            </Link>
           </div>
         </div>
       </div>

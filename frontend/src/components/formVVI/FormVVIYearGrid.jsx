@@ -19,10 +19,6 @@ const FormVVIYearGrid = ({
   return (
     <div className="year-selection-page-container">
       <div className="year-selection-card">
-        <div className="year-selection-card-header">
-          <i className="fas fa-calendar-alt"></i>
-          <span>{title}</span>
-        </div>
         <div className="year-selection-card-body">
           <p className="form-vvi-year-help">{helpText}</p>
           {years.length === 0 ? (

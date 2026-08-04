@@ -35,12 +35,6 @@ const StreamSelection = ({ formLevel, isFormVOrVI = false }) => {
     <AdminLayout>
       <div className="stream-selection-page-container">
         <div className="stream-selection-card">
-          <div className="stream-selection-card-header">
-            <i className="fas fa-layer-group"></i>
-            <span>
-              {formLevel} {year && `- ${year}`} - Select Stream
-            </span>
-          </div>
           <div className="stream-selection-card-body">
             {isFormVOrVI && formVVIStreams.length === 0 ? (
               <p className="stream-selection-empty">You do not have access to any streams for this form. Contact an administrator.</p>
@@ -60,7 +54,6 @@ const StreamSelection = ({ formLevel, isFormVOrVI = false }) => {
                     </Link>
                   ))
                 ) : (
-                  // FORM I-IV standard streams
                   standardStreams.map((stream) => (
                     <Link
                       key={stream}
@@ -87,4 +80,3 @@ const StreamSelection = ({ formLevel, isFormVOrVI = false }) => {
 };
 
 export default StreamSelection;
-

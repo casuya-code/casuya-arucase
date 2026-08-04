@@ -36,10 +36,6 @@ const YearSelection = ({ formLevel }) => {
     <AdminLayout>
       <div className="year-selection-page-container">
         <div className="year-selection-card">
-          <div className="year-selection-card-header">
-            <i className="fas fa-calendar-alt"></i>
-            <span>{formLevel} - Choose Year</span>
-          </div>
           <div className="year-selection-card-body">
             {years.length === 0 ? (
               <p className="year-selection-empty">You do not have access to any years for this class. Contact an administrator.</p>
@@ -74,4 +70,3 @@ const YearSelection = ({ formLevel }) => {
 };
 
 export default YearSelection;
-

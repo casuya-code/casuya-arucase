@@ -1,21 +1,23 @@
 /* ===========================================
-   REGISTRATION FORM — Sharp, Colorful, Clean
+   REGISTRATION FORM — Clean Modern Design
    =========================================== */
 
 .registration-form-page-container {
+  background: #f5f5f0;
+  min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
-  max-width: 100vw;
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
-  overflow-x: hidden;
+  padding: clamp(1rem, 3vw, 2rem) clamp(0.75rem, 2.5vw, 1.5rem);
   display: flex;
   flex-direction: column;
   gap: 1rem;
+  max-width: 960px;
+  margin: 0 auto;
 }
 
 /* ===========================================
-   CARDS — Sharp corners, color accents
+   CARDS — Clean rounded cards
    =========================================== */
 
 .registration-form-card,
@@ -23,19 +25,19 @@
 .bulk-delete-card,
 .registered-students-card {
   background: #ffffff;
-  border: 2px solid #e2e8f0;
-  border-radius: 0;
-  box-shadow: 0 2px 6px rgba(15, 23, 42, 0.06);
+  border: 1px solid #e8e8e0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   overflow: hidden;
 }
 
-/* Card headers — sharp, colorful */
+/* Card headers */
 .registration-form-card-header,
 .registered-students-card-header,
 .bulk-upload-card-header {
-  background: #0f172a;
+  background: #1a1a1a;
   color: #ffffff;
-  padding: 0.65rem 1rem;
+  padding: 0.75rem 1.25rem;
   font-size: clamp(0.85rem, 2vw, 0.95rem);
   font-weight: 700;
   display: flex;
@@ -45,9 +47,7 @@
 }
 
 .registration-form-card-header i,
-.registered-students-card-header i,
-.bulk-upload-card-header i {
-  font-size: clamp(0.85rem, 2vw, 0.95rem);
+.registered-students-card-header i {
   color: #4ade80;
 }
 
@@ -59,7 +59,7 @@
 .registration-form-card-body,
 .bulk-upload-card-body,
 .registered-students-card-body {
-  padding: clamp(0.75rem, 2vw, 1rem);
+  padding: clamp(1rem, 2.5vw, 1.5rem);
 }
 
 /* ===========================================
@@ -96,7 +96,7 @@
 }
 
 /* ===========================================
-   FORM FIELDS — Sharp inputs
+   FORM FIELDS — Clean inputs
    =========================================== */
 
 .form-field {
@@ -110,9 +110,9 @@
 }
 
 .form-group label {
-  font-weight: 700;
+  font-weight: 600;
   margin-bottom: 0.3rem;
-  color: #0f172a;
+  color: #1a1a1a;
   font-size: clamp(0.7rem, 1.5vw, 0.78rem);
   text-transform: uppercase;
   letter-spacing: 0.04em;
@@ -123,24 +123,24 @@
 }
 
 .form-input {
-  padding: 0.5rem 0.75rem;
-  border: 2px solid #d1d5db;
-  border-radius: 0;
+  padding: 0.55rem 0.85rem;
+  border: 1px solid #e0ddd5;
+  border-radius: 8px;
   font-size: clamp(0.78rem, 1.5vw, 0.85rem);
   font-weight: 500;
-  color: #0f172a;
+  color: #1a1a1a;
   background: #ffffff;
   transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #01a72b;
-  box-shadow: 0 0 0 3px rgba(1, 167, 43, 0.12);
+  border-color: #16a34a;
+  box-shadow: 0 0 0 3px rgba(22, 163, 74, 0.12);
 }
 
 .form-input:disabled {
-  background: #f1f5f9;
+  background: #f5f5f0;
   cursor: not-allowed;
   opacity: 0.7;
 }
@@ -155,7 +155,7 @@
   align-items: flex-end;
 }
 
-/* Action buttons row — Add, Cancel, Back in one line */
+/* Action buttons row */
 .form-actions-row {
   display: flex;
   gap: 0.5rem;
@@ -169,7 +169,7 @@
 }
 
 /* ===========================================
-   BUTTONS — Sharp, colorful, well-arranged
+   BUTTONS — Clean, rounded
    =========================================== */
 
 .form-btn {
@@ -179,8 +179,8 @@
   gap: 0.4rem;
   padding: 0.5rem 0.85rem;
   border: none;
-  border-radius: 0;
-  font-weight: 700;
+  border-radius: 8px;
+  font-weight: 600;
   font-size: clamp(0.72rem, 1.5vw, 0.8rem);
   cursor: pointer;
   transition: background 0.15s ease, transform 0.12s ease, box-shadow 0.15s ease;
@@ -191,26 +191,26 @@
 }
 
 .form-btn.primary {
-  background: #01a72b;
+  background: #16a34a;
   color: #ffffff;
-  box-shadow: 0 2px 6px rgba(1, 167, 43, 0.25);
+  box-shadow: 0 2px 6px rgba(22, 163, 74, 0.25);
 }
 
 .form-btn.primary:hover:not(:disabled) {
-  background: #028a23;
+  background: #15803d;
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(1, 167, 43, 0.3);
+  box-shadow: 0 4px 12px rgba(22, 163, 74, 0.3);
 }
 
 .form-btn.secondary {
-  background: #f1f5f9;
-  color: #334155;
-  border: 2px solid #d1d5db;
+  background: #f5f5f0;
+  color: #4a4a40;
+  border: 1px solid #e0ddd5;
 }
 
 .form-btn.secondary:hover:not(:disabled) {
-  background: #e2e8f0;
-  border-color: #9ca3af;
+  background: #e8e8e0;
+  border-color: #c8c8c0;
 }
 
 .form-btn.danger {
@@ -294,7 +294,7 @@
 .file-label {
   padding: 0.45rem 0.75rem;
   border: 2px dashed #93c5fd;
-  border-radius: 0;
+  border-radius: 8px;
   background: #eff6ff;
   cursor: pointer;
   font-size: clamp(0.72rem, 1.5vw, 0.8rem);
@@ -323,7 +323,7 @@
 
 .bulk-delete-card {
   border-color: #fecaca;
-  border-left: 5px solid #ef4444;
+  border-left: 4px solid #ef4444;
 }
 
 .bulk-delete-card-header {
@@ -358,8 +358,8 @@
 .bulk-delete-modal {
   background: #fff;
   border: 2px solid #fecaca;
-  border-left: 5px solid #ef4444;
-  border-radius: 0;
+  border-left: 4px solid #ef4444;
+  border-radius: 12px;
   max-width: 32rem;
   width: 100%;
   padding: 1.5rem;
@@ -376,7 +376,7 @@
 .bulk-delete-modal p {
   margin: 0 0 0.75rem;
   font-size: 0.85rem;
-  color: #334155;
+  color: #4a4a40;
   line-height: 1.5;
 }
 
@@ -386,7 +386,7 @@
   font-weight: 700;
   background: #fef2f2;
   border: 2px dashed #f87171;
-  border-radius: 0;
+  border-radius: 8px;
   padding: 0.6rem 0.85rem;
   word-break: break-word;
   color: #991b1b;
@@ -406,15 +406,15 @@
 }
 
 /* ===========================================
-   REGISTERED STUDENTS TABLE — Sharp, clean
+   REGISTERED STUDENTS TABLE
    =========================================== */
 
 .registered-students-card {
-  border-color: #c9cdd4;
+  border-color: #e8e8e0;
 }
 
 .registered-students-card-header {
-  background: #0f172a;
+  background: #1a1a1a;
 }
 
 .registered-students-card-header i {
@@ -433,33 +433,30 @@
 }
 
 .registered-table thead {
-  background: #0f172a;
+  background: #f5f5f0;
 }
 
 .registered-table th {
-  padding: 0.6rem 0.75rem;
+  padding: 0.65rem 0.75rem;
   text-align: left;
   font-weight: 700;
-  color: #ffffff;
+  color: #4a4a40;
   font-size: clamp(0.68rem, 1.3vw, 0.75rem);
   text-transform: uppercase;
   letter-spacing: 0.04em;
   white-space: nowrap;
+  border-bottom: 2px solid #e0ddd5;
 }
 
 .registered-table td {
   padding: 0.55rem 0.75rem;
-  border-bottom: 1px solid #e2e8f0;
-  color: #334155;
+  border-bottom: 1px solid #f0f0ea;
+  color: #1a1a1a;
   font-weight: 500;
 }
 
-.registered-table tbody tr:nth-child(even) {
-  background: #f8fafc;
-}
-
 .registered-table tbody tr:hover {
-  background: #f1f5f9;
+  background: #f5f5f0;
 }
 
 .clickable-cell {
@@ -485,7 +482,7 @@
 }
 
 .action-buttons .form-btn.small {
-  border-radius: 0;
+  border-radius: 8px;
 }
 
 .action-buttons .form-btn.small:not(.danger) {
@@ -516,13 +513,13 @@
 .empty-state {
   text-align: center;
   padding: clamp(1.5rem, 4vw, 2.5rem);
-  color: #64748b;
+  color: #6b6b60;
 }
 
 .empty-state i {
   font-size: 2rem;
   margin-bottom: 0.75rem;
-  color: #94a3b8;
+  color: #9ca3af;
 }
 
 .empty-state p {
@@ -531,7 +528,7 @@
 }
 
 /* ===========================================
-   PAGINATION — Sharp, centered
+   PAGINATION
    =========================================== */
 
 .pagination-controls {
@@ -541,13 +538,13 @@
   gap: 0.35rem;
   padding: 0.75rem;
   background: #ffffff;
-  border: 2px solid #e2e8f0;
-  border-radius: 0;
+  border: 1px solid #e8e8e0;
+  border-radius: 10px;
 }
 
 .pagination-info {
   font-size: 0.8rem;
-  color: #64748b;
+  color: #6b6b60;
   font-weight: 600;
   padding: 0 0.5rem;
   font-variant-numeric: tabular-nums;
@@ -559,22 +556,21 @@
 }
 
 .pagination-controls .form-btn:not(:disabled) {
-  background: #f1f5f9;
-  color: #334155;
-  border: 1px solid #d1d5db;
+  background: #f5f5f0;
+  color: #4a4a40;
+  border: 1px solid #e0ddd5;
 }
 
 .pagination-controls .form-btn:not(:disabled):hover {
-  background: #01a72b;
+  background: #16a34a;
   color: #ffffff;
-  border-color: #01a72b;
+  border-color: #16a34a;
 }
 
 /* ===========================================
-   RESPONSIVE — Mobile first
+   RESPONSIVE
    =========================================== */
 
-/* Tablet */
 @media (max-width: 768px) {
   .registration-form-card-body,
   .bulk-upload-card-body,
@@ -613,10 +609,10 @@
   }
 }
 
-/* Mobile */
 @media (max-width: 480px) {
   .registration-form-page-container {
     gap: 0.75rem;
+    padding: 0.75rem;
   }
 
   .registration-form-card-body,
@@ -625,13 +621,11 @@
     padding: 0.6rem;
   }
 
-  /* Form grid: 2 columns for fields */
   .registration-form-grid {
     grid-template-columns: 1fr 1fr;
     gap: 0.5rem;
   }
 
-  /* Actions row spans full width, buttons side by side */
   .form-actions-row {
     grid-column: 1 / -1;
     gap: 0.4rem;
@@ -642,7 +636,6 @@
     font-size: 0.82rem;
   }
 
-  /* Labels and inputs tighter */
   .form-group label {
     font-size: 0.68rem;
     margin-bottom: 0.2rem;
@@ -654,7 +647,6 @@
     min-height: 36px;
   }
 
-  /* Bulk actions stacked */
   .bulk-upload-actions.csv-bulk-actions {
     gap: 0.4rem;
   }
@@ -673,7 +665,6 @@
     font-size: 0.78rem;
   }
 
-  /* Danger zone */
   .bulk-delete-card-header {
     font-size: 0.82rem;
     padding: 0.55rem 0.75rem;
@@ -691,7 +682,6 @@
     font-size: 0.8rem;
   }
 
-  /* Table smaller */
   .registered-table {
     font-size: 0.68rem;
     min-width: 500px;
@@ -713,7 +703,6 @@
     padding: 0.3rem;
   }
 
-  /* Pagination compact */
   .pagination-controls {
     gap: 0.2rem;
     padding: 0.5rem;
@@ -725,7 +714,6 @@
   }
 }
 
-/* Very small phones */
 @media (max-width: 360px) {
   .registration-form-grid {
     grid-template-columns: 1fr;

@@ -57,11 +57,6 @@ const FormVVITermGrid = ({
           )
         )}
       </div>
-      {backPath ? (
-        <Link to={backPath} className="excel-btn small secondary" style={{ marginTop: 16 }}>
-          <i className="fas fa-arrow-left"></i> Back
-        </Link>
-      ) : null}
     </>
   );
 };

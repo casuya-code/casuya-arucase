@@ -33,7 +33,6 @@ const ActionSelectionVVI = ({ formLevel }) => {
   };
   
   const getRegisteredStudentsPath = () => {
-    // For Form V-VI, we can use the StudentList component with filters
     return `/students/list?level=${encodeURIComponent(formLevel)}&stream=${encodeURIComponent(stream)}&year=${year}&term=${encodeURIComponent(term)}`;
   };
 
@@ -41,12 +40,6 @@ const ActionSelectionVVI = ({ formLevel }) => {
     <AdminLayout>
       <div className="action-selection-page-container">
         <div className="action-selection-card">
-          <div className="action-selection-card-header">
-            <i className="fas fa-tasks"></i>
-            <span>
-              {formLevel} {stream} {year} ({term}) — Select Action
-            </span>
-          </div>
           <div className="action-selection-card-body">
             <div className="action-selection-grid">
               <Link
@@ -89,4 +82,3 @@ const ActionSelectionVVI = ({ formLevel }) => {
 };
 
 export default ActionSelectionVVI;
-

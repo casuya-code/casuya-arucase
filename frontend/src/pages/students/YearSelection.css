@@ -1,57 +1,51 @@
-/* Year Selection Page Styles */
+/* Year Selection — Clean Modern Design */
 .year-selection-page-container {
+  background: #f5f5f0;
+  min-height: 100vh;
+  min-height: 100dvh;
   width: 100%;
-  max-width: 100%;
-  margin: 0;
-  padding: 0;
   box-sizing: border-box;
+  padding: clamp(1rem, 3vw, 2rem) clamp(0.75rem, 2.5vw, 1.5rem);
 }
 
 .year-selection-card {
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  margin: 0;
-  padding: 0;
-  overflow: hidden;
+  max-width: 800px;
+  margin: 0 auto;
 }
 
 .year-selection-card-header {
-  background: #f1f5f9;
-  color: #1e293b;
-  padding: 16px 20px;
-  font-size: 18px;
-  font-weight: 600;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 10px;
-  min-height: 56px;
-  box-sizing: border-box;
-  border-bottom: 1px solid #e2e8f0;
+  display: none;
 }
 
-.year-selection-card-header i {
-  font-size: 20px;
-  width: 24px;
+.year-selection-card-body {
+  padding: 0;
+}
+
+.year-selection-empty {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  padding: 2.5rem 1.5rem;
   text-align: center;
+  color: #6b6b60;
+  font-size: 0.9rem;
 }
 
 .form-vvi-year-help {
-  margin: 0 0 16px;
-  padding: 12px 14px;
-  font-size: 13px;
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
+  padding: 1rem 1.25rem;
+  margin: 0 0 1rem;
+  font-size: 0.85rem;
   line-height: 1.5;
-  color: #475569;
-  background: #f8fafc;
-  border: 1px solid #e2e8f0;
-  border-radius: 4px;
+  color: #4a4a40;
+  border: 1px solid #e8e8e0;
 }
 
 .year-selection-sublabel {
-  font-size: 12px;
-  color: #64748b;
+  font-size: 0.75rem;
+  color: #6b6b60;
   margin-top: 4px;
 }
 
@@ -59,20 +53,20 @@
   display: inline-block;
   margin-top: 6px;
   padding: 2px 8px;
-  font-size: 11px;
+  font-size: 0.7rem;
   font-weight: 600;
   color: #166534;
   background: #dcfce7;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .form-vvi-year-badge {
   display: inline-block;
   margin-top: 6px;
   padding: 2px 8px;
-  font-size: 11px;
+  font-size: 0.7rem;
   font-weight: 600;
-  border-radius: 4px;
+  border-radius: 6px;
   line-height: 1.3;
 }
 
@@ -90,9 +84,9 @@
   display: inline-block;
   margin-top: 6px;
   padding: 2px 8px;
-  font-size: 11px;
+  font-size: 0.7rem;
   font-weight: 600;
-  border-radius: 4px;
+  border-radius: 6px;
   line-height: 1.3;
 }
 
@@ -111,28 +105,26 @@
   background: #dcfce7;
 }
 
-.year-selection-card-body {
-  padding: 16px;
-  box-sizing: border-box;
-}
-
+/* Year grid */
 .year-selection-grid {
   display: grid;
   width: 100%;
   box-sizing: border-box;
-  margin-bottom: 20px;
-  gap: 12px;
-  /* N year cards → N equal columns spanning full width */
-  grid-template-columns: repeat(auto-fit, minmax(min(9.5rem, 100%), 1fr));
+  margin-bottom: 1.25rem;
+  gap: clamp(0.75rem, 2vw, 1rem);
+  grid-template-columns: repeat(3, 1fr);
 }
 
 .year-selection-grid[style*='--year-card-count'] {
   grid-template-columns: repeat(var(--year-card-count), minmax(0, 1fr));
 }
 
-@media (max-width: 599px) {
+@media (max-width: 640px) {
   .year-selection-grid[style*='--year-card-count'] {
-    grid-template-columns: repeat(auto-fit, minmax(min(8rem, calc(50% - 6px)), 1fr));
+    grid-template-columns: repeat(auto-fit, minmax(min(8rem, calc(50% - 0.5rem)), 1fr));
+  }
+  .year-selection-grid {
+    grid-template-columns: repeat(2, 1fr);
   }
 }
 
@@ -144,13 +136,13 @@
   justify-content: center;
   text-decoration: none;
   background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-radius: 0;
+  border: 1px solid #e8e8e0;
+  border-radius: 12px;
   padding: clamp(1rem, 2.5vw, 1.25rem) clamp(0.75rem, 2vw, 1rem);
   text-align: center;
-  color: #1e293b;
+  color: #1a1a1a;
   transition: all 0.2s ease;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
   min-height: clamp(90px, 12vw, 110px);
   box-sizing: border-box;
   cursor: pointer;
@@ -159,59 +151,57 @@
 }
 
 .year-selection-card-item[data-current-year="true"] {
-  border-color: #01a72b;
+  border-color: #16a34a;
   background: #f0fdf4;
 }
 
 .year-selection-card-item:active {
   transform: scale(0.98);
-  box-shadow: none;
-  background: #f8fafc;
 }
 
 .year-selection-card-item:hover {
   transform: translateY(-2px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
-  background: #f8fafc;
-  border-color: #01a72b;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+  border-color: #16a34a;
 }
 
 .year-selection-number {
   font-size: clamp(1rem, 2.5vw, 1.25rem);
-  font-weight: 700;
+  font-weight: 800;
   margin-bottom: clamp(0.375rem, 1vw, 0.5rem);
   line-height: 1.2;
-  color: #1e293b;
+  color: #1a1a1a;
 }
 
 .year-selection-label {
-  font-size: clamp(0.75rem, 1.8vw, 0.875rem);
+  font-size: clamp(0.75rem, 1.8vw, 0.85rem);
   font-weight: 500;
   line-height: 1.3;
-  color: #64748b;
+  color: #6b6b60;
 }
 
+/* Back button */
 .year-selection-back-btn {
   display: inline-flex;
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: #f1f5f9;
-  color: #1e293b;
+  background: #fff;
+  color: #1a1a1a;
   text-decoration: none;
-  border-radius: 0;
-  font-weight: 500;
+  border-radius: 10px;
+  font-weight: 600;
+  font-size: 0.85rem;
   transition: all 0.2s ease;
-  border: 1px solid #e2e8f0;
-  margin-top: 10px;
+  border: 1px solid #e8e8e0;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.06);
 }
 
 .year-selection-back-btn:hover {
-  background: #e2e8f0;
-  transform: translateX(-2px);
+  background: #f5f5f0;
+  border-color: #d1d1c8;
 }
 
 .year-selection-back-btn i {
-  font-size: 14px;
+  font-size: 0.8rem;
 }
-

@@ -34,10 +34,6 @@ const StudentRegistration = () => {
     <AdminLayout>
       <div className="registration-page-container">
         <div className="registration-card">
-          <div className="registration-card-header">
-            <i className="fas fa-layer-group"></i>
-            <span>Classes</span>
-          </div>
           <div className="registration-card-body">
             {forms.length === 0 ? (
               <p className="registration-empty" role="status">
