@@ -1150,7 +1150,7 @@ router.post('/school-branding', requireModule('school_branding'), async (req, re
 });
 
 // Get school logo
-router.get('/school-logo', requireModule('school_branding'), async (req, res) => {
+router.get('/school-logo', async (req, res) => {
   try {
     // Check if table exists first
     const tableCheck = await query(`
