@@ -1,840 +1,270 @@
-/**
- * All Forms Averages - Cross-form Performance Comparison
- */
 import { useMemo } from 'react';
 import { Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { analyticsAPI } from '../../services/analytics';
 import { Bar, Line, Doughnut } from 'react-chartjs-2';
-import '../../utils/chartConfig'; // Register Chart.js components
-import { 
-  sortMonthlyData,
-  getCommonChartOptions,
-} from '../../utils/analyticsUtils';
+import '../../utils/chartConfig';
 import './AnalyticsTrack.css';
 
+const FORM_COLORS = {
+  'FORM I': { bg: '#3b82f6', light: '#3b82f620' },
+  'FORM II': { bg: '#10b981', light: '#10b98120' },
+  'FORM III': { bg: '#ef4444', light: '#ef444420' },
+  'FORM IV': { bg: '#8b5cf6', light: '#8b5cf620' },
+  'FORM V': { bg: '#f59e0b', light: '#f59e0b20' },
+  'FORM VI': { bg: '#ec4899', light: '#ec489920' },
+};
+
+const SUBJECT_COLORS = ['#3b82f6', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899', '#06b6d4', '#84cc16', '#f97316', '#6366f1', '#14b8a6', '#e11d48'];
+
 const AllFormsAverages = () => {
-  // Get all forms averages
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
+
   const { data: formsData, isLoading, error, isError, refetch } = useQuery({
     queryKey: ['all-forms-averages'],
     queryFn: async () => {
       const res = await analyticsAPI.getAllFormsAverages();
-      if (!res.data || !res.data.forms) {
-        throw new Error('No data received from server');
-      }
+      if (!res.data || !res.data.forms) throw new Error('No data received');
       return res.data.forms || [];
     },
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
-    retry: (failureCount, error) => {
-      // Don't retry on 4xx errors
-      if (error?.response?.status >= 400 && error?.response?.status < 500) {
-        return false;
-      }
-      return failureCount < 2;
-    },
+    staleTime: 5 * 60 * 1000,
+    retry: (f, e) => (e?.response?.status >= 400 && e?.response?.status < 500) ? false : f < 2,
   });
-  
-  // Process data to match Python version structure (memoized)
-  const processedFormsData = useMemo(() => {
-    try {
-      if (!formsData || formsData.length === 0) return [];
-      return formsData.map(form => {
-        if (!form || !form.level) return null;
+
+  const processedData = useMemo(() => {
+    if (!formsData || formsData.length === 0) return [];
+    return formsData.map(form => {
+      if (!form || !form.level) return null;
       const monthlyData = (form.averages || []).map(avg => ({
-        month: avg.month,
-        year: avg.year,
+        month: avg.month, year: avg.year,
         monthYear: avg.monthYear || `${avg.month} ${avg.year}`,
         average: avg.class_average || avg.average || 0,
-        student_count: avg.student_count || 0,
-        score_count: avg.score_count || 0,
+        student_count: avg.student_count || 0, score_count: avg.score_count || 0,
       }));
-      
-      // If no monthly_data but we have subject_averages, calculate monthly averages from subjects
-      let finalMonthlyData = monthlyData;
-      if (monthlyData.length === 0 && form.subject_averages && form.subject_averages.length > 0) {
-        // Calculate monthly averages from subject_averages
-        finalMonthlyData = form.subject_averages
-          .filter(monthData => monthData && monthData.subjects && Object.keys(monthData.subjects).length > 0)
-          .map(monthData => {
-            try {
-              const subjects = monthData.subjects || {};
-              const subjectValues = Object.values(subjects).filter(s => s && typeof s === 'object');
-              
-              if (subjectValues.length === 0) return null;
-              
-              const validAverages = subjectValues
-                .map(s => parseFloat(s.average) || 0)
-                .filter(a => a > 0);
-              
-              const avg = validAverages.length > 0
-                ? validAverages.reduce((sum, a) => sum + a, 0) / validAverages.length
-                : 0;
-              
-              const studentCounts = subjectValues
-                .map(s => parseInt(s.student_count) || 0)
-                .filter(c => c > 0);
-              
-              const studentCount = studentCounts.length > 0
-                ? Math.max(...studentCounts)
-                : 0;
-              
-              return {
-                month: monthData.month || '',
-                year: monthData.year || 0,
-                monthYear: monthData.monthYear || `${monthData.month || ''} ${monthData.year || 0}`.trim(),
-                average: isNaN(avg) || !isFinite(avg) ? 0 : avg,
-                student_count: isNaN(studentCount) || !isFinite(studentCount) ? 0 : studentCount,
-                score_count: isNaN(studentCount) || !isFinite(studentCount) ? 0 : studentCount * subjectValues.length,
-              };
-            } catch (error) {
-              console.error(`Error processing month data for ${form.level}:`, error);
-              return null;
-            }
-          })
-          .filter(m => m !== null);
-      }
-      
-      // Calculate overall_average from monthly_data or subject_averages
-      let overallAvg = 0;
-      try {
-        if (finalMonthlyData.length > 0) {
-          const validAverages = finalMonthlyData
-            .map(m => parseFloat(m.average) || 0)
-            .filter(a => a > 0);
-          overallAvg = validAverages.length > 0
-            ? validAverages.reduce((sum, a) => sum + a, 0) / validAverages.length
-            : 0;
-        } else if (form.subject_averages && form.subject_averages.length > 0) {
-          // Fallback: calculate from subject averages
-          const allSubjectAvgs = form.subject_averages
-            .flatMap(m => Object.values(m.subjects || {}))
-            .filter(s => s && typeof s === 'object')
-            .map(s => parseFloat(s.average) || 0)
-            .filter(a => a > 0);
-          overallAvg = allSubjectAvgs.length > 0
-            ? allSubjectAvgs.reduce((sum, a) => sum + a, 0) / allSubjectAvgs.length
-            : 0;
-        }
-        overallAvg = isNaN(overallAvg) || !isFinite(overallAvg) ? 0 : overallAvg;
-      } catch (error) {
-        console.error(`Error calculating overall average for ${form.level}:`, error);
-        overallAvg = 0;
-      }
-      
-      // Calculate overall_student_count - prefer distinct_student_count from backend, otherwise use most recent month or max
-      let overallStudentCount = 0;
-      try {
-        // First, try to use distinct_student_count from backend (most accurate)
-        if (form.distinct_student_count && form.distinct_student_count > 0) {
-          overallStudentCount = parseInt(form.distinct_student_count) || 0;
-        } else if (finalMonthlyData.length > 0) {
-          // Sort by year and month to get most recent
-          const sortedData = [...finalMonthlyData].sort((a, b) => {
-            const monthOrder = { 
-              'Jrb1': 1, 'Robo': 2, 'Jrb2': 3, 'Nusu': 4, 'Muh': 5,
-              'February': 1, 'March': 2, 'April': 3, 'May': 4,
-              'August': 5, 'September': 6, 'October': 7, 'November': 8
+      let finalMonthly = monthlyData;
+      if (monthlyData.length === 0 && form.subject_averages?.length > 0) {
+        finalMonthly = form.subject_averages
+          .filter(m => m?.subjects && Object.keys(m.subjects).length > 0)
+          .map(m => {
+            const vals = Object.values(m.subjects).filter(s => s && typeof s === 'object');
+            const avgs = vals.map(s => parseFloat(s.average) || 0).filter(a => a > 0);
+            const counts = vals.map(s => parseInt(s.student_count) || 0).filter(c => c > 0);
+            return {
+              month: m.month || '', year: m.year || 0,
+              monthYear: m.monthYear || `${m.month || ''} ${m.year || 0}`.trim(),
+              average: avgs.length > 0 ? avgs.reduce((s, a) => s + a, 0) / avgs.length : 0,
+              student_count: counts.length > 0 ? Math.max(...counts) : 0,
+              score_count: counts.length > 0 ? Math.max(...counts) : 0,
             };
-            if (a.year !== b.year) return b.year - a.year; // Most recent year first
-            return (monthOrder[b.month] || 99) - (monthOrder[a.month] || 99); // Most recent month first
-          });
-          
-          // Use most recent month's student count, or max if that's higher
-          const mostRecentCount = sortedData.length > 0 ? parseInt(sortedData[0].student_count) || 0 : 0;
-          const allCounts = finalMonthlyData
-            .map(m => parseInt(m.student_count) || 0)
-            .filter(c => c > 0);
-          const maxCount = allCounts.length > 0 ? Math.max(...allCounts) : 0;
-          
-          // Use the higher of most recent or max (to handle cases where student count increases)
-          overallStudentCount = Math.max(mostRecentCount, maxCount);
-        } else if (form.subject_averages && form.subject_averages.length > 0) {
-          // Get distinct student counts from all subjects across all months
-          const allStudentCounts = form.subject_averages
-            .flatMap(m => Object.values(m.subjects || {}))
-            .filter(s => s && typeof s === 'object')
-            .map(s => parseInt(s.student_count) || 0)
-            .filter(c => c > 0);
-          overallStudentCount = allStudentCounts.length > 0 ? Math.max(...allStudentCounts) : 0;
-        }
-        overallStudentCount = isNaN(overallStudentCount) || !isFinite(overallStudentCount) ? 0 : overallStudentCount;
-      } catch (error) {
-        console.error(`Error calculating overall student count for ${form.level}:`, error);
-        overallStudentCount = 0;
+          }).filter(Boolean);
       }
-      
-    return {
-      level: form.level,
-      monthly_data: finalMonthlyData,
-      subject_averages: form.subject_averages || [],
-      overall_average: overallAvg,
-      overall_student_count: overallStudentCount,
-      overall_score_count: finalMonthlyData.reduce((sum, m) => sum + (m.score_count || m.student_count || 0), 0),
+      let overallAvg = 0;
+      if (finalMonthly.length > 0) {
+        const valid = finalMonthly.map(m => parseFloat(m.average) || 0).filter(a => a > 0);
+        overallAvg = valid.length > 0 ? valid.reduce((s, a) => s + a, 0) / valid.length : 0;
+      }
+      let studentCount = form.distinct_student_count || 0;
+      if (!studentCount && finalMonthly.length > 0) {
+        studentCount = Math.max(...finalMonthly.map(m => parseInt(m.student_count) || 0));
+      }
+      return {
+        level: form.level, monthly_data: finalMonthly,
+        subject_averages: form.subject_averages || [],
+        overall_average: isNaN(overallAvg) ? 0 : overallAvg,
+        overall_student_count: isNaN(studentCount) ? 0 : studentCount,
+      };
+    }).filter(Boolean);
+  }, [formsData]);
+
+  const getDoughnutOpts = () => {
+    const doughnutGenerateLabels = (chart) => {
+      const d = chart.data;
+      const total = d.datasets[0].data.reduce((a, b) => (a || 0) + (b || 0), 0);
+      return d.labels.map((l, i) => {
+        const v = d.datasets[0].data[i] || 0;
+        const pct = total > 0 ? ((v / total) * 100).toFixed(1) : 0;
+        return {
+          text: l + ': ' + v + ' (' + pct + '%)',
+          fillStyle: d.datasets[0].backgroundColor[i],
+          hidden: false,
+          index: i,
+        };
+      });
     };
-    }).filter(form => form !== null);
-  } catch (error) {
-    console.error('[AllFormsAverages] Error processing forms data:', error);
-    return [];
-  }
-}, [formsData]);
+    const doughnutTooltipLabel = (ctx) => {
+      const v = ctx.parsed || 0;
+      const total = ctx.dataset.data.reduce((a, b) => (a || 0) + (b || 0), 0);
+      const pct = total > 0 ? ((v / total) * 100).toFixed(1) : 0;
+      return ctx.label + ': ' + v + ' (' + pct + '%)';
+    };
+    return {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {
+        legend: {
+          position: isMobile ? 'bottom' : 'right',
+          labels: {
+            boxWidth: 12,
+            font: { size: isMobile ? 10 : 12 },
+            padding: isMobile ? 8 : 16,
+            generateLabels: doughnutGenerateLabels,
+          },
+        },
+        tooltip: {
+          callbacks: { label: doughnutTooltipLabel },
+        },
+      },
+    };
+  };
+
+  const chartOpts = (xLabel) => ({
+    responsive: true, maintainAspectRatio: false,
+    plugins: {
+      legend: { display: true, position: isMobile ? 'bottom' : 'top', labels: { boxWidth: isMobile ? 10 : 14, padding: isMobile ? 8 : 16, font: { size: isMobile ? 10 : 12 }, usePointStyle: true } },
+      tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', titleFont: { size: isMobile ? 11 : 13 }, bodyFont: { size: isMobile ? 10 : 12 }, padding: isMobile ? 6 : 10, cornerRadius: 8, mode: 'index', intersect: false },
+    },
+    scales: {
+      y: { beginAtZero: true, max: 100, title: { display: !isMobile, text: 'Score (%)', font: { size: 11 } }, ticks: { font: { size: isMobile ? 9 : 11 } }, grid: { color: 'rgba(0,0,0,0.04)' } },
+      x: { title: { display: !isMobile, text: xLabel, font: { size: 11 } }, ticks: { maxRotation: isMobile ? 60 : 45, font: { size: isMobile ? 9 : 11 } }, grid: { display: false } },
+    },
+  });
+
+  const monthOrder = { 'Jrb1': 1, 'Robo': 2, 'Jrb2': 3, 'Nusu': 4, 'Muh': 5, 'February': 1, 'March': 2, 'April': 3, 'May': 4, 'August': 5, 'September': 6, 'October': 7, 'November': 8 };
+  const sortMonths = (arr) => [...arr].sort((a, b) => { const gy = s => parseInt(String(s).split(' ').pop()) || 0; const gm = s => String(s).split(' ')[0]; if (gy(a.monthYear || a.month) !== gy(b.monthYear || b.month)) return gy(a.monthYear || a.month) - gy(b.monthYear || b.month); return (monthOrder[gm(a.monthYear || a.month)] || 99) - (monthOrder[gm(b.monthYear || b.month)] || 99); });
 
   return (
     <AdminLayout>
-      <div className="analytics-track-page">
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-chart-bar"></i>
-            All Forms Averages
-            <div className="header-actions">
-              <Link to="/admin/analytics" className="excel-btn secondary small">
-                <i className="fas fa-arrow-left"></i> Back
-              </Link>
+      <div className="an-st-page">
+        <div className="an-st-shell">
+          <header className="an-st-top">
+            <div className="an-st-top-row">
+              <div>
+                <h1 className="an-st-title">All Forms Averages</h1>
+                <p className="an-st-sub">Cross-form performance comparison</p>
+              </div>
+              <Link to="/admin/analytics" className="an-st-back"><i className="fas fa-arrow-left" /><span>Back</span></Link>
             </div>
-          </div>
-          <div className="excel-card-body">
-            {isLoading ? (
-              <div className="loading-state">
-                <div className="loading-spinner"></div>
-                <p>Loading forms averages...</p>
+          </header>
+
+          {isLoading ? (
+            <div className="an-st-loading"><div className="an-st-spinner" /><span>Loading forms data...</span></div>
+          ) : isError ? (
+            <div className="an-ct-error"><i className="fas fa-exclamation-triangle" /><span>{error?.message || 'Failed to load'}</span><button onClick={() => refetch()} className="an-ct-retry">Retry</button></div>
+          ) : processedData.length > 0 ? (
+            <div className="an-st-perf-body">
+              {/* Summary Cards */}
+              <div className="an-ct-stats" style={{ gridTemplateColumns: `repeat(${Math.min(processedData.length, 6)}, 1fr)` }}>
+                {processedData.map(f => (
+                  <div key={f.level} className="an-ct-stat">
+                    <span className="an-ct-stat-label">{f.level}</span>
+                    <span className="an-ct-stat-val" style={{ color: FORM_COLORS[f.level]?.bg || '#3b82f6' }}>{f.overall_average.toFixed(1)}%</span>
+                    <span className="an-ct-stat-label" style={{ fontSize: '0.6rem' }}>{f.overall_student_count} students</span>
+                  </div>
+                ))}
               </div>
-            ) : isError ? (
-              <div className="error-state">
-                <i className="fas fa-exclamation-triangle error-icon"></i>
-                <h3>Error Loading Data</h3>
-                <p>{error?.message || 'An error occurred while loading forms averages'}</p>
-                <button type="button" onClick={() => refetch()} className="excel-btn">
-                  <i className="fas fa-redo"></i> Retry
-                </button>
-              </div>
-            ) : processedFormsData && processedFormsData.length > 0 && processedFormsData.some(f => 
-              f && ((f.monthly_data && f.monthly_data.length > 0) || (f.subject_averages && f.subject_averages.length > 0))
-            ) ? (
-              <div className="forms-comparison">
-                {/* Summary Table */}
-                <div className="comparison-table">
-                  <h3>Overall Summary</h3>
-                  <table className="excel-table">
-                    <thead>
-                      <tr>
-                        <th>Form</th>
-                        <th>Overall Average</th>
-                        <th>Student Count</th>
-                        <th>Total Scores</th>
-                      </tr>
-                    </thead>
+
+              {/* Summary Table */}
+              <div className="an-aft-card">
+                <h3 className="an-aft-card-title">Overall Summary</h3>
+                <div className="an-aft-table-wrap">
+                  <table className="an-aft-table">
+                    <thead><tr><th>Form</th><th>Average</th><th>Students</th></tr></thead>
                     <tbody>
-                      {processedFormsData.map((form) => (
-                        <tr key={form.level}>
-                          <td><strong>{form.level}</strong></td>
-                          <td>{(form.overall_average || 0).toFixed(1)}</td>
-                          <td>{form.overall_student_count || 0}</td>
-                          <td>{form.overall_score_count || 0}</td>
+                      {processedData.map(f => (
+                        <tr key={f.level}>
+                          <td><span className="an-aft-dot" style={{ background: FORM_COLORS[f.level]?.bg }} />{f.level}</td>
+                          <td className="an-aft-bold">{f.overall_average.toFixed(1)}%</td>
+                          <td>{f.overall_student_count}</td>
                         </tr>
                       ))}
                     </tbody>
                   </table>
                 </div>
+              </div>
 
-                {/* Monthly Data Tables */}
-                <div className="monthly-tables">
-                  <h3>Monthly Breakdown by Form</h3>
-                  {processedFormsData.map((form) => (
-                    <div key={form.level} className="form-monthly-table">
-                      <h4>{form.level} - Monthly Averages</h4>
-                      <table className="excel-table">
-                        <thead>
-                          <tr>
-                            <th>Month & Year</th>
-                            <th>Average Score</th>
-                            <th>Student Count</th>
-                            <th>Total Scores</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {form.monthly_data && form.monthly_data.length > 0 ? (
-                            form.monthly_data.map((monthData) => (
-                              <tr key={`${form.level}-${monthData.monthYear}`}>
-                                <td><strong>{monthData.monthYear}</strong></td>
-                                <td>{monthData.average.toFixed(1)}</td>
-                                <td>{monthData.student_count}</td>
-                                <td>{monthData.score_count}</td>
-                              </tr>
-                            ))
-                          ) : (
-                            <tr>
-                              <td colSpan="4" className="no-monthly-data">No monthly data available</td>
-                            </tr>
-                          )}
-                        </tbody>
-                      </table>
-                    </div>
-                  ))}
-                </div>
-
-                <div className="charts-section">
-                  {/* Monthly Trend Charts - Line Chart for Each Form */}
-                  <h3 className="section-title">Monthly Average Trends by Form</h3>
-                  {processedFormsData.filter(form => form.monthly_data && form.monthly_data.length > 0).map((form) => {
-                    const sortedMonthly = sortMonthlyData(form.monthly_data);
-                    return (
-                      <div key={`trend-${form.level}`} className="chart-container chart-section-container">
-                        <h4 className="chart-title">{form.level} - Monthly Average Trend</h4>
-                        <div className="chart-wrapper">
-                          <Line
-                            data={{
-                              labels: sortedMonthly.map(m => m.monthYear),
-                              datasets: [{
-                                label: `${form.level} Average`,
-                                data: sortedMonthly.map(m => m.average),
-                                borderColor: 'rgba(59, 130, 246, 1)',
-                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
-                                borderWidth: 2,
-                                fill: true,
-                                tension: 0.4,
-                              }],
-                            }}
-                            options={getCommonChartOptions({
-                              plugins: {
-                                title: {
-                                  display: true,
-                                  text: `${form.level} Monthly Average Performance Trend`
-                                }
-                              }
-                            })}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                  {/* Individual Monthly Test Charts - One chart per month/test */}
-                  <h3 className="section-title">Individual Monthly Test Charts - Subject Breakdown</h3>
-                  {processedFormsData.filter(form => form.subject_averages && form.subject_averages.length > 0).map((form) => {
-                    // Sort months chronologically
-                    const sortedMonths = form.subject_averages.slice().sort((a, b) => {
-                      const monthOrder = { 
-                        'Jrb1': 1, 'Robo': 2, 'Jrb2': 3, 'Nusu': 4, 'Muh': 5,
-                        'February': 1, 'March': 2, 'April': 3, 'May': 4,
-                        'August': 5, 'September': 6, 'October': 7, 'November': 8
-                      };
-                      const getYear = (str) => parseInt(str.split(' ').pop()) || 0;
-                      const getMonth = (str) => str.split(' ')[0];
-                      const yearA = getYear(a.monthYear), yearB = getYear(b.monthYear);
-                      if (yearA !== yearB) return yearA - yearB;
-                      return (monthOrder[getMonth(a.monthYear)] || 99) - (monthOrder[getMonth(b.monthYear)] || 99);
-                    });
-                    
-                    return (
-                      <div key={`monthly-tests-${form.level}`}>
-                        <h4 className="chart-title" style={{ marginTop: '30px', marginBottom: '20px' }}>
-                          {form.level} - Individual Monthly Test Charts
-                        </h4>
-                        {sortedMonths.map((monthData) => {
-                          if (!monthData.subjects || Object.keys(monthData.subjects).length === 0) return null;
-                          
-                          const subjects = Object.keys(monthData.subjects).sort();
-                          const subjectData = subjects.map(subject => ({
-                            subject,
-                            average: monthData.subjects[subject].average || 0
-                          }));
-                          
-                          // Generate colors
-                          const subjectColors = [
-                            'rgba(54, 162, 235, 0.7)', 'rgba(75, 192, 192, 0.7)', 'rgba(255, 206, 86, 0.7)',
-                            'rgba(255, 99, 132, 0.7)', 'rgba(153, 102, 255, 0.7)', 'rgba(255, 159, 64, 0.7)',
-                            'rgba(199, 199, 199, 0.7)', 'rgba(83, 102, 255, 0.7)', 'rgba(255, 99, 255, 0.7)',
-                            'rgba(99, 255, 132, 0.7)', 'rgba(255, 205, 86, 0.7)', 'rgba(54, 162, 235, 0.7)'
-                          ];
-                          
-                          // Calculate overall average for this month
-                          const monthAverage = subjectData.length > 0
-                            ? subjectData.reduce((sum, s) => sum + s.average, 0) / subjectData.length
-                            : 0;
-                          
-                          return (
-                            <div key={`${form.level}-${monthData.monthYear}`} className="chart-container chart-section-container">
-                              <h5 className="chart-title" style={{ fontSize: '16px', marginBottom: '15px' }}>
-                                {form.level} - {monthData.monthYear} Test
-                                <span style={{ marginLeft: '15px', fontSize: '14px', color: '#666' }}>
-                                  (Average: {monthAverage.toFixed(1)}%)
-                                </span>
-                              </h5>
-                              <div className="chart-wrapper" style={{ height: '350px' }}>
-                                <Bar
-                                  data={{
-                                    labels: subjects,
-                                    datasets: [{
-                                      label: 'Subject Average (%)',
-                                      data: subjectData.map(s => s.average),
-                                      backgroundColor: subjects.map((_, idx) => subjectColors[idx % subjectColors.length]),
-                                      borderColor: subjects.map((_, idx) => subjectColors[idx % subjectColors.length].replace('0.7', '1')),
-                                      borderWidth: 1,
-                                      borderRadius: 4,
-                                    }],
-                                  }}
-                                  options={getCommonChartOptions({
-                                    plugins: {
-                                      title: {
-                                        display: true,
-                                        text: `${form.level} - ${monthData.monthYear} Test Results`
-                                      },
-                                      legend: {
-                                        display: false
-                                      }
-                                    },
-                                    scales: {
-                                      x: {
-                                        ticks: {
-                                          maxRotation: 45,
-                                          minRotation: 45,
-                                        }
-                                      }
-                                    }
-                                  })}
-                                />
-                              </div>
-                              {/* Subject averages table for this month */}
-                              <div style={{ marginTop: '15px' }}>
-                                <table className="excel-table" style={{ fontSize: '0.9rem' }}>
-                                  <thead>
-                                    <tr>
-                                      <th>Subject</th>
-                                      <th>Average (%)</th>
-                                      <th>Student Count</th>
-                                    </tr>
-                                  </thead>
-                                  <tbody>
-                                    {subjectData.map((s) => (
-                                      <tr key={s.subject}>
-                                        <td><strong>{s.subject}</strong></td>
-                                        <td>{s.average.toFixed(1)}%</td>
-                                        <td>{monthData.subjects[s.subject].student_count || 0}</td>
-                                      </tr>
-                                    ))}
-                                    <tr style={{ backgroundColor: '#f8f9fa', fontWeight: 'bold' }}>
-                                      <td>Overall Average</td>
-                                      <td>{monthAverage.toFixed(1)}%</td>
-                                      <td>{monthData.subjects[subjects[0]]?.student_count || 0}</td>
-                                    </tr>
-                                  </tbody>
-                                </table>
-                              </div>
-                            </div>
-                          );
-                        })}
-                      </div>
-                    );
-                  })}
-
-                  {/* Subject Charts for each Form - Combined View */}
-                  <h3 className="section-title">Subject Performance Charts by Form (All Months Combined)</h3>
-                  
-                  {/* Subject Charts for each Form */}
-                  {processedFormsData.filter(form => form.subject_averages && form.subject_averages.length > 0).map((form) => {
-                    // Get all unique subjects across all months for this form
-                    const allSubjects = new Set();
-                    form.subject_averages.forEach(monthData => {
-                      if (monthData.subjects) {
-                        Object.keys(monthData.subjects).forEach(subject => allSubjects.add(subject));
-                      }
-                    });
-                    const sortedSubjects = Array.from(allSubjects).sort();
-                    
-                    // Get all unique months for this form
-                    const allMonths = form.subject_averages.map(m => m.monthYear).sort((a, b) => {
-                      const monthOrder = { 
-                        'Jrb1': 1, 'Robo': 2, 'Jrb2': 3, 'Nusu': 4, 'Muh': 5,
-                        'February': 1, 'March': 2, 'April': 3, 'May': 4,
-                        'August': 5, 'September': 6, 'October': 7, 'November': 8
-                      };
-                      const getYear = (str) => parseInt(str.split(' ').pop()) || 0;
-                      const getMonth = (str) => str.split(' ')[0];
-                      const yearA = getYear(a), yearB = getYear(b);
-                      if (yearA !== yearB) return yearA - yearB;
-                      return (monthOrder[getMonth(a)] || 99) - (monthOrder[getMonth(b)] || 99);
-                    });
-                    
-                    // Generate colors for subjects
-                    const subjectColors = [
-                      'rgba(54, 162, 235, 0.7)', 'rgba(75, 192, 192, 0.7)', 'rgba(255, 206, 86, 0.7)',
-                      'rgba(255, 99, 132, 0.7)', 'rgba(153, 102, 255, 0.7)', 'rgba(255, 159, 64, 0.7)',
-                      'rgba(199, 199, 199, 0.7)', 'rgba(83, 102, 255, 0.7)', 'rgba(255, 99, 255, 0.7)',
-                      'rgba(99, 255, 132, 0.7)', 'rgba(255, 205, 86, 0.7)', 'rgba(54, 162, 235, 0.7)'
-                    ];
-                    
-                    return (
-                      <div key={form.level} className="chart-container chart-section-container">
-                        <h4 className="chart-title">
-                          {form.level} - Subject Averages by Month/Test
-                        </h4>
-                        <div className="chart-wrapper">
-                          <Bar
-                            data={{
-                              labels: allMonths,
-                              datasets: sortedSubjects.map((subject, idx) => {
-                                // Create data array for this subject across all months
-                                const subjectData = allMonths.map(monthYear => {
-                                  const monthData = form.subject_averages.find(m => m.monthYear === monthYear);
-                                  if (monthData && monthData.subjects && monthData.subjects[subject]) {
-                                    return monthData.subjects[subject].average;
-                                  }
-                                  return null;
-                                });
-                                
-                                return {
-                                  label: subject,
-                                  data: subjectData,
-                                  backgroundColor: subjectColors[idx % subjectColors.length],
-                                  borderColor: subjectColors[idx % subjectColors.length].replace('0.7', '1'),
-                                  borderWidth: 1,
-                                  borderRadius: 3,
-                                };
-                              }),
-                            }}
-                            options={{
-                              responsive: true,
-                              maintainAspectRatio: false,
-                              layout: {
-                                padding: {
-                                  bottom: 20,
-                                  top: 10,
-                                  left: 10,
-                                  right: 10
-                                }
-                              },
-                              plugins: {
-                                legend: {
-                                  display: true,
-                                  position: 'top',
-                                },
-                                tooltip: {
-                                  mode: 'index',
-                                  intersect: false,
-                                  callbacks: {
-                                    label: function(context) {
-                                      const value = context.parsed.y;
-                                      return value !== null ? `${context.dataset.label}: ${value.toFixed(2)}%` : `${context.dataset.label}: No data`;
-                                    },
-                                  },
-                                },
-                              },
-                              scales: {
-                                y: {
-                                  beginAtZero: true,
-                                  max: 100,
-                                  title: {
-                                    display: true,
-                                    text: 'Average Score (%)',
-                                  },
-                                  ticks: {
-                                    callback: function(value) {
-                                      return value + '%';
-                                    },
-                                  },
-                                },
-                                x: {
-                                  stacked: false,
-                                  title: {
-                                    display: true,
-                                    text: 'Month/Test',
-                                  },
-                                  ticks: {
-                                    maxRotation: 45,
-                                    minRotation: 45,
-                                  },
-                                },
-                              },
-                            }}
-                          />
-                        </div>
-                      </div>
-                    );
-                  })}
-                  
-                  {/* Cross-Form Comparison Charts */}
-                  <h3 className="section-title">Cross-Form Comparison Charts</h3>
-                  
-                  {/* Bar Chart - Monthly Averages by Form (Grouped) */}
-                  <div className="chart-container chart-section-container">
-                    <h4 className="chart-title">Class Average Performance - All Forms (FORM I - FORM VI)</h4>
-                    <div className="chart-wrapper" style={{ height: '450px' }}>
-                      {(() => {
-                        // Ensure all forms are included (FORM I - FORM VI)
-                        const allForms = ['FORM I', 'FORM II', 'FORM III', 'FORM IV', 'FORM V', 'FORM VI'];
-                        const formsMap = {};
-                        processedFormsData.forEach(f => {
-                          formsMap[f.level] = f;
-                        });
-                        
-                        // Create entries for all forms, even if they don't have data
-                        const allFormsData = allForms.map(formLevel => {
-                          return formsMap[formLevel] || {
-                            level: formLevel,
-                            monthly_data: [],
-                            overall_average: 0,
-                            overall_student_count: 0,
-                            overall_score_count: 0
-                          };
-                        });
-                        
-                        // Get all unique monthYear labels across all forms
-                        const allMonthYears = new Set();
-                        allFormsData.forEach(f => {
-                          if (f.monthly_data && f.monthly_data.length > 0) {
-                            f.monthly_data.forEach(m => allMonthYears.add(m.monthYear));
-                          }
-                        });
-                        
-                        const sortedMonthYears = Array.from(allMonthYears).sort((a, b) => {
-                          const monthOrder = { 
-                            'Jrb1': 1, 'Robo': 2, 'Jrb2': 3, 'Nusu': 4, 'Muh': 5,
-                            'February': 1, 'March': 2, 'April': 3, 'May': 4,
-                            'August': 5, 'September': 6, 'October': 7, 'November': 8
-                          };
-                          const getYear = (str) => parseInt(str.split(' ').pop()) || 0;
-                          const getMonth = (str) => str.split(' ')[0];
-                          const yearA = getYear(a), yearB = getYear(b);
-                          if (yearA !== yearB) return yearA - yearB;
-                          return (monthOrder[getMonth(a)] || 99) - (monthOrder[getMonth(b)] || 99);
-                        });
-                        
-                        const formColors = {
-                          'FORM I': { bg: 'rgba(76, 114, 176, 0.7)', border: '#4C72B0' },
-                          'FORM II': { bg: 'rgba(85, 168, 104, 0.7)', border: '#55A868' },
-                          'FORM III': { bg: 'rgba(196, 78, 82, 0.7)', border: '#C44E52' },
-                          'FORM IV': { bg: 'rgba(129, 114, 178, 0.7)', border: '#8172B2' },
-                          'FORM V': { bg: 'rgba(237, 102, 93, 0.7)', border: '#ED665D' },
-                          'FORM VI': { bg: 'rgba(255, 158, 74, 0.7)', border: '#FF9E4A' }
-                        };
-                        
-                        return (
-                          <Bar
-                            data={{
-                              labels: sortedMonthYears.length > 0 ? sortedMonthYears : ['No Data'],
-                              datasets: allFormsData.map((form) => {
-                                const monthMap = {};
-                                if (form.monthly_data && form.monthly_data.length > 0) {
-                                  form.monthly_data.forEach(m => {
-                                    monthMap[m.monthYear] = m.average;
-                                  });
-                                }
-                                
-                                const colors = formColors[form.level] || { bg: 'rgba(128, 128, 128, 0.7)', border: '#808080' };
-                                
-                                return {
-                                  label: form.level,
-                                  data: sortedMonthYears.length > 0 
-                                    ? sortedMonthYears.map(my => monthMap[my] || null)
-                                    : [null],
-                                  backgroundColor: colors.bg,
-                                  borderColor: colors.border,
-                                  borderWidth: 2,
-                                  borderRadius: 4,
-                                  borderSkipped: false,
-                                };
-                              }),
-                            }}
-                            options={getCommonChartOptions({
-                              plugins: {
-                                title: {
-                                  display: true,
-                                  text: 'Class Average Performance Across All Forms'
-                                },
-                                tooltip: {
-                                  callbacks: {
-                                    label: function(context) {
-                                      if (context.parsed.y === null) return `${context.dataset.label}: No data`;
-                                      return `${context.dataset.label}: ${context.parsed.y.toFixed(1)}%`;
-                                    },
-                                  },
-                                },
-                              },
-                              scales: {
-                                x: {
-                                  title: {
-                                    display: true,
-                                    text: 'Month/Test Period'
-                                  },
-                                  ticks: {
-                                    maxRotation: 45,
-                                    minRotation: 45,
-                                  },
-                                },
-                                y: {
-                                  title: {
-                                    display: true,
-                                    text: 'Average Score (%)'
-                                  },
-                                },
-                              },
-                            })}
-                          />
-                        );
-                      })()}
+              {/* Monthly Trend per Form */}
+              {processedData.filter(f => f.monthly_data.length > 0).map(f => {
+                const sorted = sortMonths(f.monthly_data);
+                return (
+                  <div key={`trend-${f.level}`} className="an-st-chart-card">
+                    <h4 className="an-st-chart-label">{f.level} — Monthly Trend</h4>
+                    <div className="an-st-chart-wrap">
+                      <Line data={{
+                        labels: sorted.map(m => m.monthYear),
+                        datasets: [{ label: f.level, data: sorted.map(m => m.average), borderColor: FORM_COLORS[f.level]?.bg || '#3b82f6', backgroundColor: FORM_COLORS[f.level]?.light || '#3b82f620', tension: 0.4, fill: true, pointRadius: isMobile ? 3 : 5, borderWidth: 2 }],
+                      }} options={chartOpts('Month')} />
                     </div>
                   </div>
+                );
+              })}
 
-                  {/* Doughnut Chart - Student Distribution */}
-                  <div className="chart-container chart-section-container">
-                    <h4 className="chart-title">Student Distribution by Form</h4>
-                    <div className="chart-wrapper" style={{ height: '400px', maxWidth: '600px', margin: '0 auto' }}>
-                      {(() => {
-                        // Ensure all forms are included (FORM I - FORM VI)
-                        const allForms = ['FORM I', 'FORM II', 'FORM III', 'FORM IV', 'FORM V', 'FORM VI'];
-                        const formsMap = {};
-                        processedFormsData.forEach(f => {
-                          formsMap[f.level] = f;
-                        });
-                        
-                        // Create entries for all forms, even if they don't have data
-                        const allFormsData = allForms.map(formLevel => {
-                          return formsMap[formLevel] || {
-                            level: formLevel,
-                            monthly_data: [],
-                            overall_average: 0,
-                            overall_student_count: 0,
-                            overall_score_count: 0
-                          };
-                        });
-                        
-                        return (
-                          <>
-                            <Doughnut
-                              data={{
-                                labels: allFormsData.map(form => form.level),
-                                datasets: [
-                                  {
-                                    label: 'Student Count',
-                                    data: allFormsData.map(form => form.overall_student_count || 0),
-                                    backgroundColor: [
-                                      'rgba(76, 114, 176, 0.8)',
-                                      'rgba(85, 168, 104, 0.8)',
-                                      'rgba(196, 78, 82, 0.8)',
-                                      'rgba(129, 114, 178, 0.8)',
-                                      'rgba(237, 102, 93, 0.8)',
-                                      'rgba(255, 158, 74, 0.8)',
-                                    ],
-                                    borderColor: [
-                                      '#4C72B0',
-                                      '#55A868',
-                                      '#C44E52',
-                                      '#8172B2',
-                                      '#ED665D',
-                                      '#FF9E4A',
-                                    ],
-                                    borderWidth: 3,
-                                  },
-                                ],
-                              }}
-                              options={{
-                                responsive: true,
-                                maintainAspectRatio: true,
-                                aspectRatio: 1.5,
-                                plugins: {
-                                  legend: {
-                                    display: true,
-                                    position: 'right',
-                                    labels: {
-                                      padding: 15,
-                                      font: {
-                                        size: 12
-                                      },
-                                      generateLabels: function(chart) {
-                                        const data = chart.data;
-                                        if (data.labels.length && data.datasets.length) {
-                                          const dataset = data.datasets[0];
-                                          const total = dataset.data.reduce((a, b) => (a || 0) + (b || 0), 0);
-                                          return data.labels.map((label, i) => {
-                                            const value = dataset.data[i] || 0;
-                                            const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                            return {
-                                              text: `${label}: ${value} (${percentage}%)`,
-                                              fillStyle: dataset.backgroundColor[i],
-                                              strokeStyle: dataset.borderColor[i],
-                                              lineWidth: dataset.borderWidth,
-                                              hidden: false,
-                                              index: i
-                                            };
-                                          });
-                                        }
-                                        return [];
-                                      }
-                                    }
-                                  },
-                                  tooltip: {
-                                    callbacks: {
-                                      label: function(context) {
-                                        const label = context.label || '';
-                                        const value = context.parsed || 0;
-                                        const total = context.dataset.data.reduce((a, b) => (a || 0) + (b || 0), 0);
-                                        const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                        return `${label}: ${value || 0} students (${percentage}%)`;
-                                      },
-                                    },
-                                  },
-                                  title: {
-                                    display: true,
-                                    text: 'Student Distribution Across All Forms',
-                                    font: {
-                                      size: 16,
-                                      weight: 'bold'
-                                    },
-                                    padding: {
-                                      top: 10,
-                                      bottom: 20
-                                    }
-                                  }
-                                },
-                              }}
-                            />
-                            {/* Student count summary table */}
-                            <div style={{ marginTop: '20px', maxWidth: '600px', margin: '20px auto 0' }}>
-                              <table className="excel-table" style={{ fontSize: '0.9rem' }}>
-                                <thead>
-                                  <tr>
-                                    <th>Form</th>
-                                    <th>Student Count</th>
-                                    <th>Percentage</th>
-                                  </tr>
-                                </thead>
-                                <tbody>
-                                  {allFormsData.map((form) => {
-                                    const total = allFormsData.reduce((sum, f) => sum + (f.overall_student_count || 0), 0);
-                                    const percentage = total > 0 ? (((form.overall_student_count || 0) / total) * 100).toFixed(1) : 0;
-                                    return (
-                                      <tr key={form.level}>
-                                        <td><strong>{form.level}</strong></td>
-                                        <td>{form.overall_student_count || 0}</td>
-                                        <td>{total > 0 ? `${percentage}%` : '0%'}</td>
-                                      </tr>
-                                    );
-                                  })}
-                                  <tr style={{ backgroundColor: '#f8f9fa', fontWeight: 'bold' }}>
-                                    <td>Total</td>
-                                    <td>{allFormsData.reduce((sum, f) => sum + (f.overall_student_count || 0), 0)}</td>
-                                    <td>100%</td>
-                                  </tr>
-                                </tbody>
-                              </table>
-                            </div>
-                          </>
-                        );
-                      })()}
+              {/* Per-Form Monthly Subject Bar Charts */}
+              {processedData.filter(f => f.subject_averages.length > 0).map(f => {
+                const sorted = sortMonths(f.subject_averages);
+                return sorted.map(m => {
+                  if (!m.subjects || Object.keys(m.subjects).length === 0) return null;
+                  const subjects = Object.keys(m.subjects).sort();
+                  const avg = subjects.length > 0 ? subjects.reduce((s, k) => s + (m.subjects[k].average || 0), 0) / subjects.length : 0;
+                  return (
+                    <div key={`${f.level}-${m.monthYear}`} className="an-st-chart-card">
+                      <h4 className="an-st-chart-label">{f.level} — {m.monthYear} <span style={{ fontWeight: 400, color: '#888', fontSize: '0.8rem' }}>(avg: {avg.toFixed(1)}%)</span></h4>
+                      <div className="an-st-chart-wrap">
+                        <Bar data={{
+                          labels: subjects,
+                          datasets: [{ label: 'Average', data: subjects.map(s => m.subjects[s].average || 0), backgroundColor: subjects.map((_, i) => SUBJECT_COLORS[i % SUBJECT_COLORS.length]), borderRadius: 4, borderWidth: 0 }],
+                        }} options={{ ...chartOpts('Subject'), plugins: { ...chartOpts().plugins, legend: { display: false } } }} />
+                      </div>
                     </div>
+                  );
+                });
+              })}
+
+              {/* Cross-Form Grouped Bar */}
+              {processedData.some(f => f.monthly_data.length > 0) && (
+                <div className="an-st-chart-card">
+                  <h4 className="an-st-chart-label">Cross-Form Comparison</h4>
+                  <div className="an-st-chart-wrap" style={{ height: isMobile ? 260 : 360 }}>
+                    {(() => {
+                      const allMY = new Set();
+                      processedData.forEach(f => f.monthly_data.forEach(m => allMY.add(m.monthYear)));
+                      const sortedMY = sortMonths(Array.from(allMY).map(my => ({ monthYear: my }))).map(m => m.monthYear);
+                      return (
+                        <Bar data={{
+                          labels: sortedMY.length > 0 ? sortedMY : ['No Data'],
+                          datasets: processedData.map(f => {
+                            const map = {};
+                            f.monthly_data.forEach(m => { map[m.monthYear] = m.average; });
+                            return {
+                              label: f.level,
+                              data: sortedMY.length > 0 ? sortedMY.map(my => map[my] || null) : [null],
+                              backgroundColor: FORM_COLORS[f.level]?.bg || '#888',
+                              borderRadius: 3, borderWidth: 0,
+                            };
+                          }),
+                        }} options={chartOpts('Month')} />
+                      );
+                    })()}
                   </div>
                 </div>
-              </div>
-            ) : (
-              <div className="empty-state">
-                <i className="fas fa-chart-bar empty-icon"></i>
-                <h3>No Data Available</h3>
-                <p>No performance data available for comparison across forms.</p>
-                <p className="text-muted">Data will appear here once scores are entered for students.</p>
-              </div>
-            )}
-          </div>
+              )}
+
+              {/* Student Distribution Doughnut */}
+              {processedData.some(f => f.overall_student_count > 0) && (
+                <div className="an-st-chart-card">
+                  <h4 className="an-st-chart-label">Student Distribution</h4>
+                  <div className="an-st-chart-wrap" style={{ height: isMobile ? 250 : 320, maxWidth: 500, margin: '0 auto' }}>
+                    <Doughnut data={{
+                      labels: processedData.map(f => f.level),
+                      datasets: [{ data: processedData.map(f => f.overall_student_count || 0), backgroundColor: processedData.map(f => FORM_COLORS[f.level]?.bg || '#888'), borderWidth: 2 }],
+                    }} options={getDoughnutOpts()} />
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="an-ct-empty"><i className="fas fa-chart-bar" /><span>No performance data available for comparison</span></div>
+          )}
         </div>
       </div>
     </AdminLayout>
@@ -842,4 +272,3 @@ const AllFormsAverages = () => {
 };
 
 export default AllFormsAverages;
-
