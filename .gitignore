@@ -34,7 +34,6 @@ wheels/
 *.db
 *.sqlite
 *.sqlite3
-*.sql
 
 # Logs
 logs/
@@ -85,8 +84,11 @@ backend/backups/
 *.temp
 .cache/
 
-# Temporary/debug scripts
-**/temp_*.js
+# Local development / debug tools (not part of production app)
+dashboard/
+scripts/
+cleanup-ports.ps1
+init.ps1
 temp_*.js
 backend/auto_login.html
 
@@ -106,9 +108,6 @@ backend/BACKEND.md
 backend/admin-photos-source/README.md
 frontend/src/utils/LOGGER_README.md
 frontend/src/utils/TROUBLESHOOTING_GUIDE.md
-cleanup-ports.ps1
-init.ps1
-*.tmp
 
 # Test / tooling (not needed to run app)
 coverage/

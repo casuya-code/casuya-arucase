@@ -16,6 +16,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - CODE_OF_CONDUCT, CONTRIBUTING, SECURITY documentation
 - MIT License
 
+### Changed
+- Homepage redesign: Digital Lavender announcements, brick red admissions, dark tech stats cards
+- Admin cards: warm ivory leadership section, rector card with light green accent
+- Hero CTA buttons: transparent style, no background
+- Contact cards: per-channel tinted backgrounds (phone/email blue, WhatsApp green, location gold)
+- Gallery section: warm off-white background, consistent horizontal gutter alignment
+- All homepage sections: consistent `var(--home-gutter)` horizontal padding for uniform alignment
+- Admin cards: equal height via CSS Grid `align-items: stretch` + `height: 100%`
+
+### Fixed
+- Security: removed suspicious dev comment from `index.html` (CWE-546)
+- Security: added HSTS header `max-age=63072000; includeSubDomains; preload` to Vercel config
+- CSS: admin grid source order bug — mobile `1fr` override now correctly wins over base `3-col`
+- CSS: removed stray `}` that broke PostCSS parsing
+- CSS: removed `max-width: 24rem` constraint from admin grid on mobile
+- CSS: admissions CTA inner container — removed unnecessary grid layout
+- Admin card icons: forced white color to prevent theme `i` color override
+- Removed all hardcoded English from homepage (Swahili only)
+
+### Removed
+- Local dev tools (`dashboard/`, `scripts/`, `temp_*.js`) from git tracking
+- Duplicate/legacy debug documentation from tracked files
+
 ### Fixed
 - ESLint warnings (varsIgnorePattern for unused `_` params)
 - CI Node version bumped from 20 to 22

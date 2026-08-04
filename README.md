@@ -4,190 +4,28 @@
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Node](https://img.shields.io/badge/node-22+-green)](https://nodejs.org)
 
-Full-featured school management system built with **Node.js/Express** backend and **React** frontend, optimized for Railway deployment with PostgreSQL.
+Full-featured school management system built with **Node.js/Express** backend and **React** frontend. Backend deployed on Railway (PostgreSQL), frontend deployed on Vercel.
 
 ---
 
 ## Cybersecurity Deception Module (Casuya-defence Integration)
 
-Arusha Catholic Seminary includes **integrated cybersecurity deception capabilities** powered by the **Casuya Deception Framework**:
+The system includes an **8-layer biological defense pipeline** integrated into backend middleware for attacker detection and delay:
 
-### 8-Layer Biological Defense Pipeline
+| Layer | Mechanism |
+|-------|-----------|
+| Token Monitor | Honeytoken protection, IP blocking, security alerts |
+| Bombardier Beetle | Rate limiting (3-tier 429/503), resource tracking |
+| Mimic Octopus | Polymorphic signature spoofing per attacker fingerprint |
+| Hairy Frog | Sacrificial trap endpoints after 50 hits |
+| Horned Lizard | Resource exhaustion via data bursts after 30 hits |
+| Virginia Opossum | Dead service emulation after 3 repeat hits |
+| Recursive Tarpit | Infinite junk byte streaming (1MB chunks) |
+| Router Redirect | Bait template routing system |
 
-Integrated into the backend middleware, the system includes comprehensive deception mechanisms to detect and delay attackers:
+Advanced counterintelligence includes timing analysis, traffic pattern detection, honeypot detection countermeasures, and deception depth escalation.
 
-#### Layer 1: Token Monitor
-- Honeytoken protection for bait paths (`/.env`, `/phpmyadmin`, `/backup.zip`, etc.)
-- IP blocking and security alert webhooks
-- Dynamic junk data serving
-
-#### Layer 2: Bombardier Beetle  
-- Rate limiting with 3-tier response (429/503)
-- Exothermic discharge simulation with thermal output headers
-- Resource pool depletion tracking
-
-#### Layer 3: Mimic Octopus
-- Polymorphic signature spoofing by attacker fingerprint
-- Dynamic response profiles for scanners, crawlers, exploit kits
-- 200 OK responses with rotating variants to waste parser logic
-
-#### Layer 4: Hairy Frog
-- Sacrificial trap endpoint deployment after 50 hits
-- Fake database configuration with placeholder credentials
-- Honeypot login forms to capture attacker credentials
-
-#### Layer 5: Horned Lizard
-- Resource exhaustion via autohaemorrhaging data bursts
-- After 30 hits: dumps 1-3MB random binary data
-- Bandwidth and memory buffer exhaustion
-
-#### Layer 6: Virginia Opossum
-- Dead service emulation after 3 repeat hits
-- Random error responses (502/503/504/500/404)
-- Outdated headers to make services appear abandoned
-
-#### Layer 7: Recursive Tarpit
-- Infinite junk byte streaming (1MB chunks) at slow intervals
-- Prevents automated tools from crawling bait directories
-- Limited to 50 concurrent tarpits to prevent self-inflicted DoS
-
-#### Layer 8: Router Redirect
-- Final bait template routing system
-- Matches request to configured bait path
-- Serves corresponding HTML template with appropriate content type
-
-### Advanced Counterintelligence
-
-The framework includes advanced modules that counter experienced attackers:
-
-#### Timing Analysis Shield
-- Detects uniform request timing patterns (automated scanning)
-- Detects sequential directory enumeration
-- Applies variable jitter delays to defeat timing analysis
-
-#### Traffic Pattern Analysis
-- Identifies scanner user agents, sequential path probing
-- Detects resource overfetch patterns
-- Tracks suspicious extensions and sensitive path targeting
-
-#### Honeypot Detection Countermeasures
-- Detects when attackers are actively searching for honeypot signatures
-- Tracks sequential fingerprinting attempts
-- Identifies deception detection payloads in requests
-
-#### Deception Depth Escalation
-- Multi-stage deception that deepens based on attacker persistence
-- Stage 1: Surface bait (basic fake pages)
-- Stage 2: Deep bait (fake credentials, configs)
-- Stage 3: Adaptive bait (technology-matched responses)
-- Stage 4: Reactive camouflage (deep fake service emulation)
-
-#### False Positive Prevention
-- Whitelists localhost, private networks, and trusted user agents
-- Requires browser-like headers for non-whitelisted traffic
-- Rate limits to prevent abuse while protecting legitimate traffic
-
-### SIEM Dashboard
-
-Real-time visualization of intruder breakdown patterns across all defense layers:
-
-- **Exothermic Spike Tracker** — Bombardier Beetle activation intensity
-- **Polymorphic Disorientation Grid** — Mimic Octopus signature spoofing
-- **Structural Trauma Map** — Hairy Frog trap deployments
-- **Foul Taste Index** — Horned Lizard resource exhaustion
-- **Catatonic Deception Gauge** — Opossum dead service emulation
-- **Intruder Breakdown Tracker** — Individual attacker progression through stages 0-5
-
-API endpoints:
-- `GET /dashboard` — Serves SIEM visualization dashboard
-- `GET /api/metrics` — Real-time dashboard data
-- `GET /api/alerts` — Active biological defense alerts
-- `GET /api/footprints` — Intruder tracking data
-
-### Attack Flow
-
-```text
-Attacker Scanner
-      │
-      ├─ probes /wp-admin ──────────────────► Mimic Octopus: routed to fake admin portal (URL unchanged)
-      ├─ crawls bait directory ─────────────► Recursive Tarpit: served infinite junk folders
-      ├─ requests database_backup_fake.sql ─► Token Monitor: IP blocked + corrupted payload + webhook alert
-      ├─ rapid-fire scanning detected ──────► Bombardier Beetle: cavitation blast (429 + thermal output)
-      ├─ repeated requests from same IP ────► Bombardier Beetle: rate limited with 429/503 responses
-      ├─ scanner fingerprint detected ─────► Mimic Octopus: polymorphic signature spoofing
-      ├─ 50+ hits on same endpoint ─────────► Hairy Frog: trap endpoints deployed
-      ├─ 30+ hits persist ──────────────────► Horned Lizard: resource exhaustion data dump
-      └─ 3+ repeat hits ───────────────────► Opossum: dead service emulation
-```
-
-### Deployment Configuration
-
-Configure deception behavior in `backend/middleware/deception/config/`:
-
-#### deception_routes.json
-```json
-{
-  "bait_routes": [
-    "/wp-admin",
-    "/.env",
-    "/backup.zip",
-    "/phpmyadmin",
-    "/server-status",
-    "/config.php"
-  ],
-  "bait_templates": {
-    "/wp-admin": "admin_login_fake.html",
-    "/.env": "config_env_canary.json",
-    "/backup.zip": "backup_dashboard.html",
-    "/phpmyadmin": "admin_login_fake.html",
-    "/server-status": "backup_dashboard.html",
-    "/config.php": "admin_login_fake.html"
-  },
-  "protected_paths": [
-    "/api",
-    "/dashboard",
-    "/admin"
-  ]
-}
-```
-
-#### threshold_rules.conf
-```ini
-# Activate the tarpit after N rapid requests from one IP
-tarpit.threshold_requests = 25
-tarpit.slow_stream_bytes = 1048576
-
-# Block IPs after repeated honeytoken hits
-block.ip_repeat_hits = 3
-block.autoban_ttl_hours = 24
-
-# Webhook alert destination
-alert.webhook_url = https://your-ops-team.example.com/alerts
-alert.encryption_key = CHANGE_ME
-
-# Anti-fingerprinting (attackers detect X- headers and canned responses)
-stealth.emit_layer_headers = false
-stealth.vary_response = true
-stealth.rotation_interval_hours = 168
-```
-
-### Security Integration
-
-The deception middleware automatically integrates with the existing security stack:
-
-- **Fail-open design**: If any deception layer crashes, requests continue to the real application
-- **Dynamic protected paths**: Runtime registration of production endpoints without restart
-- **Route rotation**: Bait routes rotate every 24 hours using hash-based variations to prevent fingerprinting
-- **Advanced counterintelligence**: Timing analysis, traffic pattern detection, and false positive prevention run automatically before any defense layer engages
-
-### Testing and Validation
-
-All deception modules are thoroughly tested:
-- **Unit tests**: Comprehensive test coverage for all deception layers
-- **Security audit**: Tests for timing side-channels and vulnerability vectors
-- **CI/CD validation**: Automated deployment verification and configuration validation
-
-> The value of this deception architecture is **detection and delay**, delivered at low cost. It does not replace hardening — it only makes reconnaissance expensive enough that attackers move on to easier targets.
+> The value of this architecture is **detection and delay** at low cost. It does not replace hardening — it makes reconnaissance expensive enough that attackers move on.
 
 ## Technology Stack
 
@@ -212,7 +50,7 @@ All deception modules are thoroughly tested:
 | Build | Vite 7 |
 | State | TanStack React Query + Context API |
 | Routing | React Router v6 |
-| Styling | CSS Modules |
+| Styling | CSS (custom properties, no modules) |
 | Charts | Chart.js + react-chartjs-2 |
 | Testing | Vitest + React Testing Library |
 | Icons | Font Awesome 7 |
@@ -236,23 +74,26 @@ All deception modules are thoroughly tested:
 ├── backend/                  # Express API server
 │   ├── config/               # Database, auth, Cloudinary config
 │   ├── migrations/           # Versioned PostgreSQL migrations
-│   ├── middleware/            # Auth, cache, error handling
+│   ├── middleware/            # Auth, cache, error handling, deception layers
 │   ├── routes/               # API route handlers
 │   ├── utils/                # Shared utilities
 │   ├── scripts/              # DB scripts and tooling
-│   ├── __tests__/            # Jest test suite (67 tests)
+│   ├── __tests__/            # Jest test suite
 │   └── server.js             # Entry point
 │
-├── frontend/                 # React SPA
+├── frontend/                 # React SPA (deployed on Vercel)
 │   ├── src/
-│   │   ├── components/       # Reusable UI components
-│   │   ├── pages/            # Page components
+│   │   ├── components/       # Reusable UI components (layout, ui)
+│   │   ├── pages/            # Page components (public, admin)
 │   │   ├── services/         # API service layer (axios)
 │   │   ├── hooks/            # Custom React hooks
 │   │   ├── context/          # React Context providers
+│   │   ├── styles/           # Global CSS, homepage theme overrides
+│   │   ├── constants/        # Shared constants
 │   │   └── utils/            # i18n, logger, tokens
-│   ├── public/               # Static assets
-│   └── __tests__/            # Vitest test suite (35 tests)
+│   ├── public/               # Static assets, robots.txt
+│   ├── vercel.json           # Security headers (HSTS, CSP)
+│   └── __tests__/            # Vitest test suite
 │
 ├── docs/                     # Technical documentation
 ├── .github/                  # CI workflows, issue templates
@@ -362,22 +203,27 @@ Uses Vitest + jsdom. Coverage includes:
 | GET | `/.../pdf` | Download PDF |
 | GET | `/.../csv` | Download CSV |
 
-## Railway Deployment
+## Deployment
 
+### Backend (Railway)
 1. Create a PostgreSQL database on Railway
 2. Deploy the backend service (root dir: `backend`)
    - Environment variables are auto-populated for PostgreSQL
-3. Deploy the frontend service (root dir: `frontend`)
-   - Set `VITE_API_URL=https://your-backend.railway.app`
-4. Configure custom domain (SSL is automatic)
+3. Configure custom domain (SSL is automatic)
 
-See [Railway documentation](https://docs.railway.app) for detailed instructions.
+### Frontend (Vercel)
+1. Connect the GitHub repo to Vercel
+2. Set root directory to `frontend`
+3. Set `VITE_API_URL` environment variable to your backend URL
+4. Deploy — SSL is automatic
+
+See [Railway docs](https://docs.railway.app) and [Vercel docs](https://vercel.com/docs) for detailed instructions.
 
 ## Security
 
 - **JWT authentication** with refresh token rotation
 - **bcrypt** password hashing (no plaintext storage)
-- **Helmet** security headers (CSP, HSTS, X-Frame-Options)
+- **Helmet** security headers (CSP, HSTS with preload, X-Frame-Options)
 - **CORS** restricted to known origins
 - **Rate limiting** on all API routes
 - **Input validation** with express-validator
@@ -392,4 +238,3 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) and [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.
 ## License
 
 [MIT](LICENSE) — 2025 Arusha Catholic Seminary
-

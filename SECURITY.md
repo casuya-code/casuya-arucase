@@ -32,12 +32,13 @@ This project implements:
 
 - **JWT authentication** with token expiry and refresh
 - **bcrypt password hashing** (no plaintext storage)
-- **Helmet** security headers (CSP, HSTS, X-Frame-Options, etc.)
+- **Helmet** security headers (CSP, HSTS with preload, X-Frame-Options, etc.)
 - **CORS** restricted to known origins
 - **Rate limiting** on API routes (express-rate-limit)
 - **Input validation** on all endpoints (express-validator)
 - **SQL injection prevention** via parameterized queries
 - **Sentry** error monitoring (production only)
+- **SRI** hash injection on production builds
 
 ## Best Practices
 

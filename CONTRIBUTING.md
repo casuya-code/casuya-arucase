@@ -78,6 +78,7 @@ A commitlint hook validates messages automatically.
 
 - **Backend**: Standard JavaScript, 2-space indent
 - **Frontend**: ESLint (React config) — run `npm run lint` before committing
+- **CSS**: Custom properties (CSS variables) at `:root` level, no CSS Modules
 - Run lint-staged before each commit (configured via husky)
 
 ## Testing
@@ -99,18 +100,23 @@ The CI pipeline runs both test suites on every push to `main`.
 ```
 ├── backend/          # Express API server
 │   ├── config/       # DB, auth, cloudinary config
-│   ├── middleware/    # Express middleware
+│   ├── middleware/    # Auth, cache, error handling, deception layers
 │   ├── routes/       # API route handlers
 │   ├── utils/        # Shared utilities
-│   └── scripts/      # DB scripts, migrations
-├── frontend/         # React SPA
+│   ├── scripts/      # DB scripts and tooling
+│   └── __tests__/    # Jest test suite
+├── frontend/         # React SPA (Vite)
 │   ├── src/
-│   │   ├── components/
-│   │   ├── pages/
-│   │   ├── services/
-│   │   ├── hooks/
-│   │   └── utils/
-│   └── public/
+│   │   ├── components/   # Reusable UI (layout, ui)
+│   │   ├── pages/        # Page components (public, admin)
+│   │   ├── services/     # API service layer
+│   │   ├── hooks/        # Custom React hooks
+│   │   ├── context/      # React Context providers
+│   │   ├── styles/       # Global CSS, theme overrides
+│   │   ├── constants/    # Shared constants
+│   │   └── utils/        # i18n, logger, tokens
+│   ├── public/           # Static assets
+│   └── __tests__/        # Vitest test suite
 └── docs/             # Technical documentation
 ```
 
