@@ -702,6 +702,12 @@
   position: relative;
 }
 
+/* Rector welcome card: light green surface */
+.homepage .home-framed-panel.home-intro-panel {
+  background: #e9f7e6;
+  border-color: #c8e6c9;
+}
+
 @media (max-width: 640px) {
   .home-intro-panel {
     grid-template-columns: 1fr;

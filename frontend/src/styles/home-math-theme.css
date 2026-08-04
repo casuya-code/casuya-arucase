@@ -235,6 +235,64 @@
   color: var(--home-ink-faint);
 }
 
+/* Stats — tech-style dark cards */
+.homepage .home-stat-card {
+  background:
+    radial-gradient(90% 70% at 50% -10%, rgba(96, 165, 250, 0.16), transparent 60%),
+    radial-gradient(70% 60% at 12% 100%, rgba(34, 197, 94, 0.13), transparent 55%),
+    radial-gradient(60% 50% at 92% 8%, rgba(251, 191, 36, 0.09), transparent 50%),
+    linear-gradient(rgba(148, 163, 184, 0.07) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(148, 163, 184, 0.07) 1px, transparent 1px),
+    linear-gradient(160deg, #0a101f 0%, #131c31 55%, #0e1626 100%);
+  background-size: auto, auto, auto, 22px 22px, 22px 22px, auto;
+  border: 1px solid rgba(148, 163, 184, 0.16);
+  border-top: 3px solid transparent;
+  box-shadow: 0 10px 26px rgba(2, 6, 23, 0.28);
+}
+
+.homepage .home-stat-card::before {
+  opacity: 1;
+  height: 3px;
+}
+
+.homepage .home-stat-card--graduates::before { background: linear-gradient(90deg, #3b82f6, #60a5fa); }
+.homepage .home-stat-card--enrolled::before { background: linear-gradient(90deg, #22c55e, #4ade80); }
+.homepage .home-stat-card--year::before { background: linear-gradient(90deg, #f59e0b, #fbbf24); }
+
+.homepage .home-stat-card .home-stat-icon {
+  color: #fff;
+  background: rgba(148, 163, 184, 0.12);
+}
+
+.homepage .home-stat-card--graduates .home-stat-icon { color: #60a5fa; }
+.homepage .home-stat-card--enrolled .home-stat-icon { color: #4ade80; }
+.homepage .home-stat-card--year .home-stat-icon { color: #fbbf24; }
+
+.homepage .home-stat-card .home-stat-number {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  color: #fff;
+  text-shadow: 0 0 20px rgba(96, 165, 250, 0.35);
+}
+
+.homepage .home-stat-card--graduates .home-stat-number { color: #7db4fb; }
+.homepage .home-stat-card--enrolled .home-stat-number { color: #4ade80; }
+.homepage .home-stat-card--year .home-stat-number { color: #fbbf24; }
+
+.homepage .home-stat-card .home-stat-label {
+  color: #cbd5e1;
+}
+
+.homepage .home-stat-card .home-stat-label-en,
+.homepage .home-stat-card .home-stat-meta {
+  color: #94a3b8;
+}
+
+.homepage .home-stat-card:hover {
+  border-color: rgba(148, 163, 184, 0.32);
+  box-shadow: 0 0 0 1px rgba(96, 165, 250, 0.25), 0 14px 30px rgba(2, 6, 23, 0.4);
+  transform: translateY(-3px);
+}
+
 /* CMS block */
 .homepage .home-cms-section {
   padding: var(--home-section-pad-y) 0;
@@ -420,6 +478,55 @@
   border-color: #15803d;
 }
 
+/* Admissions CTA — brick red surface */
+.homepage .home-admissions-cta .home-admissions-cta__frame {
+  background: #a63a33;
+  border-color: #7e2c26;
+  box-shadow: 0 6px 18px rgba(122, 45, 38, 0.28);
+}
+
+.homepage .home-admissions-cta .home-section-eyebrow {
+  color: #fbe3d6;
+}
+
+.homepage .home-admissions-cta__title,
+.homepage .home-admissions-cta__lead {
+  color: #fff;
+}
+
+.homepage .home-admissions-cta__lead-en {
+  color: #f7ded5;
+}
+
+.homepage .home-admissions-steps li {
+  color: #fff3ef;
+}
+
+.homepage .home-admissions-cta .home-admissions-btn {
+  color: #fff;
+  border-color: rgba(255, 255, 255, 0.75);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.homepage .home-admissions-cta .home-admissions-btn:hover {
+  background: #fff;
+  border-color: #fff;
+  color: #8f2f28;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2);
+}
+
+.homepage .home-admissions-cta .home-admissions-btn--primary {
+  background: var(--home-accent-gradient);
+  color: #fff;
+  border-color: var(--home-accent-deep);
+}
+
+.homepage .home-admissions-cta .home-admissions-btn--primary:hover {
+  background: linear-gradient(135deg, #d4b44a, #c9a227);
+  border-color: var(--home-accent-deep);
+  color: #fff;
+}
+
 /* Gallery */
 .homepage .home-gallery {
   padding: var(--home-section-pad-y) 0;
@@ -510,6 +617,31 @@
 
 .homepage .home-contact-card .home-contact-value {
   color: var(--home-ink);
+}
+
+/* Contact cards — per-channel light tints matching each icon colour */
+.homepage .home-contact-card.home-contact-card--phone {
+  background: #eaf3fb;
+  border-top-color: #2563eb;
+}
+
+.homepage .home-contact-card.home-contact-card--email {
+  background: #eaf3fb;
+  border-top-color: #3b82c4;
+}
+
+.homepage .home-contact-card.home-contact-card--whatsapp {
+  background: #e7f8ee;
+  border-top-color: #16a34a;
+}
+
+.homepage .home-contact-card.home-contact-card--location {
+  background: #fdf6dd;
+  border-top-color: #c9a227;
+}
+
+.homepage .home-contact-card .home-contact-card-icon i {
+  color: #fff;
 }
 
 .homepage .home-contact-page-link {

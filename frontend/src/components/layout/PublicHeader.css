@@ -39,7 +39,7 @@
   margin-bottom: clamp(15px, 4vw, 25px);
   padding: clamp(15px, 3.5vw, 25px) clamp(6px, 3.5vw, 22px);
   text-align: center;
-  background: transparent;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%);
   border-radius: 0;
   box-shadow: none;
   border: none;

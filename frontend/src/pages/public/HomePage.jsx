@@ -709,7 +709,7 @@ const HomePage = () => {
                 <p className="home-section-subtitle">Get in touch · Tupo Oldonyosambu, Arusha</p>
               </header>
               <div className="home-contact-grid">
-                <a href={`tel:${contactPhone.replace(/\s/g, '')}`} className="home-contact-card">
+                <a href={`tel:${contactPhone.replace(/\s/g, '')}`} className="home-contact-card home-contact-card--phone">
                   <span className="home-contact-card-icon home-contact-card-icon--phone">
                     <i className="fas fa-phone" aria-hidden />
                   </span>
@@ -718,7 +718,7 @@ const HomePage = () => {
                     <span className="home-contact-value">{contactPhone}</span>
                   </span>
                 </a>
-                <a href={`mailto:${contactEmail}`} className="home-contact-card">
+                <a href={`mailto:${contactEmail}`} className="home-contact-card home-contact-card--email">
                   <span className="home-contact-card-icon home-contact-card-icon--email">
                     <i className="fas fa-envelope" aria-hidden />
                   </span>
@@ -731,7 +731,7 @@ const HomePage = () => {
                   href={whatsappUrl}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="home-contact-card"
+                  className="home-contact-card home-contact-card--whatsapp"
                 >
                   <span className="home-contact-card-icon home-contact-card-icon--whatsapp">
                     <i className="fab fa-whatsapp" aria-hidden />
@@ -745,7 +745,7 @@ const HomePage = () => {
                   href={socialLocation}
                   target="_blank"
                   rel="noopener noreferrer"
-                  className="home-contact-card"
+                  className="home-contact-card home-contact-card--location"
                 >
                   <span className="home-contact-card-icon home-contact-card-icon--location">
                     <i className="fas fa-map-marker-alt" aria-hidden />
