@@ -52,6 +52,11 @@ const SolutionsTrack = () => {
     queryFn: async () => {
       const params = { form: formLabel, stream: selectedStream, term: 'First Term' };
       if (selectedYear) params.year = selectedYear;
+      // Try AI-enhanced first, fall back to rule-based
+      try {
+        const aiRes = await analyticsAPI.getAISolutions(params);
+        if (aiRes.data) return aiRes.data;
+      } catch (_) { /* fall through */ }
       const res = await analyticsAPI.getSolutions(params);
       if (!res.data) throw new Error('No data received');
       return res.data;
@@ -70,7 +75,7 @@ const SolutionsTrack = () => {
           <header className="an-st-top">
             <div className="an-st-top-row">
               <div>
-                <h1 className="an-st-title">Solutions</h1>
+                <h1 className="an-st-title">Solutions {data?.ai && <span className="an-sol-ai-badge">AI Enhanced</span>}</h1>
                 <p className="an-st-sub">{formLabel} &mdash; Stream {selectedStream}</p>
               </div>
               <Link to={`/admin/analytics/${encodeURIComponent(form)}`} className="an-st-back">

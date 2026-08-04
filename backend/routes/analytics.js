@@ -1150,416 +1150,299 @@ router.get('/who-and-when', requireModule('analytics_view'), async (req, res) =>
   }
 });
 
+/**
+ * Generate rule-based recommendations (shared by /solutions and /solutions/ai).
+ */
+async function generateRuleBasedSolutions(form, normalizedStream, year, isFormIV) {
+  const recommendations = {
+    subjectSpecific: [],
+    classLevel: [],
+    studentLevel: [],
+    teachingStrategies: [],
+    resourceAllocation: []
+  };
+
+  // 1. Subject-specific
+  let subjectSql = `
+    SELECT subject_code, AVG(score) as avg_score, COUNT(*) as score_count, COUNT(DISTINCT adm_no) as student_count
+    FROM individual_scores WHERE UPPER(TRIM(level)) = UPPER(TRIM($1))
+  `;
+  const subjectParams = [form];
+  if (normalizedStream) {
+    if (isFormIV && (normalizedStream === 'A' || normalizedStream === 'NA')) {
+      subjectSql += ' AND (stream = $2 OR stream = $3)'; subjectParams.push('A', 'NA');
+    } else { subjectSql += ' AND stream = $2'; subjectParams.push(normalizedStream); }
+  }
+  if (year) { subjectSql += ` AND year = $${subjectParams.length + 1}`; subjectParams.push(parseInt(year)); }
+  subjectSql += ' GROUP BY subject_code ORDER BY avg_score ASC';
+  const subjectResult = await query(subjectSql, subjectParams);
+
+  const strugglingSubjects = subjectResult.rows.filter(row => parseFloat(row.avg_score) < 60);
+  strugglingSubjects.forEach(subject => {
+    recommendations.subjectSpecific.push({
+      type: 'struggling_subject', priority: 'high',
+      title: `Low Performance in ${subject.subject_code}`,
+      description: `Average score is ${parseFloat(subject.avg_score).toFixed(1)}%, below the 60% threshold.`,
+      details: { subject: subject.subject_code, average: parseFloat(subject.avg_score), studentCount: parseInt(subject.student_count), scoreCount: parseInt(subject.score_count) },
+      actions: [`Review teaching methods for ${subject.subject_code}`, `Provide additional support materials for ${subject.subject_code}`, `Consider remedial classes for struggling students in ${subject.subject_code}`, `Analyze common mistakes in ${subject.subject_code} assessments`]
+    });
+  });
+
+  for (const subject of subjectResult.rows) {
+    const subjectCode = subject.subject_code;
+    let trendSql = `SELECT month, year, AVG(score) as avg_score FROM individual_scores WHERE UPPER(TRIM(level)) = UPPER(TRIM($1)) AND subject_code = $2`;
+    const trendParams = [form, subjectCode];
+    if (normalizedStream) {
+      if (isFormIV && (normalizedStream === 'A' || normalizedStream === 'NA')) {
+        trendSql += ' AND (stream = $3 OR stream = $4)'; trendParams.push('A', 'NA');
+      } else { trendSql += ' AND stream = $3'; trendParams.push(normalizedStream); }
+    }
+    if (year) { trendSql += ` AND year = $${trendParams.length + 1}`; trendParams.push(parseInt(year)); }
+    trendSql += ` GROUP BY month, year ORDER BY year, ${MONTH_ORDER_CASE}`;
+    const trendResult = await query(trendSql, trendParams);
+    if (trendResult.rows.length >= 2) {
+      const firstHalf = trendResult.rows.slice(0, Math.ceil(trendResult.rows.length / 2));
+      const secondHalf = trendResult.rows.slice(Math.ceil(trendResult.rows.length / 2));
+      const firstHalfAvg = firstHalf.reduce((sum, r) => sum + parseFloat(r.avg_score), 0) / firstHalf.length;
+      const secondHalfAvg = secondHalf.reduce((sum, r) => sum + parseFloat(r.avg_score), 0) / secondHalf.length;
+      if (secondHalfAvg < firstHalfAvg - 5) {
+        recommendations.subjectSpecific.push({
+          type: 'declining_subject', priority: 'medium',
+          title: `Declining Performance in ${subjectCode}`,
+          description: `Performance decreased from ${firstHalfAvg.toFixed(1)}% to ${secondHalfAvg.toFixed(1)}%.`,
+          details: { subject: subjectCode, previousAverage: firstHalfAvg, currentAverage: secondHalfAvg, change: secondHalfAvg - firstHalfAvg },
+          actions: [`Investigate causes of decline in ${subjectCode}`, `Review recent curriculum changes or teaching staff`, `Implement intervention strategies for ${subjectCode}`, `Monitor ${subjectCode} performance closely`]
+        });
+      }
+    }
+  }
+
+  // 2. Class-level
+  let classSql = `SELECT month, year, AVG(score) as avg_score, COUNT(DISTINCT adm_no) as student_count FROM individual_scores WHERE UPPER(TRIM(level)) = UPPER(TRIM($1))`;
+  const classParams = [form];
+  if (normalizedStream) {
+    if (isFormIV && (normalizedStream === 'A' || normalizedStream === 'NA')) {
+      classSql += ' AND (stream = $2 OR stream = $3)'; classParams.push('A', 'NA');
+    } else { classSql += ' AND stream = $2'; classParams.push(normalizedStream); }
+  }
+  if (year) { classSql += ` AND year = $${classParams.length + 1}`; classParams.push(parseInt(year)); }
+  classSql += ` GROUP BY month, year ORDER BY year, ${MONTH_ORDER_CASE}`;
+  const classResult = await query(classSql, classParams);
+
+  let overallAverage = 0;
+  if (classResult.rows.length > 0) {
+    const allAverages = classResult.rows.map(r => parseFloat(r.avg_score));
+    overallAverage = allAverages.reduce((sum, val) => sum + val, 0) / allAverages.length;
+    if (overallAverage < 60) {
+      recommendations.classLevel.push({
+        type: 'low_overall_performance', priority: 'high', title: 'Low Overall Class Performance',
+        description: `Class average is ${overallAverage.toFixed(1)}%, below the 60% threshold.`,
+        details: { average: overallAverage, studentCount: Math.max(...classResult.rows.map(r => parseInt(r.student_count))) },
+        actions: ['Review overall teaching strategies', 'Implement comprehensive support programs', 'Consider additional teaching resources', 'Schedule parent-teacher meetings', 'Analyze curriculum alignment']
+      });
+    }
+    if (classResult.rows.length >= 2) {
+      const firstHalf = classResult.rows.slice(0, Math.ceil(classResult.rows.length / 2));
+      const secondHalf = classResult.rows.slice(Math.ceil(classResult.rows.length / 2));
+      const firstHalfAvg = firstHalf.reduce((sum, r) => sum + parseFloat(r.avg_score), 0) / firstHalf.length;
+      const secondHalfAvg = secondHalf.reduce((sum, r) => sum + parseFloat(r.avg_score), 0) / secondHalf.length;
+      if (secondHalfAvg < firstHalfAvg - 5) {
+        recommendations.classLevel.push({
+          type: 'declining_class_trend', priority: 'high', title: 'Declining Class Performance Trend',
+          description: `Class performance decreased from ${firstHalfAvg.toFixed(1)}% to ${secondHalfAvg.toFixed(1)}%.`,
+          details: { previousAverage: firstHalfAvg, currentAverage: secondHalfAvg, change: secondHalfAvg - firstHalfAvg },
+          actions: ['Investigate root causes of decline', 'Review recent changes in teaching staff or curriculum', 'Implement immediate intervention measures', 'Increase monitoring and support', 'Consider external support or resources']
+        });
+      }
+    }
+  }
+
+  // 3. Student-level
+  let strugglingSql = `SELECT adm_no, AVG(score) as avg_score FROM individual_scores WHERE UPPER(TRIM(level)) = UPPER(TRIM($1))`;
+  const strugglingParams = [form];
+  if (normalizedStream) {
+    if (isFormIV && (normalizedStream === 'A' || normalizedStream === 'NA')) {
+      strugglingSql += ' AND (stream = $2 OR stream = $3)'; strugglingParams.push('A', 'NA');
+    } else { strugglingSql += ' AND stream = $2'; strugglingParams.push(normalizedStream); }
+  }
+  if (year) { strugglingSql += ` AND year = $${strugglingParams.length + 1}`; strugglingParams.push(parseInt(year)); }
+  strugglingSql += ' GROUP BY adm_no HAVING AVG(score) < 50';
+  const strugglingResult = await query(strugglingSql, strugglingParams);
+  const strugglingCount = strugglingResult.rows.length;
+
+  if (strugglingCount > 0) {
+    recommendations.studentLevel.push({
+      type: 'struggling_students', priority: 'high',
+      title: `${strugglingCount} Struggling Students Identified`,
+      description: `${strugglingCount} student(s) have an average score below 50%.`,
+      details: { studentCount: strugglingCount },
+      actions: ['Provide individualized support plans', 'Schedule one-on-one tutoring sessions', 'Identify specific learning gaps', 'Engage parents/guardians', 'Consider peer mentoring programs']
+    });
+  }
+
+  // 4. Teaching strategies
+  if (strugglingSubjects.length > 0) {
+    recommendations.teachingStrategies.push({
+      type: 'differentiated_instruction', priority: 'medium',
+      title: 'Implement Differentiated Instruction',
+      description: `Multiple subjects are struggling. Consider differentiated teaching approaches.`,
+      details: { strugglingSubjectCount: strugglingSubjects.length },
+      actions: ['Use varied teaching methods (visual, auditory, kinesthetic)', 'Implement group work and collaborative learning', 'Provide multiple assessment formats', 'Offer flexible learning paths', 'Use technology-enhanced learning tools']
+    });
+  }
+  if (classResult.rows.length > 0 && overallAverage < 65) {
+    recommendations.teachingStrategies.push({
+      type: 'active_learning', priority: 'medium',
+      title: 'Promote Active Learning Strategies',
+      description: `Class average is ${overallAverage.toFixed(1)}%. Active learning can improve engagement.`,
+      details: { currentAverage: overallAverage },
+      actions: ['Implement problem-based learning', 'Use case studies and real-world examples', 'Encourage student presentations', 'Facilitate discussions and debates', 'Integrate hands-on activities']
+    });
+  }
+
+  // 5. Resource allocation
+  if (strugglingSubjects.length > 0) {
+    recommendations.resourceAllocation.push({
+      type: 'subject_support', priority: 'high',
+      title: 'Allocate Additional Resources to Struggling Subjects',
+      description: `${strugglingSubjects.length} subject(s) need additional support.`,
+      details: { subjects: strugglingSubjects.map(s => s.subject_code), count: strugglingSubjects.length },
+      actions: ['Assign experienced teachers to struggling subjects', 'Provide additional teaching materials', 'Allocate more class time if needed', 'Invest in subject-specific resources', 'Consider external tutors or specialists']
+    });
+  }
+  if (strugglingCount > 0) {
+    recommendations.resourceAllocation.push({
+      type: 'student_support', priority: 'high',
+      title: 'Increase Student Support Resources',
+      description: `${strugglingCount} student(s) require additional support.`,
+      details: { studentCount: strugglingCount },
+      actions: ['Establish a learning support center', 'Hire additional support staff', 'Allocate budget for tutoring programs', 'Provide learning materials and resources', 'Create peer support programs']
+    });
+  }
+
+  const priorityOrder = { 'high': 1, 'medium': 2, 'low': 3 };
+  Object.keys(recommendations).forEach(key => {
+    recommendations[key].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
+  });
+
+  const allRecs = [...recommendations.subjectSpecific, ...recommendations.classLevel, ...recommendations.studentLevel, ...recommendations.teachingStrategies, ...recommendations.resourceAllocation];
+
+  return {
+    recommendations,
+    summary: { totalRecommendations: allRecs.length, highPriority: allRecs.filter(r => r.priority === 'high').length },
+    form,
+    stream: normalizedStream || 'all',
+    year: year || 'all'
+  };
+}
+
+// AI-enhanced solutions — tries Mistral first, falls back to rule-based
+router.get('/solutions/ai', requireModule('analytics_solutions'), async (req, res) => {
+  try {
+    let { form, stream, year } = req.query;
+    if (!form) return res.status(400).json({ message: 'form is required' });
+    form = form.trim().toUpperCase();
+
+    const { getClient, callMistral } = require('../utils/mistral');
+    if (!getClient()) {
+      // No AI key — fall through to rule-based
+      const fallback = await generateRuleBasedSolutions(form, null, year,
+        form.includes('FORM I') || form.includes('FORM II') || form.includes('FORM III') || form.includes('FORM IV'));
+      return res.json({ ...fallback, ai: false });
+    }
+
+    let normalizedStream = null;
+    if (stream && stream !== 'NA') {
+      const isFormVOrVI = form.includes('FORM V') || form.includes('FORM VI');
+      normalizedStream = isFormVOrVI ? stream : normalizeStream(stream);
+    }
+    const isFormIV = form.includes('FORM I') || form.includes('FORM II') || form.includes('FORM III') || form.includes('FORM IV');
+
+    // Get rule-based data first (always needed)
+    const baseData = await generateRuleBasedSolutions(form, normalizedStream, year, isFormIV);
+
+    // Build context for AI
+    const contextPayload = JSON.stringify({
+      form, stream: normalizedStream || 'all', year: year || 'all',
+      ruleBased: baseData
+    }, null, 2);
+
+    const systemPrompt = `You are an expert education analytics advisor for Arusha Catholic Seminary in Tanzania.
+You receive rule-based recommendations generated from student score data. Your job is to ENHANCE and EXPAND these with additional AI-powered insights.
+
+Rules:
+1. Return a JSON object with the EXACT same structure: { "recommendations": { "subjectSpecific": [...], "classLevel": [...], "studentLevel": [...], "teachingStrategies": [...], "resourceAllocation": [...] } }
+2. Each recommendation must have: { "type", "priority" ("high"|"medium"|"low"), "title", "description", "details": {}, "actions": [] }
+3. Keep ALL existing rule-based recommendations but improve their descriptions and actions with specific, actionable advice.
+4. ADD 2-4 NEW recommendations per category that go beyond simple rules — think about root causes, long-term strategies, and context-specific solutions for a Tanzanian Catholic seminary.
+5. For subject-specific: suggest cross-subject links, exam preparation strategies, and topic-specific interventions.
+6. For teaching strategies: suggest specific pedagogical approaches relevant to the Tanzanian curriculum.
+7. Do NOT include any text outside the JSON response. Return ONLY valid JSON.
+8. Use priority levels: high for urgent issues (avg < 50), medium for moderate (avg 50-65), low for awareness (avg > 65).`;
+
+    const userMessage = `Analyze and enhance these recommendations for ${form} Stream ${normalizedStream || 'all'}${year ? ` Year ${year}` : ''}:\n\n${contextPayload}`;
+
+    let aiReply;
+    try {
+      aiReply = await callMistral(systemPrompt, userMessage, 4096, 0.4);
+    } catch (aiErr) {
+      console.warn('[SOLUTIONS-AI] Mistral call failed, falling back to rule-based:', aiErr.message);
+      return res.json({ ...baseData, ai: false });
+    }
+
+    // Parse AI response
+    try {
+      let cleaned = aiReply.trim();
+      // Strip markdown code fences if present
+      cleaned = cleaned.replace(/^```(?:json)?\s*/i, '').replace(/\s*```$/i, '');
+      const parsed = JSON.parse(cleaned);
+
+      // Validate structure
+      if (parsed.recommendations && typeof parsed.recommendations === 'object') {
+        const cats = ['subjectSpecific', 'classLevel', 'studentLevel', 'teachingStrategies', 'resourceAllocation'];
+        const valid = cats.every(c => Array.isArray(parsed.recommendations[c]));
+        if (valid) {
+          // Merge: keep rule-based as baseline, add AI extras
+          const merged = { ...baseData };
+          cats.forEach(c => {
+            const existingTitles = new Set(baseData.recommendations[c].map(r => r.title));
+            const aiOnly = parsed.recommendations[c].filter(r => !existingTitles.has(r.title));
+            merged.recommendations[c] = [...baseData.recommendations[c], ...aiOnly];
+          });
+          const allRecs = [...merged.recommendations.subjectSpecific, ...merged.recommendations.classLevel, ...merged.recommendations.studentLevel, ...merged.recommendations.teachingStrategies, ...merged.recommendations.resourceAllocation];
+          merged.summary = { totalRecommendations: allRecs.length, highPriority: allRecs.filter(r => r.priority === 'high').length };
+          return res.json({ ...merged, ai: true });
+        }
+      }
+      // Invalid structure — fall back
+      console.warn('[SOLUTIONS-AI] Invalid AI response structure, falling back');
+      return res.json({ ...baseData, ai: false });
+    } catch (parseErr) {
+      console.warn('[SOLUTIONS-AI] Failed to parse AI response, falling back:', parseErr.message);
+      return res.json({ ...baseData, ai: false });
+    }
+  } catch (error) {
+    console.error('[SOLUTIONS-AI] Error:', error);
+    return sendError(res, error, 500);
+  }
+});
+
 // Get solutions/recommendations based on analytics
 router.get('/solutions', requireModule('analytics_solutions'), async (req, res) => {
   try {
     let { form, stream, year } = req.query;
-    
-    if (!form) {
-      return res.status(400).json({ message: 'form is required' });
-    }
-    
-    // Normalize form to uppercase
+    if (!form) return res.status(400).json({ message: 'form is required' });
     form = form.trim().toUpperCase();
-    
-    // Normalize stream: NA -> A (only for Form I-IV)
+
     let normalizedStream = null;
     if (stream && stream !== 'NA') {
       const isFormVOrVI = form.includes('FORM V') || form.includes('FORM VI');
-      if (!isFormVOrVI) {
-        normalizedStream = normalizeStream(stream);
-      } else {
-        normalizedStream = stream; // Form V/VI: use as-is
-      }
+      normalizedStream = isFormVOrVI ? stream : normalizeStream(stream);
     }
-    
-    // For FORM I-IV: when stream is 'A', match both 'A' and 'NA' in individual_scores
     const isFormIV = form.includes('FORM I') || form.includes('FORM II') || form.includes('FORM III') || form.includes('FORM IV');
-    
-    const recommendations = {
-      subjectSpecific: [],
-      classLevel: [],
-      studentLevel: [],
-      teachingStrategies: [],
-      resourceAllocation: []
-    };
-    
-    // 1. Subject-specific recommendations
-    let subjectSql = `
-      SELECT 
-        subject_code,
-        AVG(score) as avg_score,
-        COUNT(*) as score_count,
-        COUNT(DISTINCT adm_no) as student_count
-      FROM individual_scores
-      WHERE UPPER(TRIM(level)) = UPPER(TRIM($1))
-    `;
-    const subjectParams = [form];
-    
-    if (normalizedStream) {
-      if (isFormIV && (normalizedStream === 'A' || normalizedStream === 'NA')) {
-        // For FORM I-IV with stream 'A' or 'NA', match both in individual_scores
-        subjectSql += ' AND (stream = $2 OR stream = $3)';
-        subjectParams.push('A', 'NA');
-      } else {
-        subjectSql += ' AND stream = $2';
-        subjectParams.push(normalizedStream);
-      }
-    }
-    
-    if (year) {
-      const paramIndex = subjectParams.length + 1;
-      subjectSql += ` AND year = $${paramIndex}`;
-      subjectParams.push(parseInt(year));
-    }
-    
-    subjectSql += ' GROUP BY subject_code ORDER BY avg_score ASC';
-    
-    const subjectResult = await query(subjectSql, subjectParams);
-    
-    // Identify struggling subjects (average < 60)
-    const strugglingSubjects = subjectResult.rows.filter(row => parseFloat(row.avg_score) < 60);
-    strugglingSubjects.forEach(subject => {
-      recommendations.subjectSpecific.push({
-        type: 'struggling_subject',
-        priority: 'high',
-        title: `Low Performance in ${subject.subject_code}`,
-        description: `Average score is ${parseFloat(subject.avg_score).toFixed(1)}%, which is below the 60% threshold.`,
-        details: {
-          subject: subject.subject_code,
-          average: parseFloat(subject.avg_score),
-          studentCount: parseInt(subject.student_count),
-          scoreCount: parseInt(subject.score_count)
-        },
-        actions: [
-          `Review teaching methods for ${subject.subject_code}`,
-          `Provide additional support materials for ${subject.subject_code}`,
-          `Consider remedial classes for struggling students in ${subject.subject_code}`,
-          `Analyze common mistakes in ${subject.subject_code} assessments`
-        ]
-      });
-    });
-    
-    // Identify subjects with declining trends
-    for (const subject of subjectResult.rows) {
-      const subjectCode = subject.subject_code;
-      let trendSql = `
-        SELECT month, year, AVG(score) as avg_score
-        FROM individual_scores
-        WHERE UPPER(TRIM(level)) = UPPER(TRIM($1)) AND subject_code = $2
-      `;
-      const trendParams = [form, subjectCode];
-      
-      if (normalizedStream) {
-        if (isFormIV && (normalizedStream === 'A' || normalizedStream === 'NA')) {
-          // For FORM I-IV with stream 'A' or 'NA', match both in individual_scores
-          trendSql += ' AND (stream = $3 OR stream = $4)';
-          trendParams.push('A', 'NA');
-        } else {
-          trendSql += ' AND stream = $3';
-          trendParams.push(normalizedStream);
-        }
-      }
-      
-      if (year) {
-        const paramIndex = trendParams.length + 1;
-        trendSql += ` AND year = $${paramIndex}`;
-        trendParams.push(parseInt(year));
-      }
-      
-      trendSql += `
-        GROUP BY month, year
-        ORDER BY year, ${MONTH_ORDER_CASE}
-      `;
-      
-      const trendResult = await query(trendSql, trendParams);
-      
-      if (trendResult.rows.length >= 2) {
-        const firstHalf = trendResult.rows.slice(0, Math.ceil(trendResult.rows.length / 2));
-        const secondHalf = trendResult.rows.slice(Math.ceil(trendResult.rows.length / 2));
-        
-        const firstHalfAvg = firstHalf.reduce((sum, r) => sum + parseFloat(r.avg_score), 0) / firstHalf.length;
-        const secondHalfAvg = secondHalf.reduce((sum, r) => sum + parseFloat(r.avg_score), 0) / secondHalf.length;
-        
-        if (secondHalfAvg < firstHalfAvg - 5) {
-          recommendations.subjectSpecific.push({
-            type: 'declining_subject',
-            priority: 'medium',
-            title: `Declining Performance in ${subjectCode}`,
-            description: `Performance has decreased from ${firstHalfAvg.toFixed(1)}% to ${secondHalfAvg.toFixed(1)}% over time.`,
-            details: {
-              subject: subjectCode,
-              previousAverage: firstHalfAvg,
-              currentAverage: secondHalfAvg,
-              change: secondHalfAvg - firstHalfAvg
-            },
-            actions: [
-              `Investigate causes of decline in ${subjectCode}`,
-              `Review recent curriculum changes or teaching staff`,
-              `Implement intervention strategies for ${subjectCode}`,
-              `Monitor ${subjectCode} performance closely`
-            ]
-          });
-        }
-      }
-    }
-    
-    // 2. Class-level recommendations
-    let classSql = `
-      SELECT 
-        month,
-        year,
-        AVG(score) as avg_score,
-        COUNT(DISTINCT adm_no) as student_count
-      FROM individual_scores
-      WHERE UPPER(TRIM(level)) = UPPER(TRIM($1))
-    `;
-    const classParams = [form];
-    
-    if (normalizedStream) {
-      if (isFormIV && (normalizedStream === 'A' || normalizedStream === 'NA')) {
-        // For FORM I-IV with stream 'A' or 'NA', match both in individual_scores
-        classSql += ' AND (stream = $2 OR stream = $3)';
-        classParams.push('A', 'NA');
-      } else {
-        classSql += ' AND stream = $2';
-        classParams.push(normalizedStream);
-      }
-    }
-    
-    if (year) {
-      const paramIndex = classParams.length + 1;
-      classSql += ` AND year = $${paramIndex}`;
-      classParams.push(parseInt(year));
-    }
-    
-    classSql += `
-      GROUP BY month, year
-      ORDER BY year, ${MONTH_ORDER_CASE}
-    `;
-    
-    const classResult = await query(classSql, classParams);
-    
-    if (classResult.rows.length > 0) {
-      const allAverages = classResult.rows.map(r => parseFloat(r.avg_score));
-      const overallAverage = allAverages.reduce((sum, val) => sum + val, 0) / allAverages.length;
-      
-      // Low overall performance
-      if (overallAverage < 60) {
-        recommendations.classLevel.push({
-          type: 'low_overall_performance',
-          priority: 'high',
-          title: 'Low Overall Class Performance',
-          description: `Class average is ${overallAverage.toFixed(1)}%, which is below the 60% threshold.`,
-          details: {
-            average: overallAverage,
-            studentCount: Math.max(...classResult.rows.map(r => parseInt(r.student_count)))
-          },
-          actions: [
-            'Review overall teaching strategies',
-            'Implement comprehensive support programs',
-            'Consider additional teaching resources',
-            'Schedule parent-teacher meetings',
-            'Analyze curriculum alignment'
-          ]
-        });
-      }
-      
-      // Declining class trend
-      if (classResult.rows.length >= 2) {
-        const firstHalf = classResult.rows.slice(0, Math.ceil(classResult.rows.length / 2));
-        const secondHalf = classResult.rows.slice(Math.ceil(classResult.rows.length / 2));
-        
-        const firstHalfAvg = firstHalf.reduce((sum, r) => sum + parseFloat(r.avg_score), 0) / firstHalf.length;
-        const secondHalfAvg = secondHalf.reduce((sum, r) => sum + parseFloat(r.avg_score), 0) / secondHalf.length;
-        
-        if (secondHalfAvg < firstHalfAvg - 5) {
-          recommendations.classLevel.push({
-            type: 'declining_class_trend',
-            priority: 'high',
-            title: 'Declining Class Performance Trend',
-            description: `Class performance has decreased from ${firstHalfAvg.toFixed(1)}% to ${secondHalfAvg.toFixed(1)}% over time.`,
-            details: {
-              previousAverage: firstHalfAvg,
-              currentAverage: secondHalfAvg,
-              change: secondHalfAvg - firstHalfAvg
-            },
-            actions: [
-              'Investigate root causes of decline',
-              'Review recent changes in teaching staff or curriculum',
-              'Implement immediate intervention measures',
-              'Increase monitoring and support',
-              'Consider external support or resources'
-            ]
-          });
-        }
-      }
-    }
-    
-    // 3. Student-level recommendations (based on who-and-when categories)
-    // Get struggling students count
-    let strugglingSql = `
-      SELECT adm_no, AVG(score) as avg_score
-      FROM individual_scores
-      WHERE UPPER(TRIM(level)) = UPPER(TRIM($1))
-    `;
-    const strugglingParams = [form];
-    
-    if (normalizedStream) {
-      if (isFormIV && (normalizedStream === 'A' || normalizedStream === 'NA')) {
-        // For FORM I-IV with stream 'A' or 'NA', match both in individual_scores
-        strugglingSql += ' AND (stream = $2 OR stream = $3)';
-        strugglingParams.push('A', 'NA');
-      } else {
-        strugglingSql += ' AND stream = $2';
-        strugglingParams.push(normalizedStream);
-      }
-    }
-    
-    if (year) {
-      const paramIndex = strugglingParams.length + 1;
-      strugglingSql += ` AND year = $${paramIndex}`;
-      strugglingParams.push(parseInt(year));
-    }
-    
-    strugglingSql += `
-      GROUP BY adm_no
-      HAVING AVG(score) < 50
-    `;
-    
-    const strugglingResult = await query(strugglingSql, strugglingParams);
-    const strugglingCount = strugglingResult.rows.length;
-    
-    if (strugglingCount > 0) {
-      recommendations.studentLevel.push({
-        type: 'struggling_students',
-        priority: 'high',
-        title: `${strugglingCount} Struggling Students Identified`,
-        description: `${strugglingCount} student(s) have an average score below 50%.`,
-        details: {
-          studentCount: strugglingCount
-        },
-        actions: [
-          'Provide individualized support plans',
-          'Schedule one-on-one tutoring sessions',
-          'Identify specific learning gaps',
-          'Engage parents/guardians',
-          'Consider peer mentoring programs'
-        ]
-      });
-    }
-    
-    // 4. Teaching strategy recommendations
-    if (strugglingSubjects.length > 0) {
-      recommendations.teachingStrategies.push({
-        type: 'differentiated_instruction',
-        priority: 'medium',
-        title: 'Implement Differentiated Instruction',
-        description: `Multiple subjects are struggling. Consider differentiated teaching approaches.`,
-        details: {
-          strugglingSubjectCount: strugglingSubjects.length
-        },
-        actions: [
-          'Use varied teaching methods (visual, auditory, kinesthetic)',
-          'Implement group work and collaborative learning',
-          'Provide multiple assessment formats',
-          'Offer flexible learning paths',
-          'Use technology-enhanced learning tools'
-        ]
-      });
-    }
-    
-    if (classResult.rows.length > 0) {
-      const allAverages = classResult.rows.map(r => parseFloat(r.avg_score));
-      const overallAverage = allAverages.reduce((sum, val) => sum + val, 0) / allAverages.length;
-      
-      if (overallAverage < 65) {
-        recommendations.teachingStrategies.push({
-          type: 'active_learning',
-          priority: 'medium',
-          title: 'Promote Active Learning Strategies',
-          description: `Class average is ${overallAverage.toFixed(1)}%. Active learning can improve engagement and performance.`,
-          details: {
-            currentAverage: overallAverage
-          },
-          actions: [
-            'Implement problem-based learning',
-            'Use case studies and real-world examples',
-            'Encourage student presentations',
-            'Facilitate discussions and debates',
-            'Integrate hands-on activities'
-          ]
-        });
-      }
-    }
-    
-    // 5. Resource allocation recommendations
-    if (strugglingSubjects.length > 0) {
-      recommendations.resourceAllocation.push({
-        type: 'subject_support',
-        priority: 'high',
-        title: 'Allocate Additional Resources to Struggling Subjects',
-        description: `${strugglingSubjects.length} subject(s) need additional support.`,
-        details: {
-          subjects: strugglingSubjects.map(s => s.subject_code),
-          count: strugglingSubjects.length
-        },
-        actions: [
-          'Assign experienced teachers to struggling subjects',
-          'Provide additional teaching materials',
-          'Allocate more class time if needed',
-          'Invest in subject-specific resources',
-          'Consider external tutors or specialists'
-        ]
-      });
-    }
-    
-    if (strugglingCount > 0) {
-      recommendations.resourceAllocation.push({
-        type: 'student_support',
-        priority: 'high',
-        title: 'Increase Student Support Resources',
-        description: `${strugglingCount} student(s) require additional support.`,
-        details: {
-          studentCount: strugglingCount
-        },
-        actions: [
-          'Establish a learning support center',
-          'Hire additional support staff',
-          'Allocate budget for tutoring programs',
-          'Provide learning materials and resources',
-          'Create peer support programs'
-        ]
-      });
-    }
-    
-    // Sort recommendations by priority
-    const priorityOrder = { 'high': 1, 'medium': 2, 'low': 3 };
-    Object.keys(recommendations).forEach(key => {
-      recommendations[key].sort((a, b) => priorityOrder[a.priority] - priorityOrder[b.priority]);
-    });
-    
-    res.json({
-      recommendations,
-      summary: {
-        totalRecommendations: 
-          recommendations.subjectSpecific.length +
-          recommendations.classLevel.length +
-          recommendations.studentLevel.length +
-          recommendations.teachingStrategies.length +
-          recommendations.resourceAllocation.length,
-        highPriority: [
-          ...recommendations.subjectSpecific,
-          ...recommendations.classLevel,
-          ...recommendations.studentLevel,
-          ...recommendations.teachingStrategies,
-          ...recommendations.resourceAllocation
-        ].filter(r => r.priority === 'high').length
-      },
-      form,
-      stream: normalizedStream || 'all',
-      year: year || 'all'
-    });
+
+    const result = await generateRuleBasedSolutions(form, normalizedStream, year, isFormIV);
+    res.json(result);
   } catch (error) {
     console.error('[SOLUTIONS] Error:', error);
     console.error('[SOLUTIONS] Error stack:', error.stack);

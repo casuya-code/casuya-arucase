@@ -52,5 +52,11 @@ export const analyticsAPI = {
     const queryString = new URLSearchParams(params).toString();
     return api.get(`/analytics/solutions?${queryString}`);
   },
+
+  // Get AI-enhanced solutions (Mistral-powered, falls back to rule-based)
+  getAISolutions: (params) => {
+    const queryString = new URLSearchParams(params).toString();
+    return api.get(`/analytics/solutions/ai?${queryString}`);
+  },
 };
 

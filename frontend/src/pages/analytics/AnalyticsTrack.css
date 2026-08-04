@@ -917,6 +917,21 @@
    Scoped under .an-sol-*
    =========================================== */
 
+.an-sol-ai-badge {
+  display: inline-block;
+  font-size: 0.55rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  padding: 0.2rem 0.5rem;
+  background: linear-gradient(135deg, #8b5cf6, #3b82f6);
+  color: #fff;
+  border-radius: 999px;
+  vertical-align: middle;
+  margin-left: 0.5rem;
+  line-height: 1;
+}
+
 .an-sol-card {
   padding: 1rem;
   border-bottom: 1px solid #f5f5f0;
