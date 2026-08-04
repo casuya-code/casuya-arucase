@@ -193,6 +193,350 @@
 }
 
 /* ===========================================
+   STUDENT TRACK — Clean Modern Design
+   Scoped under .an-st-*
+   =========================================== */
+
+.an-st-page {
+  background: #f5f5f0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.an-st-shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2rem) clamp(0.75rem, 2.5vw, 1.5rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.an-st-top {
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e0ddd5;
+}
+
+.an-st-top-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.an-st-title {
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.an-st-sub {
+  font-size: 0.85rem;
+  color: #6b6b60;
+  margin: 0.25rem 0 0;
+}
+
+.an-st-back {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  background: #fff;
+  border: 1px solid #e0ddd5;
+  border-radius: 8px;
+  color: #4a4a40;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  transition: all 0.15s ease;
+  white-space: nowrap;
+}
+
+.an-st-back:hover {
+  border-color: #10b981;
+  color: #10b981;
+  text-decoration: none;
+}
+
+/* Search */
+.an-st-search {
+  background: #fff;
+  border: 1px solid #e8e8e0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.an-st-search-wrap {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1rem;
+}
+
+.an-st-search-icon {
+  color: #aaa;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.an-st-search-input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 0.9rem;
+  color: #1a1a1a;
+  background: transparent;
+  min-width: 0;
+}
+
+.an-st-search-input::placeholder {
+  color: #aaa;
+}
+
+.an-st-search-spinner {
+  color: #aaa;
+  font-size: 0.85rem;
+  flex-shrink: 0;
+}
+
+.an-st-results {
+  border-top: 1px solid #f0efe8;
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.an-st-result {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  width: 100%;
+  padding: 0.7rem 1rem;
+  border: none;
+  background: none;
+  cursor: pointer;
+  text-align: left;
+  transition: background 0.12s ease;
+  font: inherit;
+}
+
+.an-st-result:hover {
+  background: #fafaf5;
+}
+
+.an-st-result + .an-st-result {
+  border-top: 1px solid #f5f5f0;
+}
+
+.an-st-result-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  min-width: 0;
+}
+
+.an-st-result-name {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: #1a1a1a;
+}
+
+.an-st-result-meta {
+  font-size: 0.75rem;
+  color: #888;
+}
+
+.an-st-result-arrow {
+  color: #ccc;
+  font-size: 0.65rem;
+  flex-shrink: 0;
+}
+
+.an-st-empty-hint {
+  padding: 0.75rem 1rem;
+  text-align: center;
+  color: #aaa;
+  font-size: 0.85rem;
+  border-top: 1px solid #f0efe8;
+}
+
+/* Performance Header */
+.an-st-perf {
+  background: #fff;
+  border: 1px solid #e8e8e0;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.an-st-perf-header {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 1.25rem 1.25rem 1rem;
+  border-bottom: 1px solid #f0efe8;
+}
+
+.an-st-perf-avatar {
+  width: 48px;
+  height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #3b82f614;
+  color: #3b82f6;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.an-st-perf-name {
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+}
+
+.an-st-perf-meta {
+  font-size: 0.8rem;
+  color: #888;
+  margin: 0.15rem 0 0;
+}
+
+.an-st-perf-body {
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.an-st-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.6rem;
+  padding: 3rem 1rem;
+  color: #888;
+  font-size: 0.9rem;
+}
+
+.an-st-spinner {
+  width: 18px;
+  height: 18px;
+  border: 2px solid #e5e5e0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: an-st-spin 0.7s linear infinite;
+}
+
+@keyframes an-st-spin {
+  to { transform: rotate(360deg); }
+}
+
+.an-st-no-data {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 3rem 1rem;
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+.an-st-no-data i {
+  font-size: 1.5rem;
+  opacity: 0.4;
+}
+
+/* Sections */
+.an-st-section {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.an-st-section-title {
+  font-size: 0.8rem;
+  font-weight: 700;
+  color: #6b6b60;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  margin: 0;
+}
+
+/* Subject Chips */
+.an-st-subject-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.an-st-subject-chip {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.45rem 0.85rem;
+  background: #f8f8f5;
+  border: 1px solid #eee;
+  border-radius: 8px;
+}
+
+.an-st-subject-name {
+  font-size: 0.8rem;
+  color: #555;
+}
+
+.an-st-subject-val {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #3b82f6;
+}
+
+/* Chart Cards */
+.an-st-chart-card {
+  background: #f8f8f5;
+  border: 1px solid #eee;
+  border-radius: 10px;
+  padding: 1rem;
+}
+
+.an-st-chart-label {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0 0 0.75rem;
+}
+
+.an-st-chart-wrap {
+  height: 320px;
+  position: relative;
+}
+
+@media (max-width: 768px) {
+  .an-st-chart-wrap {
+    height: 260px;
+  }
+}
+
+@media (max-width: 480px) {
+  .an-st-chart-wrap {
+    height: 220px;
+  }
+
+  .an-st-perf-header {
+    padding: 1rem;
+  }
+
+  .an-st-perf-body {
+    padding: 1rem;
+  }
+}
+
+/* ===========================================
    EXISTING TRACK PAGE STYLES (unchanged)
    =========================================== */
 
