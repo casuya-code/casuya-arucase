@@ -56,6 +56,7 @@
   box-sizing: border-box;
   width: 100%;
   max-width: 100%;
+  height: 100%;
   border: var(--home-frame-border);
   box-shadow: var(--home-frame-shadow);
   background: var(--home-surface, #fff);
@@ -386,9 +387,7 @@
   border-radius: 9999px;
   border: 2px solid rgba(255, 255, 255, 0.5);
   color: #fff;
-  background: rgba(15, 23, 42, 0.4);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  background: transparent;
   transition: background 0.2s ease, transform 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease;
   min-height: 44px;
   letter-spacing: 0.02em;
@@ -491,9 +490,11 @@
   width: 100%;
   max-width: var(--home-content-max);
   margin: 0 auto;
-  padding: 0;
+  padding-left: var(--home-gutter);
+  padding-right: var(--home-gutter);
   box-sizing: border-box;
   min-width: 0;
+  align-items: stretch;
 }
 
 .home-stat-card {
@@ -569,8 +570,8 @@
   margin: 0 auto;
   width: 100%;
   min-width: 0;
-  padding-left: 0;
-  padding-right: 0;
+  padding-left: var(--home-gutter);
+  padding-right: var(--home-gutter);
   box-sizing: border-box;
 }
 
@@ -964,6 +965,7 @@
   grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--home-col-2)), 1fr));
   gap: var(--home-grid-gap);
   width: 100%;
+  align-items: stretch;
 }
 
 .home-announce-item {
@@ -985,11 +987,11 @@
   align-items: center;
   gap: 0.35rem;
   padding: 0.2rem 0.6rem;
-  background: rgba(26, 84, 144, 0.06);
+  background: rgba(107, 85, 150, 0.1);
   border-radius: 9999px;
   font-size: 0.75rem;
   font-weight: 600;
-  color: var(--home-primary-mid);
+  color: #6b5b95;
 }
 
 .home-announce-meta time::before {
@@ -1000,6 +1002,7 @@
 }
 
 .home-announce-priority {
+  display: none;
   padding: 0.2rem 0.6rem;
   font-size: 0.65rem;
   font-weight: 700;
@@ -1070,15 +1073,11 @@
 }
 
 .home-admissions-cta__inner {
-  display: grid;
-  grid-template-columns: 1fr auto;
-  gap: clamp(1.5rem, 4vw, 2.5rem);
-  align-items: start;
   width: 100%;
   max-width: var(--home-content-max);
   margin: 0 auto;
-  padding-left: 0;
-  padding-right: 0;
+  padding-left: var(--home-gutter);
+  padding-right: var(--home-gutter);
   box-sizing: border-box;
 }
 
@@ -1300,7 +1299,7 @@
 
 .home-gallery-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, max(10.5rem, var(--home-col-6))), 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--home-grid-gap);
   width: 100%;
   align-items: stretch;
@@ -1605,6 +1604,7 @@
   grid-template-columns: repeat(4, 1fr);
   gap: clamp(0.75rem, 2vw, 1rem);
   width: 100%;
+  align-items: stretch;
 }
 
 .home-contact-card {
@@ -1723,7 +1723,7 @@
 .admin-card-body {
   padding: 1rem 0.75rem 1.15rem;
   text-align: center;
-  background: #fff;
+  background: #fffdf7;
   border-top: 1px solid var(--home-border-weak);
 }
 
@@ -1851,10 +1851,6 @@
   /* Uongozi wa Shule: one per row on small screens */
   .administrators-grid {
     grid-template-columns: 1fr;
-    max-width: 100%;
-    max-width: 24rem;
-    margin-left: auto;
-    margin-right: auto;
   }
 
   .home-admissions-cta__inner,
@@ -2003,8 +1999,8 @@
   max-width: var(--home-content-max);
   margin: 0 auto;
   width: 100%;
-  padding-left: 0;
-  padding-right: 0;
+  padding-left: var(--home-gutter);
+  padding-right: var(--home-gutter);
   box-sizing: border-box;
 }
 
@@ -2039,15 +2035,22 @@
 
 .administrators-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, var(--home-col-4)), 1fr));
+  grid-template-columns: repeat(3, 1fr);
   gap: var(--home-grid-gap);
   width: 100%;
+  align-items: stretch;
 }
 
-/* Tablets / narrow desktop: cap leadership row at 2 when auto-fill would fit more */
+@media (max-width: 768px) {
+  .administrators-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Tablets / narrow desktop: 3 per row */
 @media (min-width: 769px) and (max-width: 1024px) {
   .administrators-grid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+    grid-template-columns: repeat(3, 1fr);
   }
 }
 

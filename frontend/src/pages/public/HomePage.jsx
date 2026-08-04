@@ -264,10 +264,9 @@ const HomePage = () => {
 
           <div className="hero-content-overlay hero-content-overlay--cta-only">
             <div className="hero-cta-group">
-              <Link to="/admissions/apply" className="hero-cta hero-cta--primary">
+              <Link to="/admissions/apply" className="hero-cta">
                 <i className="fas fa-pen-to-square" aria-hidden />
                 Omba Udahili
-                <span className="hero-cta-en">Apply now</span>
               </Link>
               <Link to="/about" className="hero-cta">
                 <i className="fas fa-info-circle" aria-hidden />
@@ -310,7 +309,6 @@ const HomePage = () => {
                 {isLoading ? '…' : formatStat(school_stats?.graduates_since_1967)}
               </p>
               <p className="home-stat-label">Wahitimu tangu 1967</p>
-              <p className="home-stat-label-en">Graduates since 1967</p>
             </article>
             <article className="home-stat-card home-stat-card--enrolled">
               <i className="fas fa-users home-stat-icon" aria-hidden />
@@ -318,10 +316,9 @@ const HomePage = () => {
                 {isLoading ? '…' : formatStat(school_stats?.current_students)}
               </p>
               <p className="home-stat-label">Wanafunzi wa sasa</p>
-              <p className="home-stat-label-en">Current students</p>
               {academicYear ? (
                 <p className="home-stat-meta">
-                  Mwaka wa masomo {academicYear} · Academic year
+                  Mwaka wa masomo {academicYear}
                 </p>
               ) : null}
             </article>
@@ -360,22 +357,16 @@ const HomePage = () => {
                     Karibu
                   </p>
                   <h2 id="home-intro-heading" className="home-section-title">
-                    Seminari ya Kikatoliki Arusha
+                    Arusha Catholic Seminary
                   </h2>
-                  <p className="home-section-subtitle" lang="en">
-                    St. Thomas Aquinas Seminary · Oldonyosambu, Tanzania
-                  </p>
                 </header>
                 <p className="home-intro-text" lang="sw">
-                  Tangu <strong>1967</strong>, tunatoa elimu bora ya Kikatoliki na malezi ya kiroho kwa
-                  vijana wa kiume wanaotamani kulitumikia Kanisa na jamii. Tunafundisha{' '}
-                  <strong>Form I hadi Form VI</strong> (O-Level na A-Level) kwa ubora wa kitaaluma na
-                  nidhamu.
-                </p>
-                <p className="home-intro-text home-intro-text--en" lang="en">
-                  For over five decades we have formed young men in faith, academics, and service —
-                  offering <strong>O-Level and A-Level</strong> programmes with NECTA excellence and
-                  Catholic discipleship in the heart of Arusha.
+                  Tangu mwaka <strong>1967</strong>, tunatoa elimu bora ya Kikatoliki na malezi ya kiroho kwa
+                  vijana wa kiume wenye wito wa kulitumikia Kanisa na jamii. Seminari yetu imefanikiwa
+                  kulea Askofu, Mapadri, na Wakristo wema wengi wanaomtumikia Mungu na Kanisa la
+                  Ulimwengu katika nyadhifa mbalimbali. Tunafundisha kuanzia{' '}
+                  <strong>Kidato cha Kwanza hadi cha Sita</strong> (O-Level na A-Level) kwa kuzingatia
+                  ubora wa kitaaluma, kazi na utumishi, pamoja na nidhamu na uwajibikaji.
                 </p>
                 <Link to="/about" className="home-text-link">
                   Soma zaidi kuhusu sisi
@@ -404,7 +395,7 @@ const HomePage = () => {
                     <i className="fas fa-bullhorn" aria-hidden />
                     Matangazo
                   </h2>
-                  <p className="home-section-subtitle">Latest news · Habari za hivi karibuni</p>
+                  <p className="home-section-subtitle">Habari za hivi karibuni</p>
                 </div>
                 <Link to="/announcements" className="home-view-all">
                   Angalia yote
@@ -462,12 +453,8 @@ const HomePage = () => {
                 Jiunge na Seminari Yetu
               </h2>
               <p className="home-admissions-cta__lead" lang="sw">
-                Tunapokea maombi kutoka kwa vijana wa kiume wenye nia ya malezi ya wito na ubora wa
-                kitaaluma. Anza safari yako leo — mtandaoni au ofisini.
-              </p>
-              <p className="home-admissions-cta__lead-en" lang="en">
-                We welcome applications from young men seeking Catholic formation and academic
-                excellence. Apply online or visit our office.
+                Tunapokea maombi kutoka kwa vijana wa kiume wa Kanisa Katoliki wenye nia ya malezi mfungamano ya awali ya wito wa Upadre.
+                Anza safari yako leo — mtandaoni au ofisini.
               </p>
               <ol className="home-admissions-steps">
                 <li>
@@ -485,7 +472,7 @@ const HomePage = () => {
               <Link to="/admissions/apply" className="home-admissions-btn home-admissions-btn--primary">
                 <i className="fas fa-pen-to-square" aria-hidden />
                 <span className="home-admissions-btn__label">
-                  Omba Udahili / Apply Online
+                  Omba Udahili
                 </span>
               </Link>
               <Link to="/admissions" className="home-admissions-btn home-admissions-btn--secondary">
@@ -500,7 +487,7 @@ const HomePage = () => {
                 >
                   <i className="fas fa-file-pdf" aria-hidden />
                   <span className="home-admissions-btn__label">
-                    Pakua Fomu ya Maombi / Download Application Form
+                    Pakua Fomu ya Maombi
                   </span>
                 </a>
               )}
@@ -528,7 +515,7 @@ const HomePage = () => {
                     <i className="fas fa-images" aria-hidden />
                     Picha za Seminari
                   </h2>
-                  <p className="home-section-subtitle">Campus & life · Maisha na mazingira</p>
+                  <p className="home-section-subtitle">Maisha na mazingira</p>
                 </div>
                 <Link to="/gallery" className="home-view-all">
                   Angalia picha zote
@@ -593,7 +580,7 @@ const HomePage = () => {
                   Uongozi wa Shule
                 </h2>
                 <p className="administration-subtitle">
-                  School leadership · Wafahamu viongozi wa seminari
+                  Wafahamu viongozi wa seminari
                 </p>
               </header>
               <div className="administrators-grid">
@@ -630,12 +617,6 @@ const HomePage = () => {
                     <div className="admin-card-body">
                       <h3 className="admin-name">{admin.name || '—'}</h3>
                       <p className="admin-title">{admin.title || '—'}</p>
-                      {admin.year_started && (
-                        <p className="admin-year-inline">
-                          <i className="fas fa-calendar-alt" aria-hidden /> Tangu{' '}
-                          {admin.year_started}
-                        </p>
-                      )}
                     </div>
                   </article>
                 ))}
@@ -654,7 +635,7 @@ const HomePage = () => {
                   Maswali Yanayoulizwa Mara kwa Mara
                 </h2>
                 <p className="home-section-subtitle">
-                  Frequently asked questions · Majibu ya haraka
+                  Majibu ya haraka
                 </p>
               </header>
               <div className="home-faq-list">
@@ -706,7 +687,7 @@ const HomePage = () => {
                   <i className="fas fa-headset" aria-hidden />
                   Wasiliana Nasi
                 </h2>
-                <p className="home-section-subtitle">Get in touch · Tupo Oldonyosambu, Arusha</p>
+                <p className="home-section-subtitle">Tupo Oldonyosambu, Arusha</p>
               </header>
               <div className="home-contact-grid">
                 <a href={`tel:${contactPhone.replace(/\s/g, '')}`} className="home-contact-card home-contact-card--phone">
