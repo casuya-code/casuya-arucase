@@ -32,8 +32,6 @@
   inset: 0;
   z-index: var(--chat-z-widget);
   pointer-events: none;
-  overflow: hidden;
-  contain: layout style;
 }
 
 .chatbot-widget * {

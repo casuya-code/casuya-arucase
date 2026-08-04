@@ -1,35 +1,10 @@
 /* ===========================================
-   DASHBOARD STYLES - Scalable & Responsive
-   Supports both Admin and Non-Admin users
+   DASHBOARD — Clean Modern Design
    =========================================== */
 
-/* Mute Toggle Button */
-.mute-toggle-btn {
-  background: #ffffff;
-  border: 2px solid #01a72b;
-  border-radius: 0;
-  padding: 8px 16px;
-  cursor: pointer;
-  font-size: 1rem;
-  color: #01a72b;
-  transition: all 0.2s ease;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.mute-toggle-btn:hover {
-  background: #01a72b;
-  color: #ffffff;
-}
-
-.mute-toggle-btn:active {
-  transform: scale(0.95);
-}
-
-/* Loading & Error States */
-.dashboard-loading,
-.dashboard-error {
+/* --- Shared --- */
+.dash-load,
+.dash-error {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -37,1096 +12,495 @@
   min-height: 400px;
   padding: 2rem;
   text-align: center;
+  gap: 1rem;
 }
 
-.dashboard-loading .loading-spinner {
-  width: 48px;
-  height: 48px;
-  border: 4px solid #e2e8f0;
-  border-top-color: #01a72b;
-  border-radius: 0;
-  animation: spin 1s linear infinite;
-  margin-bottom: 1rem;
+.dash-load-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 1rem;
+  width: 100%;
+  max-width: 900px;
 }
 
-@keyframes spin {
-  to { transform: rotate(360deg); }
+.dash-error {
+  color: #dc2626;
 }
 
-.dashboard-error {
-  color: #ef4444;
+.dash-error i {
+  font-size: 2.5rem;
+  opacity: 0.6;
 }
 
-.dashboard-error i {
-  font-size: 3rem;
-  margin-bottom: 1rem;
-}
-
-/* ===========================================
-   ADMIN DASHBOARD STYLES
-   =========================================== */
-
-.dashboard-layout {
-  background: #e8eaed;
-  color: #000000;
+/* --- Admin Dashboard Shell --- */
+.dash-admin {
+  background: #f5f5f0;
   min-height: 100vh;
   min-height: 100dvh;
   width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  padding: 1.25rem 0 2.5rem;
-  margin: 0;
   box-sizing: border-box;
 }
 
-/* Single column: welcome + stats share the same width */
-.dashboard-content-shell {
-  max-width: 1200px;
-  width: 100%;
+.dash-shell {
+  max-width: 960px;
   margin: 0 auto;
-  padding: 0 clamp(0.75rem, 2.5vw, 1.5rem);
-  box-sizing: border-box;
+  padding: clamp(1rem, 3vw, 2rem) clamp(0.75rem, 2.5vw, 1.5rem);
   display: flex;
   flex-direction: column;
-  gap: 1.5rem;
+  gap: 1.25rem;
 }
 
-/* White framed cards on gray canvas */
-.dashboard-surface-card {
-  background: #ffffff;
-  border: 1px solid #c9cdd4;
-  border-radius: 0;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
-  width: 100%;
-  min-width: 0;
-  box-sizing: border-box;
-}
-
-.year-table-scroll {
-  width: 100%;
-  max-width: 100%;
-  min-width: 0;
-  overflow-x: auto;
-  -webkit-overflow-scrolling: touch;
-}
-
-/* Welcome Header */
-.welcome-header {
-  padding: 1.25rem 1.5rem;
-  text-align: center;
-}
-
-.welcome-header.dashboard-surface-card {
-  width: 100%;
-  margin-bottom: 0;
-}
-
-.welcome-header-content {
+/* --- Top Header --- */
+.dash-top {
   display: flex;
-  flex-direction: row;
-  flex-wrap: nowrap;
+  align-items: flex-start;
   justify-content: space-between;
-  align-items: center;
-  gap: 0.75rem;
-  width: 100%;
-}
-
-.welcome-text {
-  flex: 1 1 auto;
-  min-width: 0;
-}
-
-.dashboard-layout .welcome-header .mute-toggle-btn {
-  flex-shrink: 0;
-}
-
-.welcome-text h2 {
-  font-size: clamp(1.125rem, 2.8vw, 1.5rem);
-  font-weight: 700;
-  color: #000000;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(0.5rem, 1.5vw, 0.75rem);
-  line-height: 1.3;
-}
-
-.welcome-text h2 i {
-  color: #000000;
-}
-
-/* Welcome user meta — name + role chips */
-.welcome-user-meta {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  margin-top: 0.35rem;
-  flex-wrap: wrap;
-}
-
-.welcome-user-name,
-.welcome-user-role {
-  display: inline-block;
-  padding: 0.2rem 0.6rem;
-  font-size: 0.78rem;
-  font-weight: 700;
-  letter-spacing: 0.02em;
-  border-radius: 0;
-}
-
-.welcome-user-name {
-  background: #0f172a;
-  color: #ffffff;
-}
-
-.welcome-user-role {
-  background: #01a72b;
-  color: #ffffff;
-}
-
-/* Welcome actions — mute + logout buttons */
-.welcome-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  flex-shrink: 0;
-}
-
-/* Mute toggle button inside welcome header */
-.welcome-mute-btn {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 40px;
-  height: 40px;
-  background: #e6f7ea;
-  color: #01a72b;
-  border: none;
-  border-radius: 0;
-  font-size: 1rem;
-  cursor: pointer;
-  outline: none;
-  transition: background 0.15s ease, color 0.15s ease;
-}
-
-.welcome-mute-btn:hover {
-  background: #01a72b;
-  color: #ffffff;
-}
-
-.welcome-mute-btn:active {
-  transform: scale(0.95);
-}
-
-/* Logout button in welcome header */
-.welcome-logout-btn {
-  flex-shrink: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.4rem;
-  height: 40px;
-  padding: 0 1rem;
-  background: #ef4444;
-  color: #ffffff;
-  border: none;
-  border-radius: 0;
-  font-size: 0.85rem;
-  font-weight: 700;
-  cursor: pointer;
-  outline: none;
-  transition: background 0.15s ease, transform 0.12s ease;
-}
-
-.welcome-logout-btn:hover {
-  background: #dc2626;
-  transform: translateY(-1px);
-}
-
-.welcome-logout-btn:active {
-  transform: scale(0.97);
-}
-
-/* Main Grid Layout */
-.dashboard-main-grid {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 1.5rem;
-  padding: 0 0 2rem;
-  margin: 0;
-  width: 100%;
-}
-
-.dashboard-left-column {
-  display: flex;
-  flex-direction: column;
-  gap: 1.5rem;
-}
-
-/* Dashboard Sections */
-.dashboard-section {
-  background: transparent;
-  padding: 0;
-}
-
-.dashboard-layout .section-title {
-  font-size: clamp(1.375rem, 3.5vw, 1.75rem);
-  font-weight: 700;
-  color: #000000;
-  margin: 0 0 1.25rem;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(0.5rem, 2vw, 0.75rem);
-  text-align: center;
-  line-height: 1.35;
-}
-
-.dashboard-layout .section-title i {
-  color: #000000;
-}
-
-/* Statistics Grid */
-.stats-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 1rem;
-  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e0ddd5;
 }
 
-.stats-grid-students {
-  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
-}
-
-/* Per-year student cards (2025=56, 2026=55, ...) */
-.stats-year-row {
-  margin-bottom: 1.5rem;
-}
-
-.stats-grid-years {
-  grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-  gap: 0.75rem;
-}
-
-.stat-card-year {
-  min-height: 90px;
-  padding: 0.75rem;
-}
-
-.stat-card-year .stat-number-year {
-  font-size: clamp(1.125rem, 3vw, 1.375rem);
-  font-weight: 700;
-  color: #000000;
-  margin: 0 0 0.25rem 0;
-  line-height: 1.2;
-}
-
-.stat-card-year .stat-number-year-value {
-  font-size: clamp(1.5rem, 4vw, 2rem);
-  font-weight: 700;
-  color: #000000;
-  margin: 0;
-  line-height: 1.2;
-}
-
-.stat-card-year .stat-label {
-  font-size: 0.8125rem;
-  margin-top: 0.25rem;
-  color: #000000;
-}
-
-.stats-grid-academic {
-  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-}
-
-/* Yearly student table — sharp, colorful, well-arranged */
-.year-table-container {
-  margin-bottom: 0;
-}
-
-.year-table-container.dashboard-surface-card {
-  padding: 1.125rem 1.25rem 1.25rem;
-  border-left: 5px solid #01a72b;
-}
-
-.year-table-container--forms.dashboard-surface-card {
-  border-left-color: #2563eb;
-}
-
-.year-table-header {
-  font-size: clamp(0.9375rem, 2vw, 1.0625rem);
-  font-weight: 700;
-  color: #ffffff;
-  margin: 0 0 0.75rem;
-  padding: 0.65rem 0.85rem;
-  background: #0f172a;
-  border-radius: 0;
-  letter-spacing: 0.02em;
-}
-
-.year-table {
-  display: grid;
-  border: 2px solid #0f172a;
-  border-radius: 0;
-  overflow: hidden;
-  background: #ffffff;
-  min-width: 100%;
-}
-
-.year-table-row {
-  display: grid;
-  grid-template-columns: 1fr 1.2fr;
-}
-
-.year-table--forms .year-table-row {
-  grid-template-columns: 1.4fr repeat(var(--year-cols, 1), 1fr) 1.1fr;
-}
-
-.year-table-row:not(:last-child) .year-table-cell {
-  border-bottom: 1px solid #e2e8f0;
-}
-
-.year-table-row--head {
-  background: #0f172a;
-}
-
-.year-table-cell {
-  padding: 0.7rem 0.85rem;
-  border-right: 1px solid #e2e8f0;
-  font-size: clamp(0.875rem, 1.6vw, 0.9375rem);
-  display: flex;
-  align-items: center;
-}
-
-.year-table-cell:last-child {
-  border-right: none;
-}
-
-.year-table-cell--head {
-  font-weight: 700;
-  text-transform: uppercase;
-  font-size: clamp(0.6875rem, 1.2vw, 0.75rem);
-  letter-spacing: 0.06em;
-  color: #ffffff;
-}
-
-.year-table-cell--year {
-  font-weight: 600;
-  color: #0f172a;
-}
-
-.year-table-cell--count {
-  font-variant-numeric: tabular-nums;
-  justify-content: flex-end;
-  color: #01a72b;
-  font-weight: 700;
-  font-size: clamp(0.95rem, 2vw, 1.1rem);
-}
-
-.year-table-cell--count::after {
-  content: ' students';
-  font-weight: 500;
-  color: #64748b;
-  margin-left: 0.25rem;
-  font-size: 0.78rem;
-}
-
-.year-table-cell--count-no-suffix {
-  font-variant-numeric: tabular-nums;
-  justify-content: flex-end;
-  color: #0f172a;
-  font-weight: 700;
-}
-
-.year-table-row:not(.year-table-row--head):not(.year-table-row--footer):nth-child(even) {
-  background: #f8fafc;
-}
-
-.year-table-row:not(.year-table-row--head):not(.year-table-row--footer):hover {
-  background: #f1f5f9;
-}
-
-.year-table-row--footer {
-  background-color: #0f172a;
-}
-
-.year-table-row--footer .year-table-cell {
-  border-bottom: none;
-  font-weight: 700;
-  color: #ffffff;
-}
-
-/* Forms table uses blue accent */
-.year-table--forms {
-  border-color: #2563eb;
-}
-
-.year-table-container--forms .year-table-header {
-  background: #2563eb;
-}
-
-.year-table--forms .year-table-cell--head {
-  background: #1d4ed8;
-}
-
-.year-table--forms .year-table-row--head {
-  background: #1d4ed8;
-}
-
-.year-table--forms .year-table-row--footer {
-  background: #1d4ed8;
-}
-
-.year-table--forms .year-table-cell--count-no-suffix {
-  color: #2563eb;
-}
-
-@media (max-width: 768px) {
-  .dashboard-layout {
-    padding: 0.75rem 0 1.5rem;
-  }
-
-  .dashboard-content-shell {
-    padding: 0 clamp(0.5rem, 3vw, 0.75rem);
-    gap: 1rem;
-  }
-
-  .welcome-header {
-    padding: 1rem;
-  }
-
-  .welcome-header-content {
-    flex-direction: row;
-    align-items: center;
-    gap: 0.5rem;
-  }
-
-  .welcome-text h2 {
-    justify-content: flex-start;
-    text-align: left;
-    font-size: clamp(0.9375rem, 3.8vw, 1.25rem);
-  }
-
-  .dashboard-layout .welcome-header .mute-toggle-btn {
-    padding: 0.5rem 0.75rem;
-    min-width: 2.75rem;
-    min-height: 2.75rem;
-  }
-
-  .dashboard-layout .section-title {
-    justify-content: flex-start;
-    text-align: left;
-  }
-
-  .year-table-container.dashboard-surface-card {
-    padding: 0.875rem 0.75rem 1rem;
-  }
-
-  .year-table-scroll {
-    margin: 0 -0.25rem;
-    padding: 0 0.25rem 0.125rem;
-  }
-}
-
-@media (max-width: 640px) {
-  .year-table-row {
-    grid-template-columns: 0.9fr 1.1fr;
-  }
-
-  .year-table--forms {
-    min-width: min(100%, 20rem);
-  }
-
-  .year-table--forms .year-table-row {
-    grid-template-columns: 1.35fr repeat(var(--year-cols, 1), minmax(3.25rem, 1fr)) minmax(3.5rem, 1.1fr);
-    min-width: max(100%, calc(5.5rem + var(--year-cols, 1) * 3.5rem));
-  }
-
-  .year-table-cell {
-    padding: 0.5rem 0.5rem;
-    font-size: 0.8125rem;
-  }
-
-  .year-table-cell--head {
-    font-size: 0.625rem;
-    letter-spacing: 0.02em;
-  }
-}
-
-/* Stat cells responsive arrangement */
-@media (max-width: 1024px) {
-  .stats-grid-summary {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 560px) {
-  .stats-grid-summary {
-    grid-template-columns: 1fr;
-    gap: 0.75rem;
-  }
-
-  .stat-cell {
-    min-height: 84px;
-    padding: 0.85rem 0.9rem;
-  }
-}
-
-/* Admin dashboard: mute matches gray card chrome (teacher view keeps default .mute-toggle-btn) */
-.dashboard-layout .mute-toggle-btn {
-  color: #000000;
-  border: 1px solid #c9cdd4;
-  background: #ffffff;
-  border-radius: 0;
-}
-
-.dashboard-layout .mute-toggle-btn:hover {
-  background: #f4f5f7;
-  color: #000000;
-  border-color: #9ca3af;
-}
-
-/* Stat Cells — sharp corners, vivid colour accents, well-arranged grid */
-.stats-grid-summary {
-  display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 1rem;
-  margin: 0 0 1.5rem;
-}
-
-.stat-cell {
-  position: relative;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
-  gap: 0.85rem;
-  text-align: left;
-  background: #ffffff;
-  border: 1px solid #e2e8f0;
-  border-left: 5px solid var(--cell-accent, #01a72b);
-  border-radius: 0;
-  padding: 1rem 1.1rem;
-  box-shadow: 0 2px 5px rgba(15, 23, 42, 0.07);
-  min-height: 96px;
-  overflow: hidden;
-  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
-}
-
-.stat-cell::after {
-  content: '';
-  position: absolute;
-  inset: 0 auto 0 0;
-  width: 5px;
-  background: var(--cell-accent, #01a72b);
-}
-
-.stat-cell:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.14);
-}
-
-.stat-cell-icon {
-  flex: 0 0 auto;
-  width: 46px;
-  height: 46px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.3rem;
-  color: var(--cell-accent, #01a72b);
-  background: var(--cell-soft, rgba(1, 167, 43, 0.12));
-  border-radius: 0;
-}
-
-.stat-cell-body {
-  min-width: 0;
-  display: flex;
-  flex-direction: column;
-  gap: 0.1rem;
-}
-
-.stat-cell-number {
-  font-size: clamp(1.6rem, 3.6vw, 2.1rem);
+.dash-top-title {
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
   font-weight: 800;
-  color: #0f172a;
+  color: #1a1a1a;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.dash-top-sub {
+  font-size: 0.85rem;
+  color: #6b6b60;
+  margin: 0.25rem 0 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.dash-top-role {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  background: #10b981;
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  border-radius: 999px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.dash-top-actions {
+  display: flex;
+  gap: 0.4rem;
+  flex-shrink: 0;
+}
+
+.dash-icon-btn {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d4d4cc;
+  background: #fff;
+  color: #555;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.15s ease;
+}
+
+.dash-icon-btn:hover {
+  background: #f0f0ea;
+  color: #1a1a1a;
+  border-color: #bbb;
+}
+
+.dash-icon-btn--red {
+  color: #dc2626;
+  border-color: #fca5a5;
+}
+
+.dash-icon-btn--red:hover {
+  background: #fef2f2;
+  color: #b91c1c;
+}
+
+/* --- Stat Cards --- */
+.dash-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+.dash-stat {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1.1rem 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.15rem;
+  border: 1px solid #e8e8e0;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.dash-stat:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+.dash-stat-num {
+  font-size: clamp(1.6rem, 4vw, 2.2rem);
+  font-weight: 800;
+  color: var(--accent, #10b981);
   line-height: 1.1;
   font-variant-numeric: tabular-nums;
 }
 
-.stat-cell-label {
-  font-size: clamp(0.8rem, 2vw, 0.95rem);
-  font-weight: 700;
-  color: #334155;
+.dash-stat-label {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: #333;
   line-height: 1.2;
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-.stat-cell-desc {
+.dash-stat-sub {
   font-size: 0.72rem;
-  color: #64748b;
-  line-height: 1.25;
-  white-space: nowrap;
+  color: #999;
+  line-height: 1.3;
+}
+
+/* --- Card (tables section) --- */
+.dash-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e8e8e0;
   overflow: hidden;
-  text-overflow: ellipsis;
 }
 
-/* Colour variants — sharp, distinct accents */
-.stat-cell--green {
-  --cell-accent: #01a72b;
-  --cell-soft: rgba(1, 167, 43, 0.12);
+.dash-card-title {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #1a1a1a;
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid #f0f0ea;
 }
 
-.stat-cell--blue {
-  --cell-accent: #2563eb;
-  --cell-soft: rgba(37, 99, 235, 0.12);
+.dash-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
 }
 
-.stat-cell--purple {
-  --cell-accent: #7c3aed;
-  --cell-soft: rgba(124, 58, 237, 0.12);
+.dash-table {
+  width: 100%;
+  min-width: 100%;
 }
 
-.stat-cell--orange {
-  --cell-accent: #ea580c;
-  --cell-soft: rgba(234, 88, 12, 0.12);
+/* 2-column table (Yearly Distribution) */
+.dash-table--2col {
+  display: flex;
+  flex-direction: column;
 }
 
-/* Keep the year table rows tinted to match the accent palette */
-.year-table-row--head {
-  background: #0f172a;
+.dash-table--2col .dash-row {
+  display: grid;
+  grid-template-columns: 1fr auto;
 }
 
-.year-table-row--head .year-table-cell--head {
-  color: #ffffff;
+/* Forms table */
+.dash-table--forms {
+  display: flex;
+  flex-direction: column;
 }
 
-.year-table-row--footer {
-  background-color: #f1f5f9;
+.dash-table--forms .dash-row {
+  display: grid;
+  grid-template-columns: 1.3fr repeat(var(--cols, 1), 1fr) 1.1fr;
 }
 
-/* Sharp academic table section spacing */
-.dashboard-section + .dashboard-section {
-  margin-top: 0.5rem;
+/* Rows */
+.dash-row {
+  align-items: center;
+  padding: 0 1rem;
+  min-height: 40px;
+  border-bottom: 1px solid #f5f5f0;
+}
+
+.dash-row:last-child {
+  border-bottom: none;
+}
+
+.dash-row--head {
+  background: #fafaf6;
+  min-height: 36px;
+}
+
+.dash-row--head span {
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: #888;
+  padding: 0.55rem 0;
+}
+
+.dash-row--foot {
+  background: #1a1a1a;
+  min-height: 40px;
+}
+
+.dash-row--foot span {
+  color: #fff;
+  font-weight: 700;
+}
+
+.dash-row:not(.dash-row--head):not(.dash-row--foot):nth-child(even) {
+  background: #fafaf8;
+}
+
+.dash-row:not(.dash-row--head):not(.dash-row--foot):hover {
+  background: #f5f5ee;
+}
+
+.dash-row-year {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.dash-row-year small {
+  font-weight: 400;
+  color: #999;
+  margin-left: 0.25rem;
+  font-size: 0.75rem;
+}
+
+.dash-row-count {
+  font-size: 0.9rem;
+  font-weight: 700;
+  color: #10b981;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.dash-row-num {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #333;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  padding: 0.5rem 0;
+}
+
+.dash-row-num--total {
+  font-weight: 800;
+  color: #10b981;
 }
 
 /* ===========================================
-   NON-ADMIN (TEACHER) DASHBOARD STYLES
+   TEACHER DASHBOARD
    =========================================== */
-
-.teacher-dashboard-container {
-  --teacher-dash-gutter: clamp(0.75rem, 2.5vw, 1.5rem);
-  --teacher-dash-max: min(1200px, 100%);
-  background: #e8eaed;
+.dash-teacher {
+  background: #f5f5f0;
   min-height: 100vh;
   min-height: 100dvh;
-  padding: 0 0 2rem;
-  margin: 0;
   width: 100%;
-  max-width: 100%;
-  min-width: 0;
   box-sizing: border-box;
 }
 
-/* Sky Background — compact welcome strip */
-.sky-background {
-  background: linear-gradient(135deg, #028a23 0%, #01a72b 100%);
-  min-height: 0;
+.dash-welcome-strip {
+  background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+  padding: clamp(0.75rem, 2.5vw, 1.25rem) clamp(0.75rem, 2.5vw, 1.5rem);
+}
+
+.dash-welcome-inner {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.dash-welcome-name {
+  font-size: clamp(1rem, 3vw, 1.35rem);
+  font-weight: 700;
+  color: #fff;
+  margin: 0;
+}
+
+.dash-welcome-sub {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  margin: 0.15rem 0 0;
+}
+
+.dash-mute {
+  width: 36px;
+  height: 36px;
   display: flex;
   align-items: center;
   justify-content: center;
-  position: relative;
-  overflow: hidden;
-  width: 100%;
-  padding: clamp(0.55rem, 1.8vw, 0.75rem) clamp(0.75rem, 2.5vw, 1.25rem);
-  box-shadow: none;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  color: #fff;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
 }
 
-.sky-background::before {
-  content: '';
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
-  z-index: 1;
+.dash-mute:hover {
+  background: rgba(255, 255, 255, 0.25);
 }
 
-.welcome-overlay {
-  position: relative;
-  z-index: 2;
-  text-align: center;
-  color: #ffffff;
-  padding: 0.1rem 0.25rem;
-  max-width: 56rem;
+/* Guidelines */
+.dash-guides {
+  max-width: 960px;
   margin: 0 auto;
+  padding: clamp(1rem, 3vw, 1.5rem) clamp(0.75rem, 2.5vw, 1.5rem);
 }
 
-.welcome-title {
-  font-size: clamp(1.05rem, 3.2vw, 1.35rem);
+.dash-guides-title {
+  font-size: clamp(1rem, 2.5vw, 1.15rem);
   font-weight: 700;
-  margin: 0 0 0.15rem;
-  color: #ffffff;
-  letter-spacing: -0.01em;
-  text-align: center;
-  display: block;
-  width: 100%;
-  line-height: 1.15;
+  color: #1a1a1a;
+  margin: 0 0 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
-.welcome-subtitle {
-  font-size: clamp(0.75rem, 2vw, 0.875rem);
-  font-weight: 400;
-  color: rgba(255, 255, 255, 0.92);
-  line-height: 1.35;
-  text-align: center;
-  display: block;
-  width: 100%;
-  margin: 0;
+.dash-guides-title i {
+  color: #10b981;
+  font-size: 0.9em;
 }
 
-/* Guidelines Section */
-.guidelines-section {
-  background: #e8eaed;
-  padding: clamp(1rem, 2.5vw, 1.75rem) var(--teacher-dash-gutter, 1.5rem);
-  margin: 0 auto;
-  width: 100%;
-  max-width: var(--teacher-dash-max, 1200px);
-  box-sizing: border-box;
-  border: none;
+.dash-guides-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 260px), 1fr));
+  gap: 0.6rem;
 }
 
-.guidelines-header {
-  color: #1e293b;
-  font-size: clamp(1.25rem, 4vw, 1.75rem);
-  font-weight: 600;
-  margin-bottom: 0.75rem;
-  text-align: left;
+.dash-guide-card {
   display: flex;
   align-items: center;
   gap: 0.75rem;
-  line-height: 1.3;
-}
-
-.guidelines-header i {
-  color: #01a72b;
-  font-size: 1em;
-}
-
-.guidelines-header-row {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 0.5rem;
-  gap: 0.75rem;
-}
-
-.guidelines-intro {
-  color: #475569;
-  font-size: clamp(0.875rem, 2.2vw, 0.975rem);
-  margin: 0 0 clamp(0.85rem, 2vw, 1.25rem);
-  text-align: left;
-  line-height: 1.55;
-  max-width: 72ch;
-}
-
-.guidelines-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(min(100%, 15.5rem), 1fr));
-  gap: clamp(0.55rem, 1.5vw, 0.85rem);
-  margin-top: 0;
-  width: 100%;
-}
-
-/* Guideline Cards — compact gray tiles */
-.guideline-card {
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  border-left: 3px solid #01a72b;
-  border-radius: 0;
-  padding: clamp(0.7rem, 2vw, 0.9rem) clamp(0.75rem, 2.2vw, 1rem);
-  box-shadow: 2px 2px 0 rgba(15, 23, 42, 0.06);
-  transition: border-color 0.15s ease, box-shadow 0.15s ease, background 0.15s ease;
-  text-align: left;
-  display: grid;
-  grid-template-columns: 2.125rem 1fr;
-  column-gap: 0.65rem;
-  row-gap: 0.35rem;
-  align-items: start;
-  position: relative;
-  overflow: hidden;
-  min-width: 0;
+  background: #fff;
+  border: 1px solid #e8e8e0;
+  border-radius: 10px;
+  padding: 0.75rem 0.85rem;
   text-decoration: none;
   color: inherit;
-  cursor: pointer;
+  transition: all 0.15s ease;
+  min-width: 0;
 }
 
-.guideline-card::before {
-  display: none;
+.dash-guide-card:hover {
+  border-color: #10b981;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+  transform: translateY(-1px);
 }
 
-.guideline-card:hover {
-  background: #e8eef4;
-  border-color: #94a3b8;
-  border-left-color: #028a23;
-  box-shadow: 3px 3px 0 rgba(15, 23, 42, 0.08);
-}
-
-.guideline-icon {
-  width: 2.125rem;
-  height: 2.125rem;
-  min-width: 2.125rem;
-  background: #01a72b;
-  border-radius: 0;
+.dash-guide-icon {
+  flex-shrink: 0;
+  width: 32px;
+  height: 32px;
   display: flex;
   align-items: center;
   justify-content: center;
-  margin: 0;
-  color: #ffffff;
-  font-size: 0.85rem;
-  grid-column: 1;
-  grid-row: 1;
-  align-self: center;
-  transition: background 0.15s ease;
+  background: #f0fdf4;
+  color: #10b981;
+  border-radius: 8px;
+  font-size: 0.8rem;
 }
 
-.guideline-card:hover .guideline-icon {
-  background: #028a23;
-  transform: none;
+.dash-guide-card:hover .dash-guide-icon {
+  background: #10b981;
+  color: #fff;
 }
 
-.guideline-card h3 {
-  font-size: clamp(0.875rem, 2.2vw, 0.95rem);
-  font-weight: 700;
-  color: #0f172a;
-  margin: 0;
+.dash-guide-text {
+  display: flex;
+  flex-direction: column;
+  gap: 0.1rem;
+  min-width: 0;
+}
+
+.dash-guide-text strong {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #1a1a1a;
+  line-height: 1.2;
+}
+
+.dash-guide-text small {
+  font-size: 0.7rem;
+  color: #999;
   line-height: 1.3;
-  grid-column: 2;
-  grid-row: 1;
-  align-self: center;
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
 }
 
-.guideline-card p {
-  font-size: clamp(0.75rem, 2vw, 0.8125rem);
-  color: #475569;
-  line-height: 1.5;
-  margin: 0;
+.dash-no-modules {
   grid-column: 1 / -1;
-  grid-row: 2;
-}
-
-.guidelines-footer {
-  margin-top: clamp(1rem, 2.5vw, 1.5rem);
-  padding: clamp(0.75rem, 2vw, 1rem);
-  background: #f1f5f9;
-  border: 1px solid #cbd5e1;
-  box-shadow: 2px 2px 0 rgba(15, 23, 42, 0.06);
   text-align: center;
-}
-
-.guidelines-footer p {
-  font-size: clamp(0.8125rem, 2vw, 0.875rem);
-  color: #64748b;
-  margin: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 0.5rem;
-  flex-wrap: wrap;
-}
-
-.guidelines-footer i {
-  color: #01a72b;
+  color: #999;
+  font-size: 0.85rem;
+  padding: 2rem 1rem;
 }
 
 /* ===========================================
-   RESPONSIVE DESIGN
+   RESPONSIVE
    =========================================== */
 
-/* Teacher Dashboard - Mobile First */
-@media (max-width: 480px) {
-  .sky-background {
-    padding: 0.5rem 0.65rem;
+@media (max-width: 768px) {
+  .dash-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
   }
 
-  .welcome-title {
-    font-size: clamp(0.95rem, 4.5vw, 1.15rem);
-  }
-
-  .welcome-subtitle {
-    font-size: clamp(0.7rem, 2.8vw, 0.8rem);
-  }
-
-  .guidelines-section {
-    padding: 1rem max(0.65rem, 3.5vw);
-  }
-  
-  .guidelines-header {
-    font-size: clamp(1.05rem, 4.5vw, 1.25rem);
-  }
-  
-  .guidelines-grid {
-    grid-template-columns: 1fr;
-    gap: 0.55rem;
-  }
-}
-
-@media (min-width: 768px) {
-  .dashboard-main-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  }
-  
-  .stats-grid-students {
-    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
-  }
-  
-  .guidelines-grid {
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 14rem), 1fr));
-  }
-}
-
-@media (min-width: 1024px) {
-  .dashboard-main-grid {
-    grid-template-columns: 1fr;
-  }
-  
-  .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  }
-  
-  .stats-grid-students {
-    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  }
-  
-  .guidelines-grid {
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 16rem), 1fr));
-  }
-}
-
-@media (min-width: 1280px) {
-  .stats-grid {
-    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
-  }
-  
-  .stats-grid-students {
-    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-  }
-  
-  .guidelines-grid {
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 17rem), 1fr));
-  }
-}
-
-/* Extra large screens */
-@media (min-width: 1536px) {
-  .guidelines-grid {
-    grid-template-columns: repeat(auto-fill, minmax(min(100%, 18rem), 1fr));
-  }
-}
-
-@media (max-width: 767px) {
-  .dashboard-layout {
-    padding: 0.5rem 0 1.25rem;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  .teacher-dashboard-container {
-    padding: 0;
-    width: 100%;
-    max-width: 100%;
-  }
-
-  .teacher-dashboard-container .guidelines-section {
-    max-width: 100%;
-    width: 100%;
-    padding-left: clamp(0.5rem, 2.5vw, 0.75rem);
-    padding-right: clamp(0.5rem, 2.5vw, 0.75rem);
-  }
-
-  .dashboard-content-shell {
-    max-width: 100%;
-    width: 100%;
-    padding: 0;
-    gap: 1rem;
-  }
-
-  .welcome-header {
-    padding: 0.875rem clamp(0.5rem, 2.5vw, 0.75rem);
-  }
-
-  .welcome-header-content {
-    flex-direction: row;
-    align-items: center;
+  .dash-top {
+    flex-direction: column;
     gap: 0.5rem;
   }
 
-  .welcome-text h2 {
-    justify-content: flex-start;
-    font-size: clamp(0.875rem, 4vw, 1.125rem);
+  .dash-top-actions {
+    align-self: flex-end;
   }
 
-  .dashboard-main-grid {
-    padding: 0 0 1.25rem;
-    width: 100%;
-  }
-
-  .dashboard-layout .section-title {
-    font-size: clamp(1.125rem, 4vw, 1.375rem);
-    justify-content: flex-start;
-    text-align: left;
-  }
-
-  .stats-grid,
-  .stats-grid-students,
-  .stats-grid-academic {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 0.625rem;
-  }
-
-  .stats-grid-years {
-    grid-template-columns: repeat(auto-fit, minmax(min(100%, 5.5rem), 1fr));
-  }
-
-  .stat-card {
-    padding: 0.75rem;
-    min-height: 88px;
-  }
-
-  .stat-number {
-    font-size: clamp(1.25rem, 5vw, 1.5rem);
-  }
-
-  .year-table-container.dashboard-surface-card {
-    padding: 0.75rem clamp(0.5rem, 2.5vw, 0.75rem);
-  }
-
-  .year-table--forms .year-table-row {
-    min-width: max(100%, 17.5rem);
-  }
-
-  .guidelines-grid {
+  .dash-guides-grid {
     grid-template-columns: 1fr;
   }
+}
 
-  .guidelines-header-row {
-    flex-direction: column;
-    align-items: stretch;
+@media (max-width: 480px) {
+  .dash-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .dash-stat {
+    padding: 0.85rem 0.75rem;
+  }
+
+  .dash-row {
+    padding: 0 0.65rem;
+    min-height: 36px;
+  }
+
+  .dash-card-title {
+    padding: 0.7rem 0.65rem;
+    font-size: 0.82rem;
   }
 }
 
 @media (max-width: 380px) {
-  .stats-grid,
-  .stats-grid-students,
-  .stats-grid-academic {
+  .dash-stats {
     grid-template-columns: 1fr;
   }
 }
-

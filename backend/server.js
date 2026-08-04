@@ -84,7 +84,12 @@ const corsOriginValidator = createCorsOriginValidator();
 const server = http.createServer(app);
 const io = new Server(server, {
   cors: {
-    origin: corsOriginValidator,
+    origin: (origin, cb) => {
+      corsOriginValidator(origin, (err, allow) => {
+        if (allow) return cb(null, origin || false);
+        cb(err || null, false);
+      });
+    },
     methods: ['GET', 'POST'],
     credentials: true,
   },

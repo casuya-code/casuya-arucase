@@ -798,12 +798,8 @@ html {
   }
 }
 
-/* Optimize rendering performance on mobile */
+/* Optimize font rendering */
 * {
-  /* Enable hardware acceleration for better performance */
-  -webkit-transform: translateZ(0);
-  transform: translateZ(0);
-  /* Optimize font rendering */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
 }
