@@ -1,6 +1,3 @@
-/**
- * Class Track - Class-wide Performance Metrics
- */
 import { useState, useMemo, useEffect } from 'react';
 import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
@@ -8,8 +5,8 @@ import AdminLayout from '../../components/layout/AdminLayout';
 import { analyticsAPI } from '../../services/analytics';
 import { Bar, Line, Doughnut } from 'react-chartjs-2';
 import '../../utils/chartConfig';
-import { 
-  normalizeFormLabel, 
+import {
+  normalizeFormLabel,
   sortMonthlyData,
   getCommonChartOptions,
   calculateTrend,
@@ -22,448 +19,238 @@ const ClassTrack = () => {
   const { form } = useParams();
   const [searchParams, setSearchParams] = useSearchParams();
   const formLabel = normalizeFormLabel(form);
-  
-  // Standard streams for FORM I-IV
-  const standardStreams = [
-    { value: 'A', label: 'A' },
-    { value: 'B', label: 'B' }
-  ];
+  const isMobile = typeof window !== 'undefined' && window.innerWidth <= 768;
 
-  // Combination streams for FORM V-VI
+  const standardStreams = [{ value: 'A', label: 'A' }, { value: 'B', label: 'B' }];
   const combinationStreams = [
-    { value: 'PCB', label: 'PCB - Physics, Chemistry, Biology' },
-    { value: 'PCM', label: 'PCM - Physics, Chemistry, Mathematics' },
-    { value: 'EGM', label: 'EGM - Economics, Geography, Mathematics' },
-    { value: 'HGE', label: 'HGE - History, Geography, Economics' },
-    { value: 'HGL', label: 'HGL - History, Geography, Literature' }
+    { value: 'PCB', label: 'PCB' },
+    { value: 'PCM', label: 'PCM' },
+    { value: 'EGM', label: 'EGM' },
+    { value: 'HGE', label: 'HGE' },
+    { value: 'HGL', label: 'HGL' },
   ];
 
-  // Get available streams based on form
-  const getAvailableStreams = () => {
-    if (formLabel.includes('FORM V') || formLabel.includes('FORM VI')) {
-      return combinationStreams;
-    }
-    return standardStreams;
-  };
+  const availableStreams = (formLabel.includes('FORM V') || formLabel.includes('FORM VI'))
+    ? combinationStreams : standardStreams;
 
-  const availableStreams = getAvailableStreams();
-  
-  // Initialize from URL params or defaults
   const [selectedStream, setSelectedStream] = useState(() => {
     const urlStream = searchParams.get('stream');
-    if (urlStream && availableStreams.find(s => s.value === urlStream)) {
-      return urlStream;
-    }
+    if (urlStream && availableStreams.find(s => s.value === urlStream)) return urlStream;
     return availableStreams[0]?.value || 'A';
   });
-  
+
   const [selectedYear, setSelectedYear] = useState(() => {
     const urlYear = searchParams.get('year');
-    if (urlYear) {
-      const yearNum = parseInt(urlYear);
-      if (!isNaN(yearNum) && yearNum > 0) {
-        return yearNum;
-      }
-    }
-    return null; // Optional - null means all years
+    if (urlYear) { const y = parseInt(urlYear); if (!isNaN(y) && y > 0) return y; }
+    return null;
   });
 
-  // Update URL params when filters change
   useEffect(() => {
-    const newParams = new URLSearchParams(searchParams);
-    if (selectedStream) {
-      newParams.set('stream', selectedStream);
-    } else {
-      newParams.delete('stream');
-    }
-    if (selectedYear) {
-      newParams.set('year', selectedYear.toString());
-    } else {
-      newParams.delete('year');
-    }
-    setSearchParams(newParams, { replace: true });
+    const p = new URLSearchParams(searchParams);
+    if (selectedStream) p.set('stream', selectedStream); else p.delete('stream');
+    if (selectedYear) p.set('year', selectedYear.toString()); else p.delete('year');
+    setSearchParams(p, { replace: true });
   }, [selectedStream, selectedYear]);
 
-  // Get class performance
   const { data: classPerformance, isLoading, error, isError, refetch } = useQuery({
     queryKey: ['class-performance', formLabel, selectedStream, selectedYear],
     queryFn: async () => {
-      const params = {
-        form: formLabel,
-        stream: selectedStream,
-      };
-      if (selectedYear) {
-        // Use calendar year directly for Form V/VI (no academic year conversion)
-        params.year = selectedYear;
-      }
+      const params = { form: formLabel, stream: selectedStream };
+      if (selectedYear) params.year = selectedYear;
       const res = await analyticsAPI.getClassPerformance(params);
-      if (!res.data) {
-        throw new Error('No data received from server');
-      }
+      if (!res.data) throw new Error('No data received from server');
       return res.data;
     },
     enabled: !!selectedStream,
-    staleTime: 5 * 60 * 1000, // 5 minutes
-    cacheTime: 10 * 60 * 1000, // 10 minutes
-    retry: (failureCount, error) => {
-      // Don't retry on 4xx errors
-      if (error?.response?.status >= 400 && error?.response?.status < 500) {
-        return false;
-      }
-      return failureCount < 2;
-    },
+    staleTime: 5 * 60 * 1000,
+    retry: (f, e) => (e?.response?.status >= 400 && e?.response?.status < 500) ? false : f < 2,
   });
 
-  // Calculate insights and sorted data (memoized)
-  const sortedMonthly = useMemo(() => {
-    return sortMonthlyData(classPerformance?.monthly_averages ?? []);
-  }, [classPerformance]);
+  const sortedMonthly = useMemo(() => sortMonthlyData(classPerformance?.monthly_averages ?? []), [classPerformance]);
+  const trend = useMemo(() => sortedMonthly.length > 0 ? calculateTrend(sortedMonthly) : null, [sortedMonthly]);
+  const stats = useMemo(() => sortedMonthly.length > 0 ? calculateStats(sortedMonthly) : null, [sortedMonthly]);
 
-  const trend = useMemo(() => {
-    return sortedMonthly.length > 0 ? calculateTrend(sortedMonthly) : null;
-  }, [sortedMonthly]);
-
-  const stats = useMemo(() => {
-    return sortedMonthly.length > 0 ? calculateStats(sortedMonthly) : null;
-  }, [sortedMonthly]);
+  const mobileChartOpts = (extra = {}) => ({
+    responsive: true,
+    maintainAspectRatio: false,
+    plugins: {
+      legend: { display: true, position: isMobile ? 'bottom' : 'top', labels: { boxWidth: isMobile ? 10 : 14, padding: isMobile ? 8 : 16, font: { size: isMobile ? 10 : 12 }, usePointStyle: true } },
+      tooltip: { backgroundColor: 'rgba(0,0,0,0.8)', titleFont: { size: isMobile ? 11 : 13 }, bodyFont: { size: isMobile ? 10 : 12 }, padding: isMobile ? 6 : 10, cornerRadius: 8, ...extra.tooltip },
+      ...(extra.plugins || {}),
+    },
+    scales: {
+      y: { beginAtZero: true, max: 100, title: { display: !isMobile, text: 'Score (%)', font: { size: 11 } }, ticks: { font: { size: isMobile ? 9 : 11 } }, grid: { color: 'rgba(0,0,0,0.04)' }, ...extra.y },
+      x: { title: { display: !isMobile, text: extra.xLabel || '', font: { size: 11 } }, ticks: { maxRotation: isMobile ? 60 : 45, font: { size: isMobile ? 9 : 11 } }, grid: { display: false }, ...extra.x },
+    },
+    ...extra.root,
+  });
 
   return (
     <AdminLayout>
-      <div className="analytics-track-page">
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-users"></i>
-            Class Track - {formLabel}
-            <div className="header-actions">
-              <Link to={`/admin/analytics/${form}`} className="excel-btn secondary small">
-                <i className="fas fa-arrow-left"></i> Back
+      <div className="an-st-page">
+        <div className="an-st-shell">
+          <header className="an-st-top">
+            <div className="an-st-top-row">
+              <div>
+                <h1 className="an-st-title">Class Track</h1>
+                <p className="an-st-sub">{formLabel} &mdash; Stream {selectedStream}</p>
+              </div>
+              <Link to={`/admin/analytics/${form}`} className="an-st-back">
+                <i className="fas fa-arrow-left" />
+                <span>Back</span>
               </Link>
             </div>
-          </div>
-          <div className="excel-card-body">
-            <div className="filter-section">
-              <div className="filter-group">
-                <label>Stream:</label>
-                <select
-                  value={selectedStream}
-                  onChange={(e) => setSelectedStream(e.target.value)}
-                  className="filter-select"
-                >
-                  {availableStreams.map((stream) => (
-                    <option key={stream.value} value={stream.value}>
-                      {stream.label}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="filter-group">
-                <label>Year (Optional - leave empty for all years):</label>
-                <input
-                  type="number"
-                  value={selectedYear || ''}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    setSelectedYear(value ? parseInt(value) : null);
-                  }}
-                  className="filter-input"
-                  placeholder="All years"
-                  min={new Date().getFullYear() - 10}
-                  max={new Date().getFullYear() + 5}
-                />
-              </div>
+          </header>
+
+          {/* Filters */}
+          <div className="an-ct-filters">
+            <div className="an-ct-filter">
+              <label className="an-ct-filter-label">Stream</label>
+              <select value={selectedStream} onChange={e => setSelectedStream(e.target.value)} className="an-ct-select">
+                {availableStreams.map(s => <option key={s.value} value={s.value}>{s.label}</option>)}
+              </select>
             </div>
-
-            {isLoading ? (
-              <div className="loading-state">
-                <div className="loading-spinner"></div>
-                <p>Loading class performance data...</p>
-              </div>
-            ) : isError ? (
-              <div className="error-state">
-                <i className="fas fa-exclamation-triangle error-icon"></i>
-                <h3>Error Loading Data</h3>
-                <p>{error?.message || 'Failed to load performance data'}</p>
-                <button type="button" onClick={() => refetch()} className="excel-btn secondary">
-                  <i className="fas fa-redo"></i> Retry
-                </button>
-              </div>
-            ) : classPerformance ? (
-              <div className="performance-data">
-                {/* Performance Insights */}
-                <div className="insights-section">
-                  <h4>Performance Insights</h4>
-                  <div className="insights-grid">
-                    <div className="insight-card">
-                      <div className="insight-label">Overall Average</div>
-                      <div className="insight-value">{stats?.avg.toFixed(1) ?? '0.0'}%</div>
-                    </div>
-                    <div className="insight-card">
-                      <div className="insight-label">Highest Score</div>
-                      <div className="insight-value">{stats?.max.toFixed(1) ?? '0.0'}%</div>
-                    </div>
-                    <div className="insight-card">
-                      <div className="insight-label">Lowest Score</div>
-                      <div className="insight-value">{stats?.min.toFixed(1) ?? '0.0'}%</div>
-                    </div>
-                    <div className="insight-card">
-                      <div className="insight-label">Trend</div>
-                      <div className={`insight-value ${trend?.trend === 'improving' ? 'text-success' : trend?.trend === 'declining' ? 'text-danger' : 'text-muted'}`}>
-                        {trend?.message ?? 'Insufficient data'}
-                      </div>
-                    </div>
-                  </div>
-                  <div className="insights-actions">
-                    <button 
-                      className="excel-btn secondary small"
-                      onClick={() => exportToCSV(
-                        sortedMonthly.map(m => ({
-                          'Month/Year': m.monthYear || `${m.month} ${m.year || ''}`,
-                          'Average Score': m.average.toFixed(1),
-                          'Student Count': m.student_count
-                        })),
-                        `class-performance-${formLabel}-${selectedStream}-${selectedYear || 'all'}.csv`
-                      )}
-                    >
-                      <i className="fas fa-download"></i> Export Monthly Data
-                    </button>
-                    {classPerformance.subject_averages && classPerformance.subject_averages.length > 0 && (
-                      <button 
-                        className="excel-btn secondary small"
-                        onClick={() => exportToCSV(
-                          classPerformance.subject_averages.map(s => ({
-                            'Subject': s.subject_code,
-                            'Average Score': s.average.toFixed(1),
-                            'Student Count': s.student_count
-                          })),
-                          `subject-averages-${formLabel}-${selectedStream}-${selectedYear || 'all'}.csv`
-                        )}
-                      >
-                        <i className="fas fa-download"></i> Export Subject Data
-                      </button>
-                    )}
-                  </div>
-                </div>
-
-                <div className="performance-summary">
-                  <div className="summary-card">
-                    <h4>Monthly Averages</h4>
-                    <div className="monthly-list">
-                      {sortedMonthly.map((item) => (
-                        <div key={`${item.month}-${item.year || ''}`} className="monthly-item">
-                          <span className="month-name">{item.monthYear || `${item.month} ${item.year || ''}`}</span>
-                          <span className="month-avg">{item.average.toFixed(1)}</span>
-                          <span className="month-count">({item.student_count} students)</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-
-                  <div className="summary-card">
-                    <h4>Subject Averages</h4>
-                    <div className="subject-list">
-                      {classPerformance.subject_averages && classPerformance.subject_averages.length > 0 ? (
-                        classPerformance.subject_averages.map((item) => (
-                          <div key={item.subject_code} className="subject-item">
-                            <span className="subject-name">{item.subject_code}</span>
-                            <span className="subject-avg">{item.average.toFixed(1)}</span>
-                          </div>
-                        ))
-                      ) : (
-                        <div className="no-data">No subject data available</div>
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Grade Distribution Card - Only show when data is available */}
-                  {classPerformance.grade_distribution && classPerformance.grade_distribution.length > 0 && (
-                    <div className="summary-card">
-                      <h4>Grade Distribution</h4>
-                      <div className="grade-list">
-                        {classPerformance.grade_distribution.map((item) => (
-                          <div key={item.grade} className="grade-item">
-                            <span className="grade-name">Grade {item.grade}</span>
-                            <span className="grade-count">{item.count} students</span>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-
-                <div className="charts-section">
-                  <h3 className="section-title">Performance Charts</h3>
-                  
-                  {/* Monthly Averages Line Chart */}
-                  {sortedMonthly.length > 0 && (
-                    <div className="chart-container">
-                      <h4 className="chart-title">Monthly Average Scores</h4>
-                      <div className="chart-wrapper">
-                        <Line
-                          data={{
-                            labels: sortedMonthly.map(item => item.monthYear || `${item.month} ${item.year || ''}`),
-                            datasets: [
-                              {
-                                label: 'Average Score',
-                                data: sortedMonthly.map(item => item.average),
-                                borderColor: 'rgba(75, 192, 192, 1)',
-                                backgroundColor: 'rgba(75, 192, 192, 0.2)',
-                                tension: 0.4,
-                                fill: true,
-                                pointRadius: 6,
-                                pointHoverRadius: 8,
-                              },
-                            ],
-                          }}
-                          options={getCommonChartOptions({
-                            plugins: {
-                              tooltip: {
-                                callbacks: {
-                                  label: function(context) {
-                                    return `Average: ${context.parsed.y.toFixed(1)}% (${sortedMonthly[context.dataIndex].student_count} students)`;
-                                  },
-                                },
-                              },
-                            },
-                            scales: {
-                              y: {
-                                title: {
-                                  display: true,
-                                  text: 'Average Score (%)',
-                                },
-                              },
-                              x: {
-                                title: {
-                                  display: true,
-                                  text: 'Month & Year',
-                                },
-                              },
-                            },
-                          })}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Subject Averages Bar Chart */}
-                  {classPerformance.subject_averages && classPerformance.subject_averages.length > 0 && (
-                    <div className="chart-container">
-                      <h4 className="chart-title">Subject Average Scores</h4>
-                      <div className="chart-wrapper">
-                        <Bar
-                          data={{
-                            labels: classPerformance.subject_averages.map(item => item.subject_code),
-                            datasets: [
-                              {
-                                label: 'Average Score',
-                                data: classPerformance.subject_averages.map(item => item.average),
-                                backgroundColor: 'rgba(54, 162, 235, 0.6)',
-                                borderColor: 'rgba(54, 162, 235, 1)',
-                                borderWidth: 2,
-                              },
-                            ],
-                          }}
-                          options={getCommonChartOptions({
-                            plugins: {
-                              tooltip: {
-                                callbacks: {
-                                  label: function(context) {
-                                    return `Average: ${context.parsed.y.toFixed(1)}%`;
-                                  },
-                                },
-                              },
-                            },
-                            scales: {
-                              y: {
-                                title: {
-                                  display: true,
-                                  text: 'Average Score (%)',
-                                },
-                              },
-                              x: {
-                                title: {
-                                  display: true,
-                                  text: 'Subject',
-                                },
-                                ticks: {
-                                  minRotation: 0,
-                                },
-                              },
-                            },
-                          })}
-                        />
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Grade Distribution Doughnut Chart */}
-                  {classPerformance.grade_distribution && classPerformance.grade_distribution.length > 0 && (
-                    <div className="chart-container">
-                      <h4 className="chart-title">Grade Distribution</h4>
-                      <div className="chart-wrapper">
-                        <Doughnut
-                        data={{
-                          labels: classPerformance.grade_distribution.map(item => `Grade ${item.grade}`),
-                          datasets: [
-                            {
-                              label: 'Student Count',
-                              data: classPerformance.grade_distribution.map(item => item.count),
-                              backgroundColor: [
-                                'rgba(75, 192, 192, 0.6)',
-                                'rgba(54, 162, 235, 0.6)',
-                                'rgba(255, 206, 86, 0.6)',
-                                'rgba(255, 99, 132, 0.6)',
-                                'rgba(153, 102, 255, 0.6)',
-                              ],
-                              borderColor: [
-                                'rgba(75, 192, 192, 1)',
-                                'rgba(54, 162, 235, 1)',
-                                'rgba(255, 206, 86, 1)',
-                                'rgba(255, 99, 132, 1)',
-                                'rgba(153, 102, 255, 1)',
-                              ],
-                              borderWidth: 2,
-                            },
-                          ],
-                        }}
-                        options={{
-                          responsive: true,
-                          maintainAspectRatio: false,
-                          plugins: {
-                            legend: {
-                              display: true,
-                              position: 'right',
-                            },
-                            tooltip: {
-                              callbacks: {
-                                label: function(context) {
-                                  const label = context.label || '';
-                                  const value = context.parsed || 0;
-                                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
-                                  const percentage = total > 0 ? ((value / total) * 100).toFixed(1) : 0;
-                                  return `${label}: ${value} students (${percentage}%)`;
-                                },
-                              },
-                            },
-                          },
-                        }}
-                      />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              </div>
-            ) : (
-              <div className="empty-state">
-                <i className="fas fa-chart-line empty-icon"></i>
-                <h3>No Performance Data Available</h3>
-                <p>There is no data for <strong>{formLabel}</strong> - Stream <strong>{selectedStream}</strong>
-                   {selectedYear ? ` in ${selectedYear}` : ''}.</p>
-                <p className="text-muted">
-                  Data will appear here once scores are entered for this class.
-                </p>
-              </div>
-            )}
+            <div className="an-ct-filter">
+              <label className="an-ct-filter-label">Year (optional)</label>
+              <input type="number" value={selectedYear || ''} onChange={e => setSelectedYear(e.target.value ? parseInt(e.target.value) : null)} className="an-ct-input" placeholder="All years" min={new Date().getFullYear() - 10} max={new Date().getFullYear() + 5} />
+            </div>
           </div>
+
+          {isLoading ? (
+            <div className="an-st-loading"><div className="an-st-spinner" /><span>Loading class data...</span></div>
+          ) : isError ? (
+            <div className="an-ct-error">
+              <i className="fas fa-exclamation-triangle" />
+              <span>{error?.message || 'Failed to load data'}</span>
+              <button onClick={() => refetch()} className="an-ct-retry">Retry</button>
+            </div>
+          ) : classPerformance ? (
+            <div className="an-st-perf-body">
+              {/* Stat Cards */}
+              <div className="an-ct-stats">
+                <div className="an-ct-stat">
+                  <span className="an-ct-stat-label">Average</span>
+                  <span className="an-ct-stat-val an-ct-blue">{stats?.avg.toFixed(1) ?? '0.0'}%</span>
+                </div>
+                <div className="an-ct-stat">
+                  <span className="an-ct-stat-label">Highest</span>
+                  <span className="an-ct-stat-val an-ct-green">{stats?.max.toFixed(1) ?? '0.0'}%</span>
+                </div>
+                <div className="an-ct-stat">
+                  <span className="an-ct-stat-label">Lowest</span>
+                  <span className="an-ct-stat-val an-ct-red">{stats?.min.toFixed(1) ?? '0.0'}%</span>
+                </div>
+                <div className="an-ct-stat">
+                  <span className="an-ct-stat-label">Trend</span>
+                  <span className={`an-ct-stat-val ${trend?.trend === 'improving' ? 'an-ct-green' : trend?.trend === 'declining' ? 'an-ct-red' : 'an-ct-muted'}`}>
+                    {trend?.trend === 'improving' ? '↑' : trend?.trend === 'declining' ? '↓' : '—'}
+                  </span>
+                </div>
+              </div>
+
+              {/* Export Buttons */}
+              <div className="an-ct-actions">
+                <button className="an-ct-action-btn" onClick={() => exportToCSV(
+                  sortedMonthly.map(m => ({ 'Month/Year': m.monthYear || `${m.month} ${m.year || ''}`, 'Average': m.average.toFixed(1), 'Students': m.student_count })),
+                  `class-${formLabel}-${selectedStream}-${selectedYear || 'all'}.csv`
+                )}>
+                  <i className="fas fa-download" /> Monthly
+                </button>
+                {classPerformance.subject_averages?.length > 0 && (
+                  <button className="an-ct-action-btn" onClick={() => exportToCSV(
+                    classPerformance.subject_averages.map(s => ({ 'Subject': s.subject_code, 'Average': s.average.toFixed(1), 'Students': s.student_count })),
+                    `subjects-${formLabel}-${selectedStream}-${selectedYear || 'all'}.csv`
+                  )}>
+                    <i className="fas fa-download" /> Subjects
+                  </button>
+                )}
+              </div>
+
+              {/* Charts */}
+              {sortedMonthly.length > 0 && (
+                <div className="an-st-chart-card">
+                  <h4 className="an-st-chart-label">Monthly Averages</h4>
+                  <div className="an-st-chart-wrap">
+                    <Line
+                      data={{
+                        labels: sortedMonthly.map(m => m.monthYear || `${m.month} ${m.year || ''}`),
+                        datasets: [{
+                          label: 'Average',
+                          data: sortedMonthly.map(m => m.average),
+                          borderColor: '#3b82f6',
+                          backgroundColor: '#3b82f620',
+                          tension: 0.4,
+                          fill: true,
+                          pointRadius: isMobile ? 3 : 5,
+                          pointHoverRadius: isMobile ? 5 : 7,
+                          borderWidth: 2,
+                        }],
+                      }}
+                      options={mobileChartOpts({
+                        xLabel: 'Month & Year',
+                        tooltip: {
+                          callbacks: { label: ctx => `Avg: ${ctx.parsed.y.toFixed(1)}% (${sortedMonthly[ctx.dataIndex]?.student_count} students)` },
+                        },
+                      })}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {classPerformance.subject_averages?.length > 0 && (
+                <div className="an-st-chart-card">
+                  <h4 className="an-st-chart-label">Subject Averages</h4>
+                  <div className="an-st-chart-wrap">
+                    <Bar
+                      data={{
+                        labels: classPerformance.subject_averages.map(s => s.subject_code),
+                        datasets: [{
+                          label: 'Average',
+                          data: classPerformance.subject_averages.map(s => s.average),
+                          backgroundColor: '#8b5cf6',
+                          borderColor: '#8b5cf6',
+                          borderWidth: 1,
+                          borderRadius: 4,
+                        }],
+                      }}
+                      options={mobileChartOpts({ xLabel: 'Subject' })}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {classPerformance.grade_distribution?.length > 0 && (
+                <div className="an-st-chart-card">
+                  <h4 className="an-st-chart-label">Grade Distribution</h4>
+                  <div className="an-st-chart-wrap">
+                    <Doughnut
+                      data={{
+                        labels: classPerformance.grade_distribution.map(g => `Grade ${g.grade}`),
+                        datasets: [{
+                          data: classPerformance.grade_distribution.map(g => g.count),
+                          backgroundColor: ['#3b82f6', '#8b5cf6', '#f59e0b', '#10b981', '#ef4444'],
+                          borderWidth: 2,
+                        }],
+                      }}
+                      options={{
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                          legend: { position: isMobile ? 'bottom' : 'right', labels: { boxWidth: 12, font: { size: isMobile ? 10 : 12 }, padding: isMobile ? 8 : 16 } },
+                          tooltip: { callbacks: { label: ctx => { const t = ctx.dataset.data.reduce((a, b) => a + b, 0); return `${ctx.label}: ${ctx.parsed} (${t > 0 ? ((ctx.parsed / t) * 100).toFixed(1) : 0}%)`; } } },
+                        },
+                      }}
+                    />
+                  </div>
+                </div>
+              )}
+            </div>
+          ) : (
+            <div className="an-ct-empty">
+              <i className="fas fa-chart-line" />
+              <span>No data for {formLabel} - Stream {selectedStream}{selectedYear ? ` in ${selectedYear}` : ''}</span>
+            </div>
+          )}
         </div>
       </div>
     </AdminLayout>
@@ -471,4 +258,3 @@ const ClassTrack = () => {
 };
 
 export default ClassTrack;
-

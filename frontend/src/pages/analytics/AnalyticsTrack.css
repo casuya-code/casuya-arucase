@@ -548,6 +548,180 @@
 }
 
 /* ===========================================
+   CLASS TRACK — Clean Modern Design
+   Scoped under .an-ct-*
+   =========================================== */
+
+.an-ct-filters {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.an-ct-filter {
+  flex: 1;
+  min-width: 140px;
+}
+
+.an-ct-filter-label {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #888;
+  margin-bottom: 0.3rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.an-ct-select,
+.an-ct-input {
+  width: 100%;
+  padding: 0.55rem 0.75rem;
+  background: #fff;
+  border: 1px solid #e0ddd5;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: #1a1a1a;
+  transition: border-color 0.15s ease;
+  box-sizing: border-box;
+}
+
+.an-ct-select:focus,
+.an-ct-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+}
+
+.an-ct-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.6rem;
+}
+
+.an-ct-stat {
+  background: #fff;
+  border: 1px solid #e8e8e0;
+  border-radius: 10px;
+  padding: 0.85rem 0.65rem;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+}
+
+.an-ct-stat-label {
+  font-size: 0.7rem;
+  color: #888;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+}
+
+.an-ct-stat-val {
+  font-size: 1.2rem;
+  font-weight: 800;
+  color: #1a1a1a;
+}
+
+.an-ct-blue { color: #3b82f6; }
+.an-ct-green { color: #10b981; }
+.an-ct-red { color: #ef4444; }
+.an-ct-muted { color: #aaa; }
+
+.an-ct-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.an-ct-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.45rem 0.85rem;
+  background: #fff;
+  border: 1px solid #e0ddd5;
+  border-radius: 8px;
+  color: #4a4a40;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  font-family: inherit;
+}
+
+.an-ct-action-btn:hover {
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+.an-ct-error {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 2rem 1rem;
+  background: #fff;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+  color: #ef4444;
+  text-align: center;
+}
+
+.an-ct-error i { font-size: 1.5rem; }
+.an-ct-error span { font-size: 0.85rem; }
+
+.an-ct-retry {
+  padding: 0.45rem 1rem;
+  background: #ef4444;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.an-ct-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 3rem 1rem;
+  color: #aaa;
+  font-size: 0.9rem;
+}
+
+.an-ct-empty i { font-size: 1.5rem; opacity: 0.4; }
+
+@media (max-width: 768px) {
+  .an-ct-stats {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .an-ct-stats {
+    grid-template-columns: 1fr 1fr;
+    gap: 0.5rem;
+  }
+
+  .an-ct-stat {
+    padding: 0.65rem 0.5rem;
+  }
+
+  .an-ct-stat-val {
+    font-size: 1rem;
+  }
+
+  .an-ct-filters {
+    flex-direction: column;
+    gap: 0.5rem;
+  }
+}
+
+/* ===========================================
    EXISTING TRACK PAGE STYLES (unchanged)
    =========================================== */
 
