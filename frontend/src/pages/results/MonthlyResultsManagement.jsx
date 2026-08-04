@@ -708,218 +708,204 @@ const MonthlyResultsManagement = ({ formLevel }) => {
 
   return (
     <AdminLayout>
-      <div className="monthly-results-mgmt-page-container monthly-results-management">
-        <div className="excel-card monthly-results-management">
-          <div className="excel-card-header">
-            <i className="fas fa-chart-bar"></i> MONTHLY RESULTS MANAGEMENT
-            <div className="header-actions">
+      <div className="monthly-mgmt-page">
+        <div className="monthly-mgmt-shell">
+          <header className="monthly-mgmt-top">
+            <Link to={getBackPath()} className="monthly-mgmt-back" title="Back">
+              <i className="fas fa-arrow-left"></i>
+            </Link>
+            <div className="monthly-mgmt-top-info">
+              <h1 className="monthly-mgmt-title">Monthly Results Management</h1>
+              <p className="monthly-mgmt-sub">{normalizedLevel} {normalizedStream} &middot; {month} &middot; {year}</p>
+            </div>
+            <div className="monthly-mgmt-actions">
               <button
                 type="button"
                 onClick={handleCalculate}
-                className="excel-btn primary small"
+                className="monthly-btn monthly-btn-calc"
                 disabled={calculateResultsMutation.isLoading}
               >
-                <i className="fas fa-calculator"></i> {calculateResultsMutation.isLoading ? 'Calculating...' : 'Calculate Results'}
+                <i className="fas fa-calculator"></i> {calculateResultsMutation.isLoading ? 'Calculating...' : 'Calculate'}
               </button>
-              <Link to={getBackPath()} className="excel-btn secondary small">
-                <i className="fas fa-arrow-left"></i> Back
-              </Link>
             </div>
-          </div>
-          <div className="excel-card-body">
-            {studentsLoading || subjectsLoading || resultsLoading ? (
-              <div className="loading-state">Loading...</div>
-            ) : students.length === 0 ? (
-              <div className="empty-state">
-                <i className="fas fa-chart-bar empty-icon"></i>
-                <h3>No Students Found</h3>
-                <p>No students have been registered for this class yet.</p>
+          </header>
+
+          {studentsLoading || subjectsLoading || resultsLoading ? (
+            <div className="monthly-mgmt-loading">Loading...</div>
+          ) : students.length === 0 ? (
+            <div className="monthly-mgmt-empty">
+              <i className="fas fa-chart-bar"></i>
+              <h3>No Students Found</h3>
+              <p>No students have been registered for this class yet.</p>
+            </div>
+          ) : (
+            <>
+              <div className="monthly-mgmt-stats">
+                <div className="monthly-mgmt-stat" style={{ '--accent': '#3b82f6' }}>
+                  <span className="monthly-mgmt-stat-num">{students.length}</span>
+                  <span className="monthly-mgmt-stat-label">Students</span>
+                </div>
+                <div className="monthly-mgmt-stat" style={{ '--accent': '#10b981' }}>
+                  <span className="monthly-mgmt-stat-num">{month}</span>
+                  <span className="monthly-mgmt-stat-label">Month</span>
+                </div>
+                <div className="monthly-mgmt-stat" style={{ '--accent': '#8b5cf6' }}>
+                  <span className="monthly-mgmt-stat-num">{year}</span>
+                  <span className="monthly-mgmt-stat-label">Year</span>
+                </div>
+                <div className="monthly-mgmt-stat" style={{ '--accent': '#f59e0b' }}>
+                  <span className="monthly-mgmt-stat-num">{isALevel ? 'A-Level' : 'O-Level'}</span>
+                  <span className="monthly-mgmt-stat-label">Grading</span>
+                </div>
               </div>
-            ) : (
-              <>
-                <div className="results-info">
-                  <div className="info-item"><strong>Students:</strong> {students.length}</div>
-                  <div className="info-item"><strong>Month:</strong> {month}</div>
-                  <div className="info-item"><strong>Year:</strong> {year}</div>
-                  <div className="info-item">
-                    <strong>Grading:</strong> {isALevel ? 'A-Level' : 'O-Level'}
+
+              <div className="monthly-mgmt-btns">
+                <button type="button" onClick={handlePrint} id="downloadResultsBtn" className="monthly-btn monthly-btn-pdf">
+                  <i className="fas fa-file-pdf"></i> <span id="downloadBtnText">Download PDF</span>
+                </button>
+                <button type="button" onClick={handleDownloadCSV} className="monthly-btn monthly-btn-csv">
+                  <i className="fas fa-file-csv"></i> {CSV_BULK_LABELS.filled}
+                </button>
+              </div>
+
+              {/* Report Header */}
+              <div className="monthly-report-header">
+                <div className="monthly-report-row">
+                  <div className="monthly-report-logo">
+                    {schoolLogoData?.logo_image_path ? (
+                      <img
+                        src={resolveStaticUrl(schoolLogoData.logo_image_path || '')}
+                        alt="School logo"
+                        className="school-logo"
+                        loading="eager"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    ) : (
+                      <div className="school-logo-placeholder"><i className="fas fa-school"></i></div>
+                    )}
+                  </div>
+                  <div className="monthly-report-school">
+                    <h1>CATHOLIC ARCHDIOCESE OF ARUSHA</h1>
+                    <h2>ARUSHA CATHOLIC SEMINARY-OLDONYOSAMBU</h2>
+                    <div className="monthly-report-contact">
+                      <p>P.O BOX 3102 Arusha, Tanzania</p>
+                      <p>+255 754 92 60 22 / +255 765 394 802</p>
+                      <p>Email: arucase@gmail.com</p>
+                    </div>
+                  </div>
+                  <div className="monthly-report-logo">
+                    {schoolLogoData?.logo_image_path ? (
+                      <img
+                        src={resolveStaticUrl(schoolLogoData.logo_image_path || '')}
+                        alt="School logo"
+                        className="school-logo"
+                        loading="eager"
+                        onError={(e) => { e.target.style.display = 'none'; }}
+                      />
+                    ) : (
+                      <div className="school-logo-placeholder"><i className="fas fa-school"></i></div>
+                    )}
                   </div>
                 </div>
-                <div className="print-spacer-bottom"></div>
-              </>
-            )}
-          </div>
-        </div>
-
-        {!studentsLoading && !subjectsLoading && !resultsLoading && students.length > 0 && (
-          <>
-            <div className="print-button-container">
-              <button type="button" onClick={handlePrint} id="downloadResultsBtn" className="download-btn-monthly">
-                <i className="fas fa-file-pdf"></i> <span id="downloadBtnText">Download Result (PDF)</span>
-              </button>
-              <button type="button" onClick={handleDownloadCSV} className="download-btn-monthly" style={{ background: 'linear-gradient(135deg, #059669 0%, #047857 100%)' }}>
-                <i className="fas fa-file-csv"></i> {CSV_BULK_LABELS.filled}
-              </button>
-            </div>
-
-            {/* Report Header */}
-            <div className="report-header-section">
-              <div className="report-header">
-                <div className="logo-section">
-                  {schoolLogoData?.logo_image_path ? (
-                    <img
-                      src={resolveStaticUrl(schoolLogoData.logo_image_path || '')}
-                      alt="Arusha Catholic Seminary official school logo"
-                      className="school-logo"
-                      loading="eager"
-                      onError={(e) => {
-                        console.error('[MonthlyResults] Logo image load error:', e.target.src);
-                        e.target.style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <div className="school-logo-placeholder">
-                      <i className="fas fa-school"></i>
-                    </div>
-                  )}
-                </div>
-                <div className="school-info">
-                  <h1>CATHOLIC ARCHDIOCESE OF ARUSHA</h1>
-                  <h2>ARUSHA CATHOLIC SEMINARY-OLDONYOSAMBU</h2>
-                  <div className="contact-info">
-                    <p>P.O BOX 3102 Arusha, Tanzania</p>
-                    <p>+255 754 92 60 22 / +255 765 394 802</p>
-                    <p>Email: arucase@gmail.com</p>
-                  </div>
-                </div>
-                <div className="logo-section-right">
-                  {schoolLogoData?.logo_image_path ? (
-                    <img
-                      src={resolveStaticUrl(schoolLogoData.logo_image_path || '')}
-                      alt="Arusha Catholic Seminary official school logo"
-                      className="school-logo-right"
-                      loading="eager"
-                      onError={(e) => {
-                        console.error('[MonthlyResults] Logo image load error:', e.target.src);
-                        e.target.style.display = 'none';
-                      }}
-                    />
-                  ) : (
-                    <div className="school-logo-placeholder">
-                      <i className="fas fa-school"></i>
-                    </div>
-                  )}
+                <div className="monthly-report-title-bar">
+                  {(() => {
+                    let formattedTestType = testType.replace('MID-TERM', 'MIDTERM').replace(' TEST', '').trim();
+                    formattedTestType = formattedTestType + ' RESULTS';
+                    return `${normalizedLevel} ${formattedTestType} ${month ? month.toUpperCase() : ''} ${year}`;
+                  })()}
                 </div>
               </div>
-              <div className="test-info-bar">
-                {(() => {
-                  // Extract just the form level (e.g., "FORM III" from "FORM III A 2025")
-                  const formLevelOnly = normalizedLevel;
-                  // Format test type: remove hyphen from MID-TERM and remove TEST, then add RESULTS
-                  // Test types: MONTHLY TEST, MID-TERM TEST, ANNUAL, TERMINAL
-                  let formattedTestType = testType
-                    .replace('MID-TERM', 'MIDTERM')
-                    .replace(' TEST', '')
-                    .trim();
-                  // Add RESULTS suffix
-                  formattedTestType = formattedTestType + ' RESULTS';
-                  return `${formLevelOnly} ${formattedTestType} ${month ? month.toUpperCase() : ''} ${year}`;
-                })()}
-              </div>
-            </div>
 
-            {/* Results Table */}
-            <div className="results-table-container">
-              <div className="results-table-wrapper">
-                <table className="compact-results-table">
-                  <thead>
-                    <tr>
-                      <th className="sticky-col col-sn">S/N</th>
-                      <th className="sticky-col col-fname">F.Name</th>
-                      <th className="sticky-col col-mname">M.Name</th>
-                      <th className="sticky-col col-sname">Surname</th>
-                      {subjects.map((subject) => (
-                        <th key={subject.subject_code} className="subject-col">
-                          <div className="rotate-header">
-                            {isALevel
-                              ? formatALevelSubjectHeader(subject.subject_abbreviation || subject.subject_code)
-                              : (subject.subject_abbreviation || subject.subject_code)}
-                          </div>
-                        </th>
-                      ))}
-                      <th className="result-col">TOT</th>
-                      <th className="result-col">AVR</th>
-                      <th className="result-col">GRD</th>
-                      <th className="result-col">POS</th>
-                      {showComColumn && <th className="comb-col">COM</th>}
-                      <th className="remarks-col">REMARKS</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {sortedStudents.map((student, index) => {
-                      const studentIndex = getStudentIndex(student);
-                      const result = results[studentIndex] || {};
-                      const studentScores = subjectScores[student.adm_no] || {};
-                      const gradeClass = result.grade || 'none';
-                      const avgValue = result.average ? parseFloat(result.average) : null;
-                      // Grade C-low only applies to O-Level when average < 55
-                      const gradeRowClass = gradeClass === 'C' && avgValue !== null && avgValue < 55 && !isALevel
-                        ? `grade-row-${gradeClass}-low`
-                        : `grade-row-${gradeClass}${isALevel ? ' a-level' : ''}`;
-                      
-                      return (
-                        <tr key={student.adm_no} className={gradeRowClass}>
-                          <td className="sticky-col col-sn">{index + 1}</td>
-                          <td className="sticky-col col-fname">{student.first_name}</td>
-                          <td className="sticky-col col-mname">{student.middle_name || '-'}</td>
-                          <td className="sticky-col col-sname">{student.surname}</td>
-                          {subjects.map((subject) => {
-                            // Match Flask template: use abbreviation if available, otherwise use code
-                            const subjectKey = subject.subject_abbreviation || subject.subject_code;
-                            // Try both abbreviation and code to match scores
-                            const score = studentScores[subjectKey] || studentScores[subject.subject_code];
-                            return (
-                              <td key={subject.subject_code} className="subject-col">
-                                {formatSubjectScore(score)}
-                              </td>
-                            );
-                          })}
-                          <td className="result-col tot-col">
-                            {formatSubjectScore(result.total_marks)}
-                          </td>
-                          <td className="result-col">
-                            {result.average !== null && result.average !== undefined 
-                              ? Math.round(result.average) 
-                              : '-'}
-                          </td>
-                          <td className="result-col grd-col">{result.grade || '-'}</td>
-                          <td className="result-col">{result.position || '-'}</td>
-                          {showComColumn && (
-                            <td className="comb-col">
-                              {resolveComDisplay(student, studentScores)}
+              {/* Results Table */}
+              <div className="monthly-results-card">
+                <div className="monthly-table-wrap">
+                  <table className="compact-results-table">
+                    <thead>
+                      <tr>
+                        <th className="sticky-col col-sn">S/N</th>
+                        <th className="sticky-col col-fname">F.Name</th>
+                        <th className="sticky-col col-mname">M.Name</th>
+                        <th className="sticky-col col-sname">Surname</th>
+                        {subjects.map((subject) => (
+                          <th key={subject.subject_code} className="subject-col">
+                            <div className="rotate-header">
+                              {isALevel
+                                ? formatALevelSubjectHeader(subject.subject_abbreviation || subject.subject_code)
+                                : (subject.subject_abbreviation || subject.subject_code)}
+                            </div>
+                          </th>
+                        ))}
+                        <th className="result-col">TOT</th>
+                        <th className="result-col">AVR</th>
+                        <th className="result-col">GRD</th>
+                        <th className="result-col">POS</th>
+                        {showComColumn && <th className="comb-col">COM</th>}
+                        <th className="remarks-col">REMARKS</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {sortedStudents.map((student, index) => {
+                        const studentIndex = getStudentIndex(student);
+                        const result = results[studentIndex] || {};
+                        const studentScores = subjectScores[student.adm_no] || {};
+                        const gradeClass = result.grade || 'none';
+                        const avgValue = result.average ? parseFloat(result.average) : null;
+                        const gradeRowClass = gradeClass === 'C' && avgValue !== null && avgValue < 55 && !isALevel
+                          ? `grade-row-${gradeClass}-low`
+                          : `grade-row-${gradeClass}${isALevel ? ' a-level' : ''}`;
+                        
+                        return (
+                          <tr key={student.adm_no} className={gradeRowClass}>
+                            <td className="sticky-col col-sn">{index + 1}</td>
+                            <td className="sticky-col col-fname">{student.first_name}</td>
+                            <td className="sticky-col col-mname">{student.middle_name || '-'}</td>
+                            <td className="sticky-col col-sname">{student.surname}</td>
+                            {subjects.map((subject) => {
+                              const subjectKey = subject.subject_abbreviation || subject.subject_code;
+                              const score = studentScores[subjectKey] || studentScores[subject.subject_code];
+                              return (
+                                <td key={subject.subject_code} className="subject-col">
+                                  {formatSubjectScore(score)}
+                                </td>
+                              );
+                            })}
+                            <td className="result-col tot-col">
+                              {formatSubjectScore(result.total_marks)}
                             </td>
-                          )}
-                          <td className="remarks-col">{result.remarks || '-'}</td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                            <td className="result-col">
+                              {result.average !== null && result.average !== undefined 
+                                ? Math.round(result.average) 
+                                : '-'}
+                            </td>
+                            <td className="result-col grd-col">{result.grade || '-'}</td>
+                            <td className="result-col">{result.position || '-'}</td>
+                            {showComColumn && (
+                              <td className="comb-col">
+                                {resolveComDisplay(student, studentScores)}
+                              </td>
+                            )}
+                            <td className="remarks-col">{result.remarks || '-'}</td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-            </div>
 
-            <div className="print-spacer-bottom"></div>
+              <div className="print-spacer-bottom"></div>
 
-            <div className="back-margin">
-              <Link to={getBackPath()} className="excel-btn">
-                <i className="fas fa-arrow-left"></i> Back
-              </Link>
-              <button type="button" onClick={handleDownloadCSV} className="excel-btn csv-btn">
-                <i className="fas fa-file-csv"></i> {CSV_BULK_LABELS.filled}
-              </button>
-            </div>
-          </>
-        )}
+              <div className="monthly-bottom-actions">
+                <Link to={getBackPath()} className="monthly-btn monthly-btn-back">
+                  <i className="fas fa-arrow-left"></i> Back
+                </Link>
+                <button type="button" onClick={handleDownloadCSV} className="monthly-btn monthly-btn-csv">
+                  <i className="fas fa-file-csv"></i> {CSV_BULK_LABELS.filled}
+                </button>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     </AdminLayout>
   );

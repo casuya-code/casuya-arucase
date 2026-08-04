@@ -1,261 +1,347 @@
-/**
- * Monthly Results Management Styles
- * Border-free pure mobile layout
- */
-
-.monthly-results-mgmt-page-container {
-  padding: 0;
-  width: 100%;
-  box-sizing: border-box;
+/* ===========================================
+   MONTHLY RESULTS MANAGEMENT — Clean Modern Design
+   =========================================== */
+.monthly-mgmt-page {
+  background: #f5f5f0;
   min-height: 100vh;
-  background: linear-gradient(135deg, #f5f7fa 0%, #e8ecf1 100%);
-  margin: 0;
-}
-
-.monthly-results-mgmt-page-container .excel-card {
-  background: transparent;
-  border-radius: 0;
-  box-shadow: none;
-  border: none;
-  overflow: visible;
-  margin: 0;
-  width: 100%;
-}
-
-.monthly-results-mgmt-page-container .excel-card-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border: none;
-  border-radius: 0;
-  box-shadow: none;
-  padding: clamp(1rem, 3vw, 1.5rem);
-  margin-bottom: clamp(1rem, 3vw, 1.5rem);
-  position: sticky;
-  top: 0;
-  z-index: 10;
-}
-
-.monthly-results-mgmt-page-container .excel-card-body {
-  padding: clamp(1rem, 3vw, 2rem);
-  background: transparent;
-  border: none;
+  min-height: 100dvh;
   width: 100%;
   box-sizing: border-box;
 }
 
-.monthly-results-management {
-  margin-bottom: 0;
+.monthly-mgmt-shell {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2rem) clamp(0.75rem, 2.5vw, 1.5rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-.loading-state {
+/* --- Top Header --- */
+.monthly-mgmt-top {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e0ddd5;
+  flex-wrap: wrap;
+}
+
+.monthly-mgmt-back {
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid #d4d4cc;
+  background: #fff;
+  color: #555;
+  border-radius: 8px;
+  text-decoration: none;
+  font-size: 0.85rem;
+  transition: all 0.15s ease;
+  flex-shrink: 0;
+}
+
+.monthly-mgmt-back:hover {
+  background: #f0f0ea;
+  color: #1a1a1a;
+  border-color: #bbb;
+}
+
+.monthly-mgmt-top-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.monthly-mgmt-title {
+  font-size: clamp(1.2rem, 3vw, 1.5rem);
+  font-weight: 800;
+  color: #1a1a1a;
+  margin: 0;
+  letter-spacing: -0.02em;
+}
+
+.monthly-mgmt-sub {
+  font-size: 0.8rem;
+  color: #6b6b60;
+  margin: 0.2rem 0 0;
+}
+
+.monthly-mgmt-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-shrink: 0;
+}
+
+/* --- States --- */
+.monthly-mgmt-loading {
   text-align: center;
   padding: 3rem;
-  color: #6b7280;
+  color: #6b6b60;
+  font-size: 0.9rem;
 }
 
-.empty-state {
+.monthly-mgmt-empty {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e8e8e0;
+  padding: 3rem 1.5rem;
   text-align: center;
-  padding: 4rem 2rem;
 }
 
-.empty-icon {
-  font-size: 4rem;
-  color: #9ca3af;
+.monthly-mgmt-empty i {
+  font-size: 2.5rem;
+  color: #d1d5db;
   margin-bottom: 1rem;
   display: block;
 }
 
-.empty-state h3 {
-  margin: 0 0 0.5rem 0;
-  color: #111827;
+.monthly-mgmt-empty h3 {
+  margin: 0 0 0.5rem;
+  font-size: 1.1rem;
+  font-weight: 700;
+  color: #1a1a1a;
 }
 
-.empty-state p {
-  margin: 0 0 2rem 0;
-  color: #6b7280;
+.monthly-mgmt-empty p {
+  margin: 0;
+  color: #6b6b60;
+  font-size: 0.85rem;
 }
 
-.results-info {
+/* --- Stat Cards --- */
+.monthly-mgmt-stats {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
+}
+
+.monthly-mgmt-stat {
+  background: #fff;
+  border-radius: 12px;
+  padding: 1rem;
   display: flex;
-  justify-content: space-around;
+  flex-direction: column;
+  gap: 0.15rem;
+  border: 1px solid #e8e8e0;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.monthly-mgmt-stat:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
+}
+
+.monthly-mgmt-stat-num {
+  font-size: clamp(1.2rem, 3vw, 1.6rem);
+  font-weight: 800;
+  color: var(--accent, #10b981);
+  line-height: 1.1;
+  font-variant-numeric: tabular-nums;
+}
+
+.monthly-mgmt-stat-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: #6b6b60;
+  line-height: 1.2;
+}
+
+/* --- Action Buttons --- */
+.monthly-mgmt-btns {
+  display: flex;
+  gap: 0.75rem;
   flex-wrap: wrap;
-  gap: clamp(0.75rem, 2vw, 15px);
-  margin-bottom: clamp(1rem, 3vw, 1.5rem);
-  padding: clamp(0.75rem, 2vw, 1rem);
-  background: rgba(249, 250, 251, 0.8);
-  border-radius: 0;
-  border: none;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
 }
 
-.info-item {
-  padding: clamp(6px, 1.5vw, 8px) clamp(12px, 3vw, 16px);
-  background: rgba(249, 250, 251, 0.6);
-  border-radius: 0;
-  font-size: clamp(0.75rem, 2vw, 13px);
+.monthly-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.375rem;
+  padding: 0.5rem 1rem;
   border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.2s ease;
+  text-decoration: none;
+  white-space: nowrap;
 }
 
-.info-item strong {
-  color: #000000;
-  margin-right: 5px;
+.monthly-btn-calc {
+  background: #3b82f6;
+  color: #fff;
 }
 
-/* Report Header Styles */
-.report-header-section {
-  background: linear-gradient(135deg, #87ceeb 0%, #b0e0e6 100%);
-  padding: clamp(10px, 2.5vw, 15px);
-  margin-bottom: clamp(3px, 1vw, 5px);
-  border-radius: 0;
-  border: none;
+.monthly-btn-calc:hover:not(:disabled) {
+  background: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.25);
+}
+
+.monthly-btn-calc:disabled {
+  background: #9ca3af;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.monthly-btn-pdf {
+  background: #ef4444;
+  color: #fff;
+}
+
+.monthly-btn-pdf:hover {
+  background: #dc2626;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.25);
+}
+
+.monthly-btn-csv {
+  background: #10b981;
+  color: #fff;
+}
+
+.monthly-btn-csv:hover {
+  background: #059669;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+}
+
+.monthly-btn-back {
+  background: #fff;
+  color: #1a1a1a;
+  border: 1px solid #e8e8e0;
+}
+
+.monthly-btn-back:hover {
+  background: #f5f5f0;
+  border-color: #d1d1c8;
+}
+
+/* --- Report Header --- */
+.monthly-report-header {
+  background: #e0f2fe;
+  border: 1px solid #bae6fd;
+  border-radius: 12px;
+  padding: clamp(0.75rem, 2vw, 1.25rem);
   font-family: 'Times New Roman', Times, serif;
 }
 
-.report-header {
+.monthly-report-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding-bottom: clamp(15px, 3vw, 20px);
-  position: relative;
-  max-width: 1200px;
-  margin: 0 auto;
-  gap: clamp(10px, 2vw, 20px);
+  gap: clamp(0.5rem, 2vw, 1rem);
+  padding-bottom: clamp(0.5rem, 1.5vw, 0.75rem);
 }
 
-.logo-section, .logo-section-right {
+.monthly-report-logo {
   flex: 0 0 auto;
-  width: clamp(80px, 12vw, 120px);
-  height: clamp(80px, 12vw, 120px);
-  min-width: clamp(80px, 12vw, 120px);
-  max-width: clamp(80px, 12vw, 120px);
-  min-height: clamp(80px, 12vw, 120px);
-  max-height: clamp(80px, 12vw, 120px);
+  width: clamp(60px, 10vw, 100px);
+  height: clamp(60px, 10vw, 100px);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  margin: 0;
-  box-sizing: border-box;
 }
 
-.logo-section {
-  order: 1;
-}
-
-.logo-section-right {
-  order: 3;
-}
-
-.school-logo, .school-logo-right {
-  width: clamp(80px, 12vw, 120px);
-  height: clamp(80px, 12vw, 120px);
-  min-width: clamp(80px, 12vw, 120px);
-  max-width: clamp(80px, 12vw, 120px);
-  min-height: clamp(80px, 12vw, 120px);
-  max-height: clamp(80px, 12vw, 120px);
-  display: block;
+.monthly-report-logo .school-logo {
+  width: 100%;
+  height: 100%;
   object-fit: contain;
-  object-position: center;
-  border: 2px solid rgba(0, 0, 0, 0.1);
-  border-radius: 0;
-  background: white;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
+  background: #fff;
   padding: 4px;
   box-sizing: border-box;
 }
 
 .school-logo-placeholder {
-  width: clamp(80px, 12vw, 120px);
-  height: clamp(80px, 12vw, 120px);
-  border: 2px solid rgba(0, 0, 0, 0.1);
+  width: 100%;
+  height: 100%;
+  border: 1px solid rgba(0, 0, 0, 0.1);
+  border-radius: 8px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: #f3f4f6;
-  font-size: clamp(1.25rem, 3vw, 1.5rem);
+  font-size: 1.25rem;
   color: #6b7280;
-  border-radius: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  box-sizing: border-box;
 }
 
-.school-info {
+.monthly-report-school {
   flex: 1;
   text-align: center;
-  padding: 0 clamp(10px, 2vw, 20px);
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
   min-width: 0;
-  order: 2;
 }
 
-.school-info h1 {
-  font-size: clamp(10px, 2vw, 24px);
+.monthly-report-school h1 {
+  font-size: clamp(0.7rem, 2vw, 1.1rem);
   font-weight: bold;
   margin: 0;
-  color: #000000;
-  text-align: center;
+  color: #000;
   line-height: 1.2;
 }
 
-.school-info h2 {
-  font-size: clamp(9px, 1.75vw, 20px);
+.monthly-report-school h2 {
+  font-size: clamp(0.6rem, 1.5vw, 0.95rem);
   font-weight: bold;
-  margin: clamp(2px, 0.5vw, 5px) 0;
-  color: #000000;
-  text-align: center;
+  margin: 0.2rem 0;
+  color: #000;
   line-height: 1.2;
 }
 
-.contact-info {
-  text-align: center;
-  margin-top: clamp(3px, 0.75vw, 8px);
+.monthly-report-contact {
+  margin-top: 0.3rem;
 }
 
-.contact-info p {
-  margin: clamp(0px, 0.25vw, 2px) 0;
-  font-size: clamp(8px, 1.5vw, 14px);
-  color: #000000;
-  text-align: center;
-  font-weight: 500;
+.monthly-report-contact p {
+  margin: 0;
+  font-size: clamp(0.5rem, 1.2vw, 0.75rem);
+  color: #000;
   line-height: 1.3;
 }
 
-.test-info-bar {
-  background-color: #87ceeb;
-  color: #000000;
+.monthly-report-title-bar {
+  background: #7dd3fc;
+  color: #000;
   text-align: center;
-  padding: clamp(6px, 1.5vw, 10px);
-  font-size: clamp(10px, 2vw, 16px);
+  padding: clamp(0.375rem, 1vw, 0.5rem);
+  font-size: clamp(0.6rem, 1.5vw, 0.85rem);
   font-weight: bold;
-  letter-spacing: clamp(0.5px, 0.5vw, 1px);
-  margin-top: clamp(2px, 0.75vw, 5px);
-  margin-bottom: 0;
+  letter-spacing: 0.5px;
+  border-radius: 6px;
   font-family: 'Times New Roman', Times, serif;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  border: none;
 }
 
-/* Results Table Container */
-.results-table-container {
-  margin: clamp(0.25rem, 1vw, 5px) 0 clamp(1rem, 3vw, 20px) 0;
-  background: transparent;
-  border-radius: 0;
-  box-shadow: none;
-  overflow: visible;
-  border: none;
+/* --- Results Table Card --- */
+.monthly-results-card {
+  background: #fff;
+  border: 1px solid #e8e8e0;
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.06);
+  overflow: hidden;
 }
 
-.results-table-wrapper {
-  width: 100%;
+.monthly-table-wrap {
   overflow-x: auto;
-  overflow-y: visible;
   -webkit-overflow-scrolling: touch;
-  box-sizing: border-box;
 }
 
+/* --- Bottom Actions --- */
+.monthly-bottom-actions {
+  display: flex;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+/* ===========================================
+   TABLE STYLES (preserved from original)
+   =========================================== */
 .compact-results-table {
   width: 100%;
   border-collapse: collapse;
@@ -267,8 +353,8 @@
 }
 
 .compact-results-table thead {
-  background: white;
-  color: #000000;
+  background: #f5f5f0;
+  color: #000;
   position: sticky;
   top: 0;
   z-index: 10;
@@ -278,58 +364,45 @@
   padding: clamp(6px, 1.5vw, 8px) clamp(3px, 1vw, 4px);
   font-weight: 600;
   text-align: center;
-  border: none;
+  border-bottom: 2px solid #e0ddd5;
   font-size: clamp(11px, 2vw, 13px);
   text-transform: uppercase;
   letter-spacing: 0.5px;
-  background: white !important;
-  color: #000000 !important;
+  background: #f5f5f0 !important;
+  color: #4a4a40 !important;
   line-height: 1.2;
-}
-
-/* Ensure ALL header columns have white background */
-.compact-results-table thead th.sticky-col,
-.compact-results-table thead th.subject-col,
-.compact-results-table thead th.result-col,
-.compact-results-table thead th.comb-col,
-.compact-results-table thead th.remarks-col {
-  background: white !important;
-  color: #000000 !important;
 }
 
 .compact-results-table td {
   padding: clamp(4px, 1vw, 6px) clamp(3px, 1vw, 4px);
-  border: none;
+  border-bottom: 1px solid #f0f0ea;
   text-align: center;
   font-size: clamp(10px, 1.75vw, 12px);
   font-family: 'Times New Roman', Times, serif;
   line-height: 1.2;
 }
 
-.compact-results-table tbody tr {
-  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
-}
-
-.compact-results-table tbody tr:last-child {
-  border-bottom: none;
+.compact-results-table tbody tr:hover {
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  transform: scale(1.002);
+  transition: all 0.2s ease;
+  filter: brightness(1.1);
 }
 
 /* Sticky Columns */
 .sticky-col {
   position: sticky;
   z-index: 5;
-  box-shadow: 2px 0 5px rgba(0,0,0,0.05);
+  box-shadow: 2px 0 5px rgba(0, 0, 0, 0.05);
 }
 
-/* Body sticky columns have white background by default */
 .compact-results-table tbody .sticky-col {
-  background: white;
+  background: #fff;
 }
 
-/* Header sticky columns have white background */
 .compact-results-table thead th.sticky-col {
-  background: white !important;
-  color: var(--gray-900) !important;
+  background: #f5f5f0 !important;
+  color: #4a4a40 !important;
 }
 
 .col-sn {
@@ -370,7 +443,6 @@
   padding-right: 2px !important;
 }
 
-/* Subject Columns */
 .subject-col {
   width: 32px;
   min-width: 32px;
@@ -391,10 +463,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #000000;
+  color: #4a4a40;
 }
 
-/* Result Columns */
 .result-col {
   width: 40px;
   min-width: 40px;
@@ -412,7 +483,6 @@
   font-size: 12px;
 }
 
-/* Remarks Column */
 .comb-col {
   width: 60px;
   min-width: 60px;
@@ -421,7 +491,6 @@
   text-align: center;
 }
 
-/* Remarks Column */
 .remarks-col {
   width: 80px;
   min-width: 80px;
@@ -530,7 +599,6 @@
   color: #713f12 !important;
 }
 
-/* Grade E, S, F - A-Level (same as O-Level for these) */
 .a-level.grade-row-E,
 .a-level.grade-row-S,
 .a-level.grade-row-F {
@@ -548,346 +616,110 @@
   color: #7f1d1d !important;
 }
 
-/* Default row - No grade (White background) */
 .grade-row-none {
-  background: #ffffff !important;
+  background: #fff !important;
 }
 
 .grade-row-none td,
 .grade-row-none .sticky-col {
-  background: #ffffff !important;
+  background: #fff !important;
 }
 
-/* Alternating row shading for rows without grades */
 .compact-results-table tbody tr.grade-row-none:nth-child(even) {
-  background: #f9fafb !important;
+  background: #fafaf8 !important;
 }
 
 .compact-results-table tbody tr.grade-row-none:nth-child(even) td,
 .compact-results-table tbody tr.grade-row-none:nth-child(even) .sticky-col {
-  background: #f9fafb !important;
-}
-
-.compact-results-table tbody tr:hover {
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
-  transform: scale(1.002);
-  transition: all 0.2s ease;
-  filter: brightness(1.1);
-}
-
-/* Print Button */
-.print-button-container {
-  text-align: center;
-  margin: 15px 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 15px;
-  flex-wrap: wrap;
-}
-
-.download-btn-monthly {
-  background: linear-gradient(135deg, #6b7280 0%, #111827 100%);
-  color: white;
-  border: none;
-  padding: clamp(8px, 2vw, 12px) clamp(12px, 3vw, 24px);
-  font-size: clamp(10px, 2vw, 14px);
-  font-weight: 600;
-  border-radius: 0;
-  cursor: pointer;
-  transition: all 0.3s ease;
-  box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: clamp(0.25rem, 1vw, 0.5rem);
-  white-space: nowrap;
-}
-
-.download-btn-monthly:hover {
-  transform: translateY(-2px);
-  box-shadow: 0 6px 12px rgba(0,0,0,0.15);
-}
-
-.back-margin {
-  margin-top: 20px;
-  text-align: center;
-}
-
-.excel-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  padding: 10px 20px;
-  background: #f9fafb;
-  color: #374151;
-  text-decoration: none;
-  border-radius: 0;
-  font-weight: 500;
-  transition: all 0.2s ease;
-  border: none;
-  cursor: pointer;
-}
-
-.excel-btn:hover {
-  background: #e5e7eb;
-  transform: translateX(-3px);
-}
-
-.monthly-results-mgmt-page-container .excel-card-header .header-actions .excel-btn.primary {
-  background: #6b7280;
-  color: #ffffff;
-}
-
-.monthly-results-mgmt-page-container .excel-card-header .header-actions .excel-btn.primary:hover:not(:disabled) {
-  background: #4b5563;
-  color: #ffffff;
-}
-
-.csv-btn {
-  background: #6b7280 !important;
-  color: white !important;
-  margin-left: 10px;
-}
-
-.csv-btn:hover {
-  background: #111827 !important;
-  transform: translateY(-2px);
+  background: #fafaf8 !important;
 }
 
 .print-spacer-bottom {
   display: none;
 }
 
-/* Mobile-first responsive design */
+/* ===========================================
+   RESPONSIVE
+   =========================================== */
 @media (max-width: 768px) {
-  .monthly-results-mgmt-page-container {
-    padding: 0;
+  .monthly-mgmt-shell {
+    padding: clamp(0.625rem, 2vw, 1rem) clamp(0.5rem, 1.5vw, 0.75rem);
   }
 
-  .monthly-results-mgmt-page-container .excel-card-header {
-    padding: clamp(0.875rem, 2.5vw, 1rem);
-    margin-bottom: clamp(0.75rem, 2vw, 1rem);
-    font-size: clamp(0.9375rem, 3vw, 1.125rem);
+  .monthly-mgmt-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+
+  .monthly-mgmt-top {
     flex-wrap: wrap;
-    align-items: center;
   }
 
-  .monthly-results-mgmt-page-container .excel-card-header .header-actions {
-    display: flex;
-    flex-direction: row;
-    flex-wrap: nowrap;
+  .monthly-mgmt-actions {
     width: 100%;
-    margin-left: 0;
-    gap: clamp(0.375rem, 1.5vw, 0.5rem);
-    align-items: stretch;
   }
 
-  .monthly-results-mgmt-page-container .excel-card-header .header-actions .excel-btn {
-    flex: 1 1 0;
+  .monthly-btn {
+    flex: 1;
     min-width: 0;
-    width: auto;
-    justify-content: center;
-    font-size: clamp(0.6875rem, 2vw, 0.8125rem);
-    padding: clamp(0.5rem, 1.5vw, 0.625rem) clamp(0.375rem, 1vw, 0.75rem);
-    white-space: nowrap;
-  }
-
-  .monthly-results-mgmt-page-container .excel-card-body {
-    padding: clamp(0.75rem, 2vw, 1rem);
-  }
-
-  .results-info {
-    padding: clamp(0.5rem, 1.5vw, 0.75rem);
-    gap: clamp(0.5rem, 1.5vw, 0.75rem);
-  }
-
-  .info-item {
-    font-size: clamp(0.6875rem, 1.75vw, 0.8125rem);
-    padding: clamp(4px, 1vw, 6px) clamp(8px, 2vw, 12px);
-  }
-
-  .results-table-container {
-    margin: 0 clamp(-0.5rem, -2vw, -1rem);
-    padding: 0 clamp(0.5rem, 2vw, 1rem);
-    width: calc(100% + clamp(1rem, 4vw, 2rem));
-  }
-
-  .results-table-wrapper {
-    margin: 0;
+    font-size: 0.75rem;
+    padding: 0.4rem 0.75rem;
   }
 
   .compact-results-table {
-    font-size: clamp(10px, 1.75vw, 12px);
+    font-size: 10px;
+    min-width: 700px;
   }
 
   .compact-results-table th {
     padding: clamp(4px, 1vw, 6px) clamp(2px, 0.75vw, 3px);
-    font-size: clamp(10px, 1.75vw, 11px);
+    font-size: clamp(9px, 1.5vw, 11px);
   }
 
   .compact-results-table td {
     padding: clamp(3px, 0.75vw, 4px) clamp(2px, 0.75vw, 3px);
-    font-size: clamp(9px, 1.5vw, 10px);
+    font-size: clamp(8px, 1.3vw, 10px);
   }
 
-  .report-header-section {
-    padding: clamp(8px, 2vw, 12px);
-    margin-bottom: clamp(2px, 0.75vw, 3px);
+  .monthly-report-row {
+    gap: clamp(0.25rem, 1vw, 0.5rem);
   }
 
-  .report-header {
-    flex-direction: row;
-    align-items: center;
-    gap: clamp(3px, 1vw, 10px);
-    padding-bottom: clamp(8px, 1.5vw, 15px);
+  .monthly-report-logo {
+    width: clamp(40px, 8vw, 70px);
+    height: clamp(40px, 8vw, 70px);
   }
 
-  .logo-section, .logo-section-right {
-    width: clamp(40px, 8vw, 100px);
-    height: clamp(40px, 8vw, 100px);
-    min-width: clamp(40px, 8vw, 100px);
-    max-width: clamp(40px, 8vw, 100px);
-    min-height: clamp(40px, 8vw, 100px);
-    max-height: clamp(40px, 8vw, 100px);
-  }
-
-  .logo-section {
-    order: 1;
-  }
-
-  .logo-section-right {
-    order: 3;
-  }
-
-  .school-info {
-    order: 2;
-    flex: 1;
-    padding: 0 clamp(3px, 1vw, 10px);
-    min-width: 0;
-  }
-
-  .school-info h1 {
-    font-size: clamp(8px, 1.5vw, 24px);
-    line-height: 1.1;
-  }
-
-  .school-info h2 {
-    font-size: clamp(7px, 1.25vw, 20px);
-    line-height: 1.1;
-    margin: clamp(1px, 0.25vw, 5px) 0;
-  }
-
-  .contact-info {
-    margin-top: clamp(2px, 0.5vw, 8px);
-  }
-
-  .contact-info p {
-    font-size: clamp(6px, 1.25vw, 14px);
-    line-height: 1.2;
-    margin: clamp(0px, 0.15vw, 2px) 0;
-  }
-
-  .school-logo, .school-logo-right {
-    width: clamp(40px, 8vw, 100px);
-    height: clamp(40px, 8vw, 100px);
-    min-width: clamp(40px, 8vw, 100px);
-    max-width: clamp(40px, 8vw, 100px);
-    min-height: clamp(40px, 8vw, 100px);
-    max-height: clamp(40px, 8vw, 100px);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    border-radius: 0;
-    padding: 2px;
-  }
-
-  .school-logo-placeholder {
-    width: clamp(40px, 8vw, 100px);
-    height: clamp(40px, 8vw, 100px);
-    min-width: clamp(40px, 8vw, 100px);
-    max-width: clamp(40px, 8vw, 100px);
-    min-height: clamp(40px, 8vw, 100px);
-    max-height: clamp(40px, 8vw, 100px);
-    border: 1px solid rgba(0, 0, 0, 0.1);
-    font-size: clamp(0.75rem, 2vw, 1.5rem);
-  }
-
-  .test-info-bar {
-    padding: clamp(4px, 1vw, 8px);
-    font-size: clamp(9px, 1.75vw, 14px);
-  }
-
-  .print-button-container {
-    margin: clamp(8px, 2vw, 15px) 0;
-    gap: clamp(6px, 1.5vw, 12px);
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-
-  .download-btn-monthly {
-    padding: clamp(6px, 1.5vw, 12px) clamp(10px, 2.5vw, 24px);
-    font-size: clamp(9px, 1.75vw, 14px);
-    min-height: clamp(36px, 8vw, 48px);
-    white-space: nowrap;
-  }
-
-  .back-margin {
-    margin-top: clamp(15px, 3vw, 20px);
-  }
-
-  .excel-btn {
-    width: 100%;
-    padding: clamp(8px, 2vw, 10px) clamp(16px, 4vw, 20px);
-    font-size: clamp(0.875rem, 3vw, 1rem);
-    min-height: clamp(44px, 10vw, 48px);
-    justify-content: center;
-  }
-}
-
-/* Extra small devices */
-@media (max-width: 480px) {
-  .monthly-results-mgmt-page-container .excel-card-header {
-    padding: clamp(0.75rem, 2vw, 0.875rem);
-    display: flex;
+  .monthly-bottom-actions {
     flex-direction: column;
-    gap: clamp(0.5rem, 1.5vw, 1rem);
   }
 
-  .monthly-results-mgmt-page-container .excel-card-header .header-actions {
-    flex-direction: row;
-    flex-wrap: nowrap;
-    gap: clamp(0.25rem, 1vw, 0.375rem);
-  }
-
-  .monthly-results-mgmt-page-container .excel-card-header .header-actions .excel-btn {
-    flex: 1 1 0;
-    min-width: 0;
-    width: auto;
-    font-size: clamp(0.625rem, 1.75vw, 0.75rem);
-    padding: clamp(0.4375rem, 1.25vw, 0.5rem) clamp(0.25rem, 0.75vw, 0.5rem);
-  }
-
-  .monthly-results-mgmt-page-container .excel-card-body {
-    padding: clamp(0.5rem, 1.5vw, 0.75rem);
-  }
-
-  .results-table-container {
-    margin: 0 clamp(-0.25rem, -1vw, -0.5rem);
-    padding: 0 clamp(0.25rem, 1vw, 0.5rem);
-    width: calc(100% + clamp(0.5rem, 2vw, 1rem));
-  }
-
-  .compact-results-table th,
-  .compact-results-table td {
-    padding: clamp(2px, 0.5vw, 3px) clamp(1px, 0.5vw, 2px);
+  .monthly-bottom-actions .monthly-btn {
+    width: 100%;
   }
 }
 
-/* Tablet adjustments */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .results-table-container {
-    margin-left: clamp(-1rem, -2vw, -1.25rem);
-    margin-right: clamp(-1rem, -2vw, -1.25rem);
-    width: calc(100% + clamp(2rem, 4vw, 2.5rem));
+@media (max-width: 480px) {
+  .monthly-mgmt-stats {
+    grid-template-columns: 1fr 1fr;
+  }
+
+  .monthly-mgmt-stat {
+    padding: 0.75rem;
+  }
+
+  .monthly-mgmt-btns {
+    flex-direction: column;
+  }
+
+  .monthly-btn {
+    width: 100%;
+  }
+}
+
+@media (min-width: 1440px) {
+  .monthly-mgmt-shell {
+    padding: 2.5rem;
   }
 }
 
@@ -904,11 +736,12 @@
     print-color-adjust: exact !important;
   }
   
-  .monthly-results-management,
-  .excel-card,
-  .excel-card-body,
-  .print-button-container,
-  .back-margin,
+  .monthly-mgmt-page,
+  .monthly-mgmt-shell,
+  .monthly-mgmt-top,
+  .monthly-mgmt-stats,
+  .monthly-mgmt-btns,
+  .monthly-bottom-actions,
   .sidebar,
   nav,
   header {
@@ -922,18 +755,17 @@
     font-family: 'Times New Roman', Times, serif;
   }
   
-  /* Preserve report header layout with logos */
-  .report-header-section {
+  .monthly-report-header {
     display: block !important;
     visibility: visible !important;
-    background: linear-gradient(135deg, #87ceeb 0%, #b0e0e6 100%) !important;
+    background: #e0f2fe !important;
     padding: 15px !important;
     margin-bottom: 5px !important;
     border-radius: 0 !important;
     page-break-inside: avoid;
   }
 
-  .report-header {
+  .monthly-report-row {
     display: flex !important;
     justify-content: space-between !important;
     align-items: center !important;
@@ -941,59 +773,41 @@
     gap: 20px !important;
   }
 
-  .logo-section,
-  .logo-section-right {
-    flex: 0 0 auto !important;
+  .monthly-report-logo {
     width: 120px !important;
     height: 120px !important;
     display: flex !important;
     align-items: center !important;
     justify-content: center !important;
-    padding: 0 !important;
-    margin: 0 !important;
   }
 
-  .school-logo,
-  .school-logo-right {
+  .monthly-report-logo .school-logo {
     width: 120px !important;
     height: 120px !important;
-    display: block !important;
-    object-fit: contain !important;
-    object-position: center !important;
-    border: 2px solid rgba(0, 0, 0, 0.1) !important;
     border-radius: 0 !important;
-    background: white !important;
-    padding: 4px !important;
-    box-sizing: border-box !important;
   }
 
   .school-logo-placeholder {
     width: 120px !important;
     height: 120px !important;
-    display: flex !important;
-    border: 2px solid rgba(0, 0, 0, 0.1) !important;
-    box-sizing: border-box !important;
+    border-radius: 0 !important;
   }
 
-  .school-info {
+  .monthly-report-school {
     flex: 1 !important;
     text-align: center !important;
-    padding: 0 20px !important;
-    display: flex !important;
-    flex-direction: column !important;
-    align-items: center !important;
-    justify-content: center !important;
   }
-  
-  /* Preserve table structure and cell layout */
-  .results-table-container {
+
+  .monthly-results-card {
     display: block !important;
     margin: 5px 0 20px 0;
     overflow: visible;
+    border-radius: 0 !important;
+    border: none !important;
     page-break-inside: avoid;
   }
   
-  .results-table-wrapper {
+  .monthly-table-wrap {
     overflow: visible !important;
   }
   
@@ -1026,24 +840,15 @@
     break-inside: avoid;
   }
   
-  /* Page break before specific rows */
-  .page-break-before-row {
-    page-break-before: always !important;
-    break-before: page !important;
-  }
-  
-  /* Prevent breaking header row */
   .compact-results-table thead {
     display: table-header-group !important;
   }
   
-  /* Repeat header on each page */
   .compact-results-table thead tr {
     page-break-after: avoid;
     page-break-inside: avoid;
   }
   
-  /* Preserve sticky columns */
   .sticky-col {
     position: static !important;
     box-shadow: none !important;
@@ -1054,7 +859,6 @@
     background-color: #e5e7eb !important;
   }
   
-  /* Rotate headers back to horizontal for print */
   .rotate-header {
     writing-mode: horizontal-tb !important;
     transform: none !important;
@@ -1062,7 +866,6 @@
     white-space: nowrap !important;
   }
   
-  /* Preserve grade-based row colors */
   .grade-row-A,
   .grade-row-B,
   .grade-row-C,
@@ -1076,7 +879,6 @@
     print-color-adjust: exact !important;
   }
   
-  /* Ensure subject columns maintain width */
   .subject-col {
     width: auto !important;
     min-width: 50px !important;

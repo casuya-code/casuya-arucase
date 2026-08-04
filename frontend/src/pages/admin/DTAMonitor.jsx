@@ -229,38 +229,26 @@ const DTAMonitor = () => {
         </div>
 
         {/* Statistics Cards */}
-        <div className="stats-grid">
-          <div className="stat-card stat-card-primary">
-            <div className="stat-header">
-              <span className="stat-icon">&#128260;</span>
-              <span className="stat-label">Total Changes</span>
-            </div>
-            <div className="stat-value">{stats.totalChanges}</div>
+        <div className="dta-stats">
+          <div className="dta-stat" style={{ '--accent': '#3b82f6' }}>
+            <span className="dta-stat-num">{stats.totalChanges}</span>
+            <span className="dta-stat-label">Total Changes</span>
           </div>
-          <div className="stat-card stat-card-success">
-            <div className="stat-header">
-              <span className="stat-icon">&#128197;</span>
-              <span className="stat-label">Today</span>
-            </div>
-            <div className="stat-value">{stats.todayChanges}</div>
+          <div className="dta-stat" style={{ '--accent': '#10b981' }}>
+            <span className="dta-stat-num">{stats.todayChanges}</span>
+            <span className="dta-stat-label">Today</span>
           </div>
-          <div className="stat-card stat-card-info">
-            <div className="stat-header">
-              <span className="stat-icon">&#128218;</span>
-              <span className="stat-label">Top Subject</span>
-            </div>
-            <div className="stat-value" title={stats.mostChangedSubjects[0]?.subject_name || '-'}>
+          <div className="dta-stat" style={{ '--accent': '#8b5cf6' }}>
+            <span className="dta-stat-num dta-stat-num--text" title={stats.mostChangedSubjects[0]?.subject_name || '-'}>
               {stats.mostChangedSubjects[0]?.subject_name || '-'}
-            </div>
+            </span>
+            <span className="dta-stat-label">Top Subject</span>
           </div>
-          <div className="stat-card stat-card-warning">
-            <div className="stat-header">
-              <span className="stat-icon">&#128100;</span>
-              <span className="stat-label">Top User</span>
-            </div>
-            <div className="stat-value" title={stats.mostActiveUsers[0]?.last_changed_by || '-'}>
+          <div className="dta-stat" style={{ '--accent': '#f59e0b' }}>
+            <span className="dta-stat-num dta-stat-num--text" title={stats.mostActiveUsers[0]?.last_changed_by || '-'}>
               {stats.mostActiveUsers[0]?.last_changed_by || '-'}
-            </div>
+            </span>
+            <span className="dta-stat-label">Top User</span>
           </div>
         </div>
 

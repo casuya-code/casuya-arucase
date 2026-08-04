@@ -192,159 +192,158 @@ const TeachersManagement = ({ formLevel, stream: streamProp }) => {
 
   return (
     <AdminLayout>
-      <div className="subject-teachers-mgmt-page-container">
-        <div className="subject-teachers-mgmt-card">
-          <div className="subject-teachers-mgmt-card-header">
-            <Link to={getBackPath()} className="subject-teachers-mgmt-back-btn-top" title="Back">
+      <div className="teachers-mgmt-page">
+        <div className="teachers-mgmt-shell">
+          <header className="teachers-mgmt-top">
+            <Link to={getBackPath()} className="teachers-mgmt-back" title="Back">
               <i className="fas fa-arrow-left"></i>
             </Link>
-            <i className="fas fa-chalkboard-teacher"></i>
-            <span>Subject Teachers Management</span>
-          </div>
-          <div className="subject-teachers-mgmt-card-body">
-            {teachersError && (
-              <div className="error-state" style={{ padding: '20px', background: '#ffebee', color: '#c62828', marginBottom: '20px', borderRadius: '4px' }}>
-                <i className="fas fa-exclamation-triangle"></i>
-                <strong>Error loading teachers:</strong> {teachersError.message || 'Failed to fetch teachers'}
-                <div style={{ fontSize: '12px', marginTop: '10px', fontFamily: 'monospace' }}>
-                  Level={normalizedLevel} | Stream={normalizedStream} | DisplayYear={year} | ApiYear={apiYear}
-                </div>
+            <div>
+              <h1 className="teachers-mgmt-title">Subject Teachers Management</h1>
+              <p className="teachers-mgmt-sub">{normalizedLevel} {normalizedStream} &middot; {year}{term ? ` &middot; ${term}` : ''}</p>
+            </div>
+          </header>
+
+          {teachersError && (
+            <div className="teachers-mgmt-error">
+              <i className="fas fa-exclamation-triangle"></i>
+              <strong>Error loading teachers:</strong> {teachersError.message || 'Failed to fetch teachers'}
+              <div className="teachers-mgmt-error-detail">
+                Level={normalizedLevel} | Stream={normalizedStream} | DisplayYear={year} | ApiYear={apiYear}
               </div>
-            )}
-            {subjectsLoading || teachersLoading ? (
-              <div className="loading-state">Loading...</div>
-            ) : subjects.length === 0 ? (
-              <div className="empty-state">
-                <i className="fas fa-book"></i>
-                <h3>No Subjects Found</h3>
-                <p>No subjects have been added for this class yet. Please add subjects first.</p>
-                <Link to="/admin/subjects" className="excel-btn primary">
-                  <i className="fas fa-plus"></i> Add Subjects
-                </Link>
-              </div>
-            ) : (
-              <>
-                {Object.keys(teachers).length === 0 && !teachersLoading && (
-                  <div className="info-state" style={{ padding: '15px', background: '#fff3cd', border: '1px solid #ffc107', borderRadius: '4px', marginBottom: '20px' }}>
-                    <i className="fas fa-info-circle" style={{ color: '#856404', marginRight: '10px' }}></i>
-                    <strong style={{ color: '#856404' }}>No teacher names saved yet</strong>
-                    <p style={{ margin: '10px 0 0 0', color: '#856404', fontSize: '14px' }}>
+            </div>
+          )}
+
+          {subjectsLoading || teachersLoading ? (
+            <div className="teachers-mgmt-loading">Loading...</div>
+          ) : subjects.length === 0 ? (
+            <div className="teachers-mgmt-empty">
+              <i className="fas fa-book"></i>
+              <h3>No Subjects Found</h3>
+              <p>No subjects have been added for this class yet. Please add subjects first.</p>
+              <Link to="/admin/subjects" className="teachers-btn teachers-btn-primary">
+                <i className="fas fa-plus"></i> Add Subjects
+              </Link>
+            </div>
+          ) : (
+            <>
+              {Object.keys(teachers).length === 0 && !teachersLoading && (
+                <div className="teachers-mgmt-info">
+                  <i className="fas fa-info-circle"></i>
+                  <div>
+                    <strong>No teacher names saved yet</strong>
+                    <p>
                       You have {subjects.length} subject{subjects.length !== 1 ? 's' : ''} for {normalizedLevel} {normalizedStream} {year}. 
-                      This screen does <strong>not</strong> load a list of staff from elsewhere — you enter each teacher&apos;s name yourself when you assign them to a subject.
-                      Click <i className="fas fa-edit"></i> on a row, type the name (and optional signature), then save. After at least one subject has a teacher, this notice disappears.
+                      Click <i className="fas fa-edit"></i> on a row, type the name (and optional signature), then save.
                     </p>
                   </div>
-                )}
-                <div className="subject-teachers-mgmt-table-container">
-                  <table className="subject-teachers-mgmt-table">
-                  <thead>
-                    <tr>
-                      <th>S/N</th>
-                      <th>Subject Name</th>
-                      <th>Subject Code</th>
-                      <th>Subject Abbreviation</th>
-                      <th>Year</th>
-                      <th>Teacher&apos;s Name</th>
-                      <th>Teacher Signature</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {subjects.map((subject, index) => {
-                      // Try both subject_code and abbreviation to find teacher
-                      const subjectCode = subject.subject_code || subject.subject_abbreviation;
-                      const subjectAbbr = subject.subject_abbreviation;
-                      // Check teacher by both code and abbreviation
-                      const teacher = teachers[subjectCode] || teachers[subjectAbbr] || 
-                                     (subjectCode && teachers[subjectCode]) ||
-                                     (subjectAbbr && teachers[subjectAbbr]);
-                      
-                      return (
-                        <tr key={`${subjectCode}-${subject.level}-${subject.stream}-${subject.year}`}>
-                          <td>{index + 1}</td>
-                          <td>{subject.subject_name}</td>
-                          <td>
-                            <span className="subject-code">{subject.subject_code}</span>
-                          </td>
-                          <td>
-                            <span className="subject-abbreviation">{subject.subject_abbreviation || '-'}</span>
-                          </td>
-                          <td>{subject.year}</td>
-                          <td>
-                            {teacher?.teacher_name ? (
-                              <span className="teacher-name">{teacher.teacher_name}</span>
-                            ) : (
-                              <span className="no-teacher">Not Assigned</span>
-                            )}
-                          </td>
-                          <td>
-                            {teacher?.teacher_signature ? (
-                              <span className="teacher-signature">{teacher.teacher_signature}</span>
-                            ) : (
-                              <span className="no-signature">No Signature</span>
-                            )}
-                          </td>
-                          <td>
-                            <div className="action-buttons">
-                              <button
-                                type="button"
-                                className="excel-btn small"
-                                onClick={() => openModal(subject)}
-                                aria-label="Edit teacher"
-                              >
-                                <i className="fas fa-edit"></i>
-                              </button>
-                              {teacher?.teacher_name && (
+                </div>
+              )}
+
+              <div className="teachers-mgmt-card">
+                <div className="teachers-mgmt-table-wrap">
+                  <table className="teachers-mgmt-table">
+                    <thead>
+                      <tr>
+                        <th>S/N</th>
+                        <th>Subject Name</th>
+                        <th>Code</th>
+                        <th>Abbr</th>
+                        <th>Year</th>
+                        <th>Teacher&apos;s Name</th>
+                        <th>Signature</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {subjects.map((subject, index) => {
+                        const subjectCode = subject.subject_code || subject.subject_abbreviation;
+                        const subjectAbbr = subject.subject_abbreviation;
+                        const teacher = teachers[subjectCode] || teachers[subjectAbbr] || 
+                                       (subjectCode && teachers[subjectCode]) ||
+                                       (subjectAbbr && teachers[subjectAbbr]);
+                        
+                        return (
+                          <tr key={`${subjectCode}-${subject.level}-${subject.stream}-${subject.year}`}>
+                            <td>{index + 1}</td>
+                            <td>{subject.subject_name}</td>
+                            <td><span className="teachers-tag">{subject.subject_code}</span></td>
+                            <td><span className="teachers-tag teachers-tag--muted">{subject.subject_abbreviation || '-'}</span></td>
+                            <td>{subject.year}</td>
+                            <td>
+                              {teacher?.teacher_name ? (
+                                <span className="teachers-teacher-name">{teacher.teacher_name}</span>
+                              ) : (
+                                <span className="teachers-no-teacher">Not Assigned</span>
+                              )}
+                            </td>
+                            <td>
+                              {teacher?.teacher_signature ? (
+                                <span className="teachers-sig">{teacher.teacher_signature}</span>
+                              ) : (
+                                <span className="teachers-no-teacher">—</span>
+                              )}
+                            </td>
+                            <td>
+                              <div className="teachers-actions">
                                 <button
                                   type="button"
-                                  className="excel-btn small danger"
-                                  onClick={() => handleDelete(subject)}
-                                  aria-label="Delete teacher"
+                                  className="teachers-btn teachers-btn-edit"
+                                  onClick={() => openModal(subject)}
+                                  aria-label="Edit teacher"
                                 >
-                                  <i className="fas fa-trash"></i>
+                                  <i className="fas fa-edit"></i>
                                 </button>
-                              )}
-                            </div>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+                                {teacher?.teacher_name && (
+                                  <button
+                                    type="button"
+                                    className="teachers-btn teachers-btn-danger"
+                                    onClick={() => handleDelete(subject)}
+                                    aria-label="Delete teacher"
+                                  >
+                                    <i className="fas fa-trash"></i>
+                                  </button>
+                                )}
+                              </div>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
-              </>
-            )}
-          </div>
-        </div>
+            </>
+          )}
 
-        {/* Back Button */}
-        <Link to={getBackPath()} className="subject-teachers-mgmt-back-btn">
-          <i className="fas fa-arrow-left"></i>
-          <span>Back</span>
-        </Link>
+          <Link to={getBackPath()} className="teachers-mgmt-back-bottom">
+            <i className="fas fa-arrow-left"></i>
+            <span>Back</span>
+          </Link>
+        </div>
 
         {/* Add/Edit Teacher Modal */}
         {showModal && editingSubject && (
-          <div className="subject-teachers-mgmt-modal-overlay" onClick={closeModal}>
-            <div className="subject-teachers-mgmt-modal-content" onClick={(e) => e.stopPropagation()}>
-              <div className="subject-teachers-mgmt-modal-header">
+          <div className="teachers-modal-overlay" onClick={closeModal}>
+            <div className="teachers-modal" onClick={(e) => e.stopPropagation()}>
+              <div className="teachers-modal-header">
                 <h3>Assign Teacher</h3>
-                <button className="subject-teachers-mgmt-modal-close" onClick={closeModal}>&times;</button>
+                <button className="teachers-modal-close" onClick={closeModal}>&times;</button>
               </div>
-              <form onSubmit={handleSubmit} className="subject-teachers-mgmt-modal-body">
-                <div className="subject-teachers-mgmt-form-group">
+              <form onSubmit={handleSubmit} className="teachers-modal-body">
+                <div className="teachers-field">
                   <label htmlFor="subject_name">Subject</label>
                   <input
                     type="text"
                     id="subject_name"
                     value={editingSubject.subject_name}
                     readOnly
-                    className="form-control"
+                    className="teachers-input"
                   />
                 </div>
                 
-                <div className="subject-teachers-mgmt-form-group">
-                  <label htmlFor="teacher_name">Teacher&apos;s Name <span className="req">*</span></label>
+                <div className="teachers-field">
+                  <label htmlFor="teacher_name">Teacher&apos;s Name <span className="teachers-required">*</span></label>
                   <input
                     type="text"
                     id="teacher_name"
@@ -352,11 +351,11 @@ const TeachersManagement = ({ formLevel, stream: streamProp }) => {
                     onChange={(e) => setFormData({ ...formData, teacher_name: e.target.value })}
                     placeholder="Enter teacher's full name"
                     required
-                    className="form-control"
+                    className="teachers-input"
                   />
                 </div>
                 
-                <div className="subject-teachers-mgmt-form-group">
+                <div className="teachers-field">
                   <label htmlFor="teacher_signature">Teacher Signature</label>
                   <input
                     type="text"
@@ -364,15 +363,15 @@ const TeachersManagement = ({ formLevel, stream: streamProp }) => {
                     value={formData.teacher_signature}
                     onChange={(e) => setFormData({ ...formData, teacher_signature: e.target.value })}
                     placeholder="Enter teacher's signature"
-                    className="form-control"
+                    className="teachers-input"
                   />
                 </div>
                 
-                <div className="subject-teachers-mgmt-modal-footer">
-                  <button type="button" className="btn-secondary" onClick={closeModal}>
+                <div className="teachers-modal-footer">
+                  <button type="button" className="teachers-btn teachers-btn-secondary" onClick={closeModal}>
                     Cancel
                   </button>
-                  <button type="submit" className="btn-primary" disabled={saveMutation.isLoading}>
+                  <button type="submit" className="teachers-btn teachers-btn-primary" disabled={saveMutation.isLoading}>
                     {saveMutation.isLoading ? 'Saving...' : 'Save Teacher'}
                   </button>
                 </div>

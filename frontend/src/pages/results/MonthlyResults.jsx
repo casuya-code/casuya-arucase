@@ -1,6 +1,5 @@
 /**
  * Monthly Results Landing Page
- * Copied from arucase456copy Flask template
  */
 import { Link } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
@@ -8,41 +7,42 @@ import './MonthlyResults.css';
 
 const MonthlyResults = () => {
   const forms = [
-    { id: 'FORM I', label: 'FORM I', path: '/admin/results/monthly/form-i/years' },
-    { id: 'FORM II', label: 'FORM II', path: '/admin/results/monthly/form-ii/years' },
-    { id: 'FORM III', label: 'FORM III', path: '/admin/results/monthly/form-iii/years' },
-    { id: 'FORM IV', label: 'FORM IV', path: '/admin/results/monthly/form-iv/years' },
-    { id: 'FORM V', label: 'FORM V', path: '/admin/results/monthly/form-v/streams' },
-    { id: 'FORM VI', label: 'FORM VI', path: '/admin/results/monthly/form-vi/streams' },
-    {
-      id: 'FORM V COMBINED',
-      label: 'FORM V COMBINED',
-      path: '/admin/results/monthly/form-v/streams?combined=1',
-    },
-    {
-      id: 'FORM VI COMBINED',
-      label: 'FORM VI COMBINED',
-      path: '/admin/results/monthly/form-vi/streams?combined=1',
-    },
+    { id: 'FORM I', label: 'Form I', path: '/admin/results/monthly/form-i/years', accent: '#3b82f6' },
+    { id: 'FORM II', label: 'Form II', path: '/admin/results/monthly/form-ii/years', accent: '#10b981' },
+    { id: 'FORM III', label: 'Form III', path: '/admin/results/monthly/form-iii/years', accent: '#8b5cf6' },
+    { id: 'FORM IV', label: 'Form IV', path: '/admin/results/monthly/form-iv/years', accent: '#f59e0b' },
+    { id: 'FORM V', label: 'Form V', path: '/admin/results/monthly/form-v/streams', accent: '#ef4444' },
+    { id: 'FORM VI', label: 'Form VI', path: '/admin/results/monthly/form-vi/streams', accent: '#06b6d4' },
+    { id: 'FORM V COMBINED', label: 'Form V Combined', path: '/admin/results/monthly/form-v/streams?combined=1', accent: '#ec4899' },
+    { id: 'FORM VI COMBINED', label: 'Form VI Combined', path: '/admin/results/monthly/form-vi/streams?combined=1', accent: '#14b8a6' },
   ];
 
   return (
     <AdminLayout>
-      <div className="monthly-results">
-        <div className="excel-card mb-30">
-          <div className="excel-card-header monthly-results-header">
-            <i className="fas fa-chart-line"></i> Classes
-          </div>
-          <div className="excel-card-body">
-            <div className="stats-grid">
-              {forms.map((form) => (
-                <Link key={form.id} to={form.path} className="stat-card">
-                  <i className="fas fa-check-circle monthly-results-hover-tick"></i>
-                  <div className="stat-number">{form.label}</div>
-                  <div className="stat-label">Monthly Results</div>
-                </Link>
-              ))}
+      <div className="monthly-page">
+        <div className="monthly-shell">
+          <header className="monthly-top">
+            <div>
+              <h1 className="monthly-top-title">Monthly Results</h1>
+              <p className="monthly-top-sub">Select a form to view or manage monthly test results</p>
             </div>
+          </header>
+
+          <div className="monthly-grid">
+            {forms.map((form) => (
+              <Link
+                key={form.id}
+                to={form.path}
+                className="monthly-form-card"
+                style={{ '--accent': form.accent }}
+              >
+                <span className="monthly-form-icon">
+                  <i className="fas fa-clipboard-list" />
+                </span>
+                <span className="monthly-form-label">{form.label}</span>
+                <span className="monthly-form-desc">Monthly Results</span>
+              </Link>
+            ))}
           </div>
         </div>
       </div>
