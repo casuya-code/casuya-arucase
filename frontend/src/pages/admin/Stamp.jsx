@@ -2,6 +2,7 @@
  * School Stamp Management Page
  */
 import { useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '../../utils/toast';
 import AdminLayout from '../../components/layout/AdminLayout';
@@ -90,25 +91,41 @@ const Stamp = () => {
 
   return (
     <AdminLayout>
-      <div className="stamp-admin-page">
-        <div className="excel-card stamp-root-card">
-          <div className="excel-card-header">
-            <i className="fas fa-stamp" aria-hidden="true"></i>
-            School Stamp Management
+      <div className="stamp-page">
+        <div className="stamp-shell">
+          <div className="breadcrumb">
+            <Link to="/admin/school-branding">School Branding</Link>
+            <span style={{ color: '#bbb' }}>&rsaquo;</span>
+            <span className="breadcrumb-current">Stamp</span>
           </div>
-          <div className="excel-card-body">
-            {authLoading || isLoading ? (
-              <div className="loading-state">Loading...</div>
-            ) : stampError ? (
-              <div className="error-state">
-                <i className="fas fa-exclamation-triangle error-icon" aria-hidden="true"></i>
-                <h3>Error Loading Stamp</h3>
-                <p>{stampError.message || 'Failed to load stamp information'}</p>
-              </div>
-            ) : (
-              <>
-                <div className="current-logo-section">
-                  <h3>Current Stamp</h3>
+
+          <header className="stamp-top">
+            <div>
+              <h1 className="stamp-top-title">
+                <i className="fas fa-stamp stamp-top-icon" aria-hidden></i>
+                School Stamp
+              </h1>
+              <p className="stamp-top-sub">Upload and manage the official stamp used on student reports</p>
+            </div>
+          </header>
+
+          {authLoading || isLoading ? (
+            <div className="stamp-loading">
+              <i className="fas fa-spinner fa-spin"></i> Loading stamp…
+            </div>
+          ) : stampError ? (
+            <div className="error-state">
+              <i className="fas fa-exclamation-triangle error-icon" aria-hidden="true"></i>
+              <h3>Error Loading Stamp</h3>
+              <p>{stampError.message || 'Failed to load stamp information'}</p>
+            </div>
+          ) : (
+            <>
+              <div className="excel-card" style={{ '--accent': '#8b5cf6' }}>
+                <div className="excel-card-header">
+                  <i className="fas fa-stamp" aria-hidden="true"></i> Current Stamp
+                </div>
+                <div className="excel-card-body">
                   {getStampUrl() && stampData?.stamp_image_path ? (
                     <div className="logo-preview">
                       <img
@@ -139,9 +156,13 @@ const Stamp = () => {
                     </div>
                   )}
                 </div>
+              </div>
 
-                <div className="upload-section">
-                  <h3>Upload New Stamp</h3>
+              <div className="excel-card" style={{ '--accent': '#10b981' }}>
+                <div className="excel-card-header">
+                  <i className="fas fa-cloud-upload-alt" aria-hidden="true"></i> Upload New Stamp
+                </div>
+                <div className="excel-card-body">
                   <div
                     className={`upload-area ${dragActive ? 'drag-active' : ''}`}
                     onDrop={handleDrop}
@@ -173,13 +194,13 @@ const Stamp = () => {
 
                   {uploadMutation.isPending && (
                     <div className="upload-progress">
-                      <i className="fas fa-spinner fa-spin" aria-hidden="true"></i> Uploading...
+                      <i className="fas fa-spinner fa-spin" aria-hidden="true"></i> Uploading…
                     </div>
                   )}
                 </div>
-              </>
-            )}
-          </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </AdminLayout>
