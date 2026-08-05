@@ -1,32 +1,111 @@
-/**
- * News & Announcements Styles - Modern Responsive Design
- * Large, Readable Content on Small Screens
- */
-.news-page-container {
-  padding: clamp(1.5rem, 4vw, 2.5rem);
-  font-size: clamp(18px, 4vw, 20px);
-  line-height: 1.75;
+/* ===========================================
+   NEWS & ANNOUNCEMENTS — Clean Modern Design
+   =========================================== */
+
+/* --- Page Shell --- */
+.news-page {
+  background: #f5f5f0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.loading-state {
-  text-align: center;
-  padding: 3rem;
+.news-shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2rem) clamp(0.75rem, 2.5vw, 1.5rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* --- Top Header --- */
+.news-top {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e0ddd5;
+}
+
+.news-top-title {
+  margin: 0;
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-weight: 800;
+  color: #1a1a1a;
+  letter-spacing: -0.02em;
+}
+
+.news-top-sub {
+  margin: 0.25rem 0 0 0;
+  font-size: 0.85rem;
+  color: #6b6b60;
+}
+
+.news-top-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+/* --- Loading --- */
+.news-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
   color: #6b7280;
+  background: #fff;
+  border: 1px solid #e8e8e0;
+  border-radius: 12px;
+  padding: 2.5rem;
+  font-size: 0.9rem;
 }
 
-.add-announcement-form {
-  background: #f9fafb;
-  padding: 1.5rem;
-  border-radius: 0;
-  margin-bottom: 2rem;
-  border: 1px solid #e5e7eb;
+/* --- Card --- */
+.excel-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e8e8e0;
+  box-shadow: none;
+  overflow: hidden;
 }
 
-.add-announcement-form h3 {
-  margin: 0 0 1rem 0;
-  color: #111827;
+.excel-card-header {
+  background: #fff;
+  color: #1a1a1a;
+  border-bottom: 1px solid #f0f0ea;
+  padding: 0.85rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
+.excel-card-header i {
+  color: var(--accent, #10b981);
+  font-size: 0.85rem;
+}
+
+.excel-card-count {
+  margin-left: auto;
+  background: #f0f0ea;
+  color: #6b6b60;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+}
+
+.excel-card-body {
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+  background: #fff;
+}
+
+/* --- Form --- */
 .form-row {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -39,120 +118,72 @@
   flex-direction: column;
 }
 
+.form-group--wide {
+  grid-column: span 2;
+}
+
 .form-group label {
-  margin-bottom: clamp(0.5rem, 2vw, 0.75rem);
+  margin-bottom: 0.4rem;
   font-weight: 600;
   color: #374151;
-  font-size: clamp(1rem, 3vw, 1.125rem);
-  line-height: 1.5;
+  font-size: 0.8rem;
+  line-height: 1.4;
 }
 
 .excel-input {
-  padding: clamp(1rem, 3.5vw, 1.25rem);
-  border: 2px solid #d1d5db;
-  border-radius: 0;
-  font-size: clamp(1rem, 4vw, 1.125rem);
+  padding: 0.65rem 0.85rem;
+  border: 1px solid #e0ddd5;
+  border-radius: 10px;
+  background: #fafaf6;
+  font-size: 0.9rem;
   font-family: inherit;
-  line-height: 1.6;
-  min-height: 52px;
-  transition: all 0.2s;
+  line-height: 1.5;
+  color: #1a1a1a;
+  transition: all 0.15s ease;
 }
 
 .excel-input:focus {
   outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  border-color: var(--accent, #10b981);
+  background: #fff;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+textarea.excel-input {
+  resize: vertical;
+  min-height: 90px;
 }
 
 .form-actions {
   display: flex;
-  gap: 1rem;
-  margin-top: 1rem;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1.25rem;
 }
 
-.announcements-table-container {
-  overflow-x: auto;
-}
-
-.excel-table {
-  width: 100%;
-  border-collapse: collapse;
-  background: white;
-}
-
-.excel-table th {
-  background: #f3f4f6;
-  padding: clamp(1rem, 3vw, 1.25rem);
-  text-align: left;
-  font-weight: 600;
-  color: #374151;
-  border-bottom: 2px solid #e5e7eb;
-  font-size: clamp(1rem, 3vw, 1.125rem);
-  line-height: 1.5;
-}
-
-.excel-table td {
-  padding: clamp(1rem, 3vw, 1.25rem);
-  border-bottom: 1px solid #e5e7eb;
-  font-size: clamp(1rem, 3vw, 1.125rem);
-  line-height: 1.6;
-}
-
-.excel-table tbody tr:hover {
-  background: #f9fafb;
-}
-
-.news-content {
-  max-width: 400px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-.priority-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 0;
-  font-size: 0.875rem;
-  font-weight: 500;
-  display: inline-block;
-}
-
-.priority-high {
-  background: #fee2e2;
-  color: #991b1b;
-}
-
-.priority-normal {
-  background: #dbeafe;
-  color: #1e40af;
-}
-
-.priority-low {
-  background: #f3f4f6;
-  color: #374151;
-}
-
-.empty-table-message {
-  text-align: center;
-  padding: 2rem;
-  color: #6b7280;
-}
-
+/* --- Buttons --- */
 .excel-btn {
-  padding: clamp(1rem, 3.5vw, 1.25rem) clamp(1.5rem, 5vw, 2rem);
-  border: none;
-  border-radius: 0;
-  cursor: pointer;
-  font-size: clamp(1rem, 4vw, 1.125rem);
-  font-weight: 600;
-  transition: all 0.2s;
   display: inline-flex;
   align-items: center;
-  gap: clamp(0.5rem, 2vw, 0.75rem);
+  justify-content: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.15rem;
+  border: 1px solid transparent;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  font-weight: 600;
+  font-family: inherit;
+  transition: all 0.15s ease;
   text-decoration: none;
-  color: white;
-  min-height: 52px;
-  line-height: 1.5;
+  color: #fff;
+  background: #10b981;
+}
+
+.excel-btn:hover:not(:disabled) {
+  filter: brightness(0.96);
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.25);
+  transform: translateY(-1px);
 }
 
 .excel-btn:disabled {
@@ -161,11 +192,12 @@
 }
 
 .excel-btn.primary {
-  background: #3b82f6;
+  background: var(--accent, #10b981);
 }
 
 .excel-btn.primary:hover:not(:disabled) {
-  background: #2563eb;
+  background: var(--accent, #10b981);
+  box-shadow: 0 2px 10px rgba(16, 185, 129, 0.25);
 }
 
 .excel-btn.secondary {
@@ -174,6 +206,7 @@
 
 .excel-btn.secondary:hover {
   background: #4b5563;
+  box-shadow: 0 2px 10px rgba(107, 114, 128, 0.25);
 }
 
 .excel-btn.danger {
@@ -182,22 +215,129 @@
 
 .excel-btn.danger:hover {
   background: #dc2626;
+  box-shadow: 0 2px 10px rgba(239, 68, 68, 0.25);
 }
 
 .excel-btn.small {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
+  padding: 0.4rem 0.8rem;
+  font-size: 0.75rem;
+  border-radius: 8px;
 }
 
-.header-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-left: auto;
+/* --- Table --- */
+.announcements-table-container {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid #e8e8e0;
+  border-radius: 10px;
 }
 
-@media (max-width: 768px) {
+.excel-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.excel-table th,
+.excel-table td {
+  padding: 0.6rem 0.85rem;
+  text-align: left;
+  border-bottom: 1px solid #f5f5f0;
+}
+
+.excel-table th {
+  background: #fafaf6;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.7rem;
+  color: #888;
+  white-space: nowrap;
+}
+
+.excel-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.excel-table tbody tr:nth-child(even) {
+  background: #fafaf8;
+}
+
+.excel-table tbody tr:hover {
+  background: #f5f5ee;
+}
+
+.news-id {
+  font-family: monospace;
+  font-size: 0.8rem;
+  color: #888;
+}
+
+.news-content {
+  max-width: 320px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #555;
+  font-size: 0.85rem;
+}
+
+.news-date {
+  color: #555;
+  font-size: 0.85rem;
+  white-space: nowrap;
+}
+
+.priority-badge {
+  display: inline-block;
+  padding: 0.2rem 0.7rem;
+  border-radius: 999px;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+}
+
+.priority-high {
+  background: #fef2f2;
+  color: #b91c1c;
+  border: 1px solid #fecaca;
+}
+
+.priority-normal {
+  background: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+.priority-low {
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+}
+
+.empty-table-message {
+  text-align: center;
+  padding: 2rem;
+  color: #6b7280;
+}
+
+/* --- Responsive --- */
+@media (max-width: 640px) {
   .form-row {
     grid-template-columns: 1fr;
+  }
+
+  .form-group--wide {
+    grid-column: span 1;
+  }
+
+  .news-top {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .news-top-actions .excel-btn {
+    width: 100%;
   }
 
   .announcements-table-container {
@@ -205,7 +345,6 @@
   }
 
   .excel-table {
-    min-width: 800px;
+    min-width: 720px;
   }
 }
-

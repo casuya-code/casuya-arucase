@@ -96,39 +96,54 @@ const News = () => {
     return 'priority-normal';
   }, []);
 
+  const priorityLabel = useCallback((priority) => {
+    const p = priority?.toLowerCase() || 'normal';
+    if (p === 'high') return 'High';
+    if (p === 'low') return 'Low';
+    return 'Normal';
+  }, []);
+
   return (
     <AdminLayout>
-      <div className="news-page-container">
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-newspaper"></i>
-            Latest News and Announcements
-            <div className="header-actions">
+      <div className="news-page">
+        <div className="news-shell">
+          <header className="news-top">
+            <div>
+              <h1 className="news-top-title">News &amp; Announcements</h1>
+              <p className="news-top-sub">Publish and manage announcements shown on the website</p>
+            </div>
+            <div className="news-top-actions">
               <button
                 onClick={() => setShowAddForm(!showAddForm)}
-                className="excel-btn primary small"
+                className="excel-btn primary"
               >
                 <i className="fas fa-plus"></i> {showAddForm ? 'Cancel' : 'Add New'}
               </button>
             </div>
-          </div>
-          <div className="excel-card-body">
-            {isLoading ? (
-              <div className="loading-state">Loading...</div>
-            ) : (
-              <>
-                {showAddForm && (
-                  <div className="add-announcement-form">
-                    <h3>Add New Announcement</h3>
+          </header>
+
+          {isLoading ? (
+            <div className="news-loading">
+              <i className="fas fa-spinner fa-spin"></i> Loading announcements…
+            </div>
+          ) : (
+            <>
+              {showAddForm && (
+                <div className="excel-card" style={{ '--accent': '#3b82f6' }}>
+                  <div className="excel-card-header">
+                    <i className="fas fa-bullhorn"></i> Add New Announcement
+                  </div>
+                  <div className="excel-card-body">
                     <form onSubmit={handleSubmit}>
                       <div className="form-row">
-                        <div className="form-group">
+                        <div className="form-group form-group--wide">
                           <label>Title *</label>
                           <input
                             type="text"
                             value={formData.title}
                             onChange={(e) => setFormData({ ...formData, title: e.target.value })}
                             className="excel-input"
+                            placeholder="e.g. Mid-term examinations schedule"
                             required
                           />
                         </div>
@@ -168,7 +183,7 @@ const News = () => {
                       </div>
                       <div className="form-actions">
                         <button type="submit" className="excel-btn primary" disabled={saveMutation.isLoading}>
-                          <i className="fas fa-save"></i> {saveMutation.isLoading ? 'Publishing...' : 'Publish Announcement'}
+                          <i className="fas fa-save"></i> {saveMutation.isLoading ? 'Publishing…' : 'Publish Announcement'}
                         </button>
                         <button type="button" onClick={() => setShowAddForm(false)} className="excel-btn secondary">
                           Cancel
@@ -176,56 +191,64 @@ const News = () => {
                       </div>
                     </form>
                   </div>
-                )}
+                </div>
+              )}
 
-                <div className="announcements-table-container">
-                  <table className="excel-table">
-                    <thead>
-                      <tr>
-                        <th>ID</th>
-                        <th>Title</th>
-                        <th>Content</th>
-                        <th>Date</th>
-                        <th>Priority</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {announcements.length === 0 ? (
+              <div className="excel-card">
+                <div className="excel-card-header">
+                  <i className="fas fa-newspaper"></i> Latest News and Announcements
+                  <span className="excel-card-count">{announcements.length}</span>
+                </div>
+                <div className="excel-card-body">
+                  <div className="announcements-table-container">
+                    <table className="excel-table">
+                      <thead>
                         <tr>
-                          <td colSpan="6" className="empty-table-message">
-                            No announcements yet. Add your first announcement above.
-                          </td>
+                          <th>ID</th>
+                          <th>Title</th>
+                          <th>Content</th>
+                          <th>Date</th>
+                          <th>Priority</th>
+                          <th>Actions</th>
                         </tr>
-                      ) : (
-                        announcements.map((item) => (
-                          <tr key={item.id}>
-                            <td>{item.id}</td>
-                            <td><strong>{item.title}</strong></td>
-                            <td className="news-content">{item.content}</td>
-                            <td>{item.date}</td>
-                            <td>
-                              <span className={`priority-badge ${getPriorityClass(item.priority)}`}>
-                                {item.priority || 'Normal'}
-                              </span>
-                            </td>
-                            <td>
-                              <button
-                                onClick={() => handleDelete(item.id)}
-                                className="excel-btn danger small"
-                              >
-                                <i className="fas fa-trash"></i> Delete
-                              </button>
+                      </thead>
+                      <tbody>
+                        {announcements.length === 0 ? (
+                          <tr>
+                            <td colSpan="6" className="empty-table-message">
+                              No announcements yet. Add your first announcement.
                             </td>
                           </tr>
-                        ))
-                      )}
-                    </tbody>
-                  </table>
+                        ) : (
+                          announcements.map((item) => (
+                            <tr key={item.id}>
+                              <td className="news-id">{item.id}</td>
+                              <td><strong>{item.title}</strong></td>
+                              <td className="news-content">{item.content}</td>
+                              <td className="news-date">{item.date}</td>
+                              <td>
+                                <span className={`priority-badge ${getPriorityClass(item.priority)}`}>
+                                  {priorityLabel(item.priority)}
+                                </span>
+                              </td>
+                              <td>
+                                <button
+                                  onClick={() => handleDelete(item.id)}
+                                  className="excel-btn danger small"
+                                >
+                                  <i className="fas fa-trash"></i> Delete
+                                </button>
+                              </td>
+                            </tr>
+                          ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
                 </div>
-              </>
-            )}
-          </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </AdminLayout>
@@ -233,4 +256,3 @@ const News = () => {
 };
 
 export default News;
-
