@@ -1,295 +1,256 @@
-/**
- * Promotion Pages Styles - Modern Responsive Design
- * Large, Readable Content on Small Screens
- */
-.promotion-page-container {
-  padding: clamp(1.5rem, 4vw, 2.5rem);
-  font-size: 1rem;
-  line-height: 1.5;
-  color: #000000;
+/* ===========================================
+   STUDENT PROMOTION DASHBOARD — Clean Modern Design
+   =========================================== */
+
+/* --- Page Shell --- */
+.promotion-page {
+  background: #f5f5f0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  box-sizing: border-box;
+  font-family: 'Source Sans 3', system-ui, sans-serif;
+  -webkit-font-smoothing: antialiased;
 }
 
-/* Main shell — pure white, black typography */
-.promotion-page-container .excel-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
+.promotion-shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2rem) clamp(0.75rem, 2.5vw, 1.5rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-.promotion-page-container .excel-card-header {
-  background: #ffffff;
-  color: #000000;
-  font-size: 1rem;
-  font-weight: 600;
+/* --- Top Header --- */
+.promotion-top {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e0ddd5;
 }
 
-.promotion-page-container .excel-card-header i {
-  color: #000000;
+.promotion-top-title {
+  margin: 0;
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-weight: 800;
+  color: #1a1a1a;
+  letter-spacing: -0.02em;
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
 }
 
-.promotion-page-container .excel-card-body {
-  background: #ffffff;
-  color: #000000;
-  font-size: 1rem;
+.promotion-top-icon {
+  color: var(--accent, #8b5cf6);
+  font-size: 1.1rem;
 }
 
-.loading-state {
-  text-align: center;
-  padding: 3rem;
-  color: #000000;
-  font-size: 1rem;
+.promotion-top-sub {
+  margin: 0.25rem 0 0;
+  font-size: 0.85rem;
+  color: #6b6b60;
 }
 
-.no-data {
-  text-align: center;
-  padding: 3rem;
-  color: #000000;
-  font-size: 1rem;
-  font-style: italic;
+.promotion-top-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
+/* --- Loading --- */
+.promotion-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #6b7280;
+  padding: 2.5rem 1rem;
+  font-size: 0.9rem;
+}
+
+/* --- Cards --- */
+.excel-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e8e8e0;
+  box-shadow: none;
+  overflow: hidden;
+}
+
+.excel-card-header {
+  background: #fff;
+  color: #1a1a1a;
+  border-bottom: 1px solid #f0f0ea;
+  padding: 0.85rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.excel-card-header i {
+  color: var(--accent, #8b5cf6);
+  font-size: 0.85rem;
+}
+
+.excel-card-count {
+  margin-left: auto;
+  background: #f5f5f0;
+  color: #6b6b60;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 0.15rem 0.6rem;
+  border-radius: 999px;
+}
+
+.excel-card-body {
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+  background: #fff;
+}
+
+/* --- Stat cards --- */
 .promotion-stats {
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1.5rem;
-  margin-bottom: 2rem;
+  gap: 1rem;
 }
 
 .stat-card {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  padding: 1.5rem;
-  background: #ffffff;
-  border-radius: 0;
-  border: 1px solid #e5e7eb;
+  gap: 0.9rem;
+  padding: 1.1rem 1.25rem;
+  background: #fff;
+  border: 1px solid #e8e8e0;
+  border-radius: 12px;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
 .stat-icon {
-  font-size: 1.5rem;
-  color: #000000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.75rem;
+  height: 2.75rem;
+  flex-shrink: 0;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent, #8b5cf6) 12%, #fff);
+  color: var(--accent, #8b5cf6);
+  font-size: 1.1rem;
 }
 
 .stat-content h3 {
   margin: 0;
-  font-size: 1.25rem;
-  font-weight: 700;
-  color: #000000;
-  line-height: 1.2;
+  font-size: 1.4rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  line-height: 1.1;
+  letter-spacing: -0.02em;
 }
 
 .stat-content p {
-  margin: 0.35rem 0 0 0;
-  color: #000000;
-  font-size: 1rem;
-  font-weight: 400;
-  line-height: 1.5;
+  margin: 0.2rem 0 0;
+  color: #6b6b60;
+  font-size: 0.8rem;
+  font-weight: 500;
 }
 
+/* --- Table --- */
 .sessions-table-container {
-  margin-top: 2rem;
-}
-
-.sessions-table-container h3 {
-  margin: 0 0 1rem 0;
-  color: #000000;
-  font-size: 1.125rem;
-  font-weight: 600;
-  line-height: 1.35;
-}
-
-.empty-state {
-  text-align: center;
-  padding: 4rem 2rem;
-}
-
-.empty-icon {
-  font-size: 2.5rem;
-  color: #000000;
-  margin-bottom: 1rem;
-  display: block;
-}
-
-.empty-state p {
-  margin: 0 0 2rem 0;
-  color: #000000;
-  font-size: 1rem;
+  overflow-x: auto;
 }
 
 .excel-table {
   width: 100%;
   border-collapse: collapse;
-  background: #ffffff;
+  background: #fff;
+  font-size: 0.85rem;
 }
 
 .excel-table th {
-  background: #ffffff;
-  padding: 0.75rem 1rem;
+  background: #fafaf6;
+  padding: 0.7rem 0.9rem;
   text-align: left;
-  font-weight: 600;
-  color: #000000;
-  border-bottom: 2px solid #e5e7eb;
-  font-size: 1rem;
-  line-height: 1.5;
+  font-weight: 700;
+  color: #6b6b60;
+  font-size: 0.72rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  border-bottom: 1px solid #e8e8e0;
+  white-space: nowrap;
 }
 
 .excel-table td {
-  padding: 0.75rem 1rem;
-  border-bottom: 1px solid #e5e7eb;
-  font-size: 1rem;
-  line-height: 1.5;
-  color: #000000;
+  padding: 0.7rem 0.9rem;
+  border-bottom: 1px solid #f0f0ea;
+  color: #1a1a1a;
+  white-space: nowrap;
+}
+
+.excel-table tbody tr:last-child td {
+  border-bottom: none;
 }
 
 .excel-table tbody tr:hover {
-  background: #ffffff;
+  background: #fafaf6;
 }
 
 .success-text {
-  color: #000000;
-  font-weight: 400;
+  color: #059669;
+  font-weight: 700;
 }
 
 .warning-text {
-  color: #000000;
-  font-weight: 400;
+  color: #d97706;
+  font-weight: 700;
 }
 
-.warning-banner {
-  display: flex;
-  align-items: center;
-  gap: 0.75rem;
-  padding: 1rem;
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-left: 4px solid #000000;
-  border-radius: 0;
-  margin-bottom: 1.5rem;
-  color: #000000;
-  font-size: 1rem;
+/* --- Empty state --- */
+.empty-state {
+  text-align: center;
+  padding: 3rem 1.5rem;
 }
 
-.warning-banner i {
-  color: #000000;
-}
-
-.stream-selection {
-  margin-bottom: 2rem;
-  padding: 1rem;
-  background: #ffffff;
-  border-radius: 0;
-  border: 1px solid #e5e7eb;
-}
-
-.stream-selection label {
+.empty-icon {
+  font-size: 2rem;
+  color: #b9b6ab;
+  margin-bottom: 0.75rem;
   display: block;
-  margin-bottom: 0.5rem;
-  font-weight: 600;
-  color: #000000;
-  font-size: 1rem;
 }
 
-.excluded-row {
-  background: #ffffff;
-  opacity: 1;
-  color: #000000;
+.empty-state p {
+  margin: 0 0 1.5rem;
+  color: #6b6b60;
+  font-size: 0.9rem;
 }
 
-.excluded-row td {
-  color: #000000;
-}
-
-.badge-active {
-  background: #ffffff;
-  color: #000000;
-  border: 1px solid #000000;
-}
-
-.badge-inactive {
-  background: #ffffff;
-  color: #000000;
-  border: 1px solid #000000;
-}
-
-.promotion-info {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 2rem;
-}
-
-.info-card {
-  padding: 1rem;
-  background: #ffffff;
-  border-radius: 0;
-  border: 1px solid #e5e7eb;
-}
-
-.info-card h4 {
-  margin: 0 0 0.5rem 0;
-  color: #000000;
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.5;
-}
-
-.info-card p {
-  margin: 0;
-  color: #000000;
-  font-size: 1rem;
-  font-weight: 600;
-  line-height: 1.4;
-}
-
-.students-list-section {
-  margin-bottom: 2rem;
-}
-
-.students-list-section h3 {
-  margin: 0 0 0.5rem 0;
-  color: #000000;
-  font-size: 1.125rem;
-  font-weight: 600;
-}
-
-.section-hint {
-  margin: 0 0 1rem 0;
-  color: #000000;
-  font-size: 1rem;
-}
-
-.students-table-container {
-  overflow-x: auto;
-}
-
-.status-badge {
-  padding: 0.25rem 0.75rem;
-  border-radius: 0;
-  font-size: 0.875rem;
-  font-weight: 500;
-  display: inline-block;
-}
-
-.promotion-actions {
-  display: flex;
-  justify-content: center;
-  margin-top: 2rem;
-}
-
+/* --- Buttons --- */
 .excel-btn {
-  padding: 0.65rem 1.25rem;
+  padding: 0.6rem 1.1rem;
   border: none;
-  border-radius: 0;
+  border-radius: 8px;
   cursor: pointer;
-  font-size: 1rem;
-  font-weight: 600;
-  transition: all 0.2s;
+  font-size: 0.85rem;
+  font-weight: 700;
+  transition: all 0.15s ease;
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
+  justify-content: center;
+  gap: 0.45rem;
   text-decoration: none;
-  color: #ffffff;
-  min-height: 44px;
-  line-height: 1.5;
+  line-height: 1.4;
+  min-height: 40px;
+  box-sizing: border-box;
 }
 
 .excel-btn:disabled {
@@ -298,110 +259,44 @@
 }
 
 .excel-btn.primary {
-  background: #3b82f6;
+  background: #1a1a1a;
+  color: #fff;
 }
 
 .excel-btn.primary:hover:not(:disabled) {
-  background: #2563eb;
+  background: #000;
+  transform: translateY(-1px);
 }
 
 .excel-btn.secondary {
-  background: #6b7280;
+  background: #f5f5f0;
+  color: #1a1a1a;
+  border: 1px solid #e0ddd5;
 }
 
 .excel-btn.secondary:hover {
-  background: #4b5563;
+  background: #ecece4;
+}
+
+.excel-btn.danger {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+.excel-btn.danger:hover:not(:disabled) {
+  background: #fee2e2;
 }
 
 .excel-btn.small {
-  padding: 0.5rem 1rem;
-  font-size: 0.875rem;
+  padding: 0.45rem 0.85rem;
+  font-size: 0.8rem;
+  min-height: 34px;
 }
 
-.excel-btn.large {
-  padding: 1rem 2rem;
-  font-size: 1.125rem;
-}
-
-.excel-input {
-  padding: 0.65rem 1rem;
-  border: 2px solid #d1d5db;
-  border-radius: 0;
-  font-size: 1rem;
-  font-family: inherit;
-  width: 100%;
-  line-height: 1.5;
-  min-height: 44px;
-  color: #000000;
-  background: #ffffff;
-  transition: all 0.2s;
-}
-
-.excel-input:focus {
-  outline: none;
-  border-color: #3b82f6;
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
-}
-
-.header-actions {
-  display: flex;
-  gap: 0.5rem;
-  margin-left: auto;
-}
-
-@media (max-width: 768px) {
-  .promotion-stats,
-  .promotion-info {
+/* --- Mobile --- */
+@media (max-width: 640px) {
+  .promotion-stats {
     grid-template-columns: 1fr;
   }
-
-  .students-table-container {
-    overflow-x: scroll;
-  }
-
-  .excel-table {
-    min-width: 800px;
-  }
 }
-
-.pagination-controls {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 1rem;
-  margin-top: 1.5rem;
-  padding: 0.75rem 0;
-}
-
-.pagination-btn {
-  padding: 0.5rem 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 0;
-  background: #ffffff;
-  color: #000000;
-  font-size: 0.875rem;
-  font-weight: 500;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 0.375rem;
-  transition: all 0.2s;
-  min-height: 36px;
-}
-
-.pagination-btn:hover:not(:disabled) {
-  background: #f9fafb;
-  border-color: #000000;
-}
-
-.pagination-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
-}
-
-.pagination-info {
-  font-size: 0.875rem;
-  color: #6b7280;
-  font-weight: 500;
-}
-
