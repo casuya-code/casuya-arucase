@@ -302,15 +302,24 @@ const DatabaseBackups = () => {
 
   return (
     <AdminLayout>
-      <div className="database-backups-page">
-        <div className="excel-card db-backups-card">
-          <div className="excel-card-header">
-            <i className="fas fa-database" aria-hidden />
-            <span className="admin-page-title">Database Backups</span>
-            <div className="header-actions">
+      <div className="backups-page">
+        <div className="backups-shell">
+          <header className="backups-top">
+            <div>
+              <h1 className="backups-top-title">
+                <i className="fas fa-database backups-top-icon" aria-hidden></i>
+                Database Backups
+              </h1>
+              <p className="backups-top-sub">
+                Scheduled backups run four times per month (days {scheduleDays} at 02:00,{' '}
+                {scheduleTz}) — only the latest {data?.retention?.maxFiles || 20} files are kept
+                on the server.
+              </p>
+            </div>
+            <div className="backups-top-actions">
               <button
                 type="button"
-                className="excel-btn secondary small"
+                className="excel-btn primary"
                 onClick={() => runBackupMutation.mutate()}
                 disabled={runBackupPending || restorePending}
               >
@@ -318,33 +327,59 @@ const DatabaseBackups = () => {
                 {runBackupPending ? 'Generating…' : 'Generate Backup'}
               </button>
             </div>
+          </header>
+
+          <div className="backups-stats" role="list" aria-label="Backup summary">
+            <article className="backups-stat" role="listitem" style={{ '--accent': '#3b82f6' }}>
+              <span className="backups-stat-icon" aria-hidden>
+                <i className="fas fa-calendar-check" />
+              </span>
+              <div className="backups-stat-content">
+                <span className="backups-stat-label">Schedule</span>
+                <strong>{data?.schedule?.frequency || '4 per month'}</strong>
+                <span className="backups-stat-hint">Days {scheduleDays}</span>
+              </div>
+            </article>
+            <article className="backups-stat" role="listitem" style={{ '--accent': '#6366f1' }}>
+              <span className="backups-stat-icon" aria-hidden>
+                <i className="fas fa-layer-group" />
+              </span>
+              <div className="backups-stat-content">
+                <span className="backups-stat-label">Retention</span>
+                <strong>Latest {data?.retention?.maxFiles || 20} files</strong>
+                <span className="backups-stat-hint">Older files removed automatically</span>
+              </div>
+            </article>
+            <article className="backups-stat" role="listitem" style={{ '--accent': '#10b981' }}>
+              <span className="backups-stat-icon" aria-hidden>
+                <i className="fas fa-hdd" />
+              </span>
+              <div className="backups-stat-content">
+                <span className="backups-stat-label">On Server</span>
+                <strong>{isLoading ? '…' : backups.length}</strong>
+                <span className="backups-stat-hint">
+                  {backups.length === 1 ? 'backup file' : 'backup files'}
+                </span>
+              </div>
+            </article>
           </div>
 
-          <div className="excel-card-body db-backups-body">
-            <p className="admin-page-description">
-              Scheduled backups run four times per month (days {scheduleDays} at 02:00,{' '}
-              {scheduleTz}). Only the latest {data?.retention?.maxFiles || 20} files are kept on
-              the server. Generate a new backup first if you need to preserve the current state
-              before restoring.
-            </p>
-
-            <section className="db-backups-restore-panel" aria-labelledby="db-backups-restore-heading">
-              <div className="db-backups-restore-panel-header">
-                <h2 id="db-backups-restore-heading" className="db-backups-panel-title">
-                  <i className="fas fa-upload" aria-hidden />
-                  Restore from Device
-                </h2>
-                <p className="db-backups-restore-panel-desc">
-                  Pick a <strong>.dump</strong> file you previously downloaded to your computer or
-                  phone storage.
-                </p>
-              </div>
-              <div className="db-backups-restore-panel-body">
+          <div className="excel-card" style={{ '--accent': '#f59e0b' }}>
+            <div className="excel-card-header">
+              <i className="fas fa-upload"></i> Restore from Device
+            </div>
+            <div className="excel-card-body">
+              <p className="backups-restore-desc">
+                Pick a <strong>.dump</strong> file you previously downloaded to your computer or
+                phone storage. This will replace the current database — generate a new backup
+                first if you need to preserve the current state.
+              </p>
+              <div className="backups-restore-body">
                 <input
                   ref={fileInputRef}
                   type="file"
                   accept=".dump,application/octet-stream"
-                  className="db-backups-file-input"
+                  className="backups-file-input"
                   onChange={handleRestoreFilePick}
                   disabled={restorePending}
                 />
@@ -358,17 +393,17 @@ const DatabaseBackups = () => {
                   Choose Backup File
                 </button>
                 {selectedRestoreFile ? (
-                  <div className="db-backups-selected-file">
-                    <span className="db-backups-selected-file-name" title={selectedRestoreFile.name}>
+                  <div className="backups-selected-file">
+                    <span className="backups-selected-file-name" title={selectedRestoreFile.name}>
                       <i className="fas fa-file-archive" aria-hidden />
                       {selectedRestoreFile.name}
                     </span>
-                    <span className="db-backups-selected-file-size">
+                    <span className="backups-selected-file-size">
                       {formatBytes(selectedRestoreFile.size)}
                     </span>
                     <button
                       type="button"
-                      className="excel-btn small db-backups-btn-clear-file"
+                      className="excel-btn small backups-btn-clear-file"
                       onClick={() => setSelectedRestoreFile(null)}
                       disabled={restorePending}
                       aria-label="Clear selected file"
@@ -377,11 +412,11 @@ const DatabaseBackups = () => {
                     </button>
                   </div>
                 ) : (
-                  <span className="db-backups-no-file">No file selected</span>
+                  <span className="backups-no-file">No file selected</span>
                 )}
                 <button
                   type="button"
-                  className="excel-btn danger small db-backups-btn-restore"
+                  className="excel-btn danger small"
                   onClick={confirmRestoreFromFile}
                   disabled={!selectedRestoreFile || restorePending}
                 >
@@ -392,127 +427,75 @@ const DatabaseBackups = () => {
                   {restoreFileMutation.isPending ? 'Restoring…' : 'Restore from File'}
                 </button>
               </div>
-            </section>
-
-            {restorePending && (
-              <div className="db-backups-restore-banner" role="status">
-                <i className="fas fa-spinner fa-spin" aria-hidden />
-                <p>
-                  Restoring database from <strong>{restoringFilename}</strong>. This may take a few
-                  minutes — do not close this page.
-                </p>
-              </div>
-            )}
-
-            <div className="db-backups-stats" role="list" aria-label="Backup summary">
-              <article className="db-backups-stat db-backups-stat--schedule" role="listitem">
-                <div className="db-backups-stat-icon" aria-hidden>
-                  <i className="fas fa-calendar-check" />
+              {restorePending && (
+                <div className="backups-restore-banner" role="status">
+                  <i className="fas fa-spinner fa-spin" aria-hidden />
+                  <p>
+                    Restoring database from <strong>{restoringFilename}</strong>. This may take a
+                    few minutes — do not close this page.
+                  </p>
                 </div>
-                <div className="db-backups-stat-content">
-                  <span className="db-backups-stat-label">Schedule</span>
-                  <strong>{data?.schedule?.frequency || '4 per month'}</strong>
-                  <span className="db-backups-stat-hint">Days {scheduleDays}</span>
-                </div>
-              </article>
-              <article className="db-backups-stat db-backups-stat--retention" role="listitem">
-                <div className="db-backups-stat-icon" aria-hidden>
-                  <i className="fas fa-layer-group" />
-                </div>
-                <div className="db-backups-stat-content">
-                  <span className="db-backups-stat-label">Retention</span>
-                  <strong>Latest {data?.retention?.maxFiles || 20} files</strong>
-                  <span className="db-backups-stat-hint">Older files removed automatically</span>
-                </div>
-              </article>
-              <article className="db-backups-stat db-backups-stat--count" role="listitem">
-                <div className="db-backups-stat-icon" aria-hidden>
-                  <i className="fas fa-hdd" />
-                </div>
-                <div className="db-backups-stat-content">
-                  <span className="db-backups-stat-label">On Server</span>
-                  <strong>{isLoading ? '…' : backups.length}</strong>
-                  <span className="db-backups-stat-hint">
-                    {backups.length === 1 ? 'backup file' : 'backup files'}
-                  </span>
-                </div>
-              </article>
+              )}
             </div>
+          </div>
 
-            <section className="db-backups-panel" aria-labelledby="db-backups-list-heading">
-              <div className="db-backups-panel-header">
-                <div className="db-backups-panel-title-wrap">
-                  <h2 id="db-backups-list-heading" className="db-backups-panel-title">
-                    <i className="fas fa-list" aria-hidden />
-                    Server Backups
-                  </h2>
-                  {markedCount > 0 && (
-                    <span className="db-backups-marked-badge">
-                      {markedCount} marked for deletion
-                    </span>
-                  )}
+          <div className="excel-card" style={{ '--accent': '#3b82f6' }}>
+            <div className="excel-card-header">
+              <i className="fas fa-list"></i> Server Backups
+              {markedCount > 0 && (
+                <span className="excel-card-count">{markedCount} marked</span>
+              )}
+              <div className="backups-card-actions">
+                <button
+                  type="button"
+                  className="excel-btn danger small"
+                  disabled={markedCount === 0 || deleteBackupsMutation.isPending}
+                  onClick={confirmDeleteMarked}
+                >
+                  <i
+                    className={`fas ${deleteBackupsMutation.isPending ? 'fa-spinner fa-spin' : 'fa-trash'}`}
+                    aria-hidden
+                  />
+                  {deleteBackupsMutation.isPending
+                    ? 'Deleting…'
+                    : markedCount > 0
+                      ? `Delete Marked (${markedCount})`
+                      : 'Delete Marked'}
+                </button>
+              </div>
+            </div>
+            <div className="excel-card-body backups-table-frame">
+              {isError ? (
+                <div className="backups-error" role="alert">
+                  <i className="fas fa-exclamation-circle" aria-hidden />
+                  <p>
+                    {error?.response?.data?.message || error?.message || 'Failed to load backups'}
+                  </p>
                 </div>
-                <div className="db-backups-panel-actions">
+              ) : isLoading ? (
+                <div className="backups-loading">
+                  <SkeletonLoader type="card" height="120px" />
+                  <SkeletonLoader type="card" height="120px" />
+                </div>
+              ) : backups.length === 0 ? (
+                <div className="backups-empty">
+                  <i className="fas fa-database" aria-hidden />
+                  <h3>No backups yet</h3>
+                  <p>Use &quot;Generate Backup&quot; to create your first database snapshot.</p>
                   <button
                     type="button"
-                    className="excel-btn danger small"
-                    disabled={markedCount === 0 || deleteBackupsMutation.isPending}
-                    onClick={confirmDeleteMarked}
+                    className="excel-btn secondary small"
+                    onClick={() => runBackupMutation.mutate()}
+                    disabled={runBackupPending}
                   >
-                    <i
-                      className={`fas ${deleteBackupsMutation.isPending ? 'fa-spinner fa-spin' : 'fa-trash'}`}
-                      aria-hidden
-                    />
-                    {deleteBackupsMutation.isPending
-                      ? 'Deleting…'
-                      : markedCount > 0
-                        ? `Delete Marked (${markedCount})`
-                        : 'Delete Marked'}
+                    <i className="fas fa-plus-circle" aria-hidden />
+                    Generate Backup
                   </button>
                 </div>
-              </div>
-
-              <div className="db-backups-table-frame">
-                {isError ? (
-                  <div className="db-backups-error" role="alert">
-                    <i className="fas fa-exclamation-circle" aria-hidden />
-                    <p>
-                      {error?.response?.data?.message ||
-                        error?.message ||
-                        'Failed to load backups'}
-                    </p>
-                  </div>
-                ) : isLoading ? (
-                  <div className="db-backups-loading">
-                    <SkeletonLoader type="card" height="120px" />
-                    <SkeletonLoader type="card" height="120px" />
-                  </div>
-                ) : backups.length === 0 ? (
-                  <div className="db-backups-empty">
-                    <i className="fas fa-database" aria-hidden />
-                    <h3>No backups yet</h3>
-                    <p>Use &quot;Generate Backup&quot; to create your first database snapshot.</p>
-                    <button
-                      type="button"
-                      className="excel-btn secondary small"
-                      onClick={() => runBackupMutation.mutate()}
-                      disabled={runBackupPending}
-                    >
-                      <i className="fas fa-plus-circle" aria-hidden />
-                      Generate Backup
-                    </button>
-                  </div>
-                ) : (
-                  <DataTable
-                    data={backups}
-                    columns={columns}
-                    searchable={false}
-                    exportable
-                    title=""
-                  />
-                )}
-              </div>
-            </section>
+              ) : (
+                <DataTable data={backups} columns={columns} searchable={false} exportable title="" />
+              )}
+            </div>
           </div>
         </div>
       </div>
