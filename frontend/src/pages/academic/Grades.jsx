@@ -2,6 +2,7 @@
  * Grade Template Page
  * Comprehensive reference page displaying all grading systems, evaluation criteria, and calculation methods
  */
+import { Link } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
 import './Grades.css';
 
@@ -91,285 +92,295 @@ const Grades = () => {
 
   const exampleDivisionPoint = exampleSubjects.reduce((sum, subj) => sum + subj.gradeValue, 0);
 
+  const cards = [
+    {
+      id: 'o-level',
+      icon: 'fa-graduation-cap',
+      title: 'O-Level Grades (Form I-IV)',
+      accent: '#3b82f6',
+      body: (
+        <div className="table-container">
+          <table className="grade-table">
+            <thead>
+              <tr>
+                <th>Grade</th>
+                <th>Marks Range</th>
+                <th>Swahili Description</th>
+                <th>Grade Value</th>
+              </tr>
+            </thead>
+            <tbody>
+              {oLevelGrades.map((grade, index) => (
+                <tr key={index} className="grade-row">
+                  <td data-label="Grade">
+                    <span className={`grade-badge grade-${grade.grade.toLowerCase()}`}>
+                      {grade.grade}
+                    </span>
+                  </td>
+                  <td data-label="Marks Range">{grade.range}</td>
+                  <td data-label="Swahili">{grade.swahili}</td>
+                  <td data-label="Grade Value">{grade.gradeValue}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ),
+    },
+    {
+      id: 'a-level',
+      icon: 'fa-university',
+      title: 'A-Level Grades (Form V-VI)',
+      accent: '#8b5cf6',
+      body: (
+        <div className="table-container">
+          <table className="grade-table">
+            <thead>
+              <tr>
+                <th>Grade</th>
+                <th>Minimum Marks</th>
+                <th>Grade Value</th>
+                <th>Official Swahili Description</th>
+              </tr>
+            </thead>
+            <tbody>
+              {aLevelGrades.map((grade, index) => (
+                <tr key={index} className="grade-row">
+                  <td data-label="Grade">
+                    <span className={`grade-badge grade-${grade.grade.toLowerCase()}`}>
+                      {grade.grade}
+                    </span>
+                  </td>
+                  <td data-label="Min Marks">{grade.minMarks}</td>
+                  <td data-label="Grade Value">{grade.gradeValue}</td>
+                  <td data-label="Description">{grade.description}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ),
+    },
+    {
+      id: 'behavior',
+      icon: 'fa-user-check',
+      title: 'Behavior and Conduct Grades',
+      accent: '#10b981',
+      body: (
+        <div className="table-container">
+          <table className="grade-table">
+            <thead>
+              <tr>
+                <th>Grade</th>
+                <th>Swahili Description</th>
+                <th>English Translation</th>
+              </tr>
+            </thead>
+            <tbody>
+              {behaviorGrades.map((grade, index) => (
+                <tr key={index} className="grade-row">
+                  <td data-label="Grade">
+                    <span className={`grade-badge grade-${grade.grade.toLowerCase()}`}>
+                      {grade.grade}
+                    </span>
+                  </td>
+                  <td data-label="Swahili">{grade.swahili}</td>
+                  <td data-label="English">{grade.english}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ),
+    },
+    {
+      id: 'tabia',
+      icon: 'fa-list-check',
+      title: 'Tabia na Mwenendo Evaluation Criteria',
+      accent: '#f59e0b',
+      body: (
+        <div className="table-container">
+          <table className="grade-table">
+            <thead>
+              <tr>
+                <th>Namba (Number)</th>
+                <th>Kipengele (Criterion)</th>
+                <th>English Translation</th>
+              </tr>
+            </thead>
+            <tbody>
+              {tabiaCriteria.map((criterion, index) => (
+                <tr key={index} className="grade-row">
+                  <td data-label="Code"><strong>{criterion.code}</strong></td>
+                  <td data-label="Criterion">{criterion.description}</td>
+                  <td data-label="English" className="english-translation">{criterion.english}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ),
+    },
+    {
+      id: 'colors',
+      icon: 'fa-palette',
+      title: 'Color-Coded Grade System',
+      accent: '#ec4899',
+      body: (
+        <div className="table-container">
+          <table className="grade-table">
+            <thead>
+              <tr>
+                <th>Level</th>
+                <th>Grade</th>
+                <th>Description</th>
+                <th>Color</th>
+                <th>Visual Sample</th>
+              </tr>
+            </thead>
+            <tbody>
+              {colorGrades.map((item, index) => (
+                <tr key={index} className="grade-row">
+                  <td data-label="Level">{item.level}</td>
+                  <td data-label="Grade">
+                    <span className={`grade-badge grade-${item.grade.toLowerCase()}`}>
+                      {item.grade}
+                    </span>
+                  </td>
+                  <td data-label="Description">{item.description}</td>
+                  <td data-label="Color">{item.color}</td>
+                  <td data-label="Sample">
+                    <div className={`color-sample ${item.colorClass}`}></div>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      ),
+    },
+    {
+      id: 'division',
+      icon: 'fa-calculator',
+      title: 'O-Level Division Calculation',
+      accent: '#06b6d4',
+      body: (
+        <div className="division-section">
+          <h3>Calculation Method</h3>
+          <p>
+            O-Level divisions are calculated using the following method:
+          </p>
+          <ol>
+            <li>Select the seven highest subject grades</li>
+            <li>Convert each grade to its grade value (A=1, B=2, C=3, D=4, F=5)</li>
+            <li>Sum all grade values to get the division point</li>
+            <li>Determine the division based on the division point range</li>
+          </ol>
+          <p className="note">
+            <strong>Note:</strong> Lower division point = better performance. Only O-Level students (Form I-IV) receive divisions.
+          </p>
+
+          <h3>Example Calculation</h3>
+          <div className="example-calculation">
+            <div className="table-container">
+              <table className="grade-table">
+                <thead>
+                  <tr>
+                    <th>Subject</th>
+                    <th>Grade</th>
+                    <th>Grade Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {exampleSubjects.map((subject, index) => (
+                    <tr key={index}>
+                      <td data-label="Subject">{subject.subject}</td>
+                      <td data-label="Grade">
+                        <span className={`grade-badge grade-${subject.grade.toLowerCase()}`}>
+                          {subject.grade}
+                        </span>
+                      </td>
+                      <td data-label="Grade Value">{subject.gradeValue}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            <div className="example-result">
+              <div className="result-item">
+                <strong>Division Point:</strong> {exampleDivisionPoint}
+              </div>
+              <div className="result-item">
+                <strong>Final Division:</strong> DIVISION I (Range: 7-17)
+              </div>
+            </div>
+          </div>
+
+          <h3>Division Point Ranges</h3>
+          <div className="table-container">
+            <table className="grade-table">
+              <thead>
+                <tr>
+                  <th>Division</th>
+                  <th>Division Point Range</th>
+                  <th>Description</th>
+                </tr>
+              </thead>
+              <tbody>
+                {divisions.map((div, index) => (
+                  <tr key={index} className="grade-row">
+                    <td data-label="Division"><strong>{div.division}</strong></td>
+                    <td data-label="Range">{div.range}</td>
+                    <td data-label="Description">{div.description}</td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      ),
+    },
+  ];
+
   return (
     <AdminLayout>
-      <div className="grades-page-container">
-        {/* O-Level Grades Table */}
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-graduation-cap"></i>
-            O-Level Grades (Form I-IV)
-          </div>
-          <div className="excel-card-body">
-            <div className="table-container">
-              <table className="grade-table">
-                <thead>
-                  <tr>
-                    <th>Grade</th>
-                    <th>Marks Range</th>
-                    <th>Swahili Description</th>
-                    <th>Grade Value</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {oLevelGrades.map((grade, index) => (
-                    <tr key={index} className="grade-row">
-                      <td data-label="Grade">
-                        <span className={`grade-badge grade-${grade.grade.toLowerCase()}`}>
-                          {grade.grade}
-                        </span>
-                      </td>
-                      <td data-label="Marks Range">{grade.range}</td>
-                      <td data-label="Swahili">{grade.swahili}</td>
-                      <td data-label="Grade Value">{grade.gradeValue}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
+      <div className="grades-page">
+        <div className="grades-shell">
+          <header className="grades-top">
+            <div>
+              <h1 className="grades-top-title">Grades</h1>
+              <p className="grades-top-sub">Grading systems, evaluation criteria, and calculation methods</p>
             </div>
-          </div>
-        </div>
+          </header>
 
-        {/* A-Level Grades Table */}
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-graduation-cap"></i>
-            A-Level Grades (Form V-VI)
-          </div>
-          <div className="excel-card-body">
-            <div className="table-container">
-              <table className="grade-table">
-                <thead>
-                  <tr>
-                    <th>Grade</th>
-                    <th>Minimum Marks</th>
-                    <th>Grade Value</th>
-                    <th>Official Swahili Description</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {aLevelGrades.map((grade, index) => (
-                    <tr key={index} className="grade-row">
-                      <td data-label="Grade">
-                        <span className={`grade-badge grade-${grade.grade.toLowerCase()}`}>
-                          {grade.grade}
-                        </span>
-                      </td>
-                      <td data-label="Min Marks">{grade.minMarks}</td>
-                      <td data-label="Grade Value">{grade.gradeValue}</td>
-                      <td data-label="Description">{grade.description}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        {/* Behavior and Conduct Grades */}
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-user-check"></i>
-            Behavior and Conduct Grades
-          </div>
-          <div className="excel-card-body">
-            <div className="table-container">
-              <table className="grade-table">
-                <thead>
-                  <tr>
-                    <th>Grade</th>
-                    <th>Swahili Description</th>
-                    <th>English Translation</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {behaviorGrades.map((grade, index) => (
-                    <tr key={index} className="grade-row">
-                      <td data-label="Grade">
-                        <span className={`grade-badge grade-${grade.grade.toLowerCase()}`}>
-                          {grade.grade}
-                        </span>
-                      </td>
-                      <td data-label="Swahili">{grade.swahili}</td>
-                      <td data-label="English">{grade.english}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        {/* Tabia na Mwenendo Evaluation Criteria */}
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-list-check"></i>
-            Tabia na Mwenendo Evaluation Criteria
-          </div>
-          <div className="excel-card-body">
-            <div className="table-container">
-              <table className="grade-table">
-                <thead>
-                  <tr>
-                    <th>Namba (Number)</th>
-                    <th>Kipengele (Criterion)</th>
-                    <th>English Translation</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {tabiaCriteria.map((criterion, index) => (
-                    <tr key={index} className="grade-row">
-                      <td data-label="Code"><strong>{criterion.code}</strong></td>
-                      <td data-label="Criterion">{criterion.description}</td>
-                      <td data-label="English" className="english-translation">{criterion.english}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        {/* Color-Coded Grade System */}
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-palette"></i>
-            Color-Coded Grade System
-          </div>
-          <div className="excel-card-body">
-            <div className="table-container">
-              <table className="grade-table">
-                <thead>
-                  <tr>
-                    <th>Level</th>
-                    <th>Grade</th>
-                    <th>Description</th>
-                    <th>Color</th>
-                    <th>Visual Sample</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {colorGrades.map((item, index) => (
-                    <tr key={index} className="grade-row">
-                      <td data-label="Level">{item.level}</td>
-                      <td data-label="Grade">
-                        <span className={`grade-badge grade-${item.grade.toLowerCase()}`}>
-                          {item.grade}
-                        </span>
-                      </td>
-                      <td data-label="Description">{item.description}</td>
-                      <td data-label="Color">{item.color}</td>
-                      <td data-label="Sample">
-                        <div className={`color-sample ${item.colorClass}`}></div>
-                      </td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
-          </div>
-        </div>
-
-        {/* O-Level Division Calculation */}
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-calculator"></i>
-            O-Level Division Calculation
-          </div>
-          <div className="excel-card-body">
-            <div className="division-section">
-              <h3>Calculation Method</h3>
-              <p>
-                O-Level divisions are calculated using the following method:
-              </p>
-              <ol>
-                <li>Select the seven highest subject grades</li>
-                <li>Convert each grade to its grade value (A=1, B=2, C=3, D=4, F=5)</li>
-                <li>Sum all grade values to get the division point</li>
-                <li>Determine the division based on the division point range</li>
-              </ol>
-              <p className="note">
-                <strong>Note:</strong> Lower division point = better performance. Only O-Level students (Form I-IV) receive divisions.
-              </p>
-
-              <h3>Example Calculation</h3>
-              <div className="example-calculation">
-                <div className="table-container">
-                  <table className="grade-table">
-                    <thead>
-                      <tr>
-                        <th>Subject</th>
-                        <th>Grade</th>
-                        <th>Grade Value</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {exampleSubjects.map((subject, index) => (
-                        <tr key={index}>
-                          <td data-label="Subject">{subject.subject}</td>
-                          <td data-label="Grade">
-                            <span className={`grade-badge grade-${subject.grade.toLowerCase()}`}>
-                              {subject.grade}
-                            </span>
-                          </td>
-                          <td data-label="Grade Value">{subject.gradeValue}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-                <div className="example-result">
-                  <div className="result-item">
-                    <strong>Division Point:</strong> {exampleDivisionPoint}
-                  </div>
-                  <div className="result-item">
-                    <strong>Final Division:</strong> DIVISION I (Range: 7-17)
-                  </div>
-                </div>
+          {cards.map((card) => (
+            <div key={card.id} className="grades-card" style={{ '--accent': card.accent }}>
+              <div className="grades-card-header">
+                <i className={`fas ${card.icon}`} />
+                {card.title}
               </div>
-
-              <h3>Division Point Ranges</h3>
-              <div className="table-container">
-                <table className="grade-table">
-                  <thead>
-                    <tr>
-                      <th>Division</th>
-                      <th>Division Point Range</th>
-                      <th>Description</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {divisions.map((div, index) => (
-                      <tr key={index} className="grade-row">
-                        <td data-label="Division"><strong>{div.division}</strong></td>
-                        <td data-label="Range">{div.range}</td>
-                        <td data-label="Description">{div.description}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
+              <div className="grades-card-body">{card.body}</div>
             </div>
-          </div>
-        </div>
+          ))}
 
-        {/* Quick Links */}
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-link"></i>
-            Quick Links
-          </div>
-          <div className="excel-card-body">
-            <div className="quick-links">
-              <a href="/reports/individual" className="excel-btn primary">
-                <i className="fas fa-file-alt"></i> View Individual Reports
-              </a>
-              <a href="/reports/bulk" className="excel-btn secondary">
-                <i className="fas fa-copy"></i> View Bulk Reports
-              </a>
-              <a href="/admin/marks-config" className="excel-btn secondary">
-                <i className="fas fa-calendar-alt"></i> Configure Marks Weights
-              </a>
+          {/* Quick Links */}
+          <div className="grades-card" style={{ '--accent': '#1a1a1a' }}>
+            <div className="grades-card-header">
+              <i className="fas fa-link" />
+              Quick Links
+            </div>
+            <div className="grades-card-body">
+              <div className="quick-links">
+                <Link to="/reports/individual" className="grades-btn grades-btn--primary">
+                  <i className="fas fa-file-alt" /> View Individual Reports
+                </Link>
+                <Link to="/reports/bulk" className="grades-btn grades-btn--secondary">
+                  <i className="fas fa-copy" /> View Bulk Reports
+                </Link>
+                <Link to="/admin/marks-config" className="grades-btn grades-btn--secondary">
+                  <i className="fas fa-calendar-alt" /> Configure Marks Weights
+                </Link>
+              </div>
             </div>
           </div>
         </div>

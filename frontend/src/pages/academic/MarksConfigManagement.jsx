@@ -175,22 +175,28 @@ const MarksConfigManagement = ({ formLevel }) => {
   return (
     <AdminLayout>
       <div className="marks-config-mgmt-page-container">
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-cog"></i>
-            Marks Configuration - {normalizedLevel} {normalizedStream && normalizedStream !== 'A' ? `Stream ${normalizedStream}` : ''} {year} - {term}
-            <div className="header-actions">
-              <Link to={getBackPath()} className="excel-btn small secondary">
+        <div className="marks-config-mgmt-shell">
+          <header className="marks-config-mgmt-top">
+            <div>
+              <h1 className="marks-config-mgmt-top-title">Marks Configuration</h1>
+              <p className="marks-config-mgmt-top-sub">
+                {normalizedLevel} {normalizedStream && normalizedStream !== 'A' ? `Stream ${normalizedStream}` : ''} &middot; {year} &middot; {term}
+              </p>
+            </div>
+            <div className="marks-config-mgmt-actions">
+              <Link to={getBackPath()} className="marks-config-mgmt-btn marks-config-mgmt-btn--secondary">
                 <i className="fas fa-arrow-left"></i> Back
               </Link>
             </div>
-          </div>
-          <div className="excel-card-body">
-            {isLoading ? (
-              <div className="loading-state">
-                <i className="fas fa-spinner fa-spin"></i> Loading configuration...
-              </div>
-            ) : (
+          </header>
+
+          {isLoading ? (
+            <div className="marks-config-mgmt-state">
+              <i className="fas fa-spinner fa-spin" style={{ fontSize: '1.5rem', color: '#999' }} />
+              <p>Loading configuration...</p>
+            </div>
+          ) : (
+            <div className="marks-config-mgmt-card">
               <form onSubmit={handleSubmit}>
                 <div className="marks-config-form">
                   {/* Configuration Info Section */}
@@ -209,7 +215,7 @@ const MarksConfigManagement = ({ formLevel }) => {
                   <div className="marks-config-actions-top">
                     <button
                       type="button"
-                      className="excel-btn secondary"
+                      className="marks-config-mgmt-btn marks-config-mgmt-btn--secondary"
                       onClick={handleEqualDistribution}
                       title="Set all months to equal weights"
                     >
@@ -218,7 +224,7 @@ const MarksConfigManagement = ({ formLevel }) => {
                     {Math.abs(total - 100) > 0.01 && total > 0 && (
                       <button
                         type="button"
-                        className="excel-btn secondary"
+                        className="marks-config-mgmt-btn marks-config-mgmt-btn--secondary"
                         onClick={handleAutoAdjust}
                         title="Automatically adjust weights to total 100%"
                       >
@@ -353,7 +359,7 @@ const MarksConfigManagement = ({ formLevel }) => {
                   <div className="marks-config-actions">
                     <button
                       type="button"
-                      className="excel-btn secondary"
+                      className="marks-config-mgmt-btn marks-config-mgmt-btn--secondary"
                       onClick={() => {
                         const resetWeights = {};
                         months.forEach(month => {
@@ -368,7 +374,7 @@ const MarksConfigManagement = ({ formLevel }) => {
                     </button>
                     <button
                       type="submit"
-                      className="excel-btn primary"
+                      className="marks-config-mgmt-btn marks-config-mgmt-btn--primary"
                       disabled={saveMutation.isLoading || Math.abs(total - 100) > 0.01}
                     >
                       <i className="fas fa-save"></i> {saveMutation.isLoading ? 'Saving...' : 'Save Configuration'}
@@ -376,8 +382,8 @@ const MarksConfigManagement = ({ formLevel }) => {
                   </div>
                 </div>
               </form>
-            )}
-          </div>
+            </div>
+          )}
         </div>
       </div>
     </AdminLayout>

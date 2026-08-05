@@ -110,72 +110,68 @@ const MarksConfigStudentSelection = ({ formLevel }) => {
   return (
     <AdminLayout>
       <div className="marks-config-student-selection-page-container">
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-users"></i>
-            Registered Students - {normalizedLevel} {normalizedStream && normalizedStream !== 'A' ? `Stream ${normalizedStream}` : ''} {term} {year}
-            <div className="header-actions">
-              <Link to={getBackPath()} className="excel-btn small secondary">
+        <div className="marks-config-student-selection-shell">
+          <header className="marks-config-student-selection-top">
+            <div>
+              <h1 className="marks-config-student-selection-top-title">Registered Students</h1>
+              <p className="marks-config-student-selection-top-sub">
+                {normalizedLevel} {normalizedStream && normalizedStream !== 'A' ? `Stream ${normalizedStream}` : ''} &middot; {term} &middot; {year}
+              </p>
+            </div>
+            <div className="marks-config-student-selection-actions">
+              <Link to={getBackPath()} className="marks-config-student-selection-btn marks-config-student-selection-btn--secondary">
                 <i className="fas fa-arrow-left"></i> Back to Terms
               </Link>
             </div>
-          </div>
-          <div className="excel-card-body">
-            {isLoading ? (
-              <div className="loading-state">
-                <i className="fas fa-spinner fa-spin"></i> Loading students...
-              </div>
-            ) : studentsError ? (
-              <div className="empty-state">
-                <i className="fas fa-exclamation-triangle"></i>
-                <h3>Error Loading Students</h3>
-                <p>{studentsError.message || 'Failed to load students. Please try again.'}</p>
-                <p style={{ fontSize: '12px', marginTop: '8px', color: '#666' }}>
-                  Query params: Level={normalizedLevel}, Stream={normalizedStream}, Year={year}
-                </p>
-              </div>
-            ) : studentsData.length === 0 ? (
-              <div className="empty-state">
-                <i className="fas fa-users-slash"></i>
-                <h3>No Students Found</h3>
-                <p>No students have been registered for this class yet.</p>
-                <p style={{ fontSize: '12px', marginTop: '8px', color: '#666' }}>
-                  Search criteria: Level={normalizedLevel}, Stream={normalizedStream}, Year={year}
-                </p>
+          </header>
+
+          {isLoading ? (
+            <div className="marks-config-student-selection-state">
+              <i className="fas fa-spinner fa-spin" style={{ fontSize: '1.5rem', color: '#999' }} />
+              <p>Loading students...</p>
+            </div>
+          ) : studentsError ? (
+            <div className="marks-config-student-selection-state marks-config-student-selection-state--error">
+              <i className="fas fa-exclamation-triangle" style={{ fontSize: '1.5rem' }} />
+              <h3>Error Loading Students</h3>
+              <p>{studentsError.message || 'Failed to load students. Please try again.'}</p>
+            </div>
+          ) : studentsData.length === 0 ? (
+            <div className="marks-config-student-selection-state">
+              <i className="fas fa-users-slash" style={{ fontSize: '2rem', color: '#ccc' }} />
+              <h3>No Students Found</h3>
+              <p>No students have been registered for this class yet.</p>
+              <Link
+                to={`/admin/students/registration?level=${encodeURIComponent(normalizedLevel)}&stream=${encodeURIComponent(normalizedStream)}&year=${year}`}
+                className="marks-config-student-selection-btn"
+                style={{ marginTop: '1rem' }}
+              >
+                <i className="fas fa-plus"></i> Register Students
+              </Link>
+            </div>
+          ) : (
+            <div className="marks-config-student-selection-grid">
+              {studentsData.map((student) => (
                 <Link
-                  to={`/admin/students/registration?level=${encodeURIComponent(normalizedLevel)}&stream=${encodeURIComponent(normalizedStream)}&year=${year}`}
-                  className="excel-btn primary"
-                  style={{ marginTop: '16px' }}
+                  key={student.adm_no}
+                  to={getStudentMarksPath(student.adm_no)}
+                  className="student-card"
                 >
-                  <i className="fas fa-plus"></i> Register Students
+                  <div className="student-avatar">
+                    <i className="fas fa-user"></i>
+                  </div>
+                  <div className="student-info">
+                    <h4>{student.first_name} {student.middle_name} {student.surname}</h4>
+                    <p className="student-adm">{student.adm_no}</p>
+                    <p className="student-sex">{student.sex}</p>
+                  </div>
+                  <div className="student-arrow">
+                    <i className="fas fa-chevron-right"></i>
+                  </div>
                 </Link>
-              </div>
-            ) : (
-              <>
-                <div className="students-grid">
-                  {studentsData.map((student) => (
-                    <Link
-                      key={student.adm_no}
-                      to={getStudentMarksPath(student.adm_no)}
-                      className="student-card"
-                    >
-                      <div className="student-avatar">
-                        <i className="fas fa-user"></i>
-                      </div>
-                      <div className="student-info">
-                        <h4>{student.first_name} {student.middle_name} {student.surname}</h4>
-                        <p className="student-adm">{student.adm_no}</p>
-                        <p className="student-sex">{student.sex}</p>
-                      </div>
-                      <div className="student-arrow">
-                        <i className="fas fa-chevron-right"></i>
-                      </div>
-                    </Link>
-                  ))}
-                </div>
-              </>
-            )}
-          </div>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </AdminLayout>
