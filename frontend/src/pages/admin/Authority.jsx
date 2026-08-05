@@ -2,6 +2,7 @@
  * Authority Data Management Page
  */
 import { useState, useRef, useEffect } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '../../utils/toast';
 import AdminLayout from '../../components/layout/AdminLayout';
@@ -152,26 +153,42 @@ const Authority = () => {
 
   return (
     <AdminLayout>
-      <div className="authority-admin-page">
-        <div className="excel-card authority-root-card">
-          <div className="excel-card-header">
-            <i className="fas fa-signature" aria-hidden="true"></i>
-            Authority Data Management
+      <div className="authority-page">
+        <div className="authority-shell">
+          <div className="breadcrumb">
+            <Link to="/admin/school-branding">School Branding</Link>
+            <span style={{ color: '#bbb' }}>&rsaquo;</span>
+            <span className="breadcrumb-current">Authority</span>
           </div>
-          <div className="excel-card-body">
-            {authLoading || isLoading ? (
-              <div className="loading-state">Loading...</div>
-            ) : authorityError ? (
-              <div className="error-state">
-                <i className="fas fa-exclamation-triangle error-icon" aria-hidden="true"></i>
-                <h3>Error Loading Authority Data</h3>
-                <p>{authorityError.message || 'Failed to load authority information'}</p>
-              </div>
-            ) : (
-              <>
-                <form onSubmit={handleSubmit} className="authority-form">
-                  <div className="form-section">
-                    <h3>Authority Information</h3>
+
+          <header className="authority-top">
+            <div>
+              <h1 className="authority-top-title">
+                <i className="fas fa-signature authority-top-icon" aria-hidden></i>
+                Authority Data
+              </h1>
+              <p className="authority-top-sub">Manage the name, title and signature shown on student reports</p>
+            </div>
+          </header>
+
+          {authLoading || isLoading ? (
+            <div className="authority-loading">
+              <i className="fas fa-spinner fa-spin"></i> Loading authority data…
+            </div>
+          ) : authorityError ? (
+            <div className="error-state">
+              <i className="fas fa-exclamation-triangle error-icon" aria-hidden="true"></i>
+              <h3>Error Loading Authority Data</h3>
+              <p>{authorityError.message || 'Failed to load authority information'}</p>
+            </div>
+          ) : (
+            <>
+              <div className="excel-card" style={{ '--accent': '#8b5cf6' }}>
+                <div className="excel-card-header">
+                  <i className="fas fa-user-tie" aria-hidden="true"></i> Authority Information
+                </div>
+                <div className="excel-card-body">
+                  <form onSubmit={handleSubmit} className="authority-form">
                     <div className="form-row">
                       <div className="form-group">
                         <label>Name of Authorisor *</label>
@@ -221,14 +238,18 @@ const Authority = () => {
                     <div className="form-actions">
                       <button type="submit" className="excel-btn primary" disabled={saveMutation.isPending}>
                         <i className="fas fa-save" aria-hidden="true"></i>{' '}
-                        {saveMutation.isPending ? 'Saving...' : 'Save Authority Data'}
+                        {saveMutation.isPending ? 'Saving…' : 'Save Authority Data'}
                       </button>
                     </div>
-                  </div>
-                </form>
+                  </form>
+                </div>
+              </div>
 
-                <div className="signature-section">
-                  <h3>Signature Image</h3>
+              <div className="excel-card" style={{ '--accent': '#10b981' }}>
+                <div className="excel-card-header">
+                  <i className="fas fa-pen-fancy" aria-hidden="true"></i> Signature Image
+                </div>
+                <div className="excel-card-body">
                   <p className="signature-section-hint">
                     Upload a signature image <strong>or</strong> enter a text signature above.
                     Reports use the image when a valid signature file is uploaded; otherwise the text signature is shown.
@@ -310,15 +331,15 @@ const Authority = () => {
 
                       {uploadSignatureMutation.isPending && (
                         <div className="upload-progress-small">
-                          <i className="fas fa-spinner fa-spin" aria-hidden="true"></i> Uploading...
+                          <i className="fas fa-spinner fa-spin" aria-hidden="true"></i> Uploading…
                         </div>
                       )}
                     </div>
                   </div>
                 </div>
-              </>
-            )}
-          </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </AdminLayout>
@@ -326,4 +347,3 @@ const Authority = () => {
 };
 
 export default Authority;
-
