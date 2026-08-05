@@ -224,6 +224,7 @@
   align-items: flex-start;
   justify-content: space-between;
   gap: 1rem;
+  flex-wrap: wrap;
 }
 
 .an-st-title {
@@ -596,6 +597,14 @@
   display: grid;
   grid-template-columns: repeat(4, 1fr);
   gap: 0.6rem;
+}
+
+.an-ct-stats--three {
+  grid-template-columns: repeat(3, 1fr);
+}
+
+.an-ct-stats--forms {
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
 }
 
 .an-ct-stat {

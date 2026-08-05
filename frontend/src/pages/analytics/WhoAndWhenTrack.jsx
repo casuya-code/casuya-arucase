@@ -130,7 +130,7 @@ const WhoAndWhenTrack = () => {
           ) : data ? (
             <div className="an-st-perf-body">
               {/* Summary Stats */}
-              <div className="an-ct-stats" style={{ gridTemplateColumns: 'repeat(3, 1fr)' }}>
+              <div className="an-ct-stats an-ct-stats--three">
                 <div className="an-ct-stat">
                   <span className="an-ct-stat-label">Total</span>
                   <span className="an-ct-stat-val an-ct-blue">{data.totalStudents || 0}</span>

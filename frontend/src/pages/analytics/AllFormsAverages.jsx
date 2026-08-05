@@ -154,7 +154,7 @@ const AllFormsAverages = () => {
           ) : processedData.length > 0 ? (
             <div className="an-st-perf-body">
               {/* Summary Cards */}
-              <div className="an-ct-stats" style={{ gridTemplateColumns: `repeat(${Math.min(processedData.length, 6)}, 1fr)` }}>
+              <div className="an-ct-stats an-ct-stats--forms">
                 {processedData.map(f => (
                   <div key={f.level} className="an-ct-stat">
                     <span className="an-ct-stat-label">{f.level}</span>
