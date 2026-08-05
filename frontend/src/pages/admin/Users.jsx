@@ -573,7 +573,6 @@ const Users = () => {
               handleEdit(user);
             }}
             className="excel-btn secondary small"
-            style={{ padding: '0.5rem 1rem', fontSize: '0.875rem' }}
           >
             <i className="fas fa-edit"></i> Edit
           </button>
@@ -583,8 +582,7 @@ const Users = () => {
                 e.stopPropagation();
                 handleDelete(user);
               }}
-              className="excel-btn secondary small"
-              style={{ padding: '0.5rem 1rem', fontSize: '0.875rem', background: '#ef4444', color: 'white' }}
+              className="excel-btn danger small"
             >
               <i className="fas fa-trash"></i> Delete
             </button>
@@ -596,54 +594,69 @@ const Users = () => {
 
   return (
     <AdminLayout>
-      <div style={{ padding: '2rem' }}>
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-users-cog"></i>
-            User & Permission Management
-            <div className="header-actions">
-              <button onClick={handleAdd} className="excel-btn secondary small">
-                <i className="fas fa-plus-circle"></i> Add New
+      <div className="users-page">
+        <div className="users-shell">
+          <header className="users-top">
+            <div>
+              <h1 className="users-top-title">
+                <i className="fas fa-users-cog users-top-icon" aria-hidden></i>
+                User &amp; Permission Management
+              </h1>
+              <p className="users-top-sub">Manage users, roles, and access permissions</p>
+            </div>
+            <div className="users-top-actions">
+              <button onClick={handleAdd} className="excel-btn primary">
+                <i className="fas fa-plus"></i> Add New
               </button>
             </div>
-          </div>
-          <div className="excel-card-body">
-            <p style={{ marginBottom: '1.5rem', color: '#656d76' }}>
-              Manage users, roles, and access permissions
-            </p>
+          </header>
 
-            {isLoading ? (
-              <div className="admin-table-container">
-                <SkeletonLoader type="table" />
+          <div className="users-stats">
+            <article className="users-stat" style={{ '--accent': '#3b82f6' }}>
+              <span className="users-stat-icon" aria-hidden>
+                <i className="fas fa-users"></i>
+              </span>
+              <div className="users-stat-content">
+                <span className="users-stat-label">Total</span>
+                <strong>{users.length}</strong>
+                <span className="users-stat-hint">Registered users</span>
               </div>
-            ) : (
-              <>
-                <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                  <span className="admin-info-badge">
-                    <i className="fas fa-info-circle"></i> Total Users: <strong>{users.length}</strong>
-                  </span>
-                </div>
-
-                {users.length === 0 ? (
-                  <div className="admin-empty-state">
-                    <i className="fas fa-users"></i>
-                    <h3>No Users Yet</h3>
-                    <p>Click &quot;Add New&quot; to add your first user.</p>
-                  </div>
-                ) : (
-                  <div className="admin-table-container">
-                    <DataTable
-                      data={users}
-                      columns={columns}
-                      pagination={false}
-                    />
-                  </div>
-                )}
-
-              </>
-            )}
+            </article>
+            <article className="users-stat" style={{ '--accent': '#10b981' }}>
+              <span className="users-stat-icon" aria-hidden>
+                <i className="fas fa-user-shield"></i>
+              </span>
+              <div className="users-stat-content">
+                <span className="users-stat-label">Roles</span>
+                <strong>{new Set(users.map((u) => u.role)).size}</strong>
+                <span className="users-stat-hint">Distinct roles</span>
+              </div>
+            </article>
           </div>
-        </div>
+
+          <div className="excel-card" style={{ '--accent': '#8b5cf6' }}>
+            <div className="excel-card-header">
+              <i className="fas fa-user-cog"></i> Users
+              <span className="excel-card-count">{users.length}</span>
+            </div>
+            <div className="excel-card-body">
+              {isLoading ? (
+                <div className="admin-table-container">
+                  <SkeletonLoader type="table" />
+                </div>
+              ) : users.length === 0 ? (
+                <div className="admin-empty-state">
+                  <i className="fas fa-users"></i>
+                  <h3>No Users Yet</h3>
+                  <p>Click &quot;Add New&quot; to add your first user.</p>
+                </div>
+              ) : (
+                <div className="admin-table-container">
+                  <DataTable data={users} columns={columns} pagination={false} />
+                </div>
+              )}
+            </div>
+          </div>
 
         {/* Modal */}
         {showAddModal && (
@@ -923,6 +936,7 @@ const Users = () => {
             </div>
           </div>
         )}
+        </div>
       </div>
     </AdminLayout>
   );
