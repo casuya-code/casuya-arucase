@@ -1,6 +1,8 @@
 .promotion-page-container{
   padding: 20px;
   max-width: 1400px;
+  width: 100%;
+  box-sizing: border-box;
   margin: 0 auto;
   font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
 }.promotion-page-container .promotion-header{
@@ -110,6 +112,8 @@
   display: flex;
   align-items: center;
   gap: 15px;
+  flex-wrap: wrap;
+  min-width: 0;
 }.promotion-page-container .excel-btn{
   display: flex;
   align-items: center;
@@ -133,6 +137,7 @@
 }.promotion-page-container .promotion-buttons{
   display: flex;
   gap: 12px;
+  flex-wrap: wrap;
 }.promotion-page-container .excel-btn.primary, .promotion-page-container .excel-btn.secondary{
   display: flex;
   align-items: center;
@@ -268,7 +273,13 @@
     gap: 15px;
   }.promotion-page-container .selection-actions{
     justify-content: space-between;
+    width: 100%;
   }.promotion-page-container .promotion-buttons{
+    justify-content: center;
+    width: 100%;
+  }.promotion-page-container .promotion-buttons .excel-btn{
+    flex: 1 1 auto;
+    min-width: 0;
     justify-content: center;
   }.promotion-page-container .status-content{
     grid-template-columns: 1fr;

@@ -24,3 +24,49 @@
   opacity: 0.5;
   cursor: not-allowed;
 }
+
+.parish-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: #f3f4f6;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  font-size: 12px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.student-info-display {
+  background: #f9fafb;
+  border: 1px solid #e5e7eb;
+  padding: 12px 16px;
+  margin-bottom: 16px;
+}
+
+.student-details-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 12px;
+}
+
+.detail-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+}
+
+.detail-item label {
+  font-size: 12px;
+  font-weight: 600;
+  color: #6b7280;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.detail-item span {
+  font-size: 14px;
+  font-weight: 500;
+  color: #111827;
+  overflow-wrap: anywhere;
+}

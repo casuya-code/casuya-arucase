@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import './PreFormOneParishes.css';
+import './PreFormOneRegistration.css';
 import { preFormOneService } from '../../services/preFormOneService';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { CSV_BULK_LABELS, CSV_BULK_TITLES } from '../../constants/csvBulkActions';

@@ -104,9 +104,16 @@
     align-items: flex-start;
   }.preform-one-results-page-container .student-info{
     width: 100%;
+    flex-direction: column;
+    align-items: stretch;
     gap: 1rem;
+  }.preform-one-results-page-container .student-meta{
+    flex-wrap: wrap;
+  }.preform-one-results-page-container .student-name{
+    overflow-wrap: anywhere;
   }.preform-one-results-page-container .student-status{
     width: 100%;
+    min-width: 0;
   }.preform-one-results-page-container .student-actions{
     width: 100%;
   }.preform-one-results-page-container .excel-btn.primary.small{
