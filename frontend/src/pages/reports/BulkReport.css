@@ -960,6 +960,10 @@
     padding: 0.75rem;
   }
 
+  .form-card-with-streams .streams-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
   .streams-grid {
     grid-template-columns: repeat(4, 1fr);
     gap: 0.4rem;
@@ -1034,14 +1038,19 @@
     min-height: 80px;
   }
 
+  .form-card-with-streams {
+    grid-column: 1 / -1;
+    padding: 0.65rem;
+  }
+
   .streams-grid {
-    grid-template-columns: repeat(4, 1fr);
-    gap: 0.35rem;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
   }
 
   .stream-card {
-    padding: 0.4rem;
-    min-height: 50px;
+    padding: 0.5rem;
+    min-height: 56px;
   }
 
   .stream-grid {
