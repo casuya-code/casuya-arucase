@@ -1,0 +1,987 @@
+/* ============================================================
+   PRE-FORM ONE — Modern restyle
+   Shared across every Pre-Form One admin page.
+   Imported AFTER each page's own CSS so these overrides win
+   the cascade. Palette mirrors the modernized admin pages
+   (Users / UserCommands / Administrators):
+   warm canvas #f5f5f0, white cards, 12px radius,
+   emerald accent #10b981, near-black #1a1a1a headings.
+   ============================================================ */
+
+.pre-form-one-page,
+.pre-form-one-year-page,
+.preform-one-registration-route,
+.interview-subjects-page-container,
+.continuing-subjects-page-container,
+.pre-form-one-score-entry,
+.promotion-page-container,
+.preform-one-results-page-container {
+  --accent: #10b981;
+  --pfo-bg: #f5f5f0;
+  --pfo-card: #ffffff;
+  --pfo-border: #e8e8e0;
+  --pfo-divider: #f0f0ea;
+  --pfo-text: #1a1a1a;
+  --pfo-muted: #6b6b60;
+  --pfo-fill: #fafaf6;
+  --pfo-focus: color-mix(in srgb, var(--accent) 15%, transparent);
+  background: var(--pfo-bg);
+  font-family: 'Source Sans 3', system-ui, -apple-system, sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+
+.pre-form-one-score-entry .score-entry-page-container {
+  background: transparent;
+  padding: clamp(0.5rem, 1.5vw, 1rem);
+}
+
+/* ------------------------------------------------------------------
+   1. Page headings
+   ------------------------------------------------------------------ */
+.pre-form-one-page .pre-form-one-header h1,
+.pre-form-one-page .year-info h3,
+.pre-form-one-year-page .pre-form-one-year-lead,
+.pre-form-one-year-page .navigation-info h3,
+.promotion-page-container .promotion-header h1,
+.promotion-page-container .status-header h3,
+.promotion-page-container .tab-button.active,
+.preform-one-results-page-container .section-title,
+.preform-one-results-page-container .excel-card-title,
+.interview-subjects-page-heading,
+.continuing-subjects-page-heading {
+  color: var(--pfo-text);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+}
+
+.pre-form-one-page .pre-form-one-header p,
+.pre-form-one-page .year-info p,
+.pre-form-one-year-page .navigation-info p,
+.promotion-page-container .promotion-header p,
+.interview-subjects-page-subtitle,
+.continuing-subjects-page-subtitle {
+  color: var(--pfo-muted);
+}
+
+.pre-form-one-year-page .pre-form-one-year-lead {
+  font-size: clamp(1.1rem, 2.5vw, 1.5rem);
+  max-width: none;
+}
+
+.interview-subjects-page-heading i,
+.continuing-subjects-page-heading i {
+  color: var(--accent);
+}
+
+/* ------------------------------------------------------------------
+   2. Landing (years) + year hub cards
+   ------------------------------------------------------------------ */
+.pre-form-one-page .years-grid,
+.pre-form-one-year-page .navigation-grid {
+  max-width: 1200px;
+}
+
+.pre-form-one-page .year-card,
+.pre-form-one-year-page .navigation-card {
+  background: var(--pfo-card);
+  border: 1px solid var(--pfo-border);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.pre-form-one-page .year-card:hover,
+.pre-form-one-year-page .navigation-card:hover {
+  transform: translateY(-2px);
+  border-color: #e0ddd5;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+}
+
+.pre-form-one-page .year-icon,
+.pre-form-one-year-page .navigation-icon {
+  background: color-mix(in srgb, var(--accent) 10%, #fff);
+  color: var(--accent);
+  border: none;
+  border-radius: 10px;
+}
+
+.pre-form-one-page .year-icon i,
+.pre-form-one-year-page .navigation-icon i {
+  font-size: 1.25rem;
+}
+
+.pre-form-one-page .year-info h3,
+.pre-form-one-year-page .navigation-info h3 {
+  font-size: clamp(1rem, 2.75vw, 1.2rem);
+  font-weight: 700;
+}
+
+.pre-form-one-page .year-arrow,
+.pre-form-one-year-page .navigation-arrow {
+  color: #c9c9bf;
+}
+
+.pre-form-one-page .year-card:hover .year-arrow,
+.pre-form-one-year-page .navigation-card:hover .navigation-arrow {
+  color: var(--accent);
+}
+
+/* ------------------------------------------------------------------
+   3. Shared card surfaces
+   ------------------------------------------------------------------ */
+.preform-one-registration-route .registration-form-card,
+.preform-one-registration-route .bulk-upload-card,
+.preform-one-registration-route .registered-students-card,
+.preform-one-registration-route .csv-template-section,
+.preform-one-registration-route .csv-template-download,
+.preform-one-registration-route .csv-template-upload,
+.preform-one-registration-route .templates-section,
+.preform-one-registration-route .registered-students,
+.preform-one-registration-route .template-card,
+.preform-one-registration-route .student-item,
+.preform-one-registration-route .registration-form-grid,
+.interview-subjects-page-container .interview-subjects-form-card,
+.interview-subjects-page-container .interview-subjects-list-card,
+.interview-subjects-page-container .interview-subjects-page-header,
+.continuing-subjects-page-container .continuing-subjects-form-card,
+.continuing-subjects-page-container .continuing-subjects-list-card,
+.continuing-subjects-page-container .continuing-subjects-page-header,
+.pre-form-one-score-entry .score-type-card,
+.pre-form-one-score-entry .subject-card,
+.pre-form-one-score-entry .score-form-card,
+.pre-form-one-score-entry .recent-scores-card,
+.pre-form-one-score-entry .students-table-card,
+.pre-form-one-score-entry .score-summary-card,
+.pre-form-one-score-entry .score-cards-header,
+.pre-form-one-score-entry .score-entry-subjects-container,
+.pre-form-one-score-entry .score-entry-subjects-header,
+.pre-form-one-score-entry .score-entry-form-header,
+.pre-form-one-score-entry .student-score-entry-header,
+.promotion-page-container .promotion-header,
+.promotion-page-container .promotion-status-card,
+.promotion-page-container .promotion-content,
+.preform-one-results-page-container .excel-card.preform-one-results,
+.preform-one-results-page-container .report-header-section,
+.preform-one-results-page-container .results-table-container,
+.preform-one-results-page-container .student-report-card,
+.preform-one-results-page-container .results-info,
+.preform-one-results-page-container .results-mobile-card {
+  background: var(--pfo-card);
+  border: 1px solid var(--pfo-border);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.preform-one-registration-route .registration-form-card:hover,
+.preform-one-registration-route .bulk-upload-card:hover,
+.preform-one-registration-route .registered-students-card:hover {
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+  transform: translateY(-2px);
+}
+
+.pre-form-one-score-entry .score-type-card:hover,
+.pre-form-one-score-entry .subject-card:hover {
+  transform: translateY(-2px);
+  border-color: #e0ddd5;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+}
+
+.pre-form-one-score-entry .score-type-card.interview,
+.pre-form-one-score-entry .score-type-card.continuing {
+  border-left: 3px solid var(--accent);
+}
+
+/* ------------------------------------------------------------------
+   4. Card headers
+   ------------------------------------------------------------------ */
+.preform-one-registration-route .registration-form-card-header,
+.preform-one-registration-route .bulk-upload-card-header,
+.preform-one-registration-route .registered-students-card-header,
+.interview-subjects-page-container .interview-subjects-form-header,
+.interview-subjects-page-container .interview-subjects-list-header,
+.continuing-subjects-page-container .continuing-subjects-form-header,
+.continuing-subjects-page-container .continuing-subjects-list-header,
+.pre-form-one-score-entry .score-type-card-header,
+.pre-form-one-score-entry .subject-card-header,
+.pre-form-one-score-entry .score-form-header,
+.pre-form-one-score-entry .recent-scores-header,
+.pre-form-one-score-entry .score-summary-header,
+.pre-form-one-score-entry .students-table-header,
+.pre-form-one-score-entry .score-entry-subjects-header,
+.pre-form-one-score-entry .score-entry-form-header,
+.pre-form-one-score-entry .student-score-entry-header,
+.promotion-page-container .status-header,
+.preform-one-results-page-container .excel-card-header {
+  background: #fff;
+  border-bottom: 1px solid var(--pfo-divider);
+}
+
+.preform-one-registration-route .registration-form-card-header,
+.preform-one-registration-route .bulk-upload-card-header,
+.preform-one-registration-route .registered-students-card-header,
+.preform-one-registration-route .csv-template-section h3,
+.preform-one-registration-route .templates-section h3,
+.preform-one-registration-route .students-header h3,
+.interview-subjects-page-container .interview-subjects-form-header h3,
+.interview-subjects-page-container .interview-subjects-list-header h3,
+.continuing-subjects-page-container .continuing-subjects-form-header h3,
+.continuing-subjects-page-container .continuing-subjects-list-header h3,
+.pre-form-one-score-entry .score-type-card-header h4,
+.pre-form-one-score-entry .subject-card-header h4,
+.pre-form-one-score-entry .score-form-header h4,
+.pre-form-one-score-entry .recent-scores-header h4,
+.pre-form-one-score-entry .score-summary-header h4,
+.pre-form-one-score-entry .students-table-header h4,
+.pre-form-one-score-entry .score-entry-subjects-header h3,
+.pre-form-one-score-entry .score-entry-form-header h3,
+.pre-form-one-score-entry .student-score-entry-header h3,
+.pre-form-one-score-entry .score-cards-header h3,
+.promotion-page-container .status-header h3,
+.preform-one-results-page-container .excel-card-title {
+  color: var(--pfo-text);
+  font-weight: 700;
+}
+
+.preform-one-registration-route .registration-form-card-body,
+.preform-one-registration-route .bulk-upload-card-body,
+.preform-one-registration-route .registered-students-card-body,
+.promotion-page-container .status-content,
+.promotion-page-container .history-container {
+  padding: clamp(1rem, 2vw, 1.5rem);
+}
+
+.preform-one-registration-route .csv-template-section h3,
+.preform-one-registration-route .templates-section h3,
+.preform-one-registration-route .students-header h3 {
+  font-size: clamp(1.05rem, 2.5vw, 1.25rem);
+}
+
+/* ------------------------------------------------------------------
+   5. Buttons (.excel-btn and friends)
+   ------------------------------------------------------------------ */
+.preform-one-registration-route .excel-btn,
+.interview-subjects-page-container .excel-btn,
+.continuing-subjects-page-container .excel-btn,
+.pre-form-one-score-entry .excel-btn,
+.promotion-page-container .excel-btn,
+.preform-one-results-page-container .excel-btn {
+  border-radius: 8px;
+  border-width: 1px;
+  border-style: solid;
+  font-weight: 700;
+  box-shadow: none;
+  box-sizing: border-box;
+  text-transform: none;
+  letter-spacing: 0;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.preform-one-registration-route .excel-btn.primary,
+.interview-subjects-page-container .excel-btn.primary,
+.continuing-subjects-page-container .excel-btn.primary,
+.pre-form-one-score-entry .excel-btn.primary,
+.promotion-page-container .excel-btn.primary,
+.preform-one-results-page-container .excel-btn.primary {
+  background: #1a1a1a;
+  color: #fff;
+  border-color: #1a1a1a;
+}
+
+.preform-one-registration-route .excel-btn.primary:hover:not(:disabled),
+.interview-subjects-page-container .excel-btn.primary:hover:not(:disabled),
+.continuing-subjects-page-container .excel-btn.primary:hover:not(:disabled),
+.pre-form-one-score-entry .excel-btn.primary:hover:not(:disabled),
+.promotion-page-container .excel-btn.primary:hover:not(:disabled),
+.preform-one-results-page-container .excel-btn.primary:hover:not(:disabled) {
+  background: #000;
+  border-color: #000;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.preform-one-registration-route .excel-btn.secondary,
+.interview-subjects-page-container .excel-btn.secondary,
+.continuing-subjects-page-container .excel-btn.secondary,
+.pre-form-one-score-entry .excel-btn.secondary,
+.promotion-page-container .excel-btn.secondary,
+.preform-one-results-page-container .excel-btn.secondary {
+  background: var(--pfo-btn-secondary, #f5f5f0);
+  color: #1a1a1a;
+  border-color: #e0ddd5;
+}
+
+.preform-one-registration-route .excel-btn.secondary:hover:not(:disabled),
+.interview-subjects-page-container .excel-btn.secondary:hover:not(:disabled),
+.continuing-subjects-page-container .excel-btn.secondary:hover:not(:disabled),
+.pre-form-one-score-entry .excel-btn.secondary:hover:not(:disabled),
+.promotion-page-container .excel-btn.secondary:hover:not(:disabled),
+.preform-one-results-page-container .excel-btn.secondary:hover:not(:disabled) {
+  background: #ecece4;
+  border-color: #d5d2c8;
+  transform: translateY(-1px);
+}
+
+/* Dedicated action buttons */
+.preform-one-registration-route .register-button,
+.preform-one-registration-route .export-button,
+.preform-one-registration-route .load-button,
+.preform-one-registration-route .download-template-button {
+  background: #1a1a1a;
+  color: #fff;
+  border: 1px solid #1a1a1a;
+  border-radius: 8px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.preform-one-registration-route .register-button:hover,
+.preform-one-registration-route .export-button:hover,
+.preform-one-registration-route .load-button:hover,
+.preform-one-registration-route .download-template-button:hover {
+  background: #000;
+  border-color: #000;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.preform-one-registration-route .clear-button,
+.preform-one-registration-route .edit-button,
+.preform-one-registration-route .sort-toggle,
+.preform-one-registration-route .upload-label {
+  background: #f5f5f0;
+  color: #1a1a1a;
+  border: 1px solid #e0ddd5;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.preform-one-registration-route .clear-button:hover,
+.preform-one-registration-route .edit-button:hover,
+.preform-one-registration-route .sort-toggle:hover,
+.preform-one-registration-route .upload-label:hover {
+  background: #ecece4;
+  border-color: #d5d2c8;
+  transform: translateY(-1px);
+}
+
+.preform-one-registration-route .delete-button {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  box-shadow: none;
+}
+
+.preform-one-registration-route .delete-button:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+  transform: translateY(-1px);
+}
+
+.preform-one-registration-route .upload-label {
+  border-width: 2px;
+  min-height: clamp(44px, 6vw, 52px);
+}
+
+/* Tabs — registration pills */
+.preform-one-registration-route .tab-button {
+  background: #fafaf6;
+  border: 1px solid #e0ddd5;
+  border-radius: 999px;
+  color: #6b6b60;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.preform-one-registration-route .tab-button:hover {
+  background: #ecece4;
+  color: var(--pfo-text);
+}
+
+.preform-one-registration-route .tab-button.active {
+  background: #1a1a1a;
+  border-color: #1a1a1a;
+  color: #fff;
+}
+
+/* Tabs — promotion underline */
+.promotion-page-container .promotion-tabs {
+  border-bottom: 1px solid var(--pfo-divider);
+}
+
+.promotion-page-container .tab-button {
+  color: var(--pfo-muted);
+  font-weight: 600;
+  border-radius: 8px 8px 0 0;
+  background: transparent;
+}
+
+.promotion-page-container .tab-button:hover {
+  color: var(--pfo-text);
+  background: #fafaf6;
+}
+
+.promotion-page-container .tab-button.active {
+  border-bottom: 2px solid #1a1a1a;
+  background: #fff;
+}
+
+/* Continuing subjects inline action buttons */
+.continuing-subjects-page-container .action-btn {
+  border: 1px solid #e0ddd5;
+  background: #f5f5f0;
+  color: #1a1a1a;
+  border-radius: 8px;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.continuing-subjects-page-container .action-btn:hover {
+  background: #ecece4;
+  border-color: #d5d2c8;
+  transform: translateY(-1px);
+}
+
+.continuing-subjects-page-container .action-btn.delete {
+  background: #fef2f2;
+  color: #dc2626;
+  border-color: #fecaca;
+}
+
+.continuing-subjects-page-container .action-btn.delete:hover {
+  background: #fee2e2;
+  border-color: #fca5a5;
+}
+
+/* Results dedicated buttons */
+.preform-one-results-page-container .download-btn-monthly {
+  background: #1a1a1a;
+  color: #fff;
+  border: 1px solid #1a1a1a;
+  border-radius: 8px;
+  font-weight: 700;
+  box-shadow: none;
+}
+
+.preform-one-results-page-container .download-btn-monthly:hover {
+  background: #000;
+  border-color: #000;
+  color: #fff;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
+}
+
+.preform-one-results-page-container .download-btn-monthly.download-btn-monthly--secondary {
+  background: #f5f5f0;
+  color: #1a1a1a;
+  border-color: #e0ddd5;
+}
+
+.preform-one-results-page-container .download-btn-monthly.download-btn-monthly--secondary:hover {
+  background: #ecece4;
+  border-color: #d5d2c8;
+  color: #1a1a1a;
+}
+
+.preform-one-results-page-container .csv-btn {
+  background: #1a1a1a;
+  color: #fff;
+  border: 1px solid #1a1a1a;
+  border-radius: 8px;
+}
+
+.preform-one-results-page-container .csv-btn:hover {
+  background: #000;
+  color: #fff;
+}
+
+.preform-one-results-page-container .excel-btn.primary.small:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: #f3f4f6;
+  color: #9ca3af;
+  border-color: #e5e7eb;
+}
+
+/* Pagination buttons */
+.preform-one-registration-route .pagination-controls,
+.pre-form-one-score-entry .pagination-controls,
+.preform-one-results-page-container .pagination-controls {
+  background: #fff;
+  border: 1px solid var(--pfo-border);
+  border-radius: 12px;
+}
+
+.preform-one-results-page-container .pagination-btn {
+  background: #f5f5f0;
+  color: #1a1a1a;
+  border: 1px solid #e0ddd5;
+  border-radius: 8px;
+  font-weight: 600;
+  box-shadow: none;
+}
+
+.preform-one-results-page-container .pagination-btn:hover:not(:disabled) {
+  background: #ecece4;
+  border-color: #d5d2c8;
+}
+
+.preform-one-registration-route .pagination-info,
+.preform-one-results-page-container .pagination-info {
+  color: var(--pfo-text);
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------
+   6. Form inputs
+   ------------------------------------------------------------------ */
+.preform-one-registration-route .form-input,
+.preform-one-registration-route .search-input,
+.preform-one-registration-route .filter-select,
+.interview-subjects-page-container .form-input,
+.interview-subjects-page-container .form-textarea,
+.continuing-subjects-page-container .form-input,
+.continuing-subjects-page-container .form-textarea,
+.pre-form-one-score-entry .form-input,
+.pre-form-one-score-entry .form-textarea,
+.promotion-page-container .stream-select {
+  border: 1px solid #d5d2c8;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--pfo-text);
+  box-shadow: none;
+  box-sizing: border-box;
+  min-height: 44px;
+  font-family: inherit;
+}
+
+.preform-one-registration-route .form-input:focus,
+.preform-one-registration-route .search-input:focus,
+.preform-one-registration-route .filter-select:focus,
+.interview-subjects-page-container .form-input:focus,
+.interview-subjects-page-container .form-textarea:focus,
+.continuing-subjects-page-container .form-input:focus,
+.continuing-subjects-page-container .form-textarea:focus,
+.pre-form-one-score-entry .form-input:focus,
+.pre-form-one-score-entry .form-textarea:focus,
+.promotion-page-container .stream-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--pfo-focus);
+}
+
+.preform-one-registration-route .form-input:hover,
+.preform-one-registration-route .search-input:hover,
+.preform-one-registration-route .filter-select:hover {
+  border-color: #b5b2a6;
+  box-shadow: none;
+}
+
+.pre-form-one-score-entry .score-input,
+.pre-form-one-score-entry .grade-select {
+  border: 1px solid #d5d2c8;
+  border-radius: 8px;
+  background: #fff;
+  color: var(--pfo-text);
+  padding: 6px 10px;
+  min-height: 36px;
+  box-sizing: border-box;
+  font-family: inherit;
+  font-size: 0.85rem;
+}
+
+.pre-form-one-score-entry .score-input:focus,
+.pre-form-one-score-entry .grade-select:focus {
+  outline: none;
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px var(--pfo-focus);
+}
+
+/* ------------------------------------------------------------------
+   7. Tables
+   ------------------------------------------------------------------ */
+.preform-one-registration-route .students-table-container {
+  border-radius: 12px;
+  border: 1px solid var(--pfo-border);
+  background: #fff;
+}
+
+.preform-one-registration-route .students-table thead,
+.preform-one-registration-route .students-table th,
+.interview-subjects-table th,
+.continuing-subjects-table th,
+.pre-form-one-score-entry .students-table th,
+.promotion-page-container .promotion-table th,
+.promotion-page-container .history-table th,
+.preform-one-results-page-container .compact-results-table th {
+  background: var(--pfo-fill);
+  color: var(--pfo-text);
+  font-weight: 700;
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border-bottom: 1px solid var(--pfo-divider);
+}
+
+.preform-one-registration-route .students-table td,
+.interview-subjects-table td,
+.continuing-subjects-table td,
+.pre-form-one-score-entry .students-table td,
+.promotion-page-container .promotion-table td,
+.promotion-page-container .history-table td {
+  border-bottom: 1px solid var(--pfo-divider);
+  color: #374151;
+}
+
+.preform-one-registration-route .students-table tbody tr:hover,
+.interview-subjects-table tbody tr:hover,
+.continuing-subjects-table tbody tr:hover,
+.pre-form-one-score-entry .students-table tbody tr:hover,
+.promotion-page-container .promotion-table tr:hover,
+.promotion-page-container .history-table tr:hover {
+  background: var(--pfo-fill);
+}
+
+.promotion-page-container .promotion-table tr.selected {
+  background: color-mix(in srgb, var(--accent) 6%, #fff);
+  border-left: 3px solid var(--accent);
+}
+
+.interview-subjects-page-container .subject-code,
+.continuing-subjects-page-container .subject-code,
+.pre-form-one-score-entry .subject-code {
+  background: #f5f5f0;
+  border: 1px solid #e8e8e0;
+  border-radius: 6px;
+  color: var(--pfo-text);
+  font-family: 'Courier New', monospace;
+  font-weight: 600;
+}
+
+/* ------------------------------------------------------------------
+   8. Badges, chips, status
+   ------------------------------------------------------------------ */
+.preform-one-registration-route .sex-badge {
+  border-radius: 999px;
+  font-weight: 600;
+  box-shadow: none;
+  letter-spacing: 0.02em;
+  border: none;
+}
+
+.preform-one-registration-route .sex-badge.male {
+  background: color-mix(in srgb, #10b981 10%, #fff);
+  color: #047857;
+}
+
+.preform-one-registration-route .sex-badge.female {
+  background: color-mix(in srgb, #8b5cf6 10%, #fff);
+  color: #6d28d9;
+}
+
+.preform-one-registration-route .sex-badge.unknown {
+  background: #f5f5f0;
+  color: var(--pfo-muted);
+}
+
+.preform-one-registration-route .parish-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  background: color-mix(in srgb, #10b981 10%, #fff);
+  color: #047857;
+  border: none;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  white-space: nowrap;
+}
+
+.preform-one-registration-route .student-info-display {
+  background: var(--pfo-fill);
+  border: 1px solid var(--pfo-border);
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+
+.preform-one-registration-route .detail-item label {
+  color: var(--pfo-muted);
+}
+
+.preform-one-registration-route .detail-item span {
+  color: var(--pfo-text);
+  font-weight: 600;
+}
+
+.interview-subjects-page-container .status-badge,
+.continuing-subjects-page-container .status-badge,
+.pre-form-one-score-entry .status-badge {
+  border-radius: 999px;
+  padding: 4px 12px;
+  font-weight: 600;
+  text-transform: capitalize;
+  letter-spacing: 0;
+  border: none;
+}
+
+.interview-subjects-page-container .status-badge.active,
+.continuing-subjects-page-container .status-badge.active,
+.pre-form-one-score-entry .status-badge.completed {
+  background: color-mix(in srgb, #10b981 12%, #fff);
+  color: #047857;
+}
+
+.interview-subjects-page-container .status-badge.inactive,
+.continuing-subjects-page-container .status-badge.inactive,
+.pre-form-one-score-entry .status-badge.pending {
+  background: #f5f5f0;
+  color: var(--pfo-muted);
+}
+
+.pre-form-one-score-entry .status-indicator i.scored {
+  color: var(--accent);
+}
+
+.pre-form-one-score-entry .status-indicator i.pending {
+  color: #f59e0b;
+}
+
+.pre-form-one-score-entry .year-badge,
+.pre-form-one-score-entry .subject-count {
+  background: #f5f5f0;
+  border: 1px solid #e8e8e0;
+  border-radius: 999px;
+  color: var(--pfo-text);
+  font-weight: 600;
+  padding: 4px 12px;
+}
+
+.pre-form-one-score-entry .score-type-icon,
+.pre-form-one-score-entry .subject-icon {
+  background: color-mix(in srgb, var(--accent) 10%, #fff);
+  color: var(--accent);
+  border: none;
+  border-radius: 10px;
+}
+
+.pre-form-one-score-entry .stat-item {
+  background: var(--pfo-fill);
+  border: 1px solid var(--pfo-divider);
+  border-radius: 10px;
+  padding: 10px 12px;
+}
+
+.pre-form-one-score-entry .stat-label {
+  color: var(--pfo-muted);
+  font-weight: 700;
+}
+
+.pre-form-one-score-entry .stat-value {
+  color: var(--pfo-text);
+  font-weight: 800;
+}
+
+.pre-form-one-score-entry .summary-item {
+  background: var(--pfo-fill);
+  border: 1px solid var(--pfo-divider);
+  border-radius: 10px;
+}
+
+.pre-form-one-score-entry .summary-label {
+  color: var(--pfo-muted);
+  font-weight: 700;
+}
+
+.pre-form-one-score-entry .summary-value {
+  color: var(--pfo-text);
+  font-weight: 800;
+}
+
+.pre-form-one-score-entry .progress-bar {
+  background: #eef0ea;
+  border-radius: 999px;
+}
+
+.pre-form-one-score-entry .progress-fill,
+.pre-form-one-score-entry .grade-fill {
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+.pre-form-one-score-entry .grade-progress {
+  border-radius: 8px;
+}
+
+/* ------------------------------------------------------------------
+   9. Promotion status / summary
+   ------------------------------------------------------------------ */
+.promotion-page-container .status-header i {
+  color: var(--accent);
+}
+
+.promotion-page-container .status-item .label {
+  color: var(--pfo-muted);
+  font-weight: 700;
+}
+
+.promotion-page-container .status-item .value {
+  color: var(--pfo-text);
+  font-weight: 600;
+}
+
+.promotion-page-container .status-item .value.completed {
+  color: #047857;
+}
+
+.promotion-page-container .status-item .value.pending {
+  color: #b45309;
+}
+
+.promotion-page-container .selection-count {
+  color: var(--pfo-muted);
+  font-weight: 600;
+}
+
+.promotion-page-container .promotion-actions {
+  background: var(--pfo-fill);
+  border-bottom: 1px solid var(--pfo-divider);
+}
+
+/* ------------------------------------------------------------------
+   10. Results page specifics
+   ------------------------------------------------------------------ */
+.preform-one-results-page-container .section-title {
+  border-bottom: 1px solid var(--pfo-divider);
+}
+
+.preform-one-results-page-container .student-report-card:hover {
+  border-color: #e0ddd5;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+.preform-one-results-page-container .student-number {
+  background: color-mix(in srgb, var(--accent) 10%, #fff);
+  color: var(--accent);
+  border-radius: 999px;
+  font-weight: 700;
+}
+
+.preform-one-results-page-container .student-name {
+  color: var(--pfo-text);
+  font-weight: 700;
+}
+
+.preform-one-results-page-container .student-meta,
+.preform-one-results-page-container .parish {
+  color: var(--pfo-muted);
+}
+
+.preform-one-results-page-container .adm-number {
+  color: var(--pfo-text);
+  font-weight: 600;
+}
+
+.preform-one-results-page-container .report-summary {
+  background: var(--pfo-fill);
+  border: 1px solid var(--pfo-divider);
+  border-radius: 999px;
+  color: var(--pfo-muted);
+  font-weight: 600;
+}
+
+.preform-one-results-page-container .report-status.available {
+  color: var(--pfo-text);
+}
+
+.preform-one-results-page-container .report-status.available i {
+  color: var(--accent);
+}
+
+.preform-one-results-page-container .report-status.unavailable {
+  color: var(--pfo-muted);
+}
+
+.preform-one-results-page-container .report-status.unavailable i {
+  color: #c9c9bf;
+}
+
+.preform-one-results-page-container .school-logo-placeholder {
+  border-radius: 10px;
+}
+
+.preform-one-results-page-container .test-info-bar {
+  border-top-color: var(--pfo-divider);
+}
+
+.preform-one-results-page-container .results-mobile-card__head {
+  background: var(--pfo-fill);
+  border-bottom-color: var(--pfo-divider);
+}
+
+.preform-one-results-page-container .results-mobile-card__sn {
+  color: var(--accent);
+  border-radius: 8px;
+}
+
+.preform-one-results-page-container .results-mobile-score-item,
+.preform-one-results-page-container .results-mobile-summary-item {
+  border-radius: 8px;
+}
+
+/* ------------------------------------------------------------------
+   11. Empty / loading states
+   ------------------------------------------------------------------ */
+.pre-form-one-page .no-students,
+.pre-form-one-page .no-templates,
+.preform-one-registration-route .no-students,
+.preform-one-registration-route .no-templates,
+.promotion-page-container .empty-state,
+.preform-one-results-page-container .empty-state,
+.interview-subjects-page-container .empty-state,
+.continuing-subjects-page-container .empty-state,
+.pre-form-one-score-entry .empty-state {
+  color: var(--pfo-muted);
+}
+
+.preform-one-registration-route .no-students i,
+.preform-one-registration-route .no-templates i,
+.promotion-page-container .empty-state i,
+.preform-one-results-page-container .empty-state i,
+.interview-subjects-page-container .empty-state i,
+.continuing-subjects-page-container .empty-state i,
+.pre-form-one-score-entry .empty-state i {
+  color: #c9c9bf;
+}
+
+.promotion-page-container .empty-state h3,
+.preform-one-results-page-container .empty-state h3,
+.interview-subjects-page-container .empty-state h3,
+.continuing-subjects-page-container .empty-state h3,
+.pre-form-one-score-entry .empty-state h3 {
+  color: var(--pfo-text);
+  font-weight: 700;
+}
+
+/* ------------------------------------------------------------------
+   12. Score entry breadcrumbs
+   ------------------------------------------------------------------ */
+.pre-form-one-score-entry .breadcrumb-navigation {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: center;
+  font-size: 0.8rem;
+}
+
+.pre-form-one-score-entry .breadcrumb-link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.pre-form-one-score-entry .breadcrumb-link:hover {
+  text-decoration: underline;
+}
+
+.pre-form-one-score-entry .breadcrumb-item {
+  color: var(--pfo-muted);
+}

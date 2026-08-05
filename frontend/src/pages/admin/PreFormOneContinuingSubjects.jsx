@@ -8,6 +8,7 @@ import { useParams, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import preFormOneContinuingSubjectsService from '../../services/preFormOneContinuingSubjectsService';
 import './PreFormOneContinuingSubjects.css';
+import './preform-one-modern.css';
 import AdminLayout from '../../components/layout/AdminLayout';
 
 const PreFormOneContinuingSubjects = () => {

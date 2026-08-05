@@ -2,6 +2,7 @@ import { Link } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { getSchoolYearOptions } from '../../utils/academicYearUtils';
 import './PreFormOne.css';
+import './preform-one-modern.css';
 
 const PreFormOne = () => {
   const years = [...getSchoolYearOptions()].reverse();

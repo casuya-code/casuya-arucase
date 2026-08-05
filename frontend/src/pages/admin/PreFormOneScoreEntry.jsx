@@ -14,6 +14,7 @@ import gradeSystemService from '../../services/gradeSystemService';
 import dataPersistenceManager, { normalizeScoresMap } from '../../utils/dataPersistenceManager';
 import AdminLayout from '../../components/layout/AdminLayout';
 import './PreFormOneScoreEntry.css';
+import './preform-one-modern.css';
 
 const PreFormOneScoreEntry = () => {
   const { year, subjectId } = useParams();

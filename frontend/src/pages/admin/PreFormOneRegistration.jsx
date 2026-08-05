@@ -5,6 +5,7 @@ import { preFormOneService } from '../../services/preFormOneService';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { CSV_BULK_LABELS, CSV_BULK_TITLES } from '../../constants/csvBulkActions';
 import './PreFormOneRegistration.css';
+import './preform-one-modern.css';
 
 const PreFormOneRegistration = () => {
   const { year } = useParams();

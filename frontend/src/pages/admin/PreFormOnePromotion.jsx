@@ -8,6 +8,7 @@ import { toast } from 'react-toastify';
 import { preFormOnePromotionService } from '../../services/preFormOnePromotionService';
 import AdminLayout from '../../components/layout/AdminLayout';
 import './PreFormOnePromotion.css';
+import './preform-one-modern.css';
 
 const PreFormOnePromotion = () => {
   const { year } = useParams();

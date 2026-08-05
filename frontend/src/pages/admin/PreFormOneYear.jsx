@@ -1,6 +1,7 @@
 import { useParams, Link } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
 import './PreFormOneYear.css';
+import './preform-one-modern.css';
 
 const PreFormOneYear = () => {
   const { year } = useParams();

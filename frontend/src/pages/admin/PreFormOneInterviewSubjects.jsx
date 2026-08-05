@@ -2,6 +2,7 @@ import { useState, useEffect } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import './PreFormOneInterviewSubjects.css';
+import './preform-one-modern.css';
 import { preFormOneInterviewSubjectsService } from '../../services/preFormOneInterviewSubjectsService';
 import AdminLayout from '../../components/layout/AdminLayout';
 

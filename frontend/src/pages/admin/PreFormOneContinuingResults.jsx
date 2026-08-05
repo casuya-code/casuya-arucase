@@ -28,6 +28,7 @@ import {
   scoreForSubject,
 } from './preFormOneResultsUtils';
 import './PreFormOneResults.css';
+import './preform-one-modern.css';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { CSV_BULK_LABELS } from '../../constants/csvBulkActions';
 

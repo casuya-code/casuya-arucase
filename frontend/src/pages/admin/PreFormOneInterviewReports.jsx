@@ -11,6 +11,7 @@ import { useAuth } from '../../context/AuthContext';
 import { buildFetchUrl } from '../../utils/backendUrl';
 import { resultsByAdmissionNumber } from '../../services/preFormOneApiHelpers';
 import './PreFormOneResults.css';
+import './preform-one-modern.css';
 import AdminLayout from '../../components/layout/AdminLayout';
 
 const PreFormOneInterviewReports = () => {
