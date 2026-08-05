@@ -247,87 +247,128 @@ const Administrators = () => {
   return (
     <AdminLayout>
       <div className="administrators-page">
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-user-tie"></i>
-            <span className="admin-page-title">Administrators Management</span>
-            <div className="header-actions">
-              <button onClick={() => handleOpenModal()} className="excel-btn secondary small">
-                <i className="fas fa-plus-circle"></i> Add New
+        <div className="administrators-shell">
+          <header className="administrators-top">
+            <div>
+              <h1 className="administrators-top-title">
+                <i className="fas fa-user-tie administrators-top-icon" aria-hidden></i>
+                Administrators Management
+              </h1>
+              <p className="administrators-top-sub">
+                Manage school leadership and administration team
+              </p>
+            </div>
+            <div className="administrators-top-actions">
+              <button onClick={() => handleOpenModal()} className="excel-btn primary">
+                <i className="fas fa-plus"></i> Add New
               </button>
             </div>
+          </header>
+
+          <div className="administrators-stats">
+            <article className="administrators-stat" style={{ '--accent': '#3b82f6' }}>
+              <span className="administrators-stat-icon" aria-hidden>
+                <i className="fas fa-user-tie"></i>
+              </span>
+              <div className="administrators-stat-content">
+                <span className="administrators-stat-label">Total</span>
+                <strong>{administrators.length}</strong>
+                <span className="administrators-stat-hint">Leadership members</span>
+              </div>
+            </article>
+            <article className="administrators-stat" style={{ '--accent': '#10b981' }}>
+              <span className="administrators-stat-icon" aria-hidden>
+                <i className="fas fa-user-check"></i>
+              </span>
+              <div className="administrators-stat-content">
+                <span className="administrators-stat-label">Active</span>
+                <strong>{administrators.filter((admin) => admin.active !== false).length}</strong>
+                <span className="administrators-stat-hint">Currently active</span>
+              </div>
+            </article>
           </div>
-          <div className="excel-card-body">
-            <p className="admin-page-description">
-              Manage school leadership and administration team
-            </p>
 
-            {isLoading ? (
-              <div className="loading-state">
-                <i className="fas fa-spinner fa-spin"></i> Loading administrators...
-              </div>
-            ) : error ? (
-              <div className="error-state">
-                <i className="fas fa-exclamation-circle"></i> Error loading administrators: {error.message}
-              </div>
-            ) : (
-              <>
-                <div className="admin-info-row">
-                  <span className="admin-info-badge">
-                    <i className="fas fa-info-circle"></i> Total: <strong>{administrators.length}</strong>
-                  </span>
+          <div className="excel-card" style={{ '--accent': '#8b5cf6' }}>
+            <div className="excel-card-header">
+              <i className="fas fa-users"></i> Leadership Team
+              <span className="excel-card-count">{administrators.length}</span>
+            </div>
+            <div className="excel-card-body">
+              {isLoading ? (
+                <div className="administrators-loading">
+                  <i className="fas fa-spinner fa-spin"></i> Loading administrators…
                 </div>
-
-                {administrators.length === 0 ? (
-                  <div className="admin-empty-state">
-                    <i className="fas fa-user-tie"></i>
-                    <h3>No Administrators Yet</h3>
-                    <p>Tap &quot;Add New&quot; to add school leadership team members.</p>
+              ) : error ? (
+                <div className="error-state">
+                  <i className="fas fa-exclamation-circle"></i> Error loading administrators:{' '}
+                  {error.message}
+                </div>
+              ) : administrators.length === 0 ? (
+                <div className="admin-empty-state">
+                  <i className="fas fa-user-tie"></i>
+                  <h3>No Administrators Yet</h3>
+                  <p>Tap &quot;Add New&quot; to add school leadership team members.</p>
+                </div>
+              ) : (
+                <>
+                  {/* Desktop: table */}
+                  <div className="admin-table-container">
+                    <DataTable data={administrators} columns={columns} />
                   </div>
-                ) : (
-                  <>
-                    {/* Desktop: table */}
-                    <div className="admin-table-container">
-                      <DataTable
-                        data={administrators}
-                        columns={columns}
-                      />
-                    </div>
-                    {/* Mobile: card list */}
-                    <div className="admin-mobile-list">
-                      {administrators.map((admin) => (
-                        <div key={admin.id} className="admin-mobile-card">
-                          <div className="admin-mobile-card-top">
-                            <div className="admin-mobile-photo-wrap">
-                              {admin.photo ? (
-                                <img src={getPhotoUrl(admin.photo)} alt="" className="admin-mobile-photo" onError={(e) => { e.target.style.display = 'none'; e.target.nextElementSibling?.classList.add('show'); }} />
-                              ) : null}
-                              <div className={`admin-mobile-photo-placeholder ${!admin.photo ? 'show' : ''}`}><i className="fas fa-user"></i></div>
-                            </div>
-                            <div className="admin-mobile-info">
-                              <div className="admin-mobile-name">{admin.name}</div>
-                              <div className="admin-mobile-title">{admin.title}</div>
-                              {admin.year_started && <div className="admin-mobile-year">From {admin.year_started}</div>}
-                              <span className={`status-badge ${admin.active ? 'active' : 'inactive'}`}>
-                                {admin.active ? 'Active' : 'Inactive'}
-                              </span>
+                  {/* Mobile: card list */}
+                  <div className="admin-mobile-list">
+                    {administrators.map((admin) => (
+                      <div key={admin.id} className="admin-mobile-card">
+                        <div className="admin-mobile-card-top">
+                          <div className="admin-mobile-photo-wrap">
+                            {admin.photo ? (
+                              <img
+                                src={getPhotoUrl(admin.photo)}
+                                alt=""
+                                className="admin-mobile-photo"
+                                onError={(e) => {
+                                  e.target.style.display = 'none';
+                                  e.target.nextElementSibling?.classList.add('show');
+                                }}
+                              />
+                            ) : null}
+                            <div className={`admin-mobile-photo-placeholder ${!admin.photo ? 'show' : ''}`}>
+                              <i className="fas fa-user"></i>
                             </div>
                           </div>
-                          <div className="admin-mobile-card-actions">
-                            <button type="button" className="admin-action-btn edit" onClick={() => handleOpenModal(admin)}>
-                              <i className="fas fa-edit"></i> Edit
-                            </button>
-                            <button type="button" className="admin-action-btn delete" onClick={() => handleDelete(admin)}>
-                              <i className="fas fa-trash-alt"></i> Delete
-                            </button>
+                          <div className="admin-mobile-info">
+                            <div className="admin-mobile-name">{admin.name}</div>
+                            <div className="admin-mobile-title">{admin.title}</div>
+                            {admin.year_started && (
+                              <div className="admin-mobile-year">From {admin.year_started}</div>
+                            )}
+                            <span className={`status-badge ${admin.active ? 'active' : 'inactive'}`}>
+                              {admin.active ? 'Active' : 'Inactive'}
+                            </span>
                           </div>
                         </div>
-                      ))}
-                    </div>
-                  </>
-                )}
-              </>
-            )}
+                        <div className="admin-mobile-card-actions">
+                          <button
+                            type="button"
+                            className="admin-action-btn edit"
+                            onClick={() => handleOpenModal(admin)}
+                          >
+                            <i className="fas fa-edit"></i> Edit
+                          </button>
+                          <button
+                            type="button"
+                            className="admin-action-btn delete"
+                            onClick={() => handleDelete(admin)}
+                          >
+                            <i className="fas fa-trash-alt"></i> Delete
+                          </button>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                </>
+              )}
+            </div>
           </div>
         </div>
 
@@ -383,7 +424,9 @@ const Administrators = () => {
                     <input
                       type="number"
                       value={formData.display_order}
-                      onChange={(e) => setFormData({ ...formData, display_order: parseInt(e.target.value) || 0 })}
+                      onChange={(e) =>
+                        setFormData({ ...formData, display_order: parseInt(e.target.value) || 0 })
+                      }
                       className="excel-input"
                       min="0"
                     />
@@ -391,7 +434,7 @@ const Administrators = () => {
                 </div>
 
                 <div className="form-group">
-                  <label>
+                  <label className="checkbox-label">
                     <input
                       type="checkbox"
                       checked={formData.active}
@@ -451,8 +494,17 @@ const Administrators = () => {
                   <button type="button" onClick={handleCloseModal} className="excel-btn secondary">
                     Cancel
                   </button>
-                  <button type="submit" className="excel-btn primary" disabled={saveMutation.isLoading}>
-                    <i className="fas fa-save"></i> {saveMutation.isLoading ? 'Saving...' : (editingAdmin ? 'Update' : 'Create')}
+                  <button
+                    type="submit"
+                    className="excel-btn primary"
+                    disabled={saveMutation.isLoading}
+                  >
+                    <i className="fas fa-save"></i>{' '}
+                    {saveMutation.isLoading
+                      ? 'Saving…'
+                      : editingAdmin
+                        ? 'Update'
+                        : 'Create'}
                   </button>
                 </div>
               </form>
