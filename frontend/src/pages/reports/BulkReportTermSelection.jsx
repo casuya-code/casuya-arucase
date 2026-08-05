@@ -40,41 +40,47 @@ const BulkReportTermSelection = () => {
   return (
     <AdminLayout>
       <div className="bulk-report-page">
-        <div className="breadcrumb">
-          <Link to="/reports/bulk">Bulk Student Report</Link> &gt;{' '}
-          <Link to={`/reports/bulk/${encodeURIComponent(form)}/${encodeURIComponent(stream)}/year`}>{form}</Link> &gt; {year}
-        </div>
-
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-calendar-check"></i> Bulk Report - {form} {year} - Select Term
+        <div className="bulk-report-shell">
+          <div className="breadcrumb">
+            <Link to="/reports/bulk">Bulk Student Report</Link>
+            <span style={{ color: '#bbb' }}>&rsaquo;</span>
+            <Link to={`/reports/bulk/${encodeURIComponent(form)}/${encodeURIComponent(stream)}/year`}>{form}</Link>
+            <span style={{ color: '#bbb' }}>&rsaquo;</span>
+            <span className="breadcrumb-current">{year} &middot; Term</span>
           </div>
-          <div className="excel-card-body">
-            <p className="instruction-text">Select a term</p>
-            <div className="term-grid">
-              {terms.map((term) => (
-                <button
-                  type="button"
-                  key={term.code}
-                  onClick={() => handleTermClick(term.code)}
-                  className="term-card"
-                >
-                  <div className="term-icon">
-                    <i className={term.code === 'Term I' ? 'fas fa-book-open' : 'fas fa-book'}></i>
-                  </div>
-                  <div className="term-title">{term.name}</div>
-                  <div className="term-subtitle">{term.subtitle}</div>
-                  <div className="term-period">{term.months}</div>
-                </button>
-              ))}
+
+          <div className="excel-card" style={{ '--accent': '#8b5cf6' }}>
+            <div className="excel-card-header">
+              <i className="fas fa-calendar-check" /> Bulk Report - {form} {year} - Select Term
             </div>
-            <div className="action-buttons mt-20">
-              <Link
-                to={`/reports/bulk/${encodeURIComponent(form)}/${encodeURIComponent(stream)}/year`}
-                className="excel-btn"
-              >
-                <i className="fas fa-arrow-left"></i> Back to Year Selection
-              </Link>
+            <div className="excel-card-body">
+              <p className="instruction-text">Select a term</p>
+              <div className="term-grid">
+                {terms.map((term) => (
+                  <button
+                    type="button"
+                    key={term.code}
+                    onClick={() => handleTermClick(term.code)}
+                    className="term-card"
+                    style={{ '--accent': term.code === 'Term I' ? '#3b82f6' : '#f59e0b' }}
+                  >
+                    <div className="term-icon">
+                      <i className={term.code === 'Term I' ? 'fas fa-book-open' : 'fas fa-book'}></i>
+                    </div>
+                    <div className="term-title">{term.name}</div>
+                    <div className="term-subtitle">{term.subtitle}</div>
+                    <div className="term-period">{term.months}</div>
+                  </button>
+                ))}
+              </div>
+              <div className="action-buttons">
+                <Link
+                  to={`/reports/bulk/${encodeURIComponent(form)}/${encodeURIComponent(stream)}/year`}
+                  className="excel-btn excel-btn--outline"
+                >
+                  <i className="fas fa-arrow-left"></i> Back to Year Selection
+                </Link>
+              </div>
             </div>
           </div>
         </div>
@@ -84,4 +90,3 @@ const BulkReportTermSelection = () => {
 };
 
 export default BulkReportTermSelection;
-

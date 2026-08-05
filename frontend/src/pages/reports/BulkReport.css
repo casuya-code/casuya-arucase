@@ -1,116 +1,149 @@
-/**
- * Bulk Report Styles
- */
+/* ===========================================
+   BULK REPORT — Clean Modern Design
+   =========================================== */
+
+/* --- Page Shell --- */
 .bulk-report-page {
-  padding: clamp(0.5rem, 1.5vw, 1rem);
-  min-height: 0;
-  background: #ffffff;
+  background: #f5f5f0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
   box-sizing: border-box;
 }
 
+.bulk-report-shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2rem) clamp(0.75rem, 2.5vw, 1.5rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* --- Top Header --- */
 .page-header {
-  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e0ddd5;
 }
 
 .page-header h1 {
-  margin: 0 0 0.5rem 0;
-  color: #000000;
-  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  margin: 0;
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-weight: 800;
+  color: #1a1a1a;
+  letter-spacing: -0.02em;
 }
 
 .page-header p {
   margin: 0;
-  color: #000000;
-  font-size: 1rem;
+  font-size: 0.85rem;
+  color: #6b6b60;
 }
 
+/* --- Breadcrumb --- */
 .breadcrumb {
-  margin-bottom: 1rem;
-  font-size: 0.875rem;
-  color: #000000;
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: #6b6b60;
 }
 
 .breadcrumb a {
-  color: #000000;
-  text-decoration: underline;
+  color: #6b6b60;
+  text-decoration: none;
+  transition: color 0.15s ease;
 }
 
 .breadcrumb a:hover {
-  text-decoration: underline;
+  color: #1a1a1a;
 }
 
-/* Excel Card Styles */
+.breadcrumb-current {
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+/* --- Card --- */
 .excel-card {
-  background: #ffffff;
-  border-radius: 0;
-  border: 1px solid #e5e7eb;
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e8e8e0;
   box-shadow: none;
   overflow: hidden;
 }
 
 .excel-card-header {
-  background: #ffffff;
-  color: #000000;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 1rem 1.25rem;
-  font-size: 1.125rem;
-  font-weight: 600;
+  background: #fff;
+  color: #1a1a1a;
+  border-bottom: 1px solid #f0f0ea;
+  padding: 0.85rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 700;
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
 }
 
 .excel-card-header i {
-  color: #000000;
+  color: var(--accent, #10b981);
+  font-size: 0.85rem;
 }
 
 .excel-card-body {
-  padding: 1rem;
-  background: #ffffff;
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+  background: #fff;
 }
 
 .instruction-text {
-  margin-bottom: 1rem;
-  color: #000000;
+  margin-bottom: clamp(0.75rem, 2vw, 1.25rem);
+  color: #6b6b60;
+  font-size: 0.82rem;
   text-align: center;
-  font-size: 1rem;
 }
 
-/* Forms Grid */
+/* --- Forms Grid --- */
 .forms-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.75rem;
 }
 
 .form-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0;
-  padding: 1.25rem;
+  background: #fff;
+  border: 1px solid #e8e8e0;
+  border-radius: 12px;
+  padding: clamp(1.25rem, 3vw, 1.75rem) clamp(0.75rem, 2vw, 1rem);
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.5rem;
+  min-height: clamp(100px, 18vw, 130px);
+  justify-content: center;
+  box-sizing: border-box;
 }
 
 .form-card:hover {
-  border-color: #000000;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  transform: none;
+  border-color: var(--accent, #10b981);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
 }
 
 .form-card .bulk-report-hover-tick {
   position: absolute;
-  top: 0.75rem;
-  right: 0.75rem;
+  top: 0.5rem;
+  right: 0.5rem;
   color: #10b981;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 .form-card:hover .bulk-report-hover-tick {
@@ -118,108 +151,115 @@
 }
 
 .form-icon {
-  font-size: 3rem;
-  color: #000000;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--accent, #10b981) 12%, transparent);
+  color: var(--accent, #10b981);
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+.form-card:hover .form-icon {
+  background: var(--accent, #10b981);
+  color: #fff;
 }
 
 .form-info h3 {
   margin: 0;
-  color: #111827;
-  font-size: 1.25rem;
+  color: #1a1a1a;
+  font-size: clamp(0.9rem, 2.2vw, 1.1rem);
+  font-weight: 800;
 }
 
 .form-info p {
-  margin: 0.5rem 0 0 0;
-  color: #000000;
-  font-size: 0.875rem;
+  margin: 0.125rem 0 0 0;
+  color: #999;
+  font-size: 0.72rem;
 }
 
 .form-arrow {
-  color: #000000;
-  font-size: 1.5rem;
-  transition: none;
+  color: #ccc;
+  font-size: 0.9rem;
+  transition: color 0.2s ease;
 }
 
 .form-card:hover .form-arrow {
-  transform: none;
+  color: var(--accent, #10b981);
 }
 
 /* Form Card with Streams */
 .form-card-with-streams {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0;
-  overflow: hidden;
+  grid-column: span 1;
+  background: #fff;
+  border: 1px solid #e8e8e0;
+  border-radius: 12px;
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
 }
 
 .form-card-header {
-  background: #ffffff;
-  color: #000000;
-  border-bottom: 1px solid #e5e7eb;
-  padding: 1rem;
   text-align: center;
-  transition: border-color 0.2s ease;
-}
-
-.form-card-header:hover {
-  background: #ffffff;
-  border-color: #000000;
+  padding-bottom: 0.5rem;
+  border-bottom: 1px solid #f0f0ea;
 }
 
 .form-card-header h3 {
-  margin: 0 0 0.5rem 0;
-  font-size: 1.25rem;
-  color: #000000;
+  margin: 0 0 0.15rem;
+  font-size: clamp(0.9rem, 2.2vw, 1.1rem);
+  font-weight: 800;
+  color: #1a1a1a;
 }
 
 .form-card-header p {
   margin: 0;
-  font-size: 0.875rem;
-  opacity: 1;
-  color: #000000;
+  font-size: 0.72rem;
+  color: #999;
 }
 
 /* Streams Grid (form pickers that reuse this pattern) */
 .streams-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.75rem;
-  padding: 1rem;
-  box-sizing: border-box;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 0.5rem;
 }
 
 .stream-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0;
-  padding: 1rem;
+  background: #fafaf6;
+  border: 1px solid #e8e8e0;
+  border-radius: 10px;
+  padding: clamp(0.5rem, 1.5vw, 0.75rem);
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: all 0.15s ease;
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 0.5rem;
-  flex: 1 1 160px;
-  min-width: 0;
+  gap: 0.3rem;
+  min-height: 60px;
+  justify-content: center;
   box-sizing: border-box;
-  box-shadow: none;
 }
 
 .stream-card:hover {
-  border-color: #000000;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  transform: none;
+  background: #f0fdf4;
+  border-color: #10b981;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.1);
+  transform: translateY(-1px);
 }
 
 .stream-card .bulk-report-hover-tick {
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  color: #000000;
+  top: 0.375rem;
+  right: 0.375rem;
+  color: #10b981;
   opacity: 0;
-  transition: opacity 0.3s ease;
+  transition: opacity 0.2s ease;
 }
 
 .stream-card:hover .bulk-report-hover-tick {
@@ -227,57 +267,154 @@
 }
 
 .stream-icon {
-  font-size: 2rem;
-  color: #000000;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--accent, #10b981) 12%, transparent);
+  color: var(--accent, #10b981);
+  border-radius: 8px;
+  font-size: 0.75rem;
+}
+
+.stream-card:hover .stream-icon {
+  background: #10b981;
+  color: #fff;
 }
 
 .stream-info h4 {
   margin: 0;
-  color: #000000;
-  font-size: 1rem;
-  font-weight: 600;
+  color: #1a1a1a;
+  font-size: clamp(0.8rem, 2vw, 0.95rem);
+  font-weight: 800;
 }
 
 .stream-info p {
   margin: 0;
-  color: #000000;
-  font-size: 0.75rem;
+  color: #999;
+  font-size: 0.65rem;
 }
 
-/* Year Grid */
-.year-grid {
+/* --- Stream Grid (V/VI step 4) --- */
+.stream-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 180px), 1fr));
+  gap: 0.75rem;
   margin-bottom: 1rem;
 }
 
-.year-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0;
+.stream-grid .stream-card {
+  background: #fff;
+  min-height: 110px;
+  border-radius: 12px;
   padding: 1rem;
+}
+
+.stream-grid .stream-icon {
+  width: 40px;
+  height: 40px;
+  font-size: 0.9rem;
+}
+
+.stream-card.all-streams {
+  background: #fff;
+  color: inherit;
+  border: 1px solid var(--accent, #10b981);
+}
+
+.stream-card.all-streams:hover {
+  background: #f0fdf4;
+  border-color: #10b981;
+}
+
+.stream-card.all-streams .stream-icon,
+.stream-card.all-streams .stream-name,
+.stream-card.all-streams .stream-subtitle {
+  color: inherit;
+}
+
+.stream-name {
+  font-size: 0.95rem;
+  font-weight: 800;
+  color: #1a1a1a;
+  margin-bottom: 0.25rem;
+}
+
+.stream-subtitle {
+  font-size: 0.72rem;
+  color: #999;
+}
+
+/* --- Info Banner --- */
+.info-banner {
+  background: #fefce8;
+  border: 1px solid #fde68a;
+  border-radius: 10px;
+  padding: 0.85rem 1rem;
+  margin-bottom: 1.25rem;
+  display: flex;
+  align-items: flex-start;
+  gap: 0.75rem;
+}
+
+.info-banner i {
+  color: #f59e0b;
+  font-size: 1.25rem;
+  flex-shrink: 0;
+  margin-top: 0.15rem;
+}
+
+.info-banner strong {
+  display: block;
+  color: #1a1a1a;
+  margin-bottom: 0.25rem;
+  font-size: 0.85rem;
+}
+
+.info-banner p {
+  margin: 0;
+  color: #6b6b60;
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+/* --- Year Grid --- */
+.year-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 200px), 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
+}
+
+.year-card {
+  background: #fff;
+  border: 1px solid #e8e8e0;
+  border-radius: 12px;
+  padding: clamp(1rem, 2.5vw, 1.5rem) clamp(0.75rem, 2vw, 1rem);
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
   position: relative;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+  min-height: 100px;
+  justify-content: center;
 }
 
 .year-card:hover {
-  border-color: #000000;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  transform: none;
+  border-color: var(--accent, #10b981);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
 }
 
 .year-status-icon {
   position: absolute;
-  top: 0.5rem;
-  right: 0.5rem;
-  font-size: 1.25rem;
+  top: 0.6rem;
+  right: 0.6rem;
+  font-size: 0.75rem;
 }
 
 .year-status-icon.year-current {
@@ -285,186 +422,225 @@
 }
 
 .year-status-icon.year-not-current {
-  color: #ef4444;
+  color: #ccc;
 }
 
 .year-icon {
-  font-size: 2.5rem;
-  color: #000000;
+  width: 36px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--accent, #10b981) 12%, transparent);
+  color: var(--accent, #10b981);
+  border-radius: 10px;
+  font-size: 0.85rem;
+}
+
+.year-card:hover .year-icon {
+  background: var(--accent, #10b981);
+  color: #fff;
 }
 
 .year-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #111827;
+  font-size: clamp(1rem, 2.2vw, 1.2rem);
+  font-weight: 800;
+  color: #1a1a1a;
 }
 
 .year-subtitle {
-  font-size: 0.875rem;
-  color: #000000;
+  font-size: 0.72rem;
+  color: #999;
 }
 
-/* Term Grid */
+/* --- Term Grid --- */
 .term-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-  margin-bottom: 1rem;
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 240px), 1fr));
+  gap: 0.75rem;
+  margin-bottom: 1.25rem;
 }
 
 .term-card {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0;
-  padding: 1.25rem;
+  background: #fff;
+  border: 1px solid #e8e8e0;
+  border-radius: 12px;
+  padding: clamp(1.25rem, 3vw, 1.75rem) clamp(0.75rem, 2vw, 1rem);
   text-align: center;
   cursor: pointer;
-  transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  transition: box-shadow 0.2s ease, transform 0.2s ease;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
+  min-height: 120px;
+  justify-content: center;
 }
 
 .term-card:hover {
-  border-color: #000000;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-  transform: none;
+  border-color: var(--accent, #10b981);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+  transform: translateY(-2px);
 }
 
 .term-icon {
-  font-size: 3rem;
-  color: #000000;
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: color-mix(in srgb, var(--accent, #10b981) 12%, transparent);
+  color: var(--accent, #10b981);
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+.term-card:hover .term-icon {
+  background: var(--accent, #10b981);
+  color: #fff;
 }
 
 .term-title {
-  font-size: 1.5rem;
-  font-weight: 600;
-  color: #111827;
+  font-size: clamp(0.95rem, 2.2vw, 1.1rem);
+  font-weight: 800;
+  color: #1a1a1a;
 }
 
 .term-subtitle {
-  font-size: 1rem;
-  color: #000000;
+  font-size: 0.72rem;
+  color: #6b6b60;
 }
 
 .term-period {
-  font-size: 0.875rem;
-  color: #000000;
+  font-size: 0.7rem;
+  color: #999;
 }
 
-/* Stream Grid */
-.stream-grid {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  box-sizing: border-box;
-}
-
-.stream-grid .stream-card {
-  flex: 1 1 160px;
-  min-width: 0;
-}
-
-@media (max-width: 480px) {
-  .stream-grid .stream-card,
-  .streams-grid .stream-card {
-    flex: 1 1 100%;
-  }
-}
-
-.stream-card.all-streams {
-  background: #ffffff;
-  color: #000000;
-  border: 1px solid #e5e7eb;
-}
-
-.stream-card.all-streams:hover {
-  background: #ffffff;
-  border-color: #000000;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
-}
-
-.stream-card.all-streams .stream-icon,
-.stream-card.all-streams .stream-name,
-.stream-card.all-streams .stream-subtitle {
-  color: #000000;
-}
-
-.stream-name {
-  font-size: 1.125rem;
-  font-weight: 600;
-  color: #000000;
-  margin-bottom: 0.25rem;
-}
-
-.stream-subtitle {
-  font-size: 0.875rem;
-  color: #000000;
-}
-
-/* Info Banner */
-.info-banner {
-  background: #ffffff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0;
-  padding: 1rem 1.5rem;
-  margin-bottom: 2rem;
-  display: flex;
-  align-items: flex-start;
-  gap: 1rem;
-}
-
-.info-banner i {
-  color: #000000;
-  font-size: 1.5rem;
-  flex-shrink: 0;
-  margin-top: 0.25rem;
-}
-
-.info-banner strong {
-  display: block;
-  color: #000000;
-  margin-bottom: 0.5rem;
-}
-
-.info-banner p {
-  margin: 0;
-  color: #000000;
-  font-size: 0.875rem;
-}
-
-/* Action Buttons */
+/* --- Action Buttons --- */
 .action-buttons {
-  margin-top: 2rem;
+  margin-top: 1.25rem;
   display: flex;
-  gap: 1rem;
-}
-
-.excel-btn {
-  background: #3b82f6;
-  color: white;
-  border: none;
-  padding: 0.5rem 1rem;
-  border-radius: 0;
-  cursor: pointer;
-  font-size: 0.875rem;
-  transition: background 0.2s ease;
-  display: inline-flex;
-  align-items: center;
   gap: 0.5rem;
-  text-decoration: none;
-}
-
-.excel-btn:hover {
-  background: #2563eb;
-  color: white;
-  text-decoration: none;
 }
 
 .mt-20 {
   margin-top: 1.25rem;
+}
+
+.excel-btn {
+  background: var(--accent, #10b981);
+  color: white;
+  border: none;
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 0.8rem;
+  font-weight: 600;
+  transition: all 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.4rem;
+  text-decoration: none;
+  min-height: 40px;
+  line-height: 1.4;
+  white-space: nowrap;
+}
+
+.excel-btn:hover {
+  background: color-mix(in srgb, var(--accent, #10b981) 85%, #000);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  color: white;
+  text-decoration: none;
+}
+
+.excel-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.excel-btn.small {
+  padding: 0.35rem 0.75rem;
+  font-size: 0.75rem;
+  min-height: 32px;
+}
+
+.excel-btn--outline {
+  background: #fff !important;
+  color: #333 !important;
+  border: 1px solid #d4d4cc !important;
+}
+
+.excel-btn--outline:hover {
+  background: #f0f0ea !important;
+  border-color: #bbb !important;
+  color: #1a1a1a !important;
+  box-shadow: none !important;
+}
+
+.excel-btn--ghost {
+  background: transparent !important;
+  color: #333 !important;
+  border: 1px dashed #d4d4cc !important;
+}
+
+.excel-btn--ghost:hover {
+  color: #1a1a1a !important;
+  border-color: #bbb !important;
+  background: #fafaf6 !important;
+  box-shadow: none !important;
+}
+
+/* --- Table --- */
+.excel-table-wrapper {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid #e8e8e0;
+  border-radius: 10px;
+}
+
+.excel-table {
+  width: 100%;
+  border-collapse: collapse;
+  background: white;
+}
+
+.excel-table th,
+.excel-table td {
+  padding: 0.6rem 0.85rem;
+  text-align: left;
+  border-bottom: 1px solid #f5f5f0;
+}
+
+.excel-table th {
+  background: #fafaf6;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  font-size: 0.7rem;
+  color: #888;
+  white-space: nowrap;
+}
+
+.excel-table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.excel-table tbody tr:nth-child(even) {
+  background: #fafaf8;
+}
+
+.excel-table tbody tr:hover {
+  background: #f5f5ee;
+}
+
+.error {
+  color: #b91c1c;
+  padding: 0.85rem 1rem;
+  background: #fef2f2;
+  border-radius: 10px;
+  border: 1px solid #fecaca;
+  font-size: 0.85rem;
 }
 
 .loading {
@@ -473,124 +649,7 @@
   color: #6b7280;
 }
 
-/* Bulk Report Actions */
-.bulk-report-actions {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 2rem;
-  padding: 1rem;
-  background: #ffffff;
-  border-radius: 0;
-  border: 1px solid #e5e7eb;
-  box-shadow: none;
-}
-
-.bulk-report-info {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-  color: #000000;
-  font-size: 0.875rem;
-}
-
-.bulk-report-info i {
-  color: #000000;
-}
-
-.bulk-reports-list {
-  margin-top: 1rem;
-}
-
-.excel-table {
-  width: 100%;
-  border-collapse: collapse;
-  margin-top: 1rem;
-  background: white;
-}
-
-.excel-table-wrapper {
-  overflow-x: auto;
-}
-
-.excel-table th,
-.excel-table td {
-  padding: 0.75rem;
-  text-align: left;
-  border: 1px solid #e5e7eb;
-}
-
-.excel-table th {
-  background: #ffffff;
-  font-weight: 600;
-  color: #000000;
-}
-
-.excel-table tbody tr:hover {
-  background: #ffffff;
-}
-
-.error {
-  color: #ef4444;
-  padding: 1rem;
-  background: #fef2f2;
-  border-radius: 0;
-  border: 1px solid #fecaca;
-}
-
-/* Smartphone layout */
-@media (max-width: 768px) {
-  .bulk-report-page { padding: 1rem; }
-  .page-header h1 { font-size: 1.5rem; }
-  .excel-card-header { padding: 1rem; font-size: 1rem; }
-  .excel-card-body { padding: 1rem; }
-  .instruction-text { font-size: 0.875rem; margin-bottom: 1rem; }
-  .breadcrumb { font-size: 0.75rem; margin-bottom: 1rem; }
-  .forms-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
-  .form-card { padding: 1rem; }
-  .form-icon { font-size: 2rem; }
-  .form-info h3 { font-size: 1.125rem; }
-  .form-card-with-streams { grid-column: span 1; }
-  .form-card-header { padding: 1rem; }
-  .form-card-header h3 { font-size: 1.125rem; }
-  .streams-grid, .stream-grid { gap: 0.75rem; padding: 1rem; }
-  .stream-card { padding: 1rem; }
-  .stream-icon { font-size: 1.5rem; }
-  .stream-info h4 { font-size: 0.875rem; }
-  .year-grid, .term-grid { grid-template-columns: repeat(2, 1fr); gap: 0.75rem; }
-  .year-card, .term-card { padding: 1rem; }
-  .year-icon, .term-icon { font-size: 2rem; }
-  .year-title, .term-title { font-size: 1.25rem; }
-  .bulk-report-actions { flex-direction: column; gap: 1rem; align-items: stretch; }
-  .info-banner { flex-direction: column; padding: 0.75rem; }
-  .info-banner i { font-size: 1.25rem; }
-  .info-banner strong { font-size: 0.875rem; }
-  .info-banner p { font-size: 0.75rem; }
-  .action-buttons { flex-direction: column; }
-  .excel-btn { width: 100%; justify-content: center; }
-  .excel-table { font-size: 0.75rem; }
-  .excel-table th, .excel-table td { padding: 0.5rem; }
-  .excel-btn.small { padding: 0.375rem 0.75rem; font-size: 0.75rem; }
-  .stream-name { font-size: 0.875rem; }
-  .stream-subtitle { font-size: 0.625rem; }
-}
-
-/* iPad / tablet layout */
-@media (min-width: 769px) and (max-width: 1024px) {
-  .forms-grid { grid-template-columns: repeat(3, 1fr); }
-  .streams-grid, .stream-grid { gap: 0.75rem; }
-  .year-grid, .term-grid { grid-template-columns: repeat(3, 1fr); }
-}
-
-/* -------------------------------------------------------------------------- */
-/* Bulk generate page — parity with individual report (toolbar, stats, PDF)   */
-/* -------------------------------------------------------------------------- */
-
-.bulk-report-generate .breadcrumb-current {
-  color: #000000;
-  font-weight: 600;
-}
-
+/* --- Bulk Generate Stats --- */
 .bulk-report-generate > .breadcrumb {
   text-align: center;
   font-size: 0.8125rem;
@@ -598,7 +657,9 @@
 }
 
 .bulk-generate-page-header {
-  text-align: center;
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
 }
 
 .bulk-generate-page-header p {
@@ -607,23 +668,20 @@
   margin-right: auto;
 }
 
-.bulk-generate-page-header h1 {
+.bulk-report-generate .bulk-generate-page-header h1 {
+  font-size: 1.125rem;
+  font-weight: 800;
+  margin: 0 0 0.35rem 0;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.5rem;
   flex-wrap: wrap;
-}
-
-/* Generate dashboard: normal UI type scale (not oversized headings / stats) */
-.bulk-report-generate .bulk-generate-page-header h1 {
-  font-size: 1.125rem;
-  font-weight: 600;
-  margin: 0 0 0.35rem 0;
+  letter-spacing: -0.01em;
 }
 
 .bulk-generate-title-icon {
-  color: #000000;
+  color: var(--accent, #10b981);
   font-size: 1rem;
 }
 
@@ -636,14 +694,18 @@
 
 .bulk-generate-stat {
   background: #fff;
-  border: 1px solid #e5e7eb;
-  border-radius: 0;
+  border: 1px solid #e8e8e0;
+  border-radius: 12px;
   padding: 0.875rem 1rem;
-  box-shadow: none;
+  transition: box-shadow 0.2s ease;
+}
+
+.bulk-generate-stat:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
 .bulk-report-generate .bulk-generate-stat {
-  padding: 0.625rem 0.75rem;
+  padding: 0.75rem 0.9rem;
 }
 
 .bulk-generate-stat--wide {
@@ -658,24 +720,26 @@
 
 .bulk-generate-stat-label {
   display: block;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: #000000;
+  letter-spacing: 0.06em;
+  color: #999;
   margin-bottom: 0.35rem;
 }
 
 .bulk-generate-stat-value {
   font-size: 1rem;
-  font-weight: 600;
-  color: #000000;
+  font-weight: 700;
+  color: #1a1a1a;
   line-height: 1.2;
+  font-variant-numeric: tabular-nums;
 }
 
 .bulk-generate-stat-value--small {
   font-size: 0.875rem;
-  font-weight: 500;
+  font-weight: 600;
   line-height: 1.35;
+  color: #333;
 }
 
 .bulk-generate-toolbar-card {
@@ -689,20 +753,24 @@
 }
 
 .bulk-report-generate .download-btn {
-  background: #ffffff;
-  color: #000000;
-  border: 2px solid #111827;
-  padding: 0.5rem 1rem;
+  background: #1a1a1a;
+  color: #fff;
+  border: none;
+  padding: 0.6rem 1.25rem;
   font-size: 0.875rem;
-  font-weight: 600;
+  font-weight: 700;
   cursor: pointer;
-  transition: background 0.2s ease, box-shadow 0.2s ease;
-  border-radius: 0;
+  transition: all 0.2s ease;
+  border-radius: 10px;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
 }
 
 .bulk-report-generate .download-btn:hover:not(:disabled) {
-  background: #ffffff;
-  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+  background: color-mix(in srgb, #1a1a1a 85%, #000);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+  transform: translateY(-1px);
 }
 
 .bulk-report-generate .download-btn:disabled {
@@ -714,14 +782,14 @@
   max-width: 420px;
   margin: 14px auto 0;
   height: 10px;
-  background: #e5e7eb;
+  background: #e8e8e0;
   border-radius: 999px;
   overflow: hidden;
 }
 
 .bulk-report-generate .download-progress-fill {
   height: 100%;
-  background: #000000;
+  background: linear-gradient(135deg, #10b981 0%, #34d399 100%);
   transition: width 0.25s ease;
   border-radius: 999px;
 }
@@ -730,7 +798,7 @@
   margin: 12px auto 0;
   max-width: 520px;
   font-size: 0.8125rem;
-  color: #000000;
+  color: #6b6b60;
   line-height: 1.45;
 }
 
@@ -744,7 +812,7 @@
 .bulk-generate-actions-row--toolbar {
   margin-top: 1rem;
   padding-top: 1rem;
-  border-top: 1px solid #e5e7eb;
+  border-top: 1px solid #f0f0ea;
 }
 
 .bulk-report-generate .bulk-generate-actions-row .excel-btn {
@@ -753,12 +821,12 @@
 }
 
 .bulk-report-generate .excel-card-header {
-  font-size: 0.9375rem;
-  padding: 0.625rem 0.875rem;
+  font-size: 0.875rem;
+  padding: 0.7rem 0.9rem;
 }
 
 .bulk-report-generate .excel-card-body {
-  padding: 0.75rem;
+  padding: 0.9rem;
 }
 
 .bulk-report-generate .excel-table {
@@ -775,31 +843,9 @@
   padding: 0.3rem 0.5rem;
 }
 
-.excel-btn--outline {
-  background: #fff !important;
-  color: #374151 !important;
-  border: 1px solid #cbd5e1 !important;
-}
-
-.excel-btn--outline:hover {
-  border-color: #000000 !important;
-  color: #000000 !important;
-}
-
-.excel-btn--ghost {
-  background: transparent !important;
-  color: #000000 !important;
-  border: 1px dashed #cbd5e1 !important;
-}
-
-.excel-btn--ghost:hover {
-  color: #000000 !important;
-  border-color: #000000 !important;
-}
-
 .bulk-generate-help {
   margin-top: 12px;
-  color: #000000;
+  color: #6b6b60;
   font-size: 0.8125rem;
   max-width: 560px;
   line-height: 1.5;
@@ -807,7 +853,7 @@
 
 .bulk-generate-loading-hint {
   text-align: center;
-  color: #000000;
+  color: #999;
   margin-top: 0.75rem;
   font-size: 0.8125rem;
 }
@@ -819,16 +865,16 @@
 .bulk-generate-skeleton-line {
   display: block;
   height: 12px;
-  background: linear-gradient(90deg, #f9fafb 0%, #e5e7eb 50%, #f9fafb 100%);
+  background: linear-gradient(90deg, #fafaf8 0%, #e5e5e0 50%, #fafaf8 100%);
   background-size: 200% 100%;
   animation: bulk-generate-shimmer 1.2s ease-in-out infinite;
-  border-radius: 4px;
+  border-radius: 6px;
 }
 
 .bulk-generate-skeleton-line--short { width: 40%; }
 .bulk-generate-skeleton-line--tiny { width: 35%; height: 8px; margin-bottom: 8px; }
 .bulk-generate-skeleton-line--med { width: 70%; height: 10px; }
-.bulk-generate-skeleton-line--btn { width: 220px; height: 40px; border-radius: 0; }
+.bulk-generate-skeleton-line--btn { width: 220px; height: 40px; border-radius: 8px; }
 
 .bulk-generate-skeleton-grid {
   display: grid;
@@ -839,7 +885,8 @@
 
 .bulk-generate-skeleton-stat {
   padding: 1rem;
-  border: 1px solid #e5e7eb;
+  border: 1px solid #e8e8e0;
+  border-radius: 12px;
 }
 
 .bulk-generate-skeleton-toolbar {
@@ -867,3 +914,186 @@
   100% { background-position: -200% 0; }
 }
 
+/* ===========================================
+   RESPONSIVE
+   =========================================== */
+@media (max-width: 768px) {
+  .bulk-report-shell {
+    padding: 0.75rem;
+  }
+
+  .page-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .excel-card-header {
+    padding: 0.75rem;
+    font-size: 0.875rem;
+    flex-wrap: wrap;
+  }
+
+  .excel-card-body {
+    padding: 0.75rem;
+  }
+
+  .instruction-text {
+    font-size: 0.8rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .breadcrumb {
+    font-size: 0.72rem;
+  }
+
+  .forms-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.6rem;
+  }
+
+  .form-card {
+    padding: 1rem;
+    min-height: 90px;
+  }
+
+  .form-card-with-streams {
+    grid-column: span 1;
+    padding: 0.75rem;
+  }
+
+  .streams-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.4rem;
+  }
+
+  .stream-card {
+    padding: 0.5rem;
+    min-height: 55px;
+  }
+
+  .stream-grid {
+    grid-template-columns: repeat(auto-fill, minmax(min(100%, 150px), 1fr));
+    gap: 0.6rem;
+  }
+
+  .year-grid,
+  .term-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .year-card,
+  .term-card {
+    padding: 0.75rem;
+    min-height: 85px;
+  }
+
+  .bulk-generate-actions-row {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .bulk-generate-actions-row .excel-btn {
+    width: 100%;
+  }
+
+  .info-banner {
+    flex-direction: column;
+    padding: 0.75rem;
+  }
+
+  .action-buttons {
+    flex-direction: column;
+  }
+
+  .action-buttons .excel-btn {
+    width: 100%;
+  }
+
+  .excel-table {
+    font-size: 0.75rem;
+  }
+
+  .excel-table th,
+  .excel-table td {
+    padding: 0.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .bulk-report-shell {
+    padding: 0.5rem;
+  }
+
+  .forms-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.5rem;
+  }
+
+  .form-card {
+    padding: 0.75rem;
+    min-height: 80px;
+  }
+
+  .streams-grid {
+    grid-template-columns: repeat(4, 1fr);
+    gap: 0.35rem;
+  }
+
+  .stream-card {
+    padding: 0.4rem;
+    min-height: 50px;
+  }
+
+  .stream-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .year-grid,
+  .term-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.375rem;
+  }
+
+  .year-card,
+  .term-card {
+    padding: 0.5rem;
+    min-height: 70px;
+  }
+
+  .year-icon,
+  .term-icon {
+    font-size: 1.25rem;
+  }
+
+  .stream-name {
+    font-size: 0.85rem;
+  }
+
+  .stream-subtitle {
+    font-size: 0.65rem;
+  }
+}
+
+/* iPad / tablet layout */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .forms-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .streams-grid {
+    grid-template-columns: repeat(4, 1fr);
+  }
+
+  .year-grid,
+  .term-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+/* Touch device optimizations */
+@media (hover: none) and (pointer: coarse) {
+  .excel-btn {
+    min-height: 44px;
+    min-width: 44px;
+  }
+}

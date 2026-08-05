@@ -226,39 +226,45 @@ const BulkReportGenerate = () => {
     return (
       <AdminLayout>
         <div className="bulk-report-page bulk-report-generate">
-          <div className="breadcrumb">
-            <Link to="/reports/bulk">Bulk Student Report</Link> &gt;{' '}
-            <Link to={yearSelectionPath}>{form}</Link> &gt;{' '}
-            <Link to={termSelectionPath}>{year}</Link> &gt; {term}
-          </div>
-          <div className="bulk-generate-skeleton excel-card">
-            <div className="excel-card-header">
-              <span className="bulk-generate-skeleton-line bulk-generate-skeleton-line--short" />
+          <div className="bulk-report-shell">
+            <div className="breadcrumb">
+              <Link to="/reports/bulk">Bulk Student Report</Link>
+              <span style={{ color: '#bbb' }}>&rsaquo;</span>
+              <Link to={yearSelectionPath}>{form}</Link>
+              <span style={{ color: '#bbb' }}>&rsaquo;</span>
+              <Link to={termSelectionPath}>{year}</Link>
+              <span style={{ color: '#bbb' }}>&rsaquo;</span>
+              <span className="breadcrumb-current">{term}</span>
             </div>
-            <div className="excel-card-body">
-              <div className="bulk-generate-skeleton-grid">
-                {[1, 2, 3, 4].map((k) => (
-                  <div key={k} className="bulk-generate-skeleton-stat">
-                    <span className="bulk-generate-skeleton-line bulk-generate-skeleton-line--tiny" />
-                    <span className="bulk-generate-skeleton-line bulk-generate-skeleton-line--med" />
-                  </div>
-                ))}
+            <div className="bulk-generate-skeleton excel-card">
+              <div className="excel-card-header">
+                <span className="bulk-generate-skeleton-line bulk-generate-skeleton-line--short" />
               </div>
-              <div className="bulk-generate-skeleton-toolbar">
-                <span className="bulk-generate-skeleton-line bulk-generate-skeleton-line--btn" />
-              </div>
-              <div className="bulk-generate-skeleton-table">
-                {[1, 2, 3, 4, 5, 6].map((r) => (
-                  <div key={r} className="bulk-generate-skeleton-row">
-                    <span className="bulk-generate-skeleton-line" />
-                    <span className="bulk-generate-skeleton-line bulk-generate-skeleton-line--med" />
-                    <span className="bulk-generate-skeleton-line bulk-generate-skeleton-line--short" />
-                  </div>
-                ))}
+              <div className="excel-card-body">
+                <div className="bulk-generate-skeleton-grid">
+                  {[1, 2, 3, 4].map((k) => (
+                    <div key={k} className="bulk-generate-skeleton-stat">
+                      <span className="bulk-generate-skeleton-line bulk-generate-skeleton-line--tiny" />
+                      <span className="bulk-generate-skeleton-line bulk-generate-skeleton-line--med" />
+                    </div>
+                  ))}
+                </div>
+                <div className="bulk-generate-skeleton-toolbar">
+                  <span className="bulk-generate-skeleton-line bulk-generate-skeleton-line--btn" />
+                </div>
+                <div className="bulk-generate-skeleton-table">
+                  {[1, 2, 3, 4, 5, 6].map((r) => (
+                    <div key={r} className="bulk-generate-skeleton-row">
+                      <span className="bulk-generate-skeleton-line" />
+                      <span className="bulk-generate-skeleton-line bulk-generate-skeleton-line--med" />
+                      <span className="bulk-generate-skeleton-line bulk-generate-skeleton-line--short" />
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
+            <p className="bulk-generate-loading-hint">Loading class list and summaries…</p>
           </div>
-          <p className="bulk-generate-loading-hint">Loading class list and summaries…</p>
         </div>
       </AdminLayout>
     );
@@ -268,24 +274,30 @@ const BulkReportGenerate = () => {
     return (
       <AdminLayout>
         <div className="bulk-report-page bulk-report-generate">
-          <div className="breadcrumb">
-            <Link to="/reports/bulk">Bulk Student Report</Link> &gt;{' '}
-            <Link to={yearSelectionPath}>{form}</Link> &gt;{' '}
-            <Link to={termSelectionPath}>{year}</Link> &gt; {term}
-          </div>
-          <div className="excel-card">
-            <div className="excel-card-header">
-              <i className="fas fa-exclamation-triangle" /> Could not load bulk report
+          <div className="bulk-report-shell">
+            <div className="breadcrumb">
+              <Link to="/reports/bulk">Bulk Student Report</Link>
+              <span style={{ color: '#bbb' }}>&rsaquo;</span>
+              <Link to={yearSelectionPath}>{form}</Link>
+              <span style={{ color: '#bbb' }}>&rsaquo;</span>
+              <Link to={termSelectionPath}>{year}</Link>
+              <span style={{ color: '#bbb' }}>&rsaquo;</span>
+              <span className="breadcrumb-current">{term}</span>
             </div>
-            <div className="excel-card-body">
-              <p className="error">{error.message || 'Unknown error'}</p>
-              <div className="bulk-generate-actions-row">
-                <button type="button" className="excel-btn" onClick={() => refetch()}>
-                  <i className="fas fa-redo" /> Try again
-                </button>
-                <Link to="/reports/bulk" className="excel-btn excel-btn--outline">
-                  <i className="fas fa-arrow-left" /> Back to form selection
-                </Link>
+            <div className="excel-card">
+              <div className="excel-card-header">
+                <i className="fas fa-exclamation-triangle" /> Could not load bulk report
+              </div>
+              <div className="excel-card-body">
+                <p className="error">{error.message || 'Unknown error'}</p>
+                <div className="bulk-generate-actions-row">
+                  <button type="button" className="excel-btn" onClick={() => refetch()}>
+                    <i className="fas fa-redo" /> Try again
+                  </button>
+                  <Link to="/reports/bulk" className="excel-btn excel-btn--outline">
+                    <i className="fas fa-arrow-left" /> Back to form selection
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -298,37 +310,43 @@ const BulkReportGenerate = () => {
     return (
       <AdminLayout>
         <div className="bulk-report-page bulk-report-generate">
-          <div className="breadcrumb">
-            <Link to="/reports/bulk">Bulk Student Report</Link> &gt;{' '}
-            <Link to={yearSelectionPath}>{form}</Link> &gt;{' '}
-            <Link to={termSelectionPath}>{year}</Link> &gt; {term}
-          </div>
-          <div className="excel-card">
-            <div className="excel-card-header">
-              <i className="fas fa-users-slash" /> No students found
+          <div className="bulk-report-shell">
+            <div className="breadcrumb">
+              <Link to="/reports/bulk">Bulk Student Report</Link>
+              <span style={{ color: '#bbb' }}>&rsaquo;</span>
+              <Link to={yearSelectionPath}>{form}</Link>
+              <span style={{ color: '#bbb' }}>&rsaquo;</span>
+              <Link to={termSelectionPath}>{year}</Link>
+              <span style={{ color: '#bbb' }}>&rsaquo;</span>
+              <span className="breadcrumb-current">{term}</span>
             </div>
-            <div className="excel-card-body">
-              <p>
-                No students found for <strong>{form}</strong> · <strong>{year}</strong> · <strong>{term}</strong>
-                {stream && stream !== 'all' && (
-                  <>
-                    {' '}
-                    · Stream <strong>{stream}</strong>
-                  </>
-                )}
-                .
-              </p>
-              <p className="bulk-generate-help">
-                Confirm registrations in <strong>Student Registration</strong> (level, year, stream). The database year
-                must match <strong>{year}</strong>.
-              </p>
-              <div className="bulk-generate-actions-row">
-                <Link to={termSelectionPath} className="excel-btn">
-                  <i className="fas fa-calendar-alt" /> Change term
-                </Link>
-                <Link to="/reports/bulk" className="excel-btn excel-btn--outline">
-                  <i className="fas fa-arrow-left" /> Back to form selection
-                </Link>
+            <div className="excel-card">
+              <div className="excel-card-header">
+                <i className="fas fa-users-slash" /> No students found
+              </div>
+              <div className="excel-card-body">
+                <p>
+                  No students found for <strong>{form}</strong> · <strong>{year}</strong> · <strong>{term}</strong>
+                  {stream && stream !== 'all' && (
+                    <>
+                      {' '}
+                      · Stream <strong>{stream}</strong>
+                    </>
+                  )}
+                  .
+                </p>
+                <p className="bulk-generate-help">
+                  Confirm registrations in <strong>Student Registration</strong> (level, year, stream). The database year
+                  must match <strong>{year}</strong>.
+                </p>
+                <div className="bulk-generate-actions-row">
+                  <Link to={termSelectionPath} className="excel-btn">
+                    <i className="fas fa-calendar-alt" /> Change term
+                  </Link>
+                  <Link to="/reports/bulk" className="excel-btn excel-btn--outline">
+                    <i className="fas fa-arrow-left" /> Back to form selection
+                  </Link>
+                </div>
               </div>
             </div>
           </div>
@@ -344,158 +362,167 @@ const BulkReportGenerate = () => {
   return (
     <AdminLayout>
       <div className="bulk-report-page bulk-report-generate">
-        <div className="breadcrumb">
-          <Link to="/reports/bulk">Bulk Student Report</Link> &gt;{' '}
-          <Link to={yearSelectionPath}>{form}</Link> &gt;{' '}
-          <Link to={termSelectionPath}>{year}</Link> &gt; <span className="breadcrumb-current">{term}</span> &gt;{' '}
-          <span className="breadcrumb-current">Generate</span>
-        </div>
+        <div className="bulk-report-shell">
+          <div className="breadcrumb">
+            <Link to="/reports/bulk">Bulk Student Report</Link>
+            <span style={{ color: '#bbb' }}>&rsaquo;</span>
+            <Link to={yearSelectionPath}>{form}</Link>
+            <span style={{ color: '#bbb' }}>&rsaquo;</span>
+            <Link to={termSelectionPath}>{year}</Link>
+            <span style={{ color: '#bbb' }}>&rsaquo;</span>
+            <span className="breadcrumb-current">{term}</span>
+          </div>
 
-        <div className="page-header bulk-generate-page-header">
-          <h1>
-            <i className="fas fa-layer-group bulk-generate-title-icon" aria-hidden />
-            Bulk student reports
-          </h1>
-        </div>
+          <div className="page-header bulk-generate-page-header">
+            <h1>
+              <i className="fas fa-layer-group bulk-generate-title-icon" aria-hidden />
+              Bulk student reports
+            </h1>
+            <p>
+              {form} &middot; {year} &middot; {term}
+              {stream && stream !== 'all' ? ` · Stream ${stream}` : ''}
+            </p>
+          </div>
 
-        <div className="bulk-generate-summary-grid" aria-label="Class summary">
-          <div className="bulk-generate-stat">
-            <span className="bulk-generate-stat-label">Students</span>
-            <span className="bulk-generate-stat-value">{totalStudents}</span>
-          </div>
-          <div className="bulk-generate-stat">
-            <span className="bulk-generate-stat-label">Subjects</span>
-            <span className="bulk-generate-stat-value">{subjectCount}</span>
-          </div>
-          <div className="bulk-generate-stat bulk-generate-stat--wide">
-            <span className="bulk-generate-stat-label">Assessment months (this term)</span>
-            <span className="bulk-generate-stat-value bulk-generate-stat-value--small">{monthsLabel}</span>
-          </div>
-          <div className="bulk-generate-stat">
-            <span className="bulk-generate-stat-label">Stream</span>
-            <span className="bulk-generate-stat-value">{streamLabel}</span>
-          </div>
-        </div>
-
-        <div className="excel-card bulk-generate-toolbar-card">
-          <div className="excel-card-header">
-            <i className="fas fa-file-pdf" /> Download &amp; refresh
-          </div>
-          <div className="excel-card-body">
-            <div className="download-section">
-              <button
-                type="button"
-                onClick={handleDownloadPDF}
-                className="download-btn"
-                disabled={isDownloading || isLoading || !bulkData}
-                title={isDownloading ? 'Generating PDF…' : 'Download all reports as one PDF'}
-              >
-                {isDownloading ? (
-                  <>
-                    <i className="fas fa-spinner fa-spin" /> Generating PDF…{' '}
-                    {downloadProgress > 0 ? `${downloadProgress}%` : null}
-                  </>
-                ) : (
-                  <>
-                    <i className="fas fa-file-download" /> Download all reports as PDF
-                  </>
-                )}
-              </button>
-              {isDownloading && downloadProgress > 0 && (
-                <div className="download-progress-bar">
-                  <div className="download-progress-fill" style={{ width: `${downloadProgress}%` }} />
-                </div>
-              )}
-              <p className="bulk-generate-pdf-hint">
-                Large classes can take several minutes. Keep this tab open until the download starts.
-              </p>
+          <div className="bulk-generate-summary-grid" aria-label="Class summary">
+            <div className="bulk-generate-stat">
+              <span className="bulk-generate-stat-label">Students</span>
+              <span className="bulk-generate-stat-value">{totalStudents}</span>
             </div>
-
-            <div className="bulk-generate-actions-row bulk-generate-actions-row--toolbar">
-              <button
-                type="button"
-                className="excel-btn excel-btn--outline"
-                onClick={handleRefresh}
-                disabled={isFetching}
-                title="Reload summaries from the server"
-              >
-                {isFetching ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-sync-alt" />}{' '}
-                {isFetching ? 'Refreshing…' : 'Refresh data'}
-              </button>
-              <Link to={termSelectionPath} className="excel-btn excel-btn--outline">
-                <i className="fas fa-calendar-alt" /> Change term
-              </Link>
-              <Link to={yearSelectionPath} className="excel-btn excel-btn--outline">
-                <i className="fas fa-calendar" /> Change year
-              </Link>
-              <Link to="/reports/individual" className="excel-btn excel-btn--ghost">
-                <i className="fas fa-user" /> Individual report wizard
-              </Link>
+            <div className="bulk-generate-stat">
+              <span className="bulk-generate-stat-label">Subjects</span>
+              <span className="bulk-generate-stat-value">{subjectCount}</span>
+            </div>
+            <div className="bulk-generate-stat bulk-generate-stat--wide">
+              <span className="bulk-generate-stat-label">Assessment months (this term)</span>
+              <span className="bulk-generate-stat-value bulk-generate-stat-value--small">{monthsLabel}</span>
+            </div>
+            <div className="bulk-generate-stat">
+              <span className="bulk-generate-stat-label">Stream</span>
+              <span className="bulk-generate-stat-value">{streamLabel}</span>
             </div>
           </div>
-        </div>
 
-        <div className="bulk-reports-list">
-          <div className="excel-card">
+          <div className="excel-card bulk-generate-toolbar-card">
             <div className="excel-card-header">
-              <i className="fas fa-list" /> Students &amp; summaries
+              <i className="fas fa-file-pdf" /> Download &amp; refresh
             </div>
             <div className="excel-card-body">
-              <div className="excel-table-wrapper">
-                <table className="excel-table">
-                  <thead>
-                    <tr>
-                      <th>Admission No.</th>
-                      <th>Name</th>
-                      <th>Stream</th>
-                      <th>Average</th>
-                      <th>Grade</th>
-                      <th>Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {students.map((student) => {
-                      const report = reports.find((r) => r.student.adm_no === student.adm_no);
-                      const summary = report?.summary_data || {};
-                      let studentName = 'N/A';
-                      if (student.first_name && student.surname) {
-                        const parts = [student.first_name];
-                        if (student.middle_name) {
-                          parts.push(student.middle_name);
-                        }
-                        parts.push(student.surname);
-                        studentName = parts.join(' ').trim();
-                      } else if (student.first_name) {
-                        studentName = student.first_name;
-                      } else if (student.surname) {
-                        studentName = student.surname;
-                      } else if (student.name) {
-                        studentName = student.name;
-                      } else if (student.full_name) {
-                        studentName = student.full_name;
-                      }
+              <div className="download-section">
+                <button
+                  type="button"
+                  onClick={handleDownloadPDF}
+                  className="download-btn"
+                  disabled={isDownloading || isLoading || !bulkData}
+                  title={isDownloading ? 'Generating PDF…' : 'Download all reports as one PDF'}
+                >
+                  {isDownloading ? (
+                    <>
+                      <i className="fas fa-spinner fa-spin" /> Generating PDF…{' '}
+                      {downloadProgress > 0 ? `${downloadProgress}%` : null}
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-file-download" /> Download all reports as PDF
+                    </>
+                  )}
+                </button>
+                {isDownloading && downloadProgress > 0 && (
+                  <div className="download-progress-bar">
+                    <div className="download-progress-fill" style={{ width: `${downloadProgress}%` }} />
+                  </div>
+                )}
+                <p className="bulk-generate-pdf-hint">
+                  Large classes can take several minutes. Keep this tab open until the download starts.
+                </p>
+              </div>
 
-                      return (
-                        <tr key={student.adm_no}>
-                          <td>{student.adm_no}</td>
-                          <td>{studentName}</td>
-                          <td>{student.stream || stream || 'N/A'}</td>
-                          <td>{summary.average ?? '—'}</td>
-                          <td>{summary.grade ?? '—'}</td>
-                          <td>
-                            <button
-                              type="button"
-                              onClick={() => handleViewIndividual(student.adm_no, student.stream)}
-                              className="excel-btn small"
-                            >
-                              <i className="fas fa-file-alt" /> View report
-                            </button>
-                          </td>
-                        </tr>
-                      );
-                    })}
-                  </tbody>
-                </table>
+              <div className="bulk-generate-actions-row bulk-generate-actions-row--toolbar">
+                <button
+                  type="button"
+                  className="excel-btn excel-btn--outline"
+                  onClick={handleRefresh}
+                  disabled={isFetching}
+                  title="Reload summaries from the server"
+                >
+                  {isFetching ? <i className="fas fa-spinner fa-spin" /> : <i className="fas fa-sync-alt" />}{' '}
+                  {isFetching ? 'Refreshing…' : 'Refresh data'}
+                </button>
+                <Link to={termSelectionPath} className="excel-btn excel-btn--outline">
+                  <i className="fas fa-calendar-alt" /> Change term
+                </Link>
+                <Link to={yearSelectionPath} className="excel-btn excel-btn--outline">
+                  <i className="fas fa-calendar" /> Change year
+                </Link>
+                <Link to="/reports/individual" className="excel-btn excel-btn--ghost">
+                  <i className="fas fa-user" /> Individual report wizard
+                </Link>
+              </div>
+            </div>
+          </div>
+
+          <div className="bulk-reports-list">
+            <div className="excel-card">
+              <div className="excel-card-header">
+                <i className="fas fa-list" /> Students &amp; summaries
+              </div>
+              <div className="excel-card-body">
+                <div className="excel-table-wrapper">
+                  <table className="excel-table">
+                    <thead>
+                      <tr>
+                        <th>Admission No.</th>
+                        <th>Name</th>
+                        <th>Stream</th>
+                        <th>Average</th>
+                        <th>Grade</th>
+                        <th>Actions</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {students.map((student) => {
+                        const report = reports.find((r) => r.student.adm_no === student.adm_no);
+                        const summary = report?.summary_data || {};
+                        let studentName = 'N/A';
+                        if (student.first_name && student.surname) {
+                          const parts = [student.first_name];
+                          if (student.middle_name) {
+                            parts.push(student.middle_name);
+                          }
+                          parts.push(student.surname);
+                          studentName = parts.join(' ').trim();
+                        } else if (student.first_name) {
+                          studentName = student.first_name;
+                        } else if (student.surname) {
+                          studentName = student.surname;
+                        } else if (student.name) {
+                          studentName = student.name;
+                        } else if (student.full_name) {
+                          studentName = student.full_name;
+                        }
+
+                        return (
+                          <tr key={student.adm_no}>
+                            <td>{student.adm_no}</td>
+                            <td>{studentName}</td>
+                            <td>{student.stream || stream || 'N/A'}</td>
+                            <td>{summary.average ?? '—'}</td>
+                            <td>{summary.grade ?? '—'}</td>
+                            <td>
+                              <button
+                                type="button"
+                                onClick={() => handleViewIndividual(student.adm_no, student.stream)}
+                                className="excel-btn small"
+                              >
+                                <i className="fas fa-file-alt" /> View report
+                              </button>
+                            </td>
+                          </tr>
+                        );
+                      })}
+                    </tbody>
+                  </table>
+                </div>
               </div>
             </div>
           </div>
