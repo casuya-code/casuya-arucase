@@ -88,16 +88,26 @@ export default function UserCommands() {
   return (
     <AdminLayout>
       <div className="user-commands-page">
-        <div className="excel-card user-commands-root-card">
+        <div className="user-commands-shell">
+          <header className="user-commands-top">
+            <div>
+              <h1 className="user-commands-top-title">
+                <i className="fas fa-comments user-commands-top-icon" aria-hidden="true"></i>
+                User Commands
+              </h1>
+              <p className="user-commands-top-sub">
+                Questions and prompts from the public website chatbot. Review them to spot gaps and improve AI answers.
+              </p>
+            </div>
+          </header>
+
+          <div className="excel-card user-commands-root-card" style={{ '--accent': '#10b981' }}>
           <div className="excel-card-header">
             <i className="fas fa-comments" aria-hidden="true" />
             User Commands
           </div>
 
           <div className="excel-card-body">
-            <p className="user-commands-intro">
-              Questions and prompts from the public website chatbot. Review them to spot gaps and improve AI answers.
-            </p>
 
             <div className="user-commands-stats-grid">
               <div className="user-commands-stat-card">
@@ -279,6 +289,7 @@ export default function UserCommands() {
                 ) : null}
               </>
             )}
+          </div>
           </div>
         </div>
       </div>
