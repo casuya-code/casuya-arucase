@@ -264,30 +264,48 @@ const FeesManagement = ({ formLevel }) => {
 
   return (
     <AdminLayout>
-      <div className="fees-mgmt-page-container">
-        <div className="excel-card">
-          <div className="excel-card-header">
-            <i className="fas fa-money-bill-wave"></i>
-            Fees Announcements - {normalizedLevel} {normalizedStream} {year} - {normalizedTerm}
-            <div className="header-actions">
-              <Link to={getOtherTermPath()} className="excel-btn secondary small" style={{ pointerEvents: 'auto' }}>
+      <div className="fees-mgmt-page">
+        <div className="fees-mgmt-shell">
+          <div className="breadcrumb">
+            <Link to="/admin/fees">Fees Announcements</Link>
+            <span style={{ color: '#bbb' }}>&rsaquo;</span>
+            <Link to={getBackPath()}>{normalizedLevel}</Link>
+            <span style={{ color: '#bbb' }}>&rsaquo;</span>
+            <span className="breadcrumb-current">{year} &middot; {normalizedTerm}</span>
+          </div>
+
+          <header className="fees-mgmt-top">
+            <div>
+              <h1 className="fees-mgmt-title">Fees Announcements</h1>
+              <p className="fees-mgmt-sub">
+                {normalizedLevel} · Stream {normalizedStream} · {year} · {normalizedTerm}
+              </p>
+            </div>
+            <div className="fees-mgmt-actions">
+              <Link to={getOtherTermPath()} className="excel-btn outline">
                 <i className="fas fa-exchange-alt"></i> Switch to {normalizedTerm === 'First Term' ? 'Second Term' : 'First Term'}
               </Link>
-              <Link to={getBackPath()} className="excel-btn secondary small" style={{ pointerEvents: 'auto' }}>
+              <Link to={getBackPath()} className="excel-btn outline">
                 <i className="fas fa-arrow-left"></i> Back
               </Link>
             </div>
-          </div>
-          <div className="excel-card-body">
-            {isLoading ? (
-              <div className="loading-state">Loading...</div>
-            ) : error ? (
-              <div className="error-state">
-                <p>Error loading fees announcements. Please try again.</p>
-                <p style={{ fontSize: '12px', color: '#666' }}>{error.message || 'Unknown error'}</p>
+          </header>
+
+          {isLoading ? (
+            <div className="fees-mgmt-loading">
+              <i className="fas fa-spinner fa-spin"></i> Loading announcements…
+            </div>
+          ) : error ? (
+            <div className="error-state">
+              <p>Error loading fees announcements. Please try again.</p>
+              <p style={{ fontSize: '12px', color: '#666' }}>{error.message || 'Unknown error'}</p>
+            </div>
+          ) : (
+            <div className="excel-card" style={{ '--accent': '#10b981' }}>
+              <div className="excel-card-header">
+                <i className="fas fa-money-bill-wave"></i> Announcements
               </div>
-            ) : (
-              <>
+              <div className="excel-card-body">
                 <p className="fees-description">Enter fees announcements and important information for students. These will appear in the instructions section of student reports.</p>
 
                 <form onSubmit={handleSubmit} className="fees-form">
@@ -322,7 +340,7 @@ const FeesManagement = ({ formLevel }) => {
                       </tbody>
                     </table>
                   </div>
-                  
+
                   <div className="csv-section">
                     <h3><i className="fas fa-file-csv"></i> CSV Bulk Operations</h3>
                     <p className="csv-hint">Download the template, fill rows 1–10 under MATANGAZO, then upload to replace announcements for this class and term.</p>
@@ -366,13 +384,13 @@ const FeesManagement = ({ formLevel }) => {
 
                   <div className="fees-actions">
                     <button type="submit" className="excel-btn primary" disabled={saveMutation.isLoading || uploading}>
-                      <i className="fas fa-save"></i> {saveMutation.isLoading ? 'Saving...' : 'Save Announcements'}
+                      <i className="fas fa-save"></i> {saveMutation.isLoading ? 'Saving…' : 'Save Announcements'}
                     </button>
                   </div>
                 </form>
-              </>
-            )}
-          </div>
+              </div>
+            </div>
+          )}
         </div>
       </div>
     </AdminLayout>
