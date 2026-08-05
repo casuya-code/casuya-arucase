@@ -1,236 +1,280 @@
-/**
- * School Logo admin (/admin/branding/logo) — premium design
- */
+/* ===========================================
+   SCHOOL LOGO — Clean Modern Design
+   =========================================== */
 
-.logo-admin-page {
-  max-width: 720px;
-  margin: 0 auto;
-  padding: clamp(1rem, 2.5vw, 1.75rem);
+/* --- Page Shell --- */
+.logo-page {
+  background: #f5f5f0;
+  min-height: 100vh;
+  min-height: 100dvh;
+  width: 100%;
+  box-sizing: border-box;
   font-family: 'Source Sans 3', system-ui, sans-serif;
   -webkit-font-smoothing: antialiased;
 }
 
-/* ── Root card ── */
-.logo-root-card {
-  background: #fff;
-  border: 1px solid rgba(15, 23, 42, 0.08);
-  border-radius: 10px;
-  box-shadow: 0 1px 3px rgba(15, 23, 42, 0.04), 0 1px 2px rgba(15, 23, 42, 0.03);
-  overflow: hidden;
+.logo-shell {
+  max-width: 960px;
+  margin: 0 auto;
+  padding: clamp(1rem, 3vw, 2rem) clamp(0.75rem, 2.5vw, 1.5rem);
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-/* ── Card header ── */
-.logo-admin-page .excel-card-header {
+/* --- Breadcrumb --- */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  flex-wrap: wrap;
+  font-size: 0.8rem;
+  color: #6b6b60;
+}
+
+.breadcrumb a {
+  color: #6b6b60;
+  text-decoration: none;
+  transition: color 0.15s ease;
+}
+
+.breadcrumb a:hover {
+  color: #1a1a1a;
+}
+
+.breadcrumb-current {
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+/* --- Top Header --- */
+.logo-top {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid #e0ddd5;
+}
+
+.logo-top-title {
+  margin: 0;
+  font-size: clamp(1.35rem, 3vw, 1.75rem);
+  font-weight: 800;
+  color: #1a1a1a;
+  letter-spacing: -0.02em;
   display: flex;
   align-items: center;
   gap: 0.6rem;
-  padding: 1rem 1.25rem;
-  background: linear-gradient(135deg, #0f2d52, #1a5490) !important;
-  color: #fff !important;
-  font-size: 0.95rem;
-  font-weight: 600;
-  border-bottom: none !important;
-  letter-spacing: 0.2px;
 }
 
-.logo-admin-page .excel-card-header i {
-  color: #c9a227 !important;
-  font-size: 1rem;
+.logo-top-icon {
+  color: var(--accent, #10b981);
+  font-size: 1.1rem;
 }
 
-/* ── Card body ── */
-.logo-admin-page .excel-card-body {
-  padding: clamp(1rem, 2.5vw, 1.5rem);
+.logo-top-sub {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #6b6b60;
+}
+
+/* --- Loading --- */
+.logo-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  color: #6b7280;
   background: #fff;
-}
-
-/* ── Loading / Error states ── */
-.logo-admin-page .loading-state {
-  text-align: center;
-  padding: 2.5rem 1rem;
-  color: #64748b;
+  border: 1px solid #e8e8e0;
+  border-radius: 12px;
+  padding: 2.5rem;
   font-size: 0.9rem;
 }
 
-.logo-admin-page .error-state {
-  text-align: center;
-  padding: 2rem 1rem;
-  border: 1px solid rgba(239, 68, 68, 0.15);
-  background: rgba(239, 68, 68, 0.03);
-  border-radius: 8px;
+/* --- Card --- */
+.excel-card {
+  background: #fff;
+  border-radius: 12px;
+  border: 1px solid #e8e8e0;
+  box-shadow: none;
+  overflow: hidden;
 }
 
-.logo-admin-page .error-state .error-icon {
+.excel-card-header {
+  background: #fff;
+  color: #1a1a1a;
+  border-bottom: 1px solid #f0f0ea;
+  padding: 0.85rem 1rem;
+  font-size: 0.9rem;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.excel-card-header i {
+  color: var(--accent, #10b981);
+  font-size: 0.85rem;
+}
+
+.excel-card-body {
+  padding: clamp(0.75rem, 2vw, 1.25rem);
+  background: #fff;
+}
+
+/* --- Error state --- */
+.error-state {
+  text-align: center;
+  padding: 2rem 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 12px;
+}
+
+.error-state .error-icon {
   font-size: 1.75rem;
   color: #ef4444;
   margin-bottom: 0.5rem;
 }
 
-.logo-admin-page .error-state h3 {
+.error-state h3 {
   margin: 0 0 0.4rem;
   font-size: 1rem;
-  font-weight: 600;
-  color: #0f172a;
+  font-weight: 700;
+  color: #1a1a1a;
 }
 
-.logo-admin-page .error-state p {
+.error-state p {
   margin: 0;
   font-size: 0.85rem;
-  color: #64748b;
+  color: #6b6b60;
 }
 
-/* ── Sections ── */
-.logo-admin-page .current-logo-section {
-  margin-bottom: 1.5rem;
-  padding-bottom: 1.25rem;
-  border-bottom: 1px solid rgba(15, 23, 42, 0.06);
-}
-
-.logo-admin-page .current-logo-section:last-child {
-  border-bottom: none;
-  margin-bottom: 0;
-  padding-bottom: 0;
-}
-
-.logo-admin-page .current-logo-section > h3,
-.logo-admin-page .upload-section > h3 {
-  margin: 0 0 1rem;
-  font-size: 0.875rem;
-  font-weight: 700;
-  color: #0f172a;
-  text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-/* ── Logo preview ── */
-.logo-admin-page .logo-preview {
+/* --- Logo preview --- */
+.logo-preview {
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.75rem;
   padding: 1.5rem;
-  background: #f8fafc;
-  border: 1px solid rgba(15, 23, 42, 0.06);
-  border-radius: 8px;
+  background: #fafaf6;
+  border: 1px solid #e8e8e0;
+  border-radius: 12px;
 }
 
-.logo-admin-page .logo-image {
+.logo-image {
   max-width: min(280px, 100%);
   max-height: min(200px, 40vh);
   width: auto;
   height: auto;
   object-fit: contain;
-  border-radius: 6px;
+  border-radius: 8px;
   background: #fff;
   padding: 0.5rem;
-  border: 1px solid rgba(15, 23, 42, 0.06);
+  border: 1px solid #e8e8e0;
 }
 
-/* ── Placeholder ── */
-.logo-admin-page .logo-placeholder {
+.logo-placeholder {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 2rem 1rem;
-  background: #f8fafc;
-  border: 2px dashed rgba(15, 23, 42, 0.1);
-  border-radius: 8px;
-  color: #64748b;
+  background: #fafaf6;
+  border: 2px dashed #d5d2c8;
+  border-radius: 12px;
+  color: #6b6b60;
   text-align: center;
 }
 
-.logo-admin-page .logo-placeholder .placeholder-icon {
+.logo-placeholder .placeholder-icon {
   font-size: 2rem;
-  color: #94a3b8;
+  color: #b9b6ab;
   margin-bottom: 0.5rem;
 }
 
-.logo-admin-page .logo-placeholder p {
+.logo-placeholder p {
   margin: 0.2rem 0 0;
-  font-size: 0.875rem;
+  font-size: 0.85rem;
   font-weight: 500;
-  color: #64748b;
+  color: #6b6b60;
 }
 
-.logo-admin-page .logo-path,
-.logo-admin-page .logo-url {
+.logo-path,
+.logo-url {
   font-size: 0.75rem;
-  margin-top: 0.5rem !important;
+  margin-top: 0.5rem;
   font-weight: 400;
-  color: #94a3b8;
+  color: #a0a094;
   word-break: break-all;
   max-width: 100%;
+  text-align: center;
 }
 
-/* ── Upload section ── */
-.logo-admin-page .upload-section {
-  margin-top: 0.5rem;
-}
-
-/* ── Upload area ── */
-.logo-admin-page .upload-area {
-  border: 2px dashed rgba(15, 23, 42, 0.1);
-  border-radius: 8px;
+/* --- Upload area --- */
+.upload-area {
+  border: 2px dashed #d5d2c8;
+  border-radius: 12px;
   padding: 2rem 1rem;
   text-align: center;
   cursor: pointer;
-  background: #f8fafc;
+  background: #fafaf6;
   transition: border-color 0.2s ease, background 0.2s ease;
   box-sizing: border-box;
 }
 
-.logo-admin-page .upload-area:hover {
-  border-color: #1a5490;
-  background: rgba(26, 84, 144, 0.03);
+.upload-area:hover {
+  border-color: var(--accent, #10b981);
+  background: rgba(16, 185, 129, 0.03);
 }
 
-.logo-admin-page .upload-area.drag-active {
-  border-color: #1a5490;
-  background: rgba(26, 84, 144, 0.06);
+.upload-area.drag-active {
+  border-color: var(--accent, #10b981);
+  background: rgba(16, 185, 129, 0.06);
   border-style: solid;
 }
 
-.logo-admin-page .upload-icon {
+.upload-icon {
   font-size: 2rem;
-  color: #1a5490;
+  color: var(--accent, #10b981);
   opacity: 0.6;
   margin-bottom: 0.5rem;
 }
 
-.logo-admin-page .upload-area:hover .upload-icon {
+.upload-area:hover .upload-icon {
   opacity: 1;
 }
 
-.logo-admin-page .upload-text {
+.upload-text {
   font-size: 0.9rem;
-  font-weight: 600;
-  color: #374151;
+  font-weight: 700;
+  color: #1a1a1a;
   margin: 0.35rem 0;
 }
 
-.logo-admin-page .upload-hint {
+.upload-hint {
   font-size: 0.8rem;
-  color: #94a3b8;
+  color: #a0a094;
   margin: 0.35rem 0 0;
 }
 
-/* ── Upload progress ── */
-.logo-admin-page .upload-progress {
+/* --- Upload progress --- */
+.upload-progress {
   margin-top: 0.75rem;
   text-align: center;
-  color: #1a5490;
+  color: var(--accent, #10b981);
   font-size: 0.85rem;
-  font-weight: 500;
+  font-weight: 600;
   display: flex;
   align-items: center;
   justify-content: center;
   gap: 0.4rem;
 }
 
-/* ── Mobile ── */
+/* --- Mobile --- */
 @media (max-width: 480px) {
-  .logo-admin-page .logo-image {
+  .logo-image {
     max-width: 100%;
   }
 }

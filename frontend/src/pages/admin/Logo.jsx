@@ -2,6 +2,7 @@
  * School Logo Management Page
  */
 import { useState, useRef } from 'react';
+import { Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from '../../utils/toast';
 import AdminLayout from '../../components/layout/AdminLayout';
@@ -92,25 +93,41 @@ const Logo = () => {
 
   return (
     <AdminLayout>
-      <div className="logo-admin-page">
-        <div className="excel-card logo-root-card">
-          <div className="excel-card-header">
-            <i className="fas fa-image"></i>
-            School Logo Management
+      <div className="logo-page">
+        <div className="logo-shell">
+          <div className="breadcrumb">
+            <Link to="/admin/school-branding">School Branding</Link>
+            <span style={{ color: '#bbb' }}>&rsaquo;</span>
+            <span className="breadcrumb-current">Logo</span>
           </div>
-          <div className="excel-card-body">
-            {isLoading ? (
-              <div className="loading-state">Loading...</div>
-            ) : logoError ? (
-              <div className="error-state">
-                <i className="fas fa-exclamation-triangle error-icon"></i>
-                <h3>Error Loading Logo</h3>
-                <p>{logoError.message || 'Failed to load logo information'}</p>
-              </div>
-            ) : (
-              <>
-                <div className="current-logo-section">
-                  <h3>Current Logo</h3>
+
+          <header className="logo-top">
+            <div>
+              <h1 className="logo-top-title">
+                <i className="fas fa-image logo-top-icon" aria-hidden></i>
+                School Logo
+              </h1>
+              <p className="logo-top-sub">Upload and manage the logo shown on reports and the website</p>
+            </div>
+          </header>
+
+          {isLoading ? (
+            <div className="logo-loading">
+              <i className="fas fa-spinner fa-spin"></i> Loading logo…
+            </div>
+          ) : logoError ? (
+            <div className="error-state">
+              <i className="fas fa-exclamation-triangle error-icon"></i>
+              <h3>Error Loading Logo</h3>
+              <p>{logoError.message || 'Failed to load logo information'}</p>
+            </div>
+          ) : (
+            <>
+              <div className="excel-card" style={{ '--accent': '#3b82f6' }}>
+                <div className="excel-card-header">
+                  <i className="fas fa-image"></i> Current Logo
+                </div>
+                <div className="excel-card-body">
                   {getLogoUrl() && logoData?.logo_image_path ? (
                     <div className="logo-preview">
                       <img
@@ -144,9 +161,13 @@ const Logo = () => {
                     </div>
                   )}
                 </div>
+              </div>
 
-                <div className="upload-section">
-                  <h3>Upload New Logo</h3>
+              <div className="excel-card" style={{ '--accent': '#10b981' }}>
+                <div className="excel-card-header">
+                  <i className="fas fa-cloud-upload-alt"></i> Upload New Logo
+                </div>
+                <div className="excel-card-body">
                   <div
                     className={`upload-area ${dragActive ? 'drag-active' : ''}`}
                     onDrop={handleDrop}
@@ -172,13 +193,13 @@ const Logo = () => {
 
                   {uploadMutation.isLoading && (
                     <div className="upload-progress">
-                      <i className="fas fa-spinner fa-spin"></i> Uploading...
+                      <i className="fas fa-spinner fa-spin"></i> Uploading…
                     </div>
                   )}
                 </div>
-              </>
-            )}
-          </div>
+              </div>
+            </>
+          )}
         </div>
       </div>
     </AdminLayout>
@@ -186,4 +207,3 @@ const Logo = () => {
 };
 
 export default Logo;
-
