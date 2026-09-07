@@ -951,7 +951,7 @@ async function generateIndividualReportPDF(form, stream, year, term, admNo) {
       if (isForm5Or6) {
         checkNewPage(20);
         doc.fontSize(7).font('Helvetica');
-        doc.text('ALAMA: A = 85+, Bora Sana, B = 75+, Vizuri Sana, C = 65+, Vizuri, D = 55+, Dhaifu, E = 45+, Dhaifu sana, S = 40+, Kidogo, F = 0 – 39, Feli', marginX, currentY);
+        doc.text('ALAMA: A = 85+, Bora Sana, B = 75+, Vizuri Sana, C = 65+, Vizuri, D = 55+, Dhaifu, E = 45+, Dhaifu sana, S = 40+, Feli, F = 0 – 39, Feli', marginX, currentY);
         currentY += 10;
         doc.text('TABIA: A, Vizuri Sana, B, Vizuri, C, Wastani, D, Dhaifu, F, Mbaya', marginX, currentY);
         currentY += 10;

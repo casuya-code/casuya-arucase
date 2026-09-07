@@ -618,7 +618,7 @@ const IndividualReportDetail = () => {
       C: 'Vizuri',
       D: 'Dhaifu',
       E: 'Wastani',
-      S: 'Kidogo',
+      S: 'Feli',
       F: 'Feli'
     };
     return comments[grade] || 'Feli';
@@ -1232,7 +1232,7 @@ const IndividualReportDetail = () => {
           
           {/* Grade Key/Legend */}
           <div className="grade-key-legend" style={{ marginTop: '8px', padding: '4px', fontSize: '10.5px', lineHeight: '1.4', whiteSpace: 'nowrap', overflow: 'visible' }}>
-            <strong>ALAMA:</strong> {isForm5Or6 ? 'A = 85+, Bora Sana, B = 75+, Vizuri Sana, C = 65+, Vizuri, D = 55+, Dhaifu, E = 45+, Wastani, S = 40+, Kidogo, F = 0 – 39, Feli' : 'A = 85 – 100, Bora Sana, B = 70 – 84, Vizuri Sana, C = 50 – 69, Vizuri, D = 40 – 49, Dhaifu, F = 0 – 39, Feli'} | <strong>TABIA:</strong> A, Vizuri Sana, B, Vizuri, C, Wastani, D, Dhaifu, F, Mbaya
+            <strong>ALAMA:</strong> {isForm5Or6 ? 'A = 85+, Bora Sana, B = 75+, Vizuri Sana, C = 65+, Vizuri, D = 55+, Dhaifu, E = 45+, Wastani, S = 40+, Feli, F = 0 – 39, Feli' : 'A = 85 – 100, Bora Sana, B = 70 – 84, Vizuri Sana, C = 50 – 69, Vizuri, D = 40 – 49, Dhaifu, F = 0 – 39, Feli'} | <strong>TABIA:</strong> A, Vizuri Sana, B, Vizuri, C, Wastani, D, Dhaifu, F, Mbaya
           </div>
         </div>
 

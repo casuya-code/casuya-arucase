@@ -23,7 +23,7 @@ const Grades = () => {
     { grade: 'C', minMarks: '65', gradeValue: '3', description: 'Vizuri' },
     { grade: 'D', minMarks: '55', gradeValue: '4', description: 'Dhaifu' },
     { grade: 'E', minMarks: '45', gradeValue: '5', description: 'Wastani' },
-    { grade: 'S', minMarks: '40', gradeValue: '6', description: 'Kidogo' },
+    { grade: 'S', minMarks: '40', gradeValue: '6', description: 'Feli' },
     { grade: 'F', minMarks: '0', gradeValue: '7', description: 'Feli' },
   ];
 

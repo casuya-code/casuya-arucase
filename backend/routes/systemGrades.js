@@ -29,7 +29,7 @@ router.get('/grade-config', requireAuth, requireModule('grades'), async (req, re
         { grade: 'C', min: 65, max: 74, description: 'Vizuri' },
         { grade: 'D', min: 55, max: 64, description: 'Dhaifu' },
         { grade: 'E', min: 45, max: 54, description: 'Wastani' },
-        { grade: 'S', min: 40, max: 44, description: 'Kidogo' },
+        { grade: 'S', min: 40, max: 44, description: 'Feli' },
         { grade: 'F', min: 0, max: 39, description: 'Feli' }
       ]
     };
@@ -136,7 +136,7 @@ async function getGradeConfig() {
       { grade: 'C', min: 65, max: 74, description: 'Vizuri' },
       { grade: 'D', min: 55, max: 64, description: 'Dhaifu' },
       { grade: 'E', min: 45, max: 54, description: 'Wastani' },
-      { grade: 'S', min: 40, max: 44, description: 'Kidogo' },
+      { grade: 'S', min: 40, max: 44, description: 'Feli' },
       { grade: 'F', min: 0, max: 39, description: 'Feli' }
     ]
   };

@@ -260,7 +260,7 @@ const ComprehensiveStudentMarks = ({ formLevel }) => {
     if (isForm5Or6) {
       const remarks = {
         'A': 'Bora Sana', 'B': 'Vizuri Sana', 'C': 'Vizuri',
-        'D': 'Dhaifu', 'E': 'Wastani', 'S': 'Kidogo', 'F': 'Feli'
+        'D': 'Dhaifu', 'E': 'Wastani', 'S': 'Feli', 'F': 'Feli'
       };
       return remarks[grade] || '-';
     } else {

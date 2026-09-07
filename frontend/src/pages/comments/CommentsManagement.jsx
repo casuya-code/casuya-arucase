@@ -106,7 +106,7 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
         'D': 'Ufaulu dhaifu. Aongeze bidii katika masomo',
         'E': 'Anahitaji kujitahidi zaidi',
         'F': 'Amefeli',
-        'S': 'Kidogo. Anahitaji kuongeza juhudi'
+        'S': 'Feli. Anahitaji kuongeza juhudi'
       };
       return mwalimuGradeMap[normalizedGrade] || '';
     }
