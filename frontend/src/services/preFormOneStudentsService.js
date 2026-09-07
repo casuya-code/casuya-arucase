@@ -16,11 +16,6 @@ const preFormOneStudentsService = {
 
   getPreFormOneStudentsByYear: async (year) => fetchPreFormOneStudents(year),
 
-  getStudentByAdmissionNumber: async (admissionNumber) => {
-    const response = await api.get(`/pre-form-one/student/${admissionNumber}`);
-    return response.data;
-  },
-
   saveStudentScores: async (studentScores) => {
     const response = await api.post('/preformone-scores', studentScores);
     return response.data;

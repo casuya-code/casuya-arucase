@@ -985,3 +985,595 @@
 .pre-form-one-score-entry .breadcrumb-item {
   color: var(--pfo-muted);
 }
+
+/* ------------------------------------------------------------------
+    13. Parishes page
+   ------------------------------------------------------------------ */
+.preform-one-registration-route.parishes-page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding: clamp(0.25rem, 1vw, 0.5rem);
+}
+
+.preform-one-registration-route .parishes-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+  background: var(--pfo-card);
+  border: 1px solid var(--pfo-border);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  margin-bottom: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.preform-one-registration-route .parishes-page-header-left {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 1rem);
+  min-width: 0;
+}
+
+.preform-one-registration-route .parishes-page-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(44px, 8vw, 56px);
+  height: clamp(44px, 8vw, 56px);
+  background: color-mix(in srgb, var(--accent) 10%, #fff);
+  color: var(--accent);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.preform-one-registration-route .parishes-page-icon i {
+  font-size: clamp(1.1rem, 3vw, 1.4rem);
+}
+
+.preform-one-registration-route .parishes-page-title {
+  min-width: 0;
+}
+
+.preform-one-registration-route .parishes-page-title h1 {
+  margin: 0;
+  font-size: clamp(1.15rem, 3vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--pfo-text);
+}
+
+.preform-one-registration-route .parishes-page-title p {
+  margin: 0.15rem 0 0 0;
+  color: var(--pfo-muted);
+  font-size: clamp(0.8rem, 2vw, 0.95rem);
+  line-height: 1.45;
+}
+
+/* Parish summary stat cards */
+.preform-one-registration-route .parishes-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
+  gap: clamp(0.75rem, 2vw, 1rem);
+  margin-bottom: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.preform-one-registration-route .parish-stat-card {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.625rem, 1.5vw, 0.875rem);
+  background: var(--pfo-card);
+  border: 1px solid var(--pfo-border);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  padding: clamp(0.875rem, 2vw, 1.125rem);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.preform-one-registration-route .parish-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+  border-color: #e0ddd5;
+}
+
+.preform-one-registration-route .parish-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(40px, 7vw, 48px);
+  height: clamp(40px, 7vw, 48px);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 10%, #fff);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.preform-one-registration-route .parish-stat-icon i {
+  font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+}
+
+.preform-one-registration-route .parish-stat-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.preform-one-registration-route .parish-stat-value {
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--pfo-text);
+}
+
+.preform-one-registration-route .parish-stat-label {
+  font-size: clamp(0.7rem, 1.75vw, 0.8rem);
+  font-weight: 600;
+  color: var(--pfo-muted);
+  white-space: nowrap;
+}
+
+/* Card header chips / counts */
+.preform-one-registration-route .registered-students-card-header {
+  justify-content: space-between;
+}
+
+.preform-one-registration-route .registered-students-card-header-left {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.375rem, 1vw, 0.5rem);
+  min-width: 0;
+}
+
+.preform-one-registration-route .registered-students-count {
+  background: var(--pfo-fill);
+  border: 1px solid var(--pfo-divider);
+  border-radius: 999px;
+  color: var(--pfo-muted);
+  font-size: clamp(0.65rem, 1.5vw, 0.75rem);
+  font-weight: 600;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+.preform-one-registration-route .parishes-header-chip {
+  background: color-mix(in srgb, var(--accent) 10%, #fff);
+  border: none;
+  border-radius: 999px;
+  color: #047857;
+  font-weight: 600;
+  padding: 3px 10px;
+  margin-left: auto;
+  white-space: nowrap;
+}
+
+.preform-one-registration-route .parish-badge--empty {
+  background: #f5f5f0;
+  color: var(--pfo-muted);
+}
+
+/* ------------------------------------------------------------------
+    14. Year hub (Pre-Form One modules) header
+   ------------------------------------------------------------------ */
+.pre-form-one-year-page .pre-form-one-year-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+  background: var(--pfo-card);
+  border: 1px solid var(--pfo-border);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  margin-bottom: clamp(1.25rem, 3vw, 1.75rem);
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 1200px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pre-form-one-year-page .pre-form-one-year-header-left {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 1rem);
+  min-width: 0;
+}
+
+.pre-form-one-year-page .pre-form-one-year-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(44px, 8vw, 56px);
+  height: clamp(44px, 8vw, 56px);
+  background: color-mix(in srgb, var(--accent) 10%, #fff);
+  color: var(--accent);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.pre-form-one-year-page .pre-form-one-year-header-icon i {
+  font-size: clamp(1.1rem, 3vw, 1.4rem);
+}
+
+.pre-form-one-year-page .pre-form-one-year-header-text {
+  min-width: 0;
+}
+
+.pre-form-one-year-page .pre-form-one-year-header-text .pre-form-one-year-lead {
+  margin: 0;
+  font-size: clamp(1.15rem, 3vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--pfo-text);
+  max-width: none;
+}
+
+.pre-form-one-year-page .pre-form-one-year-subtitle {
+  margin: 0.15rem 0 0 0;
+  color: var(--pfo-muted);
+  font-size: clamp(0.8rem, 2vw, 0.95rem);
+  line-height: 1.45;
+}
+
+.pre-form-one-year-page .pre-form-one-year-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: clamp(0.75rem, 2vw, 1rem);
+  margin-left: auto;
+  margin-right: auto;
+  max-width: 1200px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.pre-form-one-year-page .pre-form-one-year-section-title {
+  color: var(--pfo-text);
+  font-size: clamp(0.9rem, 2.25vw, 1.05rem);
+  font-weight: 800;
+  letter-spacing: -0.01em;
+}
+
+.pre-form-one-year-page .pre-form-one-year-module-count {
+  background: var(--pfo-fill);
+  border: 1px solid var(--pfo-divider);
+  border-radius: 999px;
+  color: var(--pfo-muted);
+  font-size: clamp(0.65rem, 1.5vw, 0.75rem);
+  font-weight: 600;
+  padding: 3px 10px;
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------
+    15. Registration page header + stats
+   ------------------------------------------------------------------ */
+.preform-one-registration-route.registration-page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding: clamp(0.25rem, 1vw, 0.5rem);
+}
+
+.preform-one-registration-route .registration-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+  background: var(--pfo-card);
+  border: 1px solid var(--pfo-border);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  margin-bottom: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.preform-one-registration-route .registration-page-header-left {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 1rem);
+  min-width: 0;
+}
+
+.preform-one-registration-route .registration-page-header-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(44px, 8vw, 56px);
+  height: clamp(44px, 8vw, 56px);
+  background: color-mix(in srgb, var(--accent) 10%, #fff);
+  color: var(--accent);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.preform-one-registration-route .registration-page-header-icon i {
+  font-size: clamp(1.1rem, 3vw, 1.4rem);
+}
+
+.preform-one-registration-route .registration-page-header-text {
+  min-width: 0;
+}
+
+.preform-one-registration-route .registration-page-header-text h1 {
+  margin: 0;
+  font-size: clamp(1.15rem, 3vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--pfo-text);
+}
+
+.preform-one-registration-route .registration-page-header-text p {
+  margin: 0.15rem 0 0 0;
+  color: var(--pfo-muted);
+  font-size: clamp(0.8rem, 2vw, 0.95rem);
+  line-height: 1.45;
+}
+
+.preform-one-registration-route .registration-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
+  gap: clamp(0.75rem, 2vw, 1rem);
+  margin-bottom: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.preform-one-registration-route .registration-stat-card {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.625rem, 1.5vw, 0.875rem);
+  background: var(--pfo-card);
+  border: 1px solid var(--pfo-border);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  padding: clamp(0.875rem, 2vw, 1.125rem);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.preform-one-registration-route .registration-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+  border-color: #e0ddd5;
+}
+
+.preform-one-registration-route .registration-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(40px, 7vw, 48px);
+  height: clamp(40px, 7vw, 48px);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 10%, #fff);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.preform-one-registration-route .registration-stat-icon i {
+  font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+}
+
+.preform-one-registration-route .registration-stat-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.preform-one-registration-route .registration-stat-value {
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--pfo-text);
+}
+
+.preform-one-registration-route .registration-stat-label {
+  font-size: clamp(0.7rem, 1.75vw, 0.8rem);
+  font-weight: 600;
+  color: var(--pfo-muted);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------
+    16. Results pages header + stats (interview / continuing)
+   ------------------------------------------------------------------ */
+.preform-one-results-page-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
+  padding: clamp(0.25rem, 1vw, 0.5rem);
+}
+
+.preform-one-results-page-container .pfo-results-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: clamp(0.75rem, 2vw, 1.25rem);
+  background: var(--pfo-card);
+  border: 1px solid var(--pfo-border);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  padding: clamp(1rem, 2.5vw, 1.5rem);
+  margin-bottom: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.preform-one-results-page-container .pfo-results-page-header-left {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.75rem, 2vw, 1rem);
+  min-width: 0;
+}
+
+.preform-one-results-page-container .pfo-results-page-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(44px, 8vw, 56px);
+  height: clamp(44px, 8vw, 56px);
+  background: color-mix(in srgb, var(--accent) 10%, #fff);
+  color: var(--accent);
+  border-radius: 10px;
+  flex-shrink: 0;
+}
+
+.preform-one-results-page-container .pfo-results-page-icon i {
+  font-size: clamp(1.1rem, 3vw, 1.4rem);
+}
+
+.preform-one-results-page-container .pfo-results-page-header-text {
+  min-width: 0;
+}
+
+.preform-one-results-page-container .pfo-results-page-header-text h1 {
+  margin: 0;
+  font-size: clamp(1.15rem, 3vw, 1.5rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--pfo-text);
+}
+
+.preform-one-results-page-container .pfo-results-page-header-text p {
+  margin: 0.15rem 0 0 0;
+  color: var(--pfo-muted);
+  font-size: clamp(0.8rem, 2vw, 0.95rem);
+  line-height: 1.45;
+}
+
+.preform-one-results-page-container .pfo-results-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(190px, 100%), 1fr));
+  gap: clamp(0.75rem, 2vw, 1rem);
+  margin-bottom: clamp(1rem, 2.5vw, 1.5rem);
+}
+
+.preform-one-results-page-container .pfo-results-stat-card {
+  display: flex;
+  align-items: center;
+  gap: clamp(0.625rem, 1.5vw, 0.875rem);
+  background: var(--pfo-card);
+  border: 1px solid var(--pfo-border);
+  border-radius: 12px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+  padding: clamp(0.875rem, 2vw, 1.125rem);
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+}
+
+.preform-one-results-page-container .pfo-results-stat-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+  border-color: #e0ddd5;
+}
+
+.preform-one-results-page-container .pfo-results-stat-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: clamp(40px, 7vw, 48px);
+  height: clamp(40px, 7vw, 48px);
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 10%, #fff);
+  color: var(--accent);
+  flex-shrink: 0;
+}
+
+.preform-one-results-page-container .pfo-results-stat-icon i {
+  font-size: clamp(0.95rem, 2.5vw, 1.15rem);
+}
+
+.preform-one-results-page-container .pfo-results-stat-meta {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  min-width: 0;
+}
+
+.preform-one-results-page-container .pfo-results-stat-value {
+  font-size: clamp(1.25rem, 3vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.1;
+  color: var(--pfo-text);
+}
+
+.preform-one-results-page-container .pfo-results-stat-label {
+  font-size: clamp(0.7rem, 1.75vw, 0.8rem);
+  font-weight: 600;
+  color: var(--pfo-muted);
+  white-space: nowrap;
+}
+
+/* ------------------------------------------------------------------
+    17. Results pages: report typography (matches IndividualReportDetail)
+   ------------------------------------------------------------------ */
+.preform-one-results-page-container .report-header,
+.preform-one-results-page-container .school-info h1,
+.preform-one-results-page-container .school-info h2,
+.preform-one-results-page-container .contact-info p,
+.preform-one-results-page-container .test-info-bar,
+.preform-one-results-page-container .compact-results-table,
+.preform-one-results-page-container .compact-results-table th,
+.preform-one-results-page-container .compact-results-table td {
+  font-family: 'Tinos', 'Times New Roman', 'Liberation Serif', 'Times', serif !important;
+  color: #000000 !important;
+}
+
+.preform-one-results-page-container .school-info h1 {
+  font-size: 13.5px !important;
+  font-weight: bold;
+  margin: 0 auto 2px auto;
+  text-align: center;
+}
+
+.preform-one-results-page-container .school-info h2 {
+  font-size: 13.5px !important;
+  font-weight: bold;
+  margin: 2px auto;
+  text-align: center;
+}
+
+.preform-one-results-page-container .contact-info p {
+  font-size: 13.5px !important;
+  font-weight: normal;
+  margin: 2px auto;
+  text-align: center;
+}
+
+.preform-one-results-page-container .test-info-bar {
+  font-size: 12.5px !important;
+  font-weight: bold;
+  letter-spacing: 0.02em;
+}
+
+.preform-one-results-page-container .compact-results-table {
+  font-size: 12.5px !important;
+  line-height: 1.3;
+}
+
+.preform-one-results-page-container .compact-results-table th {
+  font-size: 12.5px !important;
+  font-weight: bold;
+  padding: 3px 4px !important;
+}
+
+.preform-one-results-page-container .compact-results-table td {
+  font-size: 12.5px !important;
+  padding: 3px 4px !important;
+  line-height: 1.3;
+}
+
+.preform-one-results-page-container .compact-results-table .rotate-header {
+  font-size: 10.5px !important;
+  font-weight: bold;
+  max-height: none;
+}

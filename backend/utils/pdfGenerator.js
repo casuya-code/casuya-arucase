@@ -951,7 +951,7 @@ async function generateIndividualReportPDF(form, stream, year, term, admNo) {
       if (isForm5Or6) {
         checkNewPage(20);
         doc.fontSize(7).font('Helvetica');
-        doc.text('ALAMA: A = 85+, Bora Sana, B = 75+, Vizuri Sana, C = 65+, Vizuri, D = 55+, Dhaifu, E = 45+, Wastani, S = 40+, Kidogo, F = 0 – 39, Feli', marginX, currentY);
+        doc.text('ALAMA: A = 85+, Bora Sana, B = 75+, Vizuri Sana, C = 65+, Vizuri, D = 55+, Dhaifu, E = 45+, Dhaifu sana, S = 40+, Kidogo, F = 0 – 39, Feli', marginX, currentY);
         currentY += 10;
         doc.text('TABIA: A, Vizuri Sana, B, Vizuri, C, Wastani, D, Dhaifu, F, Mbaya', marginX, currentY);
         currentY += 10;
@@ -1538,26 +1538,55 @@ async function generateMonthlyResultsPDF(level, stream, year, month) {
     // Fetch all data from database
     // Check if this is FORM I-IV (which may have students with stream 'A' or 'NA')
     const isFormIV = /^FORM\s+(I|II|III|IV)$/i.test(normalizedLevel);
+    const isFormVOrVIForPDF = /^FORM\s+(V|VI)$/i.test(normalizedLevel);
+
+    // Derive term from month for Form V/VI (to exclude promoted students from other terms)
+    const getTermFromMonth = (month, isFormVOrVI) => {
+      if (isFormVOrVI) {
+        if (['August', 'September', 'October', 'November'].includes(month)) return 'First Term';
+        if (['February', 'March', 'April', 'May'].includes(month)) return 'Second Term';
+      } else {
+        if (['February', 'March', 'April', 'May'].includes(month)) return 'First Term';
+        if (['August', 'September', 'October', 'November'].includes(month)) return 'Second Term';
+      }
+      return null;
+    };
+    const normalizedTerm = getTermFromMonth(normalizedMonth, isFormVOrVIForPDF);
     
     // Get students
     // For FORM I-IV, check both 'A' and 'NA' streams since students may have either
     // For combined mode, stream=ALL includes all streams for this level/year
+    // For Form V/VI, filter by term and exclude promoted students
     let studentsResult;
     if (normalizedStream === 'ALL') {
-      studentsResult = await query(
-        'SELECT adm_no, first_name, middle_name, surname, stream, com FROM students WHERE level = $1 AND year = $2 ORDER BY adm_no',
-        [normalizedLevel, normalizedYear]
-      );
+      if (isFormVOrVIForPDF && normalizedTerm) {
+        studentsResult = await query(
+          `SELECT adm_no, first_name, middle_name, surname, stream, com FROM students WHERE level = $1 AND year = $2 AND term = $3 AND (status IS DISTINCT FROM $4) ORDER BY adm_no`,
+          [normalizedLevel, normalizedYear, normalizedTerm, 'PROMOTED']
+        );
+      } else {
+        studentsResult = await query(
+          `SELECT adm_no, first_name, middle_name, surname, stream, com FROM students WHERE level = $1 AND year = $2 ORDER BY adm_no`,
+          [normalizedLevel, normalizedYear]
+        );
+      }
     } else if (isFormIV && (normalizedStream === 'A' || normalizedStream === 'NA')) {
       studentsResult = await query(
         'SELECT adm_no, first_name, middle_name, surname, stream, com FROM students WHERE level = $1 AND (stream = $2 OR stream = $3) AND year = $4 ORDER BY adm_no',
         [normalizedLevel, 'A', 'NA', normalizedYear]
       );
     } else {
-      studentsResult = await query(
-        'SELECT adm_no, first_name, middle_name, surname, stream, com FROM students WHERE level = $1 AND stream = $2 AND year = $3 ORDER BY adm_no',
-        [normalizedLevel, normalizedStream, normalizedYear]
-      );
+      if (isFormVOrVIForPDF && normalizedTerm) {
+        studentsResult = await query(
+          `SELECT adm_no, first_name, middle_name, surname, stream, com FROM students WHERE level = $1 AND stream = $2 AND year = $3 AND term = $4 AND (status IS DISTINCT FROM $5) ORDER BY adm_no`,
+          [normalizedLevel, normalizedStream, normalizedYear, normalizedTerm, 'PROMOTED']
+        );
+      } else {
+        studentsResult = await query(
+          `SELECT adm_no, first_name, middle_name, surname, stream, com FROM students WHERE level = $1 AND stream = $2 AND year = $3 ORDER BY adm_no`,
+          [normalizedLevel, normalizedStream, normalizedYear]
+        );
+      }
     }
     
     if (studentsResult.rows.length === 0) {
@@ -1579,6 +1608,20 @@ async function generateMonthlyResultsPDF(level, stream, year, month) {
         [normalizedLevel, normalizedStream, 'NA', normalizedYear]
       );
     }
+
+    // Deduplicate A/COM vs COM, A/DIV vs DIV, A/HTM vs HTM (A-level advanced prefix)
+    const normalizeSubjectCodeForDedup = (code) => {
+      if (!code) return code;
+      const c = String(code).trim().toUpperCase();
+      const m = c.match(/^A[\/_](COM|DIV|HTM)$/);
+      return m ? m[1] : c;
+    };
+    const subjectsByNormalizedCode = new Map();
+    subjectsResult.rows.forEach((s) => {
+      const key = normalizeSubjectCodeForDedup(s.subject_code || s.subject_abbreviation);
+      if (key && !subjectsByNormalizedCode.has(key)) subjectsByNormalizedCode.set(key, s);
+    });
+    subjectsResult = { rows: Array.from(subjectsByNormalizedCode.values()) };
     
     // Get scores
     const scoresResult = normalizedStream === 'ALL'

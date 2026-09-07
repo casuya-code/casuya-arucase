@@ -47,7 +47,7 @@ function getSwahiliRemarks(grade, level) {
     'B': 'Vizuri Sana',
     'C': 'Vizuri',
     'D': 'Dhaifu',
-    'E': isALevel ? 'Wastani' : 'Feli',
+    'E': isALevel ? 'Dhaifu sana' : 'Feli',
     'S': isALevel ? 'Kidogo' : 'Feli',
     'F': 'Feli'
   };

@@ -3772,8 +3772,8 @@ router.post('/monthly-results/calculate', async (req, res) => {
       studentsParams = [level, parseInt(year)];
 
       if (isFormVOrVI && normalizedTerm) {
-        studentsQuery += ' AND term = $3';
-        studentsParams.push(normalizedTerm);
+        studentsQuery += ' AND term = $3 AND (status IS DISTINCT FROM $4)';
+        studentsParams.push(normalizedTerm, 'PROMOTED');
       }
 
       studentsQuery += ' ORDER BY adm_no';
@@ -3782,8 +3782,8 @@ router.post('/monthly-results/calculate', async (req, res) => {
       studentsParams = [level, 'A', 'NA', parseInt(year)];
 
       if (isFormVOrVI && normalizedTerm) {
-        studentsQuery += ' AND term = $5';
-        studentsParams.push(normalizedTerm);
+        studentsQuery += ' AND term = $5 AND (status IS DISTINCT FROM $6)';
+        studentsParams.push(normalizedTerm, 'PROMOTED');
       }
 
       studentsQuery += ' ORDER BY adm_no';
@@ -3792,8 +3792,8 @@ router.post('/monthly-results/calculate', async (req, res) => {
       studentsParams = [level, normalizedStreamForQuery, parseInt(year)];
 
       if (isFormVOrVI && normalizedTerm) {
-        studentsQuery += ' AND term = $4';
-        studentsParams.push(normalizedTerm);
+        studentsQuery += ' AND term = $4 AND (status IS DISTINCT FROM $5)';
+        studentsParams.push(normalizedTerm, 'PROMOTED');
       }
 
       studentsQuery += ' ORDER BY adm_no';
@@ -3873,6 +3873,20 @@ router.post('/monthly-results/calculate', async (req, res) => {
         'SELECT subject_code, subject_abbreviation FROM subjects WHERE level = $1 AND stream IN ($2, $3) AND year = $4',
         [level, normalizedStreamForQuery, 'NA', parseInt(year)]
       );
+
+    // Deduplicate A/COM vs COM, A/DIV vs DIV, A/HTM vs HTM (A-level advanced prefix)
+    const normalizeSubjectCodeForDedup = (code) => {
+      if (!code) return code;
+      const c = String(code).trim().toUpperCase();
+      const m = c.match(/^A[\/_](COM|DIV|HTM)$/);
+      return m ? m[1] : c;
+    };
+    const subjectsByNormalizedCode = new Map();
+    subjectsResult.rows.forEach((s) => {
+      const key = normalizeSubjectCodeForDedup(s.subject_code || s.subject_abbreviation);
+      if (key && !subjectsByNormalizedCode.has(key)) subjectsByNormalizedCode.set(key, s);
+    });
+    subjectsResult.rows = Array.from(subjectsByNormalizedCode.values());
     
     // Create mapping: subject_code -> [subject_code, abbreviation] (for flexible lookup)
     const subjectCodeToKeys = {};

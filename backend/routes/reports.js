@@ -107,10 +107,24 @@ router.get('/individual/:form/:stream/:year/:term/:admNo', requireModule('indivi
       );
     }
 
+    // Deduplicate A/COM vs COM, A/DIV vs DIV, A/HTM vs HTM (A-level advanced prefix)
+    const normalizeSubjectCodeForDedup = (code) => {
+      if (!code) return code;
+      const c = String(code).trim().toUpperCase();
+      const m = c.match(/^A[\/_](COM|DIV|HTM)$/);
+      return m ? m[1] : c;
+    };
+    const subjectsByNormalizedCode = new Map();
+    subjectsResult.rows.forEach((s) => {
+      const key = normalizeSubjectCodeForDedup(s.subject_code || s.subject_abbreviation);
+      if (key && !subjectsByNormalizedCode.has(key)) subjectsByNormalizedCode.set(key, s);
+    });
+    subjectsResult = { rows: Array.from(subjectsByNormalizedCode.values()) };
+
     // Subject codes configured for this class (dedupe by code; used to filter individual_scores)
     const uniqueSubjectCodes = new Set(
       subjectsResult.rows
-        .map((s) => s.subject_code)
+        .map((s) => normalizeSubjectCodeForDedup(s.subject_code))
         .filter((c) => c != null && String(c).trim() !== '')
     );
 
@@ -168,7 +182,7 @@ router.get('/individual/:form/:stream/:year/:term/:admNo', requireModule('indivi
     
     // First filter by subject codes, then remove duplicates by subject_code + month combination
     const filteredBySubject = monthlyResult.rows.filter(row => 
-      uniqueSubjectCodes.has(row.subject_code)
+      uniqueSubjectCodes.has(normalizeSubjectCodeForDedup(row.subject_code))
     );
     
     // Sort to prefer NA stream over A stream for consistency
@@ -537,11 +551,12 @@ router.get('/bulk/:form/:year/:term', requireModule('bulk_report'), async (req, 
     const params = [decodedForm, parseInt(year)];
     let paramIndex = 3;
 
-    // For Form V/VI, filter by term. For Form I-IV, show all students for the year
+    // For Form V/VI, filter by term and only active students (exclude promoted)
     if (isForm5Or6) {
       queryText += ` AND term = $${paramIndex}`;
       params.push(normalizedTerm);
       paramIndex++;
+      queryText += ` AND (status IS DISTINCT FROM 'PROMOTED')`;
     }
 
     if (stream) {
@@ -591,9 +606,16 @@ router.get('/bulk/:form/:year/:term', requireModule('bulk_report'), async (req, 
       );
     }
     // If both A and NA had subject rows, keep one row per subject_code
+    // Also deduplicate A/COM vs COM, A/DIV vs DIV, A/HTM vs HTM (A-level advanced prefix)
+    const normalizeSubjectCode = (code) => {
+      if (!code) return code;
+      const c = String(code).trim().toUpperCase();
+      const m = c.match(/^A[\/_](COM|DIV|HTM)$/);
+      return m ? m[1] : c;
+    };
     const subjectsByCode = new Map();
     subjectsResult.rows.forEach((s) => {
-      const key = s.subject_code || s.subject_abbreviation;
+      const key = normalizeSubjectCode(s.subject_code || s.subject_abbreviation);
       if (key && !subjectsByCode.has(key)) subjectsByCode.set(key, s);
     });
     const subjects = Array.from(subjectsByCode.values());
@@ -874,11 +896,12 @@ router.get('/bulk/:form/:year/:term/pdf', requireModule('bulk_report'), async (r
     const params = [decodedForm, parseInt(year)];
     let paramIndex = 3;
 
-    // For Form V/VI, filter by term. For Form I-IV, show all students for the year
+    // For Form V/VI, filter by term and only active students (exclude promoted)
     if (isForm5Or6Pdf2) {
       queryText += ` AND term = $${paramIndex}`;
       params.push(normalizedTerm);
       paramIndex++;
+      queryText += ` AND (status IS DISTINCT FROM 'PROMOTED')`;
     }
 
     if (stream) {

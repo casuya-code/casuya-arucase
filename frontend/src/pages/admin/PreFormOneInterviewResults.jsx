@@ -185,6 +185,19 @@ const PreFormOneInterviewResults = () => {
     return assignResultPositions(merged);
   }, [autoCalculatedResults, existingResults, students]);
 
+  const resultsStats = useMemo(() => {
+    const entries = Object.values(displayResults);
+    const graded = entries.filter((r) => r?.grade);
+    const averages = entries
+      .map((r) => Number(r?.average))
+      .filter((v) => Number.isFinite(v) && v > 0);
+    const averageScore =
+      averages.length > 0
+        ? Math.round((averages.reduce((sum, v) => sum + v, 0) / averages.length) * 10) / 10
+        : null;
+    return { graded: graded.length, averageScore };
+  }, [displayResults]);
+
   const calculateResultsMutation = useMutation({
     mutationFn: async () =>
       preFormOneService.calculateInterviewResults(reportYear, filter.month),
@@ -414,11 +427,75 @@ const PreFormOneInterviewResults = () => {
   return (
     <AdminLayout>
       <div className="preform-one-results-page-container">
+        {/* Page Header */}
+        <div className="pfo-results-page-header">
+          <div className="pfo-results-page-header-left">
+            <div className="pfo-results-page-icon">
+              <i className="fas fa-chart-line" aria-hidden="true"></i>
+            </div>
+            <div className="pfo-results-page-header-text">
+              <h1>Interview Results</h1>
+              <p>
+                Full results grid — per-subject scores, totals, grades and positions for
+                Pre-Form One {reportYear}.
+              </p>
+            </div>
+          </div>
+          <Link
+            to={`/admin/pre-form-one/${reportYear}`}
+            className="excel-btn secondary small"
+          >
+            <i className="fas fa-arrow-left"></i> Back to Modules
+          </Link>
+        </div>
+
+        {/* Summary Stats */}
+        <div className="pfo-results-stats-grid">
+          <div className="pfo-results-stat-card">
+            <div className="pfo-results-stat-icon">
+              <i className="fas fa-users"></i>
+            </div>
+            <div className="pfo-results-stat-meta">
+              <span className="pfo-results-stat-value">{students.length}</span>
+              <span className="pfo-results-stat-label">Registered Students</span>
+            </div>
+          </div>
+          <div className="pfo-results-stat-card">
+            <div className="pfo-results-stat-icon">
+              <i className="fas fa-book"></i>
+            </div>
+            <div className="pfo-results-stat-meta">
+              <span className="pfo-results-stat-value">{subjects.length}</span>
+              <span className="pfo-results-stat-label">Interview Subjects</span>
+            </div>
+          </div>
+          <div className="pfo-results-stat-card">
+            <div className="pfo-results-stat-icon">
+              <i className="fas fa-check-circle"></i>
+            </div>
+            <div className="pfo-results-stat-meta">
+              <span className="pfo-results-stat-value">{resultsStats.graded}</span>
+              <span className="pfo-results-stat-label">Results Graded</span>
+            </div>
+          </div>
+          <div className="pfo-results-stat-card">
+            <div className="pfo-results-stat-icon">
+              <i className="fas fa-percentage"></i>
+            </div>
+            <div className="pfo-results-stat-meta">
+              <span className="pfo-results-stat-value">
+                {resultsStats.averageScore != null ? `${resultsStats.averageScore}%` : '—'}
+              </span>
+              <span className="pfo-results-stat-label">Average Score</span>
+            </div>
+          </div>
+        </div>
+
         <div className="excel-card preform-one-results">
           <div className="excel-card-header">
             <h2 className="excel-card-title">
-              <i className="fas fa-chart-line" aria-hidden="true"></i>
-              <span>Pre-Form One Interview Results</span>
+              <i className="fas fa-calculator" aria-hidden="true"></i>
+              <span>Calculate Results</span>
             </h2>
             <div className="header-actions">
               <button
@@ -430,12 +507,6 @@ const PreFormOneInterviewResults = () => {
                 <i className="fas fa-calculator"></i>{' '}
                 {calcPending ? 'Calculating...' : 'Calculate Results'}
               </button>
-              <Link
-                to={`/admin/pre-form-one/${reportYear}`}
-                className="excel-btn secondary small"
-              >
-                <i className="fas fa-arrow-left"></i> Back
-              </Link>
             </div>
           </div>
           <YearMonthFilter

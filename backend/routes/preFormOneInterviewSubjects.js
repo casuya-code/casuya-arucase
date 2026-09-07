@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const router = express.Router();
 const { query, withTransaction } = require('../config/database');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
@@ -19,6 +19,32 @@ router.get('/', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('Error fetching interview subjects:', error);
     return sendError(res, 500, 'Failed to fetch interview subjects', error);
+  }
+});
+
+// Export interview subjects to Excel (must be registered before /:id so it is not shadowed)
+router.get('/export', requireAuth, async (req, res) => {
+  try {
+    const result = await query(
+      'SELECT subject_name, subject_code, is_active FROM preformone_interview_subjects ORDER BY subject_name'
+    );
+
+    // Create CSV content
+    const csvContent = [
+      'Subject Name,Subject Code,Status',
+      ...result.rows.map(subject => [
+        subject.subject_name,
+        subject.subject_code,
+        subject.is_active ? 'Active' : 'Inactive'
+      ])
+    ].join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="preformone-interview-subjects.csv"');
+    res.send(csvContent);
+  } catch (error) {
+    console.error('Error exporting interview subjects:', error);
+    return sendError(res, 500, 'Failed to export interview subjects', error);
   }
 });
 
@@ -289,38 +315,6 @@ router.delete('/:id', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('Error deleting interview subject:', error);
     return sendError(res, 500, 'Failed to delete interview subject', error);
-  }
-});
-
-// Export interview subjects to Excel
-router.get('/export', requireAuth, async (req, res) => {
-  try {
-    console.log('ðŸ” DEBUG: Export interview subjects request received');
-    
-    const result = await query(
-      'SELECT subject_name, subject_code, is_active FROM preformone_interview_subjects ORDER BY subject_name'
-    );
-    
-    console.log('ðŸ” DEBUG: Interview subjects for export:', result.rowCount);
-    
-    // Create CSV content
-    const csvContent = [
-      'Subject Name,Subject Code,Status',
-      ...result.rows.map(subject => [
-        subject.subject_name,
-        subject.subject_code,
-        subject.is_active ? 'Active' : 'Inactive'
-      ])
-    ].join('\n');
-    
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename="preformone-interview-subjects.csv"');
-    res.send(csvContent);
-    
-    console.log('ðŸ” DEBUG: Interview subjects exported successfully');
-  } catch (error) {
-    console.error('Error exporting interview subjects:', error);
-    return sendError(res, 500, 'Failed to export interview subjects', error);
   }
 });
 

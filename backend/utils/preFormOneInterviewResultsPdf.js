@@ -394,77 +394,92 @@ function generatePreFormOneResultsPdfHtml({
 
   const logoBlock = buildLogoBlockHtml(logoUrl);
 
+  const FONT_LINKS = `
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+`;
+  const FONT_STACK = "'Tinos', 'Times New Roman', 'Liberation Serif', 'Times', serif";
+
   return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
   <title>${escapeHtml(pageTitle)} ${escapeHtml(year)}</title>
+  ${FONT_LINKS}
   <style>
     * { box-sizing: border-box; }
     body {
-      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      font-family: ${FONT_STACK};
       margin: 0;
       padding: 12px;
-      font-size: 9px;
-      color: #111827;
+      font-size: 12.5px;
+      color: #000000;
+      line-height: 1.3;
     }
     .report-header {
       display: flex;
       align-items: center;
       justify-content: space-between;
       padding: 12px 16px;
-      border: 1px solid #e5e7eb;
+      border: 1px solid #000000;
       margin-bottom: 0;
     }
     .logo-section { flex: 0 0 80px; text-align: center; }
     .school-logo { width: 72px; height: 72px; object-fit: contain; }
     .school-logo-placeholder {
-      width: 72px; height: 72px; background: #f3f4f6; border: 1px solid #e5e7eb;
+      width: 72px; height: 72px; background: #ffffff; border: 1px solid #000000;
     }
     .school-info { flex: 1; text-align: center; padding: 0 8px; }
-    .school-info h1 { margin: 0 0 4px; font-size: 14px; font-weight: 700; }
-    .school-info h2 { margin: 0 0 8px; font-size: 12px; font-weight: 600; color: #374151; }
-    .contact-info p { margin: 2px 0; font-size: 9px; color: #6b7280; }
+    .school-info h1 { margin: 0 0 4px; font-size: 13.5px; font-weight: 700; color: #000000; }
+    .school-info h2 { margin: 0 0 8px; font-size: 13.5px; font-weight: 700; color: #000000; }
+    .contact-info p { margin: 2px 0; font-size: 13.5px; color: #000000; }
     .test-info-bar {
       text-align: center;
       padding: 10px;
-      font-size: 11px;
-      font-weight: 600;
-      letter-spacing: 0.05em;
-      border: 1px solid #e5e7eb;
+      font-size: 12.5px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border: 1px solid #000000;
       border-top: none;
       margin-bottom: 12px;
+      color: #000000;
     }
     table.compact-results-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 8px;
+      font-size: 12.5px;
+      line-height: 1.3;
     }
     table.compact-results-table th,
     table.compact-results-table td {
-      border: 1px solid #e5e7eb;
-      padding: 4px 3px;
+      border: 1px solid #000000;
+      padding: 3px 4px;
       text-align: center;
       vertical-align: middle;
+      color: #000000;
     }
     table.compact-results-table th {
       background: #ffffff;
-      font-weight: 600;
-      color: #374151;
+      font-weight: 700;
+      color: #000000;
     }
-    .col-sn { min-width: 28px; }
-    .col-fname, .col-mname { min-width: 56px; }
-    .col-sname { min-width: 64px; }
-    .col-parish { min-width: 72px; }
-    .subject-col { min-width: 28px; max-width: 36px; }
-    .result-col { min-width: 32px; font-weight: 600; }
+    .col-sn { min-width: 22px; }
+    .col-fname, .col-mname { min-width: 48px; }
+    .col-sname { min-width: 56px; }
+    .col-parish { min-width: 56px; }
+    .subject-col { min-width: 24px; max-width: 34px; }
+    .result-col { min-width: 28px; font-weight: 600; }
     .tot-col, .grd-col { font-weight: 700; }
     .rotate-header {
       display: inline-block;
       writing-mode: vertical-rl;
       transform: rotate(180deg);
-      max-height: 72px;
+      max-height: 110px;
       line-height: 1.1;
+      font-size: 10.5px;
+      font-weight: 700;
+      white-space: nowrap;
     }
   </style>
 </head>

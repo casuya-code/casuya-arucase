@@ -73,15 +73,26 @@ const PreFormOneYear = () => {
     <AdminLayout>
     <div className="pre-form-one-year-page">
       <div className="pre-form-one-year-header">
-        <div className="pre-form-one-year-header-top">
-          <Link to="/admin/pre-form-one" className="back-button">
-            <i className="fas fa-arrow-left" aria-hidden="true"></i>
-            Back to Years
-          </Link>
+        <div className="pre-form-one-year-header-left">
+          <div className="pre-form-one-year-header-icon">
+            <i className="fas fa-graduation-cap" aria-hidden="true"></i>
+          </div>
+          <div className="pre-form-one-year-header-text">
+            <h1 className="pre-form-one-year-lead">Pre-Form One Modules</h1>
+            <p className="pre-form-one-year-subtitle">
+              Select a module to manage Pre-Form One activities for the {year} intake
+            </p>
+          </div>
         </div>
-        <h1 className="pre-form-one-year-lead">
-          Select a module to manage Pre-Form One activities for {year}
-        </h1>
+        <Link to="/admin/pre-form-one" className="back-button">
+          <i className="fas fa-arrow-left" aria-hidden="true"></i>
+          Back to Years
+        </Link>
+      </div>
+
+      <div className="pre-form-one-year-section-heading">
+        <span className="pre-form-one-year-section-title">Available Modules</span>
+        <span className="pre-form-one-year-module-count">{navigationItems.length} modules</span>
       </div>
 
       <div className="navigation-grid">

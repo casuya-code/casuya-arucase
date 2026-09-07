@@ -123,7 +123,7 @@ router.post('/bulk', requireAuth, async (req, res) => {
             student.surname,
             student.sex,
             student.parish || '',
-            studentYear
+            student.year || studentYear
           ];
         });
         const placeholders = students.map((_, index) => 
@@ -136,6 +136,47 @@ router.post('/bulk', requireAuth, async (req, res) => {
         return { success: true, students: result.rows, count: students.length };
       } catch (error) {
         console.error('Error creating bulk Pre-Form One students:', error);
+        throw error;
+      }
+    });
+    res.json(result);
+  } catch (error) {
+    sendError(res, error, 500);
+  }
+});
+
+// Bulk update parishes for multiple students
+router.put('/bulk-parish', requireAuth, async (req, res) => {
+  try {
+    const result = await withTransaction(async (client) => {
+      try {
+        const { updates, year } = req.body;
+        if (!updates || !Array.isArray(updates) || updates.length === 0) {
+          return { success: false, message: 'Invalid updates data' };
+        }
+        if (!year) {
+          return { success: false, message: 'Year is required' };
+        }
+        // Process each update individually for better debugging
+        const updatedStudents = [];
+        for (let i = 0; i < updates.length; i++) {
+          const update = updates[i];
+          // First find the student by serial number (scoped to the selected year)
+          const findQuery = 'SELECT * FROM preform_one_students WHERE serial_number = $1 AND year = $2';
+          const findResult = await client.query(findQuery, [update.serial_number, year]);
+          if (findResult.rowCount === 0) {
+            continue; // Skip this update but continue with others
+          }
+          
+          // Update the parish
+          const updateQuery = 'UPDATE preform_one_students SET parish = $1 WHERE serial_number = $2 AND year = $3 RETURNING *';
+          const updateResult = await client.query(updateQuery, [update.parish, update.serial_number, year]);
+          updatedStudents.push(updateResult.rows[0]);
+        }
+        
+        return { success: true, students: updatedStudents, count: updatedStudents.length };
+      } catch (error) {
+        console.error('Error bulk updating parishes:', error);
         throw error;
       }
     });
@@ -161,7 +202,7 @@ router.put('/:id', requireAuth, async (req, res) => {
           parish
         } = req.body;
         // Validate required fields
-        if (!id || !serial_number || !first_name || !surname || !sex) {
+        if (!id || isNaN(parseInt(id)) || !serial_number || !first_name || !surname || !sex) {
           return { success: false, message: 'Missing required fields: serial number, first name, surname, and sex' };
         }
         
@@ -204,78 +245,36 @@ router.put('/:id', requireAuth, async (req, res) => {
 
 // Update a Pre-Form One student's parish
 router.put('/:id/parish', requireAuth, async (req, res) => {
-  
-  const client = await withTransaction(async (client) => {
-    try {
-      const { id } = req.params;
-      const { parish } = req.body;
-      if (!id) {
-        return { success: false, message: 'Student ID is required' };
-      }
-      
-      // Allow empty parish (for removal) but not undefined/null
-      if (parish === undefined || parish === null) {
-        return { success: false, message: 'Parish value is required' };
-      }
-      // First check if student exists
-      const checkQuery = 'SELECT * FROM preform_one_students WHERE id = $1';
-      const checkResult = await client.query(checkQuery, [id]);
-      if (checkResult.rowCount === 0) {
-        return { success: false, message: 'Student not found' };
-      }
-      
-      const updateQuery = 'UPDATE preform_one_students SET parish = $1 WHERE id = $2 RETURNING *';
-      const updateValues = [parish, id];
-      const result = await client.query(updateQuery, updateValues);
-      return { success: true, data: result.rows[0] };
-    } catch (error) {
-      console.error('Error updating student parish:', error);
-      throw error;
-    }
-  });
-  
   try {
-    res.json(client);
-  } catch (error) {
-    sendError(res, error, 500);
-  }
-});
-
-// Bulk update parishes for multiple students
-router.put('/bulk-parish', requireAuth, async (req, res) => {
-  
-  const client = await withTransaction(async (client) => {
-    try {
-      const { updates } = req.body;
-      if (!updates || !Array.isArray(updates) || updates.length === 0) {
-        return { success: false, message: 'Invalid updates data' };
-      }
-      // Process each update individually for better debugging
-      const updatedStudents = [];
-      for (let i = 0; i < updates.length; i++) {
-        const update = updates[i];
-        // First find the student by serial number
-        const findQuery = 'SELECT * FROM preform_one_students WHERE serial_number = $1';
-        const findResult = await client.query(findQuery, [update.serial_number]);
-        if (findResult.rowCount === 0) {
-          continue; // Skip this update but continue with others
+    const result = await withTransaction(async (client) => {
+      try {
+        const { id } = req.params;
+        const { parish } = req.body;
+        if (!id || isNaN(parseInt(id))) {
+          return { success: false, message: 'Student ID is required' };
         }
         
-        // Update the parish
-        const updateQuery = 'UPDATE preform_one_students SET parish = $1 WHERE serial_number = $2 RETURNING *';
-        const updateResult = await client.query(updateQuery, [update.parish, update.serial_number]);
-        updatedStudents.push(updateResult.rows[0]);
+        // Allow empty parish (for removal) but not undefined/null
+        if (parish === undefined || parish === null) {
+          return { success: false, message: 'Parish value is required' };
+        }
+        // First check if student exists
+        const checkQuery = 'SELECT * FROM preform_one_students WHERE id = $1';
+        const checkResult = await client.query(checkQuery, [id]);
+        if (checkResult.rowCount === 0) {
+          return { success: false, message: 'Student not found' };
+        }
+        
+        const updateQuery = 'UPDATE preform_one_students SET parish = $1 WHERE id = $2 RETURNING *';
+        const updateValues = [parish, id];
+        const result = await client.query(updateQuery, updateValues);
+        return { success: true, data: result.rows[0] };
+      } catch (error) {
+        console.error('Error updating student parish:', error);
+        throw error;
       }
-      
-      return { success: true, students: updatedStudents, count: updatedStudents.length };
-    } catch (error) {
-      console.error('Error bulk updating parishes:', error);
-      throw error;
-    }
-  });
-  
-  try {
-    res.json(client);
+    });
+    res.json(result);
   } catch (error) {
     sendError(res, error, 500);
   }
@@ -288,7 +287,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
     const result = await withTransaction(async (client) => {
       try {
         const { id } = req.params;
-        if (!id) {
+        if (!id || isNaN(parseInt(id))) {
           return { success: false, message: 'Student ID is required' };
         }
         // First check if student exists
@@ -509,7 +508,14 @@ router.post('/interview-score/:studentId/:subjectId', requireAuth, async (req, r
   try {
     const { studentId, subjectId } = req.params;
     const { score } = req.body;
-    
+
+    if (!studentId || !subjectId || isNaN(parseInt(studentId)) || isNaN(parseInt(subjectId))) {
+      return sendError(res, clientError('Invalid student or subject ID'), 400);
+    }
+    if (score === undefined || score === null || isNaN(Number(score)) || Number(score) < 0 || Number(score) > 100) {
+      return sendError(res, clientError('Score must be a number between 0 and 100'), 400);
+    }
+
     const savedRow = await withTransaction(async (client) => {
       const result = await client.query(
         `INSERT INTO preform_one_scores (student_id, subject_id, subject_type, score, created_by)
@@ -538,7 +544,14 @@ router.post('/continuing-score/:studentId/:subjectId', requireAuth, async (req, 
   try {
     const { studentId, subjectId } = req.params;
     const { score } = req.body;
-    
+
+    if (!studentId || !subjectId || isNaN(parseInt(studentId)) || isNaN(parseInt(subjectId))) {
+      return sendError(res, clientError('Invalid student or subject ID'), 400);
+    }
+    if (score === undefined || score === null || isNaN(Number(score)) || Number(score) < 0 || Number(score) > 100) {
+      return sendError(res, clientError('Score must be a number between 0 and 100'), 400);
+    }
+
     const savedRow = await withTransaction(async (client) => {
       const result = await client.query(
         `INSERT INTO preform_one_scores (student_id, subject_id, subject_type, score, created_by)

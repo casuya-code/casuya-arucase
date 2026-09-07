@@ -15,9 +15,6 @@ const PreFormOneInterviewSubjects = () => {
   const [formData, setFormData] = useState({
     subject_name: '',
     subject_code: '',
-    description: '',
-    max_marks: 100,
-    interview_duration_minutes: 30,
     is_active: true
   });
 
@@ -53,9 +50,6 @@ const PreFormOneInterviewSubjects = () => {
     setFormData({
       subject_name: '',
       subject_code: '',
-      description: '',
-      max_marks: 100,
-      interview_duration_minutes: 30,
       is_active: true
     });
     setEditingSubject(null);
@@ -110,9 +104,6 @@ const PreFormOneInterviewSubjects = () => {
     setFormData({
       subject_name: subject.subject_name,
       subject_code: subject.subject_code,
-      description: subject.description || '',
-      max_marks: subject.max_marks || 100,
-      interview_duration_minutes: subject.interview_duration_minutes || 30,
       is_active: subject.is_active !== undefined ? subject.is_active : true
     });
     setEditingSubject(subject);
@@ -146,12 +137,16 @@ const PreFormOneInterviewSubjects = () => {
         ...subject,
         is_active: !subject.is_active
       });
-      
-      setSubjects(prev => prev.map(s => 
-        s.id === subject.id ? updatedSubject.data : s
-      ));
-      
-      toast.success(`Interview subject ${subject.is_active ? 'deactivated' : 'activated'} successfully!`);
+
+      if (updatedSubject && updatedSubject.data) {
+        setSubjects(prev => prev.map(s => 
+          s.id === subject.id ? updatedSubject.data : s
+        ));
+
+        toast.success(`Interview subject ${subject.is_active ? 'deactivated' : 'activated'} successfully!`);
+      } else {
+        toast.error('Failed to update interview subject status. Please try again.');
+      }
     } catch (error) {
       toast.error('Error updating interview subject status. Please try again.');
     } finally {

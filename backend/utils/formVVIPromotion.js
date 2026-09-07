@@ -245,6 +245,19 @@ async function executePromotion(query, withTransaction, params, username) {
         ]
       );
 
+      // Mark the source (old) student row as PROMOTED so reports exclude it
+      await client.query(
+        `UPDATE students SET status = 'PROMOTED'
+         WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5`,
+        [
+          student.adm_no,
+          targets.from.level,
+          targets.from.stream,
+          targets.from.year,
+          targets.from.term,
+        ]
+      );
+
       await client.query(
         `INSERT INTO student_history (
            adm_no, full_name, current_level, current_stream, current_year,

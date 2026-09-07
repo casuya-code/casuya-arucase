@@ -11,7 +11,6 @@ import { CSV_BULK_LABELS, CSV_BULK_TITLES } from '../../constants/csvBulkActions
 const PreFormOneParishes = () => {
   const { year } = useParams();
   const [students, setStudents] = useState([]);
-  const [_csvData, _setCsvData] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [filterParish, setFilterParish] = useState('all');
   const [sortBy, setSortBy] = useState('admission_number');
@@ -47,11 +46,6 @@ const PreFormOneParishes = () => {
     setCurrentPage(1);
   }, [students, searchTerm, filterParish, sortBy, sortOrder]);
 
-  // Generate admission number
-  const _generateAdmissionNumber = (serialNumber) => {
-    return `789ABC${serialNumber}`;
-  };
-
   // Filter and sort students
   const filteredAndSortedStudents = useMemo(() => {
     // Ensure students is always an array
@@ -59,12 +53,14 @@ const PreFormOneParishes = () => {
     
     // Apply search filter
     if (searchTerm) {
+      const term = searchTerm.toLowerCase();
       filtered = filtered.filter(student => 
-        student && 
-        student.admission_number?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.first_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.surname?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        student.parish?.toLowerCase().includes(searchTerm.toLowerCase())
+        student && (
+          student.admission_number?.toLowerCase().includes(term) ||
+          student.first_name?.toLowerCase().includes(term) ||
+          student.surname?.toLowerCase().includes(term) ||
+          student.parish?.toLowerCase().includes(term)
+        )
       );
     }
     
@@ -91,7 +87,6 @@ const PreFormOneParishes = () => {
         bValue = parseInt(bStr.replace('789ABC', '')) || 0;
       }
       
-            
       if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
       if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
       return 0;
@@ -105,6 +100,18 @@ const PreFormOneParishes = () => {
     const parishes = [...new Set(students.map(s => s.parish).filter(p => p))];
     return parishes.sort();
   }, [students]);
+
+  // Summary stats
+  const stats = useMemo(() => {
+    const total = students.length;
+    const assigned = students.filter(s => s && s.parish && s.parish.trim()).length;
+    return {
+      total,
+      assigned,
+      notAssigned: total - assigned,
+      uniqueParishes: uniqueParishes.length
+    };
+  }, [students, uniqueParishes]);
 
   // Handle parish input change
   const handleParishChange = (e) => {
@@ -123,11 +130,20 @@ const PreFormOneParishes = () => {
 
       const updatedStudent = await preFormOneService.updateStudentParish(editingId, editingParish.trim());
 
+      // Handle unsuccessful responses from the backend
+      if (!updatedStudent || updatedStudent.success === false) {
+        toast.error(updatedStudent?.message || 'Error updating parish. Please try again.');
+        return;
+      }
+
+      // The API wraps the student record in a `data` field
+      const updatedStudentRecord = updatedStudent.data ?? updatedStudent;
+
       // Update local state with the updated student
       setStudents(prev => {
         const updatedStudents = prev.map(student => {
           if (student.id === editingId) {
-            return updatedStudent;
+            return updatedStudentRecord;
           }
           return student;
         });
@@ -172,6 +188,7 @@ const PreFormOneParishes = () => {
       processCsvData(csvText);
     };
     reader.readAsText(file);
+    event.target.value = '';
   };
 
   // Improved CSV parsing function to handle quoted fields
@@ -213,7 +230,7 @@ const PreFormOneParishes = () => {
       const updates = [];
       const seenSerialNumbers = new Set();
 
-      dataLines.forEach((line, _index) => {
+      dataLines.forEach((line) => {
         const values = parseCSVLine(line);
         let serialNumber = '';
         let parish = '';
@@ -249,7 +266,12 @@ const PreFormOneParishes = () => {
         return;
       }
 
-      const result = await preFormOneService.bulkUpdateParishes(updates);
+      const result = await preFormOneService.bulkUpdateParishes(updates, year);
+
+      if (!result || result.success === false) {
+        toast.error(result?.message || 'Error updating parishes from CSV. Please try again.');
+        return;
+      }
 
       // Update local state with the updated students
       setStudents(prev => {
@@ -284,6 +306,13 @@ const PreFormOneParishes = () => {
         setLoading(true);
         const updatedStudent = await preFormOneService.updateStudentParish(studentId, '');
 
+        if (!updatedStudent || updatedStudent.success === false) {
+          toast.error(updatedStudent?.message || 'Error removing parish assignment. Please try again.');
+          return;
+        }
+
+        const updatedStudentRecord = updatedStudent.data ?? updatedStudent;
+
         // Refresh data from database to ensure UI is in sync
         try {
           const freshData = await preFormOneService.getStudents(year);
@@ -292,7 +321,7 @@ const PreFormOneParishes = () => {
         } catch {
           // Fallback to local state update if refresh fails
           setStudents(prev => prev.map(student =>
-            student.id === studentId ? updatedStudent : student
+            student.id === studentId ? updatedStudentRecord : student
           ));
         }
 
@@ -316,15 +345,6 @@ const PreFormOneParishes = () => {
       toast.error('Error exporting students. Please try again.');
     } finally {
       setLoading(false);
-    }
-  };
-
-  
-  // Clear all students
-  const _clearAllStudents = () => {
-    if (window.confirm('Are you sure you want to clear all registered students? This action cannot be undone.')) {
-      setStudents([]);
-      toast.success('All students cleared successfully');
     }
   };
 
@@ -360,17 +380,76 @@ const PreFormOneParishes = () => {
     setCurrentPage(page);
   };
 
+  const editingStudent = editingId ? students.find(s => s.id === editingId) : null;
+
   return (
     <AdminLayout>
-    <div className="preform-one-registration-route registration-form-page-container">
+    <div className="preform-one-registration-route parishes-page-container">
+      {/* Page Header */}
+      <div className="parishes-page-header">
+        <div className="parishes-page-header-left">
+          <div className="parishes-page-icon">
+            <i className="fas fa-place-of-worship"></i>
+          </div>
+          <div className="parishes-page-title">
+            <h1>Parish Assignment</h1>
+            <p>Manage parish information for Pre-Form One students &middot; {year}</p>
+          </div>
+        </div>
+        <Link to={`/admin/pre-form-one/${year}`} className="back-button">
+          <i className="fas fa-arrow-left"></i>
+          Back to Modules
+        </Link>
+      </div>
+
+      {/* Summary Stats */}
+      <div className="parishes-stats-grid">
+        <div className="parish-stat-card">
+          <div className="parish-stat-icon">
+            <i className="fas fa-users"></i>
+          </div>
+          <div className="parish-stat-meta">
+            <span className="parish-stat-value">{stats.total}</span>
+            <span className="parish-stat-label">Registered Students</span>
+          </div>
+        </div>
+        <div className="parish-stat-card">
+          <div className="parish-stat-icon">
+            <i className="fas fa-church"></i>
+          </div>
+          <div className="parish-stat-meta">
+            <span className="parish-stat-value">{stats.assigned}</span>
+            <span className="parish-stat-label">Parish Assigned</span>
+          </div>
+        </div>
+        <div className="parish-stat-card">
+          <div className="parish-stat-icon">
+            <i className="fas fa-user-slash"></i>
+          </div>
+          <div className="parish-stat-meta">
+            <span className="parish-stat-value">{stats.notAssigned}</span>
+            <span className="parish-stat-label">Not Assigned</span>
+          </div>
+        </div>
+        <div className="parish-stat-card">
+          <div className="parish-stat-icon">
+            <i className="fas fa-map-pin"></i>
+          </div>
+          <div className="parish-stat-meta">
+            <span className="parish-stat-value">{stats.uniqueParishes}</span>
+            <span className="parish-stat-label">Unique Parishes</span>
+          </div>
+        </div>
+      </div>
+
       {/* Edit Parish Card */}
-      {editingId && (
+      {editingId && editingStudent && (
         <div className="registration-form-card">
           <div className="registration-form-card-header">
             <i className="fas fa-church"></i>
             <span>Edit Parish Assignment - {year}</span>
-            <span className="academic-year-info">
-              <small>Student: {students.find(s => s.id === editingId)?.admission_number}</small>
+            <span className="parishes-header-chip">
+              <small>{editingStudent.admission_number}</small>
             </span>
           </div>
           <div className="registration-form-card-body">
@@ -379,15 +458,15 @@ const PreFormOneParishes = () => {
                 <div className="student-details-grid">
                   <div className="detail-item">
                     <label>Admission Number:</label>
-                    <span>{students.find(s => s.id === editingId)?.admission_number}</span>
+                    <span>{editingStudent.admission_number}</span>
                   </div>
                   <div className="detail-item">
                     <label>Name:</label>
-                    <span>{students.find(s => s.id === editingId)?.first_name} {students.find(s => s.id === editingId)?.surname}</span>
+                    <span>{editingStudent.first_name} {editingStudent.surname}</span>
                   </div>
                   <div className="detail-item">
                     <label>Sex:</label>
-                    <span>{students.find(s => s.id === editingId)?.sex}</span>
+                    <span>{editingStudent.sex}</span>
                   </div>
                 </div>
               </div>
@@ -482,8 +561,13 @@ const PreFormOneParishes = () => {
       {/* Registered Students Card */}
       <div className="registered-students-card">
         <div className="registered-students-card-header">
-          <i className="fas fa-table"></i>
-          <span>Registered Students ({filteredAndSortedStudents.length})</span>
+          <div className="registered-students-card-header-left">
+            <i className="fas fa-table"></i>
+            <span>Registered Students</span>
+          </div>
+          <span className="registered-students-count">
+            {filteredAndSortedStudents.length} shown
+          </span>
         </div>
         <div className="registered-students-card-body">
           {/* Search and Filter Controls */}
@@ -493,7 +577,7 @@ const PreFormOneParishes = () => {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search students..."
+                placeholder="Search by name, admission no or parish..."
                 className="form-input"
               />
             </div>
@@ -565,7 +649,7 @@ const PreFormOneParishes = () => {
                         </span>
                       </td>
                       <td>
-                        <span className="parish-badge">
+                        <span className={`parish-badge ${student.parish ? '' : 'parish-badge--empty'}`}>
                           {student.parish || 'Not Assigned'}
                         </span>
                       </td>

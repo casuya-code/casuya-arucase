@@ -1,3 +1,4 @@
+@layer pfo-page {
 .preform-one-results-page-container .students-reports-container{
   margin-top: 2rem;
 }.preform-one-results-page-container .section-title{
@@ -991,4 +992,5 @@
   .preform-one-results-page-container .grade-row-F td {
     border: 1px solid #000;
   }
+}
 }

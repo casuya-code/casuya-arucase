@@ -1,3 +1,4 @@
+@layer pfo-page {
 .pagination-controls {
   display: flex;
   align-items: center;
@@ -23,17 +24,6 @@
 .pagination-controls .excel-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
-}
-
-.parish-badge {
-  display: inline-block;
-  padding: 4px 10px;
-  background: #f3f4f6;
-  color: #374151;
-  border: 1px solid #e5e7eb;
-  font-size: 12px;
-  font-weight: 500;
-  white-space: nowrap;
 }
 
 .student-info-display {
@@ -69,4 +59,5 @@
   font-weight: 500;
   color: #111827;
   overflow-wrap: anywhere;
+}
 }

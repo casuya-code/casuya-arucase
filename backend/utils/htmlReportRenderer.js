@@ -171,7 +171,9 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
   };
 
   const getComment = (grade) => {
-    const commentMap = { A: 'Bora Sana', B: 'Vizuri Sana', C: 'Vizuri', D: 'Dhaifu', E: 'Wastani', S: 'Kidogo', F: 'Feli' };
+    const normalizedForm = String(form || '').trim().toUpperCase();
+    const isALevel = normalizedForm.includes('FORM V') || normalizedForm.includes('FORM VI');
+    const commentMap = { A: 'Bora Sana', B: 'Vizuri Sana', C: 'Vizuri', D: 'Dhaifu', E: isALevel ? 'Dhaifu sana' : 'Wastani', S: isALevel ? 'Kidogo' : 'Feli', F: 'Feli' };
     return commentMap[grade] || 'Feli';
   };
 
@@ -526,7 +528,7 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
       <!-- Grade Key/Legend -->
       <div class="grade-key-legend" style="margin-top: 8px; padding: 4px; font-size: 10.5px; line-height: 1.4; white-space: nowrap; overflow: visible;">
         ${isForm5Or6 ? `
-          <strong>ALAMA:</strong> A = 85+, Bora Sana, B = 75+, Vizuri Sana, C = 65+, Vizuri, D = 55+, Dhaifu, E = 45+, Wastani, S = 40+, Kidogo, F = 0 – 39, Feli<br/>
+          <strong>ALAMA:</strong> A = 85+, Bora Sana, B = 75+, Vizuri Sana, C = 65+, Vizuri, D = 55+, Dhaifu, E = 45+, Dhaifu sana, S = 40+, Kidogo, F = 0 – 39, Feli<br/>
           <strong>TABIA:</strong> A, Vizuri Sana, B, Vizuri, C, Wastani, D, Dhaifu, F, Mbaya
         ` : `
           <strong>ALAMA:</strong> A = 85 – 100, Bora Sana, B = 70 – 84, Vizuri Sana, C = 50 – 69, Vizuri, D = 40 – 49, Dhaifu, F = 0 – 39, Feli | <strong>TABIA:</strong> A, Vizuri Sana, B, Vizuri, C, Wastani, D, Dhaifu, F, Mbaya

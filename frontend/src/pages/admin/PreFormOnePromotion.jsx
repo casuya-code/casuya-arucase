@@ -20,9 +20,30 @@ const PreFormOnePromotion = () => {
   const [promoting, setPromoting] = useState(false);
   const [activeTab, setActiveTab] = useState('eligible');
 
-  // Load eligible students and promotion status
-  useEffect(() => {
-    loadData();
+  // Memoized data loading function
+  const loadData = useCallback(async () => {
+    try {
+      setLoading(true);
+      
+      // Load eligible students
+      const studentsResponse = await preFormOnePromotionService.getEligibleStudents(year);
+      if (studentsResponse.success) {
+        setEligibleStudents(studentsResponse.data || []);
+      } else {
+        toast.error(studentsResponse.message || 'Failed to load eligible students');
+      }
+
+      // Load promotion status
+      const statusResponse = await preFormOnePromotionService.getPromotionStatus(year);
+      if (statusResponse.success) {
+        setPromotionStatus(statusResponse.data);
+      }
+    } catch (error) {
+      console.error('Error loading promotion data:', error);
+      toast.error('Failed to load promotion data');
+    } finally {
+      setLoading(false);
+    }
   }, [year]);
 
   // Memoized handlers to prevent unnecessary re-renders
@@ -59,14 +80,14 @@ const PreFormOnePromotion = () => {
       
       const promotionData = {
         selectedStudents: promoteAll ? [] : selectedStudents,
-        targetStreams: promoteAll ? targetStreams : targetStreams,
+        targetStreams: targetStreams,
         promoteAll: promoteAll
       };
 
       const response = await preFormOnePromotionService.promoteStudents(year, promotionData);
       
       if (response.success) {
-        const { promoted: _promoted, errors, summary } = response.data;
+        const { errors, summary } = response.data;
         
         // Show success message
         toast.success(`Promotion completed: ${summary.successful} students promoted successfully`);
@@ -93,31 +114,12 @@ const PreFormOnePromotion = () => {
     } finally {
       setPromoting(false);
     }
-  }, [year, selectedStudents, targetStreams]);
+  }, [year, selectedStudents, targetStreams, loadData]);
 
-  // Memoized data loading function
-  const loadData = useCallback(async () => {
-    try {
-      setLoading(true);
-      
-      // Load eligible students
-      const studentsResponse = await preFormOnePromotionService.getEligibleStudents(year);
-      if (studentsResponse.success) {
-        setEligibleStudents(studentsResponse.data || []);
-      }
-
-      // Load promotion status
-      const statusResponse = await preFormOnePromotionService.getPromotionStatus(year);
-      if (statusResponse.success) {
-        setPromotionStatus(statusResponse.data);
-      }
-    } catch (error) {
-      console.error('Error loading promotion data:', error);
-      toast.error('Failed to load promotion data');
-    } finally {
-      setLoading(false);
-    }
-  }, [year]);
+  // Load eligible students and promotion status on mount / year change
+  useEffect(() => {
+    loadData();
+  }, [year, loadData]);
 
   // Memoized computed values
   const isAllSelected = useMemo(() => 

@@ -4,12 +4,12 @@
  */
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, Link } from 'react-router-dom';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { preFormOneService } from '../../services/preFormOneService';
 import { useAuth } from '../../context/AuthContext';
 import { buildFetchUrl } from '../../utils/backendUrl';
-import { resultsByAdmissionNumber } from '../../services/preFormOneApiHelpers';
+import { resultsByAdmissionNumber, admissionKey } from '../../services/preFormOneApiHelpers';
 import './PreFormOneResults.css';
 import './preform-one-modern.css';
 import AdminLayout from '../../components/layout/AdminLayout';
@@ -114,9 +114,9 @@ const PreFormOneInterviewReports = () => {
   const sortedStudents = useMemo(
     () =>
       [...students].sort((a, b) => {
-        if (a.first_name !== b.first_name) return a.first_name.localeCompare(b.first_name);
-        if ((a.middle_name || '') !== (b.middle_name || '')) return (a.middle_name || '').localeCompare(b.middle_name || '');
-        return a.surname.localeCompare(b.surname);
+        const an = `${a.first_name || ''} ${a.surname || ''}`.trim();
+        const bn = `${b.first_name || ''} ${b.surname || ''}`.trim();
+        return an.localeCompare(bn);
       }),
     [students]
   );
@@ -172,7 +172,7 @@ const PreFormOneInterviewReports = () => {
                 <div className="students-list">
                   {paginatedStudents.map((student, index) => {
                     const globalIndex = (currentPage - 1) * PER_PAGE + index;
-                    const result = interviewResults[student.admission_number];
+                    const result = interviewResults[admissionKey(student.admission_number)];
                     const hasReport = result && result.total_marks !== null && result.total_marks !== undefined;
                                         
                     return (

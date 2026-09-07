@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Pre-Form One Continuing Subjects API Routes
  * Handles CRUD operations for continuing subjects management
  */
@@ -25,6 +25,32 @@ router.get('/', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('ðŸ” DEBUG: Error fetching continuing subjects:', error);
     return sendError(res, 500, 'Failed to fetch continuing subjects', error);
+  }
+});
+
+// Export continuing subjects to Excel (must be registered before /:id so it is not shadowed)
+router.get('/export', requireAuth, async (req, res) => {
+  try {
+    const result = await query(
+      'SELECT subject_name, subject_code, is_active FROM preformone_continuing_subjects ORDER BY subject_name'
+    );
+
+    // Create CSV content
+    const csvContent = [
+      'Subject Name,Subject Code,Status',
+      ...result.rows.map(subject => [
+        subject.subject_name,
+        subject.subject_code,
+        subject.is_active ? 'Active' : 'Inactive'
+      ])
+    ].join('\n');
+
+    res.setHeader('Content-Type', 'text/csv');
+    res.setHeader('Content-Disposition', 'attachment; filename="preformone-continuing-subjects.csv"');
+    res.send(csvContent);
+  } catch (error) {
+    console.error('Error exporting continuing subjects:', error);
+    return sendError(res, 500, 'Failed to export continuing subjects', error);
   }
 });
 
@@ -296,38 +322,6 @@ router.delete('/:id', requireAuth, async (req, res) => {
   } catch (error) {
     console.error('ðŸ” DEBUG: Error in delete continuing subject route:', error);
     return sendError(res, 500, 'Failed to delete continuing subject', error);
-  }
-});
-
-// Export continuing subjects to Excel
-router.get('/export', requireAuth, async (req, res) => {
-  try {
-    console.log('ðŸ” DEBUG: Export continuing subjects request received');
-    
-    const result = await query(
-      'SELECT subject_name, subject_code, is_active FROM preformone_continuing_subjects ORDER BY subject_name'
-    );
-    
-    console.log('ðŸ” DEBUG: Continuing subjects for export:', result.rowCount);
-    
-    // Create CSV content
-    const csvContent = [
-      'Subject Name,Subject Code,Status',
-      ...result.rows.map(subject => [
-        subject.subject_name,
-        subject.subject_code,
-        subject.is_active ? 'Active' : 'Inactive'
-      ])
-    ].join('\n');
-    
-    res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', 'attachment; filename="preformone-continuing-subjects.csv"');
-    res.send(csvContent);
-    
-    console.log('ðŸ” DEBUG: Continuing subjects exported successfully');
-  } catch (error) {
-    console.error('ðŸ” DEBUG: Error exporting continuing subjects:', error);
-    return sendError(res, 500, 'Failed to export continuing subjects', error);
   }
 });
 

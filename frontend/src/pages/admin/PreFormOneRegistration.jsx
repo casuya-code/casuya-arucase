@@ -18,11 +18,6 @@ const PreFormOneRegistration = () => {
     sex: '',
     year: year
   });
-  const [_csvData, _setCsvData] = useState(''); /* eslint-disable-line no-unused-vars */
-  const [searchTerm, setSearchTerm] = useState('');
-  const [filterSex, setFilterSex] = useState('all');
-  const [sortBy, setSortBy] = useState('admission_number');
-  const [sortOrder, setSortOrder] = useState('asc');
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 25;
@@ -54,47 +49,24 @@ const PreFormOneRegistration = () => {
     setCurrentPage(1);
   }, [students]);
 
-  // Filter and sort students
-  const filteredAndSortedStudents = useMemo(() => {
-    // Ensure students is always an array
-    let filtered = Array.isArray(students) ? students : [];
-    
-    // Apply search filter
-    if (searchTerm) {
-      const searchLower = searchTerm.toLowerCase();
-      filtered = filtered.filter(student => 
-        student && 
-        (student.admission_number?.toLowerCase().includes(searchLower) ||
-        student.first_name?.toLowerCase().includes(searchLower) ||
-        student.middle_name?.toLowerCase().includes(searchLower) ||
-        student.surname?.toLowerCase().includes(searchLower))
-      );
-    }
-    
-    // Apply sex filter
-    if (filterSex !== 'all') {
-      filtered = filtered.filter(student => student && student.sex?.toLowerCase() === filterSex.toLowerCase());
-    }
-    
-    // Apply sorting
-    return filtered.sort((a, b) => {
-      let aVal = a[sortBy] || '';
-      let bVal = b[sortBy] || '';
-      
-      if (sortBy === 'admission_number') {
-        aVal = aVal.replace('789ABC', '');
-        bVal = bVal.replace('789ABC', '');
-        aVal = parseInt(aVal) || 0;
-        bVal = parseInt(bVal) || 0;
-      }
-      
-      if (sortOrder === 'asc') {
-        return aVal > bVal ? 1 : -1;
-      } else {
-        return aVal < bVal ? 1 : -1;
-      }
+  // Sort students by admission number for stable display
+  const sortedStudents = useMemo(() => {
+    const list = Array.isArray(students) ? students : [];
+    return [...list].sort((a, b) => {
+      const aVal = parseInt(String(a?.admission_number || '').replace('789ABC', '')) || 0;
+      const bVal = parseInt(String(b?.admission_number || '').replace('789ABC', '')) || 0;
+      return aVal - bVal;
     });
-  }, [students, searchTerm, filterSex, sortBy, sortOrder]);
+  }, [students]);
+
+  // Summary stats
+  const stats = useMemo(() => {
+    const total = students.length;
+    const male = students.filter(s => s && s.sex?.toLowerCase() === 'male').length;
+    const female = students.filter(s => s && s.sex?.toLowerCase() === 'female').length;
+    const parishAssigned = students.filter(s => s && s.parish && s.parish.trim()).length;
+    return { total, male, female, parishAssigned };
+  }, [students]);
 
   // Generate automatic admission number
   const generateAdmissionNumber = (serialNumber) => {
@@ -293,6 +265,7 @@ const PreFormOneRegistration = () => {
       processCsvData(csvText);
     };
     reader.readAsText(file);
+    event.target.value = '';
   };
 
   // Process CSV data
@@ -339,7 +312,7 @@ const PreFormOneRegistration = () => {
         return;
       }
 
-      const result = await preFormOneService.createBulkStudents(studentsToCreate);
+      const result = await preFormOneService.createBulkStudents(studentsToCreate, year);
       
       // Update local state with the new students
       setStudents(prev => {
@@ -367,14 +340,6 @@ const PreFormOneRegistration = () => {
     }
   };
 
-  // Clear all students
-  const _clearAllStudents = () => {
-    if (window.confirm('Are you sure you want to clear all registered students? This action cannot be undone.')) {
-      setStudents([]);
-      toast.success('All students cleared successfully');
-    }
-  };
-
   // Download CSV template
   const downloadCsvTemplate = () => {
     const templateHeaders = ['S/N', 'FirstName', 'MiddleName', 'Surname', 'Sex'];
@@ -396,23 +361,77 @@ const PreFormOneRegistration = () => {
     URL.revokeObjectURL(url);
   };
 
-  const totalPages = Math.ceil(filteredAndSortedStudents.length / ITEMS_PER_PAGE);
-  const paginatedStudents = filteredAndSortedStudents.slice(
+  const totalPages = Math.ceil(sortedStudents.length / ITEMS_PER_PAGE);
+  const paginatedStudents = sortedStudents.slice(
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
 
   return (
     <AdminLayout>
-    <div className="preform-one-registration-route registration-form-page-container">
+    <div className="preform-one-registration-route registration-form-page-container registration-page-container">
+      {/* Page Header */}
+      <div className="registration-page-header">
+        <div className="registration-page-header-left">
+          <div className="registration-page-header-icon">
+            <i className="fas fa-user-plus"></i>
+          </div>
+          <div className="registration-page-header-text">
+            <h1>Pre-Form One Registration</h1>
+            <p>Register and manage Pre-Form One students for the {year} intake</p>
+          </div>
+        </div>
+        <Link to={`/admin/pre-form-one/${year}`} className="back-button">
+          <i className="fas fa-arrow-left"></i>
+          Back to Modules
+        </Link>
+      </div>
+
+      {/* Summary Stats */}
+      <div className="registration-stats-grid">
+        <div className="registration-stat-card">
+          <div className="registration-stat-icon">
+            <i className="fas fa-users"></i>
+          </div>
+          <div className="registration-stat-meta">
+            <span className="registration-stat-value">{stats.total}</span>
+            <span className="registration-stat-label">Registered Students</span>
+          </div>
+        </div>
+        <div className="registration-stat-card">
+          <div className="registration-stat-icon">
+            <i className="fas fa-mars"></i>
+          </div>
+          <div className="registration-stat-meta">
+            <span className="registration-stat-value">{stats.male}</span>
+            <span className="registration-stat-label">Male</span>
+          </div>
+        </div>
+        <div className="registration-stat-card">
+          <div className="registration-stat-icon">
+            <i className="fas fa-venus"></i>
+          </div>
+          <div className="registration-stat-meta">
+            <span className="registration-stat-value">{stats.female}</span>
+            <span className="registration-stat-label">Female</span>
+          </div>
+        </div>
+        <div className="registration-stat-card">
+          <div className="registration-stat-icon">
+            <i className="fas fa-church"></i>
+          </div>
+          <div className="registration-stat-meta">
+            <span className="registration-stat-value">{stats.parishAssigned}</span>
+            <span className="registration-stat-label">Parish Assigned</span>
+          </div>
+        </div>
+      </div>
+
       {/* Registration Form Card */}
       <div className="registration-form-card">
         <div className="registration-form-card-header">
           <i className="fas fa-user-plus"></i>
           <span>Pre-Form One Registration - {year}</span>
-          <span className="academic-year-info">
-            <small>Academic Year: {year}</small>
-          </span>
         </div>
         <div className="registration-form-card-body">
           <form onSubmit={(e) => { 
@@ -569,8 +588,11 @@ const PreFormOneRegistration = () => {
       {/* Registered Students Card */}
       <div className="registered-students-card">
         <div className="registered-students-card-header">
-          <i className="fas fa-table"></i>
-          <span>Registered ({students.length})</span>
+          <div className="registered-students-card-header-left">
+            <i className="fas fa-table"></i>
+            <span>Registered Students</span>
+          </div>
+          <span className="registered-students-count">{students.length} total</span>
         </div>
         <div className="registered-students-card-body">
           {loading ? (
@@ -593,6 +615,7 @@ const PreFormOneRegistration = () => {
                     <th>Serial No</th>
                     <th>Name</th>
                     <th>Sex</th>
+                    <th>Actions</th>
                   </tr>
                 </thead>
                 <tbody>

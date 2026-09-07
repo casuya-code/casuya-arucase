@@ -630,30 +630,6 @@ const PreFormOneContinuingResults = () => {
               })}
             </div>
 
-            {totalPages > 1 && (
-              <div className="pagination-controls">
-                <button
-                  type="button"
-                  className="pagination-btn"
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((p) => p - 1)}
-                >
-                  <i className="fas fa-chevron-left"></i> Prev
-                </button>
-                <span className="pagination-info">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button
-                  type="button"
-                  className="pagination-btn"
-                  disabled={currentPage === totalPages}
-                  onClick={() => setCurrentPage((p) => p + 1)}
-                >
-                  Next <i className="fas fa-chevron-right"></i>
-                </button>
-              </div>
-            )}
-
             <div className="results-table-container results-table-desktop">
               <div className="results-table-wrapper">
                 <table className="compact-results-table">

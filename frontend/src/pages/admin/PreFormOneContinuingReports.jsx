@@ -117,11 +117,9 @@ const PreFormOneContinuingReports = () => {
   const sortedStudents = useMemo(
     () =>
       [...students].sort((a, b) => {
-        if (a.first_name !== b.first_name) return a.first_name.localeCompare(b.first_name);
-        if ((a.middle_name || '') !== (b.middle_name || '')) {
-          return (a.middle_name || '').localeCompare(b.middle_name || '');
-        }
-        return a.surname.localeCompare(b.surname);
+        const an = `${a.first_name || ''} ${a.surname || ''}`.trim();
+        const bn = `${b.first_name || ''} ${b.surname || ''}`.trim();
+        return an.localeCompare(bn);
       }),
     [students]
   );

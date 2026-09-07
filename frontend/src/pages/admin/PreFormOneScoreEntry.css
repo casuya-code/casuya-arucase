@@ -1,3 +1,4 @@
+@layer pfo-page {
 /**
  * Pre-Form One Score Entry Styles
  * Excel-style sharp-edged design with modern appearance
@@ -1941,4 +1942,5 @@
   .students-table tbody tr:hover {
     background: #4b5563;
   }
+}
 }

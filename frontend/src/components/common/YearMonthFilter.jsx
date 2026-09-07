@@ -2,7 +2,7 @@
  * Year and Month Filter Component
  * Reusable component for filtering results by year and month
  */
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef } from 'react';
 import './YearMonthFilter.css';
 
 const MONTHS = [
@@ -27,6 +27,20 @@ const YearMonthFilter = ({
   const [selectedYear, setSelectedYear] = useState(initialYear);
   const [selectedMonth, setSelectedMonth] = useState(initialMonth);
 
+  // Keep the latest callback in a ref so the effect below only runs when the
+  // actual filter values change, not when the parent re-creates the function.
+  const onFilterChangeRef = useRef(onFilterChange);
+  onFilterChangeRef.current = onFilterChange;
+
+  // Keep internal state in sync when props change (e.g. route year change)
+  useEffect(() => {
+    setSelectedYear(initialYear);
+  }, [initialYear]);
+
+  useEffect(() => {
+    setSelectedMonth(initialMonth);
+  }, [initialMonth]);
+
   const monthsToUse = usePreFormOneMonths ? PRE_FORM_ONE_MONTHS : MONTHS;
 
   // Generate year options if not provided
@@ -45,13 +59,13 @@ const YearMonthFilter = ({
   }, [availableYears]);
 
   useEffect(() => {
-    if (onFilterChange) {
-      onFilterChange({
+    if (onFilterChangeRef.current) {
+      onFilterChangeRef.current({
         year: selectedYear,
         month: selectedMonth
       });
     }
-  }, [selectedYear, selectedMonth, onFilterChange]);
+  }, [selectedYear, selectedMonth]);
 
   const handleYearChange = (e) => {
     setSelectedYear(e.target.value);

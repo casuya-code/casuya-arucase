@@ -49,8 +49,8 @@ export const preFormOneService = {
   },
 
   // Create multiple students (bulk registration)
-  createBulkStudents: async (students) => {
-    const response = await api.post('/pre-form-one/bulk', { students });
+  createBulkStudents: async (students, year = null) => {
+    const response = await api.post('/pre-form-one/bulk', { students, year });
     return response.data;
   },
 
@@ -61,8 +61,8 @@ export const preFormOneService = {
   },
 
   // Bulk update parishes for multiple students
-  bulkUpdateParishes: async (updates) => {
-    const response = await api.put('/pre-form-one/bulk-parish', { updates });
+  bulkUpdateParishes: async (updates, year) => {
+    const response = await api.put('/pre-form-one/bulk-parish', { year, updates });
     return response.data;
   },
 

@@ -102,8 +102,8 @@ async function loadRankingCohort(query, {
 }) {
   if (isFormVOrVI) {
     const allStudentsResult = await query(
-      'SELECT adm_no, stream FROM students WHERE level = $1 AND year = $2 AND term = $3',
-      [form, yearNum, normalizedTerm]
+      'SELECT adm_no, stream FROM students WHERE level = $1 AND year = $2 AND term = $3 AND (status IS DISTINCT FROM $4)',
+      [form, yearNum, normalizedTerm, 'PROMOTED']
     );
     const allMonthlyResults = await query(
       `SELECT i.* FROM individual_scores i

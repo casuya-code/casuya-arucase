@@ -289,11 +289,22 @@ async function getReportDataInternal(form, stream, year, term, admNo, branding) 
     );
   }
 
-  const uniqueSubjectCodes = new Set(
-    subjectsResult.rows
-      .map((s) => s.subject_code)
-      .filter((c) => c != null && String(c).trim() !== '')
-  );
+  const normalizeSubjectCodeForDedup = (code) => {
+    if (!code) return code;
+    const c = String(code).trim().toUpperCase();
+    const m = c.match(/^A[\/_](COM|DIV|HTM)$/);
+    return m ? m[1] : c;
+  };
+  const uniqueSubjectCodes = new Set();
+  const uniqueSubjects = [];
+  subjectsResult.rows.forEach((s) => {
+    const key = normalizeSubjectCodeForDedup(s.subject_code);
+    if (key && !uniqueSubjectCodes.has(key)) {
+      uniqueSubjectCodes.add(key);
+      uniqueSubjects.push(s);
+    }
+  });
+  subjectsResult = { rows: uniqueSubjects };
 
   let marksConfig = {
     month_weights: {
@@ -326,7 +337,7 @@ async function getReportDataInternal(form, stream, year, term, admNo, branding) 
     [admNo, form, actualStream, normalizedStream, yearNum, months]
   );
 
-  const filteredBySubject = monthlyResult.rows.filter((row) => uniqueSubjectCodes.has(row.subject_code));
+  const filteredBySubject = monthlyResult.rows.filter((row) => uniqueSubjectCodes.has(normalizeSubjectCodeForDedup(row.subject_code)));
   const sortedByPreference = filteredBySubject.sort((a, b) => {
     if (a.subject_code === b.subject_code && a.month === b.month) {
       if (a.stream === 'NA' && b.stream !== 'NA') return -1;

@@ -90,7 +90,7 @@ function buildIndividualInterviewReportHtml(
       font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
       margin: 0;
       padding: 20px;
-      font-size: 12px;
+      font-size: 24px;
       color: #111827;
       line-height: 1.5;
     }
@@ -108,12 +108,12 @@ function buildIndividualInterviewReportHtml(
       width: 72px; height: 72px; background: #f3f4f6; border: 1px solid #e5e7eb;
     }
     .school-info { flex: 1; text-align: center; padding: 0 8px; }
-    .school-info h1 { margin: 0 0 4px; font-size: 14px; font-weight: 700; }
-    .school-info h2 { margin: 0 0 8px; font-size: 12px; font-weight: 600; color: #374151; }
-    .contact-info p { margin: 2px 0; font-size: 10px; color: #6b7280; }
+    .school-info h1 { margin: 0 0 4px; font-size: 28px; font-weight: 700; }
+    .school-info h2 { margin: 0 0 8px; font-size: 24px; font-weight: 600; color: #374151; }
+    .contact-info p { margin: 2px 0; font-size: 20px; color: #6b7280; }
     .report-title {
       text-align: center;
-      font-size: 16px;
+      font-size: 32px;
       font-weight: 700;
       margin: 0 0 16px;
       padding-bottom: 8px;
@@ -129,12 +129,12 @@ function buildIndividualInterviewReportHtml(
       width: 100%;
       border-collapse: collapse;
       table-layout: fixed;
-      font-size: 10px;
+      font-size: 20px;
     }
     .summary-row-table td {
       padding: 4px 6px;
       vertical-align: top;
-      white-space: nowrap;
+      white-space: normal;
     }
     .results-table {
       width: 100%;
@@ -146,6 +146,7 @@ function buildIndividualInterviewReportHtml(
       border: 1px solid #e5e7eb;
       padding: 8px;
       text-align: left;
+      font-size: 24px;
     }
     .results-table th {
       background: #f3f4f6;

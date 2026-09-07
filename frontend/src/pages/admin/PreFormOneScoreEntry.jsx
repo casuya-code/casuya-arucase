@@ -5,7 +5,7 @@
  */
 
 import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
-import { useParams, useLocation, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, Link } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { preFormOneInterviewSubjectsService } from '../../services/preFormOneInterviewSubjectsService';
 import preFormOneContinuingSubjectsService from '../../services/preFormOneContinuingSubjectsService';
@@ -18,7 +18,6 @@ import './preform-one-modern.css';
 
 const PreFormOneScoreEntry = () => {
   const { year, subjectId } = useParams();
-  const _location = useLocation();
   const navigate = useNavigate();
   
   // Determine if we're on subjects list or subject detail page
@@ -35,13 +34,7 @@ const PreFormOneScoreEntry = () => {
   const [exporting, setExporting] = useState(false);
   const [selectedCard, setSelectedCard] = useState(null); // 'interview' or 'continuing'
   const [selectedSubject, setSelectedSubject] = useState(null);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [itemsPerPage, setItemsPerPage] = useState(50);
-  const [isVirtualScrollEnabled, setIsVirtualScrollEnabled] = useState(false);
-  const [keyboardNavigation, setKeyboardNavigation] = useState(false);
   const [scoreStats, setScoreStats] = useState({ total: 0, scored: 0, pending: 0 });
-  const tableRef = useRef(null);
-  const _virtualListRef = useRef(null);
   const studentScoresRef = useRef({});
   const loadedSubjectRef = useRef(null);
 
@@ -49,45 +42,8 @@ const PreFormOneScoreEntry = () => {
     studentScoresRef.current = studentScores;
   }, [studentScores]);
 
-  // Use all students directly since search functionality is removed
-  const filteredStudents = preFormOneStudents;
-
-  // Paginate students for performance
-  const paginatedStudents = useMemo(() => {
-    if (isVirtualScrollEnabled) {
-      return filteredStudents;
-    }
-    
-    const startIndex = (currentPage - 1) * itemsPerPage;
-    const endIndex = startIndex + itemsPerPage;
-    return filteredStudents.slice(startIndex, endIndex);
-  }, [preFormOneStudents, currentPage, itemsPerPage, isVirtualScrollEnabled]);
-
-  // Enable virtual scrolling for large datasets
-  useEffect(() => {
-    setIsVirtualScrollEnabled(preFormOneStudents.length > 100);
-  }, [preFormOneStudents.length]);
-
-  
-  // Keyboard navigation - temporarily disabled to fix reference errors
-  useEffect(() => {
-    const handleKeyDown = (event) => {
-      if (event.ctrlKey || event.metaKey) {
-        switch (event.key) {
-          case 's':
-            event.preventDefault();
-            break;
-          case 'e':
-            event.preventDefault();
-            break;
-        }
-      }
-      
-    };
-
-    document.addEventListener('keydown', handleKeyDown);
-    return () => document.removeEventListener('keydown', handleKeyDown);
-  }, []);
+  // Show all students directly; search and pagination are intentionally removed
+  const paginatedStudents = preFormOneStudents;
 
   // Cleanup auto-save when navigating away and manage auto-save lifecycle
   useEffect(() => {
@@ -335,47 +291,6 @@ const PreFormOneScoreEntry = () => {
     return breadcrumbs;
   };
 
-  // Handle back to cards
-  const _handleBackToCards = () => {
-    // Stop auto-save before navigating away
-    stopAutoSave();
-    
-    // Clear any unsaved data persistence
-    if (selectedSubject && selectedCard) {
-      clearScoresFromPersistence(selectedSubject.id, selectedCard);
-    }
-    
-    // Reset navigation state
-    setSelectedSubject(null);
-    setSelectedCard(null);
-    
-    // Navigate to cards view
-    navigate(`/admin/pre-form-one/${year}/score-entry`);
-    
-    // Show feedback to user
-    toast.info('Returned to score type selection');
-  };
-
-  // Handle back to subjects
-  const _handleBackToSubjects = () => {
-    // Stop auto-save before navigating away
-    stopAutoSave();
-    
-    // Clear any unsaved data persistence
-    if (selectedSubject && selectedCard) {
-      clearScoresFromPersistence(selectedSubject.id, selectedCard);
-    }
-    
-    // Reset only subject state, keep the card selection
-    setSelectedSubject(null);
-    
-    // Navigate to subjects list view
-    navigate(`/admin/pre-form-one/${year}/score-entry`);
-    
-    // Show feedback to user
-    toast.info(`Returned to ${selectedCard === 'interview' ? 'Interview' : 'Continuing'} subjects`);
-  };
-
   // Enhanced navigation state management
   const handleNavigation = (destination, options = {}) => {
     // Stop any ongoing auto-save
@@ -473,33 +388,31 @@ const PreFormOneScoreEntry = () => {
 
   // Handle score input change
   const handleScoreChange = (studentId, field, value) => {
-    setStudentScores((prev) => {
-      const updated = { ...normalizeScoresMap(prev) };
+    const updated = { ...normalizeScoresMap(studentScoresRef.current) };
 
-      if (!updated[studentId]) {
-        updated[studentId] = {};
+    if (!updated[studentId]) {
+      updated[studentId] = {};
+    }
+
+    if (field === 'score') {
+      const score = value === '' ? null : Number(value);
+
+      if (score !== null && (Number.isNaN(score) || score < 0 || score > 100)) {
+        toast.error('Score must be between 0 and 100');
+        return;
       }
 
-      if (field === 'score') {
-        const score = parseInt(value, 10) || 0;
+      updated[studentId].score = score;
+      updated[studentId].grade = score === null ? '' : calculateGrade(score);
+    } else {
+      updated[studentId][field] = value;
+    }
 
-        if (score < 0 || score > 100) {
-          toast.error('Score must be between 0 and 100');
-          return prev;
-        }
+    setStudentScores(updated);
 
-        updated[studentId].score = score;
-        updated[studentId].grade = calculateGrade(score);
-      } else {
-        updated[studentId][field] = value;
-      }
-
-      if (selectedSubject && selectedCard) {
-        saveScoresToPersistence(selectedSubject.id, selectedCard, updated);
-      }
-
-      return updated;
-    });
+    if (selectedSubject && selectedCard) {
+      saveScoresToPersistence(selectedSubject.id, selectedCard, updated);
+    }
   };
 
   // Memoized student name and admission display
@@ -510,8 +423,8 @@ const PreFormOneScoreEntry = () => {
   }, []);
 
   const getStudentAdmissionNumber = useCallback((student) => {
-    return student.admission_number || student.admission_no || student.student_number || `PF2025-${student.id || student.student_id}`;
-  }, []);
+    return student.admission_number || student.admission_no || student.student_number || `${year}-${student.id || student.student_id}`;
+  }, [year]);
 
   const getStudentKey = useCallback((student) => {
     if (!student) return null;
@@ -529,9 +442,9 @@ const PreFormOneScoreEntry = () => {
     if (studentKey == null) return null;
 
     const studentScore = scoresByStudentId[studentKey] || {};
-    const displayScore = studentScore.score;
-    const displayGrade = studentScore.grade;
-    const hasScore = displayScore || displayGrade;
+    const displayScore = studentScore.score ?? '';
+    const displayGrade = studentScore.grade ?? '';
+    const hasScore = displayScore !== '' || !!displayGrade;
     
     const studentName = getStudentDisplayName(student);
     const admissionNumber = getStudentAdmissionNumber(student);
@@ -559,7 +472,7 @@ const PreFormOneScoreEntry = () => {
             placeholder="0-100"
             min="0"
             max="100"
-            value={displayScore || ''}
+            value={displayScore}
             onChange={(e) => handleScoreChange(studentKey, 'score', e.target.value)}
             aria-label={`Score for ${studentName}`}
           />
@@ -567,7 +480,7 @@ const PreFormOneScoreEntry = () => {
         <td className="grade-select">
           <select 
             className="form-input small"
-            value={displayGrade || ''}
+            value={displayGrade}
             onChange={(e) => handleScoreChange(studentKey, 'grade', e.target.value)}
             aria-label={`Grade for ${studentName}`}
           >
@@ -613,9 +526,7 @@ const PreFormOneScoreEntry = () => {
   
   // Memoized render function to prevent infinite re-renders
   const renderStudentScoreEntry = useCallback(() => {
-    if (!selectedSubject || !preFormOneStudents.length) return null;
-    
-    if (!selectedSubject || !selectedCard || !preFormOneStudents || preFormOneStudents.length === 0) {
+    if (!selectedSubject || !selectedCard) {
       return (
         <div className="score-entry-content">
           <div className="loading-state">
@@ -683,7 +594,7 @@ const PreFormOneScoreEntry = () => {
 
         {/* Students table */}
         <div className="students-table-container">
-          <table className="students-table" ref={tableRef}>
+          <table className="students-table">
             <thead>
               <tr>
                 <th scope="col">Admission Number</th>
@@ -721,7 +632,7 @@ const PreFormOneScoreEntry = () => {
       setSaving(true);
       const scoreData = scoresByStudentId[studentId];
       
-      if (!scoreData || !scoreData.score) {
+      if (!scoreData || scoreData.score === '' || scoreData.score === null || scoreData.score === undefined) {
         toast.warning('Please enter a score before saving');
         return;
       }
@@ -733,7 +644,7 @@ const PreFormOneScoreEntry = () => {
         score: scoreData.score
       };
       
-      const _result = await preFormOneStudentsService.saveStudentScores(payload);
+      const _result =       await preFormOneStudentsService.saveStudentScores(payload);
       
       toast.success('Score saved successfully!');
       
@@ -765,7 +676,12 @@ const PreFormOneScoreEntry = () => {
       const scoresToSave = [];
       Object.keys(scoresByStudentId).forEach((studentId) => {
         const scoreData = scoresByStudentId[studentId];
-        if (scoreData && scoreData.score) {
+        if (
+          scoreData &&
+          scoreData.score !== '' &&
+          scoreData.score !== null &&
+          scoreData.score !== undefined
+        ) {
           scoresToSave.push({
             student_id: parseInt(studentId),
             subject_id: selectedSubject.id,
@@ -780,7 +696,7 @@ const PreFormOneScoreEntry = () => {
         return;
       }
       
-      const _result = await preFormOneStudentsService.saveBulkStudentScores(scoresToSave);
+      await preFormOneStudentsService.saveBulkStudentScores(scoresToSave);
       
       toast.success(`${scoresToSave.length} scores saved successfully!`);
       
@@ -850,7 +766,7 @@ const PreFormOneScoreEntry = () => {
     
     const details = `
       Student: ${student.first_name && student.surname ? `${student.first_name} ${student.surname}` : student.name || student.student_name || 'Unknown Student'}
-      Admission: ${student.admission_number || student.admission_no || student.student_number || `PF2025-${student.id || student.student_id}`}
+      Admission: ${student.admission_number || student.admission_no || student.student_number || `${year}-${student.id || student.student_id}`}
       Score: ${score?.score || 'Not entered'}
       Grade: ${score?.grade || 'Not graded'}
     `;

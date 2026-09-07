@@ -34,6 +34,13 @@ export function isBenignUnhandledRejection(reason) {
     return true;
   }
 
+  if (
+    String(reason?.message || '').includes('message channel closed') ||
+    String(reason?.message || '').includes('asynchronous response')
+  ) {
+    return true;
+  }
+
   if (String(url).includes('vercel.live') || String(reason?.message || '').includes('vercel.live')) {
     return true;
   }
