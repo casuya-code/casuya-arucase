@@ -72,12 +72,13 @@ function calculateInterviewMetrics(scoresByCode, activeSubjects) {
   const average = scoredCount > 0 ? total_marks / scoredCount : 0;
   const gradeInfo =
     GRADING_SCALE.find((g) => average >= g.min) || GRADING_SCALE[GRADING_SCALE.length - 1];
+  const remarks = average >= PASS_MARK ? 'AMECHAGULIWA' : 'HAJACHAGULIWA';
 
   return {
     total_marks,
     average: Math.round(average * 100) / 100,
     grade: gradeInfo.grade,
-    remarks: gradeInfo.remarks,
+    remarks,
   };
 }
 

@@ -1060,15 +1060,8 @@ function calculateGrade(average) {
   return 'F';
 }
 
-function getRemarks(grade) {
-  switch (grade) {
-    case 'A': return 'Excellent';
-    case 'B': return 'Good';
-    case 'C': return 'Satisfactory';
-    case 'D': return 'Needs Improvement';
-    case 'F': return 'Fail';
-    default: return '';
-  }
+function getRemarks(average) {
+  return average >= 65 ? 'AMECHAGULIWA' : 'HAJACHAGULIWA';
 }
 
 // Save individual interview result

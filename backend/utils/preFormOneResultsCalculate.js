@@ -12,21 +12,8 @@ function calculateGrade(average) {
   return 'F';
 }
 
-function getRemarks(grade) {
-  switch (grade) {
-    case 'A':
-      return 'Excellent';
-    case 'B':
-      return 'Good';
-    case 'C':
-      return 'Satisfactory';
-    case 'D':
-      return 'Needs Improvement';
-    case 'F':
-      return 'Fail';
-    default:
-      return '';
-  }
+function getRemarks(average) {
+  return average >= PASS_MARK ? 'AMECHAGULIWA' : 'HAJACHAGULIWA';
 }
 
 function matchSubjectScore(scoresRows, subjectId) {
@@ -156,7 +143,7 @@ async function calculateAndSavePreFormOneResults(client, options) {
       average,
       grade,
       position: 0,
-      remarks: getRemarks(grade),
+      remarks: getRemarks(average),
       year: yearNum,
     });
   }
@@ -169,7 +156,7 @@ async function calculateAndSavePreFormOneResults(client, options) {
     await upsertPreFormOneResult(client, resultsTable, {
       ...studentResult,
       position,
-      remarks: getRemarks(studentResult.grade),
+      remarks: getRemarks(studentResult.average),
     });
     const original = results.find((r) => r.student_id === studentResult.student_id);
     if (original) original.position = position;

@@ -68,7 +68,7 @@ export function calculateInterviewMetrics(scoresByCode, activeSubjects) {
     total_marks,
     average: Math.round(average * 100) / 100,
     grade: gradeInfo.grade,
-    remarks: gradeInfo.remarks,
+    remarks: average >= PASS_MARK ? 'AMECHAGULIWA' : 'HAJACHAGULIWA',
   };
 }
 
