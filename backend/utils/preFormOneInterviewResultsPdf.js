@@ -454,7 +454,7 @@ function generatePreFormOneResultsPdfHtml({
       font-family: ${FONT_STACK};
       margin: 0;
       padding: 12px;
-      font-size: 12.5px;
+      font-size: 14px;
       color: #000000;
       line-height: 1.3;
     }
@@ -466,19 +466,19 @@ function generatePreFormOneResultsPdfHtml({
       border: 1px solid #000000;
       margin-bottom: 0;
     }
-    .logo-section { flex: 0 0 80px; text-align: center; }
-    .school-logo { width: 72px; height: 72px; object-fit: contain; }
+    .logo-section { flex: 0 0 130px; text-align: center; }
+    .school-logo { width: 120px; height: 120px; object-fit: contain; }
     .school-logo-placeholder {
-      width: 72px; height: 72px; background: #ffffff; border: 1px solid #000000;
+      width: 120px; height: 120px; background: #ffffff; border: 1px solid #000000;
     }
     .school-info { flex: 1; text-align: center; padding: 0 8px; }
-    .school-info h1 { margin: 0 0 4px; font-size: 13.5px; font-weight: 700; color: #000000; }
-    .school-info h2 { margin: 0 0 8px; font-size: 13.5px; font-weight: 700; color: #000000; }
-    .contact-info p { margin: 2px 0; font-size: 13.5px; color: #000000; }
+    .school-info h1 { margin: 0 0 4px; font-size: 17px; font-weight: 700; color: #000000; }
+    .school-info h2 { margin: 0 0 8px; font-size: 17px; font-weight: 700; color: #000000; }
+    .contact-info p { margin: 2px 0; font-size: 14px; color: #000000; }
     .test-info-bar {
       text-align: center;
       padding: 10px;
-      font-size: 12.5px;
+      font-size: 14px;
       font-weight: 700;
       letter-spacing: 0.02em;
       border: 1px solid #000000;
@@ -489,7 +489,7 @@ function generatePreFormOneResultsPdfHtml({
     table.compact-results-table {
       width: 100%;
       border-collapse: collapse;
-      font-size: 12.5px;
+      font-size: 13px;
       line-height: 1.3;
     }
     table.compact-results-table th,
@@ -515,9 +515,9 @@ function generatePreFormOneResultsPdfHtml({
       display: inline-block;
       writing-mode: vertical-rl;
       transform: rotate(180deg);
-      max-height: 110px;
+      max-height: 120px;
       line-height: 1.1;
-      font-size: 10.5px;
+      font-size: 12px;
       font-weight: 700;
       white-space: nowrap;
     }
