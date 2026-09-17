@@ -157,7 +157,7 @@ async function buildPreFormOneResultsPdfData(year, query, kind = 'interview') {
       FROM preform_one_scores sc
       JOIN ${cfg.subjectsTable} sub ON sc.subject_id = sub.id
       JOIN preform_one_students st ON sc.student_id = st.id
-      WHERE sc.subject_type = $2 AND st.year = $1
+      WHERE sc.subject_type = $2 AND st.year = $1 AND sub.is_active = true
       `,
       [yearNum, cfg.scoreType]
     ),
