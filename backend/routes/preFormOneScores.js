@@ -126,7 +126,7 @@ router.get('/year/:year', requireAuth, requireModule('pre_form_one_scores'), asy
       FROM preform_one_scores sc
       JOIN ${subjectsTable} sub ON sc.subject_id = sub.id
       JOIN preform_one_students st ON sc.student_id = st.id
-      WHERE sc.subject_type = $1 AND st.year = $2 AND sub.is_active = true
+      WHERE sc.subject_type = $1 AND st.year = $2 AND sub.is_active = true AND sc.score IS NOT NULL AND sc.score != ''
       ORDER BY st.admission_number, sub.subject_code
       `,
       [type, parseInt(year, 10)]
@@ -158,7 +158,7 @@ router.get('/active-subjects/:year', requireAuth, async (req, res) => {
       FROM ${subjectsTable} sub
       INNER JOIN preform_one_scores sc ON sc.subject_id = sub.id
       INNER JOIN preform_one_students st ON sc.student_id = st.id
-      WHERE sc.subject_type = $1 AND st.year = $2 AND sub.is_active = true
+      WHERE sc.subject_type = $1 AND st.year = $2 AND sub.is_active = true AND sc.score IS NOT NULL AND sc.score != ''
       ORDER BY sub.subject_name
       `,
       [type, parseInt(year, 10)]

@@ -748,7 +748,7 @@ router.get('/:year/interview-results/:studentId/pdf', requireAuth, async (req, r
       SELECT sc.score, sc.student_id, sub.id AS subject_id, sub.subject_code, sub.subject_name
         FROM preform_one_scores sc
         JOIN preformone_interview_subjects sub ON sc.subject_id = sub.id
-        WHERE sc.subject_type = 'interview' AND sc.student_id = $1 AND sub.is_active = true
+        WHERE sc.subject_type = 'interview' AND sub.is_active = true AND sc.score IS NOT NULL AND sc.score != '' AND sc.student_id = $1
     `, [studentId]);
     
     // Derive subjects from scores
@@ -960,7 +960,7 @@ router.get('/:year/continuing-results/:studentId/pdf', requireAuth, async (req, 
       SELECT sc.score, sc.student_id, sub.id AS subject_id, sub.subject_code, sub.subject_name
         FROM preform_one_scores sc
         JOIN preformone_continuing_subjects sub ON sc.subject_id = sub.id
-        WHERE sc.subject_type = 'continuing' AND sc.student_id = $1 AND sub.is_active = true
+        WHERE sc.subject_type = 'continuing' AND sub.is_active = true AND sc.score IS NOT NULL AND sc.score != '' AND sc.student_id = $1
     `,
       [studentId]
     );
@@ -1246,7 +1246,7 @@ router.get('/:year/interview-results/all-pdf', requireAuth, async (req, res) => 
       SELECT sc.score, sc.student_id, sub.id AS subject_id, sub.subject_code, sub.subject_name
         FROM preform_one_scores sc
         JOIN preformone_interview_subjects sub ON sc.subject_id = sub.id
-        WHERE sc.subject_type = 'interview' AND sub.is_active = true AND sc.student_id IN (
+        WHERE sc.subject_type = 'interview' AND sub.is_active = true AND sc.score IS NOT NULL AND sc.score != '' AND sc.student_id IN (
           SELECT id FROM preform_one_students WHERE year = $1
         )
     `, [year]);
@@ -1376,7 +1376,7 @@ router.get('/:year/continuing-results/all-pdf', requireAuth, async (req, res) =>
       SELECT sc.score, sc.student_id, sub.id AS subject_id, sub.subject_code, sub.subject_name
         FROM preform_one_scores sc
         JOIN preformone_continuing_subjects sub ON sc.subject_id = sub.id
-        WHERE sc.subject_type = 'continuing' AND sub.is_active = true AND sc.student_id IN (
+        WHERE sc.subject_type = 'continuing' AND sub.is_active = true AND sc.score IS NOT NULL AND sc.score != '' AND sc.student_id IN (
           SELECT id FROM preform_one_students WHERE year = $1
         )
     `, [year]);
