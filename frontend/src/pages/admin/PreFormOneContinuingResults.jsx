@@ -400,7 +400,7 @@ const PreFormOneContinuingResults = () => {
     const gradeClass = result.grade || 'none';
     const avgValue = result.average != null ? parseFloat(result.average) : null;
     const gradeRowClass =
-      gradeClass === 'C' && avgValue !== null && avgValue < 55
+      gradeClass === 'C' && avgValue !== null && avgValue < 65
         ? `grade-row-${gradeClass}-low`
         : `grade-row-${gradeClass}`;
     const fullName =

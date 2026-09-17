@@ -29,10 +29,12 @@ export function buildSubjectScoresMap(rows, admissionKeyFn) {
   return map;
 }
 
+const PASS_MARK = 65;
+
 export const INTERVIEW_GRADING_SCALE = [
   { min: 80, grade: 'A', remarks: 'Excellent' },
   { min: 70, grade: 'B', remarks: 'Good' },
-  { min: 55, grade: 'C', remarks: 'Satisfactory' },
+  { min: 65, grade: 'C', remarks: 'Satisfactory' },
   { min: 45, grade: 'D', remarks: 'Needs Improvement' },
   { min: 0, grade: 'F', remarks: 'Fail' },
 ];

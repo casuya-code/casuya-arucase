@@ -1055,7 +1055,7 @@ router.get('/:year/continuing-results/:studentId/pdf', requireAuth, async (req, 
 function calculateGrade(average) {
   if (average >= 80) return 'A';
   if (average >= 70) return 'B';
-  if (average >= 55) return 'C';
+  if (average >= 65) return 'C';
   if (average >= 45) return 'D';
   return 'F';
 }

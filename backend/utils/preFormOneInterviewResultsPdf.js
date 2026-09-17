@@ -6,10 +6,12 @@ const fs = require('fs').promises;
 const path = require('path');
 const axios = require('axios');
 
+const PASS_MARK = 65;
+
 const GRADING_SCALE = [
   { min: 80, grade: 'A', remarks: 'Excellent' },
   { min: 70, grade: 'B', remarks: 'Good' },
-  { min: 55, grade: 'C', remarks: 'Satisfactory' },
+  { min: 65, grade: 'C', remarks: 'Satisfactory' },
   { min: 45, grade: 'D', remarks: 'Needs Improvement' },
   { min: 0, grade: 'F', remarks: 'Fail' },
 ];
@@ -409,7 +411,7 @@ function generatePreFormOneResultsPdfHtml({
       (row) => {
         let gradeClass = '';
         if (row.grade && row.grade !== '-') {
-          if (row.grade === 'C' && row.avgValue != null && row.avgValue < 55) {
+          if (row.grade === 'C' && row.avgValue != null && row.avgValue < 65) {
             gradeClass = 'grade-row-C-low';
           } else {
             gradeClass = `grade-row-${row.grade}`;

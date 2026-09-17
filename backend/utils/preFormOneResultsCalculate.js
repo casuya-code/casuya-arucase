@@ -2,10 +2,12 @@
  * Shared Pre-Form One interview/continuing results calculation + upsert.
  */
 
+const PASS_MARK = 65;
+
 function calculateGrade(average) {
   if (average >= 80) return 'A';
   if (average >= 70) return 'B';
-  if (average >= 55) return 'C';
+  if (average >= 65) return 'C';
   if (average >= 45) return 'D';
   return 'F';
 }
