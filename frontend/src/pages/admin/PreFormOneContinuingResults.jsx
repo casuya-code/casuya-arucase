@@ -7,6 +7,7 @@ import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { preFormOneService } from '../../services/preFormOneService';
+import preFormOneContinuingSubjectsService from '../../services/preFormOneContinuingSubjectsService';
 import preFormOneStudentsService from '../../services/preFormOneStudentsService';
 import { adminAPI } from '../../services/admin';
 import { useAuth } from '../../context/AuthContext';
@@ -90,7 +91,16 @@ const PreFormOneContinuingResults = () => {
         const res = await preFormOneStudentsService.getActiveSubjects(reportYear, 'continuing');
         const list = res?.data ?? res;
         const active = Array.isArray(list) ? list.filter((s) => s.is_active !== false) : [];
-        return [...active].sort((a, b) =>
+        if (active.length > 0) {
+          return [...active].sort((a, b) =>
+            normalizeSubjectCode(a.subject_code).localeCompare(
+              normalizeSubjectCode(b.subject_code)
+            )
+          );
+        }
+        const fallback = await preFormOneContinuingSubjectsService.getSubjects();
+        const fallbackActive = Array.isArray(fallback) ? fallback.filter((s) => s.is_active !== false) : [];
+        return [...fallbackActive].sort((a, b) =>
           normalizeSubjectCode(a.subject_code).localeCompare(
             normalizeSubjectCode(b.subject_code)
           )
@@ -136,7 +146,7 @@ const PreFormOneContinuingResults = () => {
   });
 
   useEffect(() => {
-    if (!reportYear || students.length === 0 || subjects.length === 0) {
+    if (!reportYear || students.length === 0) {
       setSubjectScores({});
       setScoresLoading(false);
       return;
@@ -164,7 +174,7 @@ const PreFormOneContinuingResults = () => {
     return () => {
       cancelled = true;
     };
-  }, [reportYear, students.length, subjects.length]);
+  }, [reportYear, students.length]);
 
   const autoCalculatedResults = useMemo(() => {
     const draft = {};

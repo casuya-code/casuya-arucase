@@ -139,7 +139,7 @@ router.get('/year/:year', requireAuth, requireModule('pre_form_one_scores'), asy
 });
 
 // Get subjects that have scores entered for a given year and type
-router.get('/active-subjects/:year', requireAuth, requireModule('pre_form_one_scores'), async (req, res) => {
+router.get('/active-subjects/:year', requireAuth, async (req, res) => {
   try {
     const { year } = req.params;
     const { type = 'interview' } = req.query;
