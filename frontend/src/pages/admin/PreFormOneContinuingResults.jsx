@@ -7,7 +7,6 @@ import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { preFormOneService } from '../../services/preFormOneService';
-import preFormOneContinuingSubjectsService from '../../services/preFormOneContinuingSubjectsService';
 import preFormOneStudentsService from '../../services/preFormOneStudentsService';
 import { adminAPI } from '../../services/admin';
 import { useAuth } from '../../context/AuthContext';
@@ -85,10 +84,11 @@ const PreFormOneContinuingResults = () => {
   }, [students.length]);
 
   const { data: subjects = [], isLoading: subjectsLoading } = useQuery({
-    queryKey: ['preform-one-continuing-subjects', reportYear],
+    queryKey: ['preform-one-active-continuing-subjects', reportYear],
     queryFn: async () => {
       try {
-        const list = await preFormOneContinuingSubjectsService.getSubjects();
+        const res = await preFormOneStudentsService.getActiveSubjects(reportYear, 'continuing');
+        const list = res?.data ?? res;
         const active = Array.isArray(list) ? list.filter((s) => s.is_active !== false) : [];
         return [...active].sort((a, b) =>
           normalizeSubjectCode(a.subject_code).localeCompare(

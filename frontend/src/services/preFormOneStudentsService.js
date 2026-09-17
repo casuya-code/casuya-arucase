@@ -38,6 +38,11 @@ const preFormOneStudentsService = {
     return response.data;
   },
 
+  getActiveSubjects: async (year, type = 'interview') => {
+    const response = await api.get(`/preformone-scores/active-subjects/${year}?type=${type}`);
+    return response.data;
+  },
+
   getScoreStatistics: async (subjectId, scoreType, year) => {
     const response = await api.get(
       `/preformone-scores/stats/${subjectId}?type=${scoreType}&year=${encodeURIComponent(year)}`

@@ -138,6 +138,38 @@ router.get('/year/:year', requireAuth, requireModule('pre_form_one_scores'), asy
   }
 });
 
+// Get subjects that have scores entered for a given year and type
+router.get('/active-subjects/:year', requireAuth, requireModule('pre_form_one_scores'), async (req, res) => {
+  try {
+    const { year } = req.params;
+    const { type = 'interview' } = req.query;
+
+    if (!year || Number.isNaN(parseInt(year, 10))) {
+      return sendError(res, 400, 'Invalid year parameter');
+    }
+
+    const subjectsTable =
+      type === 'continuing' ? 'preformone_continuing_subjects' : 'preformone_interview_subjects';
+
+    const result = await query(
+      `
+      SELECT DISTINCT sub.*
+      FROM ${subjectsTable} sub
+      INNER JOIN preform_one_scores sc ON sc.subject_id = sub.id
+      INNER JOIN preform_one_students st ON sc.student_id = st.id
+      WHERE sc.subject_type = $1 AND st.year = $2
+      ORDER BY sub.subject_name
+      `,
+      [type, parseInt(year, 10)]
+    );
+
+    return sendSuccess(res, 200, 'Active subjects retrieved successfully', result.rows);
+  } catch (error) {
+    console.error('Error fetching active subjects:', error);
+    return sendError(res, 500, 'Failed to fetch active subjects', error);
+  }
+});
+
 // Get scores for a specific subject and type
 router.get('/subject/:subjectId', requireAuth, requireModule('pre_form_one_scores'), async (req, res) => {
   try {
