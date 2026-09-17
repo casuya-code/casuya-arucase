@@ -85,22 +85,13 @@ const PreFormOneContinuingResults = () => {
   }, [students.length]);
 
   const { data: subjects = [], isLoading: subjectsLoading } = useQuery({
-    queryKey: ['preform-one-active-continuing-subjects', reportYear],
+    queryKey: ['preform-one-continuing-subjects-config', reportYear],
     queryFn: async () => {
       try {
-        const res = await preFormOneStudentsService.getActiveSubjects(reportYear, 'continuing');
+        const res = await preFormOneContinuingSubjectsService.getSubjects();
         const list = res?.data ?? res;
         const active = Array.isArray(list) ? list.filter((s) => s.is_active !== false) : [];
-        if (active.length > 0) {
-          return [...active].sort((a, b) =>
-            normalizeSubjectCode(a.subject_code).localeCompare(
-              normalizeSubjectCode(b.subject_code)
-            )
-          );
-        }
-        const fallback = await preFormOneContinuingSubjectsService.getSubjects();
-        const fallbackActive = Array.isArray(fallback) ? fallback.filter((s) => s.is_active !== false) : [];
-        return [...fallbackActive].sort((a, b) =>
+        return [...active].sort((a, b) =>
           normalizeSubjectCode(a.subject_code).localeCompare(
             normalizeSubjectCode(b.subject_code)
           )

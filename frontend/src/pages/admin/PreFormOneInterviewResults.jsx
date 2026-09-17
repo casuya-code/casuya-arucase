@@ -81,22 +81,13 @@ const PreFormOneInterviewResults = () => {
   });
 
   const { data: subjects = [], isLoading: subjectsLoading } = useQuery({
-    queryKey: ['preform-one-active-interview-subjects', reportYear],
+    queryKey: ['preform-one-interview-subjects-config', reportYear],
     queryFn: async () => {
       try {
-        const res = await preFormOneStudentsService.getActiveSubjects(reportYear, 'interview');
+        const res = await preFormOneInterviewSubjectsService.getSubjects();
         const list = res?.data ?? res;
         const active = Array.isArray(list) ? list.filter((s) => s.is_active !== false) : [];
-        if (active.length > 0) {
-          return [...active].sort((a, b) =>
-            normalizeSubjectCode(a.subject_code).localeCompare(
-              normalizeSubjectCode(b.subject_code)
-            )
-          );
-        }
-        const fallback = await preFormOneInterviewSubjectsService.getSubjects();
-        const fallbackActive = Array.isArray(fallback) ? fallback.filter((s) => s.is_active !== false) : [];
-        return [...fallbackActive].sort((a, b) =>
+        return [...active].sort((a, b) =>
           normalizeSubjectCode(a.subject_code).localeCompare(
             normalizeSubjectCode(b.subject_code)
           )
