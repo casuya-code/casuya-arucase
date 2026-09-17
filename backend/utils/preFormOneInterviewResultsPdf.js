@@ -157,7 +157,7 @@ async function buildPreFormOneResultsPdfData(year, query, kind = 'interview') {
       FROM preform_one_scores sc
       JOIN ${cfg.subjectsTable} sub ON sc.subject_id = sub.id
       JOIN preform_one_students st ON sc.student_id = st.id
-      WHERE sc.subject_type = $2 AND st.year = $1 AND sub.is_active = true AND sc.score IS NOT NULL AND sc.score != ''
+      WHERE sc.subject_type = $2 AND st.year = $1 AND sub.is_active = true AND sc.score IS NOT NULL
       `,
       [yearNum, cfg.scoreType]
     ),
@@ -168,7 +168,7 @@ async function buildPreFormOneResultsPdfData(year, query, kind = 'interview') {
   // Build a set of subject_ids that have at least one real (non-null) score
   const subjectIdsWithScores = new Set();
   scoresRes.rows.forEach((row) => {
-    if (row.subject_id && row.score != null && row.score !== '') {
+    if (row.subject_id && row.score != null) {
       const n = Number(row.score);
       if (Number.isFinite(n)) {
         subjectIdsWithScores.add(row.subject_id);
