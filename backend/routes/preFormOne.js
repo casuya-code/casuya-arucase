@@ -10,6 +10,53 @@ function clientError(message, statusCode = 400) {
   return err;
 }
 
+// ---------------------------------------------------------------------------
+// Schema bridge: detect whether the legacy `adm_no` column still exists so
+// INSERTs work before AND after migration 1779960000000 runs on production.
+// ---------------------------------------------------------------------------
+let _admNoCheckDone = false;
+let _admNoExists = false;
+
+async function admNoExists(client) {
+  if (!_admNoCheckDone) {
+    try {
+      const r = await client.query(
+        "SELECT EXISTS(SELECT 1 FROM information_schema.columns WHERE table_name='preform_one_students' AND column_name='adm_no') AS exists"
+      );
+      _admNoExists = !!r.rows[0]?.exists;
+    } catch {
+      _admNoExists = false;
+    }
+    _admNoCheckDone = true;
+  }
+  return _admNoExists;
+}
+
+function singleInsertParts(hasAdmNo) {
+  if (hasAdmNo) {
+    return {
+      cols: '(admission_number, adm_no, serial_number, first_name, middle_name, surname, sex, parish, year)',
+      placeholders: '($1, $2, $3, $4, $5, $6, $7, $8, $9)',
+    };
+  }
+  return {
+    cols: '(admission_number, serial_number, first_name, middle_name, surname, sex, parish, year)',
+    placeholders: '($1, $2, $3, $4, $5, $6, $7, $8)',
+  };
+}
+
+function buildBulkInsertParts(hasAdmNo, count) {
+  const cols = hasAdmNo
+    ? '(admission_number, adm_no, serial_number, first_name, middle_name, surname, sex, parish, year)'
+    : '(admission_number, serial_number, first_name, middle_name, surname, sex, parish, year)';
+  const stride = hasAdmNo ? 9 : 8;
+  const placeholders = Array.from({ length: count }, (_, i) => {
+    const nums = Array.from({ length: stride }, (_, j) => `$${i * stride + j + 1}`);
+    return `(${nums.join(', ')})`;
+  }).join(', ');
+  return { cols, placeholders };
+}
+
 const { saveUserActivity } = require('../utils/activityLogger');
 const {
   buildInterviewResultsPdfData,
@@ -80,8 +127,12 @@ router.post('/', requireAuth, async (req, res) => {
         }
         // Get current year or use provided year
         const studentYear = req.body.year || new Date().getFullYear();
-        const insertQuery = 'INSERT INTO preform_one_students (admission_number, serial_number, first_name, middle_name, surname, sex, parish, year) VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *';
-        const insertValues = [admission_number, serial_number, first_name, middle_name, surname, sex, parish, studentYear];
+        const hasAdm = await admNoExists(client);
+        const parts = singleInsertParts(hasAdm);
+        const insertQuery = `INSERT INTO preform_one_students ${parts.cols} VALUES ${parts.placeholders} RETURNING *`;
+        const insertValues = hasAdm
+          ? [admission_number, admission_number, serial_number, first_name, middle_name, surname, sex, parish, studentYear]
+          : [admission_number, serial_number, first_name, middle_name, surname, sex, parish, studentYear];
         const result = await client.query(insertQuery, insertValues);
         return { success: true, data: result.rows[0] };
       } catch (error) {
@@ -116,23 +167,27 @@ router.post('/bulk', requireAuth, async (req, res) => {
           return { success: false, message: 'Invalid students data' };
         }
         const studentYear = req.body.year || new Date().getFullYear();
-        const values = students.map((student, index) => {
-          return [
+        const hasAdm = await admNoExists(client);
+        const stride = hasAdm ? 9 : 8;
+        const values = students.map((student) => {
+          const row = [
             student.admission_number,
+          ];
+          if (hasAdm) row.push(student.admission_number); // adm_no = admission_number
+          row.push(
             student.serial_number,
             student.first_name,
             student.middle_name || '',
             student.surname,
             student.sex,
             student.parish || '',
-            student.year || studentYear
-          ];
+            student.year || studentYear,
+          );
+          return row;
         });
-        const placeholders = students.map((_, index) => 
-          `($${index * 8 + 1}, $${index * 8 + 2}, $${index * 8 + 3}, $${index * 8 + 4}, $${index * 8 + 5}, $${index * 8 + 6}, $${index * 8 + 7}, $${index * 8 + 8})`
-        ).join(', ');
+        const { cols, placeholders } = buildBulkInsertParts(hasAdm, students.length);
         
-        const bulkInsertQuery = `INSERT INTO preform_one_students (admission_number, serial_number, first_name, middle_name, surname, sex, parish, year) VALUES ${placeholders} RETURNING *`;
+        const bulkInsertQuery = `INSERT INTO preform_one_students ${cols} VALUES ${placeholders} RETURNING *`;
         
         const result = await client.query(bulkInsertQuery, values.flat());
         return { success: true, students: result.rows, count: students.length };
