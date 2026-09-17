@@ -238,7 +238,7 @@ router.post('/promote/:year', requireAuth, async (req, res) => {
       await saveUserActivity({
         username: req.user?.username || req.user?.email || String(req.user?.id || 'unknown'),
         activity_type: 'PROMOTE_PREFORM_ONE',
-        description: `Pre-Form One promotion: cohort ${year} â†’ Form I ${targetYear}`,
+        description: `Pre-Form One promotion: cohort ${year} → Form I ${targetYear}`,
         details: {
           sourceYear: year,
           targetYear,
@@ -246,6 +246,35 @@ router.post('/promote/:year', requireAuth, async (req, res) => {
           failedCount: client.errors?.length || 0
         }
       });
+
+      await query(
+        `CREATE TABLE IF NOT EXISTS promotion_activities (
+          id SERIAL PRIMARY KEY,
+          user_id INTEGER REFERENCES users(id),
+          source_year INTEGER NOT NULL,
+          target_year INTEGER NOT NULL,
+          promoted_count INTEGER DEFAULT 0,
+          failed_count INTEGER DEFAULT 0,
+          details JSONB,
+          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        )`
+      );
+
+      await query(
+        `INSERT INTO promotion_activities (user_id, source_year, target_year, promoted_count, failed_count, details)
+         VALUES ($1, $2, $3, $4, $5, $6)`,
+        [
+          req.user?.user_id || null,
+          sourceYear,
+          targetYear,
+          client.promoted?.length || 0,
+          client.errors?.length || 0,
+          JSON.stringify({
+            promotedCount: client.promoted?.length || 0,
+            failedCount: client.errors?.length || 0
+          })
+        ]
+      );
 
       res.json({
         success: true,

@@ -12,6 +12,8 @@ import SkeletonLoader from '../../components/common/SkeletonLoader';
 import { adminAPI } from '../../services/admin';
 import DataTable from '../../components/common/DataTable';
 import { ADMIN_MODULES } from '../../constants/adminModules';
+import { preFormOneInterviewSubjectsService } from '../../services/preFormOneInterviewSubjectsService';
+import preFormOneContinuingSubjectsService from '../../services/preFormOneContinuingSubjectsService';
 import './Users.css';
 
 // Non-admin roles that get custom permissions (modules, classes, subjects)
@@ -62,6 +64,7 @@ const MODULE_GROUPS = [
       { id: 'student_registration_form_i_iv', label: 'Student Registration (Forms I-IV)', icon: 'fa-user-plus' },
       { id: 'student_registration_form_v_vi', label: 'Student Registration (Forms V-VI)', icon: 'fa-user-plus' },
       { id: 'student_registration_pre_form', label: 'Student Registration (Pre-Form)', icon: 'fa-user-plus' },
+      { id: 'pre_form_one_scores', label: 'Pre-Form One Score Entry', icon: 'fa-graduation-cap' },
       { id: 'student_photo', label: 'Student Photo (View)', icon: 'fa-camera' },
       { id: 'dta_monitor', label: 'DTA Monitor', icon: 'fa-history' },
     ],
@@ -122,6 +125,7 @@ const defaultPermissions = () => ({
   class_permissions: {},
   score_entry_months: [],
   module_group_permissions: defaultModuleGroupPermissions(),
+  preformone_score_subjects: {},
 });
 
 const Users = () => {
@@ -186,6 +190,17 @@ const Users = () => {
       const res = await adminAPI.getSubjectsList();
       return res.data.subjects || [];
     },
+  });
+
+  // Fetch Pre-Form One subjects (interview + continuing) registered in their subject routes
+  const { data: preFormOneInterviewSubjects = [] } = useQuery({
+    queryKey: ['preformone-interview-subjects'],
+    queryFn: async () => preFormOneInterviewSubjectsService.getSubjects(),
+  });
+
+  const { data: preFormOneContinuingSubjects = [] } = useQuery({
+    queryKey: ['preformone-continuing-subjects'],
+    queryFn: async () => preFormOneContinuingSubjectsService.getSubjects(),
   });
 
   // Unique subject names (same subject can appear for different level/stream)
@@ -267,6 +282,7 @@ const Users = () => {
         class_permissions: perms.class_permissions && typeof perms.class_permissions === 'object' ? perms.class_permissions : {},
         score_entry_months: Array.isArray(perms.score_entry_months) ? perms.score_entry_months : [],
         module_group_permissions: mgp,
+        preformone_score_subjects: perms.preformone_score_subjects && typeof perms.preformone_score_subjects === 'object' ? perms.preformone_score_subjects : {},
       },
     });
     setShowAddModal(true);
@@ -316,6 +332,20 @@ const Users = () => {
         ...prev,
         permissions: { ...prev.permissions, class_permissions: cp },
       };
+    });
+  }, []);
+
+  const togglePreFormOneSubject = useCallback((year, subjectType, subjectId, checked) => {
+    setFormData((prev) => {
+      const pfs = { ...(prev.permissions.preformone_score_subjects || {}) };
+      if (!pfs[year]) pfs[year] = [];
+      const key = `${subjectType}:${subjectId}`;
+      const list = pfs[year];
+      pfs[year] = checked
+        ? (list.includes(key) ? list : [...list, key])
+        : list.filter((k) => k !== key);
+      if (pfs[year].length === 0) delete pfs[year];
+      return { ...prev, permissions: { ...prev.permissions, preformone_score_subjects: pfs } };
     });
   }, []);
 
@@ -791,6 +821,67 @@ const Users = () => {
                                           {y}
                                         </label>
                                       ))}
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </div>
+
+                            <div className="permissions-block">
+                              <label className="permissions-block-label">Pre-Form One Score Entry &ndash; Subject assignments</label>
+                              <p className="permissions-info">
+                                <i className="fas fa-info-circle"></i> Choose which user may enter scores for each Pre-Form One subject registered in the Interview and Continuing subject routes. Tick the subjects and the year(s) they may score. Leave a year empty for no Pre-Form One score entry access in that year.
+                              </p>
+                              {YEAR_OPTIONS.map((year) => {
+                                const allocatedKeys = (formData.permissions.preformone_score_subjects || {})[year] || [];
+                                const interviewAllocation = allocatedKeys.filter((k) => String(k).startsWith('interview:'));
+                                const continuingAllocation = allocatedKeys.filter((k) => String(k).startsWith('continuing:'));
+                                const totalAssigned = interviewAllocation.length + continuingAllocation.length;
+                                return (
+                                  <div key={`pfs-${year}`} className="permission-class-subject-card">
+                                    <div className="permission-class-subject-header">
+                                      {year}
+                                      <span className="preformone-allocation-count">
+                                        {totalAssigned > 0 ? `${totalAssigned} assigned` : 'No subjects assigned'}
+                                      </span>
+                                    </div>
+                                    <div className="permission-class-subjects-row">
+                                      <span className="permission-class-subjects-label">Interview:</span>
+                                      {preFormOneInterviewSubjects.length === 0 ? (
+                                        <span className="text-muted">No interview subjects in system.</span>
+                                      ) : (
+                                        <div className="permissions-subjects-inline">
+                                          {preFormOneInterviewSubjects.map((subject) => (
+                                            <label key={`pfs-i-${year}-${subject.id}`} className="permission-check-label">
+                                              <input
+                                                type="checkbox"
+                                                checked={interviewAllocation.includes(`interview:${subject.id}`)}
+                                                onChange={(e) => togglePreFormOneSubject(year, 'interview', subject.id, e.target.checked)}
+                                              />
+                                              <span>{subject.subject_name}</span>
+                                            </label>
+                                          ))}
+                                        </div>
+                                      )}
+                                    </div>
+                                    <div className="permission-class-subjects-row">
+                                      <span className="permission-class-subjects-label">Continuing:</span>
+                                      {preFormOneContinuingSubjects.length === 0 ? (
+                                        <span className="text-muted">No continuing subjects in system.</span>
+                                      ) : (
+                                        <div className="permissions-subjects-inline">
+                                          {preFormOneContinuingSubjects.map((subject) => (
+                                            <label key={`pfs-c-${year}-${subject.id}`} className="permission-check-label">
+                                              <input
+                                                type="checkbox"
+                                                checked={continuingAllocation.includes(`continuing:${subject.id}`)}
+                                                onChange={(e) => togglePreFormOneSubject(year, 'continuing', subject.id, e.target.checked)}
+                                              />
+                                              <span>{subject.subject_name}</span>
+                                            </label>
+                                          ))}
+                                        </div>
+                                      )}
                                     </div>
                                   </div>
                                 );

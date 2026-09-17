@@ -21,6 +21,8 @@ const {
 } = require('../utils/preFormOneInterviewResultsPdf');
 const { calculateAndSavePreFormOneResults } = require('../utils/preFormOneResultsCalculate');
 const { generateIndividualInterviewPDF } = require('../utils/individualInterviewPdfGenerator');
+const { buildIndividualInterviewReportHtml } = require('../utils/individualInterviewPdfGenerator');
+const { resolveAuthoritySignatureDataUri, resolveSchoolStampDataUri } = require('../utils/authoritySignature');
 
 /**
  * Pre-Form One Routes
@@ -297,11 +299,23 @@ router.delete('/:id', requireAuth, async (req, res) => {
         if (checkResult.rowCount === 0) {
           return { success: false, message: 'Student not found' };
         }
+
+        const student = checkResult.rows[0];
         
         const result = await client.query(
           'DELETE FROM preform_one_students WHERE id = $1 RETURNING *',
           [id]
         );
+
+        // Also remove the promoted record from students table if it exists
+        if (student.admission_number && student.year) {
+          const targetYear = parseInt(student.year, 10) + 1;
+          await client.query(
+            `DELETE FROM students WHERE adm_no = $1 AND level = 'FORM I' AND year = $2`,
+            [student.admission_number, targetYear]
+          );
+        }
+        
         return { success: true, message: 'Student deleted successfully', data: result.rows[0] };
       } catch (error) {
         console.error('Error deleting Pre-Form One student:', error);
@@ -699,6 +713,26 @@ router.get('/:year/interview-results/:studentId/pdf', requireAuth, async (req, r
       console.warn('Individual interview PDF: could not load school logo:', logoErr.message);
     }
 
+    let authorityData = null;
+    let authoritySigDataUri = null;
+    let schoolStampDataUri = null;
+    try {
+      const authResult = await query('SELECT * FROM authority_data WHERE id = 1');
+      authorityData = authResult.rows[0] || null;
+      if (authorityData) {
+        authoritySigDataUri = await resolveAuthoritySignatureDataUri(authorityData);
+        console.log('Authority signature resolved:', authoritySigDataUri ? `data URI (${authoritySigDataUri.length} chars)` : 'null');
+      }
+      const stampResult = await query('SELECT * FROM school_stamp WHERE id = 1');
+      const stampRow = stampResult.rows[0];
+      if (stampRow?.stamp_image_path) {
+        schoolStampDataUri = await resolveSchoolStampDataUri(stampRow.stamp_image_path);
+        console.log('School stamp resolved:', schoolStampDataUri ? `data URI (${schoolStampDataUri.length} chars)` : 'null');
+      }
+    } catch (authErr) {
+      console.warn('Individual interview PDF: could not load authority/stamp data:', authErr.message);
+    }
+
     try {
       const pdfBuffer = Buffer.from(
         await generateIndividualInterviewPDF(
@@ -707,7 +741,12 @@ router.get('/:year/interview-results/:studentId/pdf', requireAuth, async (req, r
           subjects.rows,
           scoresMap,
           year,
-          logoUrl
+          logoUrl,
+          'interview',
+          authoritySigDataUri,
+          authorityData?.name,
+          authorityData?.title,
+          schoolStampDataUri
         )
       );
 
@@ -875,6 +914,24 @@ router.get('/:year/continuing-results/:studentId/pdf', requireAuth, async (req, 
       console.warn('Individual continuing PDF: could not load school logo:', logoErr.message);
     }
 
+    let authorityData = null;
+    let authoritySigDataUri = null;
+    let schoolStampDataUri = null;
+    try {
+      const authResult = await query('SELECT * FROM authority_data WHERE id = 1');
+      authorityData = authResult.rows[0] || null;
+      if (authorityData) {
+        authoritySigDataUri = await resolveAuthoritySignatureDataUri(authorityData);
+      }
+      const stampResult = await query('SELECT * FROM school_stamp WHERE id = 1');
+      const stampRow = stampResult.rows[0];
+      if (stampRow?.stamp_image_path) {
+        schoolStampDataUri = await resolveSchoolStampDataUri(stampRow.stamp_image_path);
+      }
+    } catch (authErr) {
+      console.warn('Individual continuing PDF: could not load authority/stamp data:', authErr.message);
+    }
+
     try {
       const pdfBuffer = Buffer.from(
         await generateIndividualInterviewPDF(
@@ -884,7 +941,11 @@ router.get('/:year/continuing-results/:studentId/pdf', requireAuth, async (req, 
           scoresMap,
           year,
           logoUrl,
-          'continuing'
+          'continuing',
+          authoritySigDataUri,
+          authorityData?.name,
+          authorityData?.title,
+          schoolStampDataUri
         )
       );
 
@@ -1077,6 +1138,242 @@ router.delete('/continuing-result/:studentId', requireAuth, async (req, res) => 
     });
   } catch (error) {
     console.error('Error deleting continuing result:', error);
+    sendError(res, error, 500);
+  }
+});
+
+// Download all interview results PDF for a specific year (bulk)
+router.get('/:year/interview-results/all-pdf', requireAuth, async (req, res) => {
+  try {
+    const { year } = req.params;
+    if (!year || isNaN(parseInt(year))) {
+      return sendError(res, clientError('Invalid year parameter'), 400);
+    }
+
+    // Get all students with interview results for this year
+    const students = await query(
+      `SELECT s.*, r.total_marks, r.average, r.grade, r.position, r.remarks
+       FROM preform_one_students s
+       JOIN preform_one_interview_results r ON r.student_id = s.id
+       WHERE s.year = $1
+       ORDER BY r.position, s.surname, s.first_name`,
+      [year]
+    );
+
+    if (students.rows.length === 0) {
+      return sendError(res, clientError('No interview results found for this year.'), 404);
+    }
+
+    // Get subjects
+    const subjects = await query('SELECT id, subject_code FROM preformone_interview_subjects WHERE is_active = true ORDER BY subject_code');
+
+    // Get all scores for this year
+    const scores = await query(`
+      SELECT sc.score, sc.student_id, sub.subject_code
+        FROM preform_one_scores sc
+        JOIN preformone_interview_subjects sub ON sc.subject_id = sub.id
+        WHERE sc.subject_type = 'interview' AND sc.student_id IN (
+          SELECT id FROM preform_one_students WHERE year = $1
+        )
+    `, [year]);
+
+    // Build scores map: { studentId: { subjectCode: score } }
+    const scoresMapByStudent = {};
+    scores.rows.forEach(row => {
+      if (!scoresMapByStudent[row.student_id]) scoresMapByStudent[row.student_id] = {};
+      scoresMapByStudent[row.student_id][row.subject_code] = row.score;
+    });
+
+    // Resolve shared resources
+    let logoUrl = null;
+    let authoritySigDataUri = null;
+    let authorityName = '';
+    let authorityTitle = '';
+    let schoolStampDataUri = null;
+    try {
+      logoUrl = await resolveSchoolLogoForPdf(query);
+    } catch (e) {
+      console.warn('Bulk interview PDF: could not load logo:', e.message);
+    }
+    try {
+      const authResult = await query('SELECT * FROM authority_data WHERE id = 1');
+      const authData = authResult.rows[0];
+      if (authData) {
+        authoritySigDataUri = await resolveAuthoritySignatureDataUri(authData);
+        authorityName = authData.name || '';
+        authorityTitle = authData.title || '';
+      }
+    } catch (e) {
+      console.warn('Bulk interview PDF: could not load authority:', e.message);
+    }
+    try {
+      const stampResult = await query('SELECT * FROM school_stamp WHERE id = 1');
+      const stampRow = stampResult.rows[0];
+      if (stampRow?.stamp_image_path) {
+        schoolStampDataUri = await resolveSchoolStampDataUri(stampRow.stamp_image_path);
+      }
+    } catch (e) {
+      console.warn('Bulk interview PDF: could not load stamp:', e.message);
+    }
+
+    // Generate HTML for each student
+    const htmlPages = students.rows.map(studentData => {
+      const studentScores = scoresMapByStudent[studentData.id] || {};
+      const resultData = {
+        total_marks: studentData.total_marks,
+        average: studentData.average,
+        grade: studentData.grade,
+        position: studentData.position,
+        remarks: studentData.remarks,
+      };
+      return buildIndividualInterviewReportHtml(
+        studentData,
+        resultData,
+        subjects.rows,
+        studentScores,
+        year,
+        logoUrl,
+        'interview',
+        authoritySigDataUri,
+        authorityName,
+        authorityTitle,
+        schoolStampDataUri
+      );
+    });
+
+    // Combine into single PDF with page breaks
+    const { renderHtmlToPdfBuffer } = require('../utils/preFormOneInterviewResultsPdf');
+    const combinedHtml = htmlPages.join('<div style="page-break-after: always;"></div>');
+    const pdfBuffer = await renderHtmlToPdfBuffer(combinedHtml);
+
+    if (!pdfBuffer.length || pdfBuffer.toString('ascii', 0, 4) !== '%PDF') {
+      return sendError(res, clientError('Generated file is not a valid PDF', 500), 500);
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="PreFormOne_All_Interview_Reports_${year}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('Error generating bulk interview PDF:', error);
+    sendError(res, error, 500);
+  }
+});
+
+// Download all continuing results PDF for a specific year (bulk)
+router.get('/:year/continuing-results/all-pdf', requireAuth, async (req, res) => {
+  try {
+    const { year } = req.params;
+    if (!year || isNaN(parseInt(year))) {
+      return sendError(res, clientError('Invalid year parameter'), 400);
+    }
+
+    // Get all students with continuing results for this year
+    const students = await query(
+      `SELECT s.*, r.total_marks, r.average, r.grade, r.position, r.remarks
+       FROM preform_one_students s
+       JOIN preform_one_continuing_results r ON r.student_id = s.id
+       WHERE s.year = $1
+       ORDER BY r.position, s.surname, s.first_name`,
+      [year]
+    );
+
+    if (students.rows.length === 0) {
+      return sendError(res, clientError('No continuing results found for this year.'), 404);
+    }
+
+    // Get subjects
+    const subjects = await query('SELECT id, subject_code FROM preformone_continuing_subjects WHERE is_active = true ORDER BY subject_code');
+
+    // Get all scores for this year
+    const scores = await query(`
+      SELECT sc.score, sc.student_id, sub.subject_code
+        FROM preform_one_scores sc
+        JOIN preformone_continuing_subjects sub ON sc.subject_id = sub.id
+        WHERE sc.subject_type = 'continuing' AND sc.student_id IN (
+          SELECT id FROM preform_one_students WHERE year = $1
+        )
+    `, [year]);
+
+    // Build scores map
+    const scoresMapByStudent = {};
+    scores.rows.forEach(row => {
+      if (!scoresMapByStudent[row.student_id]) scoresMapByStudent[row.student_id] = {};
+      scoresMapByStudent[row.student_id][row.subject_code] = row.score;
+    });
+
+    // Resolve shared resources
+    let logoUrl = null;
+    let authoritySigDataUri = null;
+    let authorityName = '';
+    let authorityTitle = '';
+    let schoolStampDataUri = null;
+    try {
+      logoUrl = await resolveSchoolLogoForPdf(query);
+    } catch (e) {
+      console.warn('Bulk continuing PDF: could not load logo:', e.message);
+    }
+    try {
+      const authResult = await query('SELECT * FROM authority_data WHERE id = 1');
+      const authData = authResult.rows[0];
+      if (authData) {
+        authoritySigDataUri = await resolveAuthoritySignatureDataUri(authData);
+        authorityName = authData.name || '';
+        authorityTitle = authData.title || '';
+      }
+    } catch (e) {
+      console.warn('Bulk continuing PDF: could not load authority:', e.message);
+    }
+    try {
+      const stampResult = await query('SELECT * FROM school_stamp WHERE id = 1');
+      const stampRow = stampResult.rows[0];
+      if (stampRow?.stamp_image_path) {
+        schoolStampDataUri = await resolveSchoolStampDataUri(stampRow.stamp_image_path);
+      }
+    } catch (e) {
+      console.warn('Bulk continuing PDF: could not load stamp:', e.message);
+    }
+
+    // Generate HTML for each student
+    const htmlPages = students.rows.map(studentData => {
+      const studentScores = scoresMapByStudent[studentData.id] || {};
+      const resultData = {
+        total_marks: studentData.total_marks,
+        average: studentData.average,
+        grade: studentData.grade,
+        position: studentData.position,
+        remarks: studentData.remarks,
+      };
+      return buildIndividualInterviewReportHtml(
+        studentData,
+        resultData,
+        subjects.rows,
+        studentScores,
+        year,
+        logoUrl,
+        'continuing',
+        authoritySigDataUri,
+        authorityName,
+        authorityTitle,
+        schoolStampDataUri
+      );
+    });
+
+    // Combine into single PDF with page breaks
+    const { renderHtmlToPdfBuffer } = require('../utils/preFormOneInterviewResultsPdf');
+    const combinedHtml = htmlPages.join('<div style="page-break-after: always;"></div>');
+    const pdfBuffer = await renderHtmlToPdfBuffer(combinedHtml);
+
+    if (!pdfBuffer.length || pdfBuffer.toString('ascii', 0, 4) !== '%PDF') {
+      return sendError(res, clientError('Generated file is not a valid PDF', 500), 500);
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Disposition', `attachment; filename="PreFormOne_All_Continuing_Reports_${year}.pdf"`);
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.send(pdfBuffer);
+  } catch (error) {
+    console.error('Error generating bulk continuing PDF:', error);
     sendError(res, error, 500);
   }
 });

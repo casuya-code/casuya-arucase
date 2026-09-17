@@ -568,6 +568,16 @@
   margin-bottom: 0.6rem;
 }
 
+.preformone-allocation-count {
+  margin-left: 0.5rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #6b6b60;
+  background: #efece4;
+  padding: 0.15rem 0.55rem;
+  border-radius: 999px;
+}
+
 .permission-class-subjects-row,
 .class-years-row,
 .module-group-years-row,

@@ -37,21 +37,27 @@ export const INTERVIEW_GRADING_SCALE = [
   { min: 0, grade: 'F', remarks: 'Fail' },
 ];
 
-/** Average over all active subjects (missing = 0), matching backend calculate. */
+/** Average over scored subjects only (missing/empty scores excluded). */
 export function calculateInterviewMetrics(scoresByCode, activeSubjects) {
   if (!activeSubjects?.length) {
     return { total_marks: 0, average: 0, grade: '-', remarks: '-' };
   }
 
-  const subjectScoresList = activeSubjects.map((subject) => {
-    const raw = scoreForSubject(scoresByCode, subject.subject_code);
-    if (raw === null || raw === undefined || raw === '') return 0;
-    const num = Number(raw);
-    return Number.isFinite(num) ? num : 0;
-  });
+  let total_marks = 0;
+  let scoredCount = 0;
 
-  const total_marks = subjectScoresList.reduce((sum, n) => sum + n, 0);
-  const average = total_marks / activeSubjects.length;
+  for (const subject of activeSubjects) {
+    const raw = scoreForSubject(scoresByCode, subject.subject_code);
+    if (raw !== null && raw !== undefined && raw !== '') {
+      const num = Number(raw);
+      if (Number.isFinite(num)) {
+        total_marks += num;
+        scoredCount++;
+      }
+    }
+  }
+
+  const average = scoredCount > 0 ? total_marks / scoredCount : 0;
   const gradeInfo =
     INTERVIEW_GRADING_SCALE.find((g) => average >= g.min) ||
     INTERVIEW_GRADING_SCALE[INTERVIEW_GRADING_SCALE.length - 1];

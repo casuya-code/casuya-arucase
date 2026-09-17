@@ -3,7 +3,7 @@
  * Full results grid: S/N, names, parish, per-subject scores, totals, grade, position, remarks
  */
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { preFormOneService } from '../../services/preFormOneService';
@@ -30,6 +30,7 @@ import {
 import './PreFormOneResults.css';
 import './preform-one-modern.css';
 import AdminLayout from '../../components/layout/AdminLayout';
+import { useGoBack } from '../../hooks/useGoBack';
 import { CSV_BULK_LABELS } from '../../constants/csvBulkActions';
 
 const PreFormOneInterviewResults = () => {
@@ -37,6 +38,7 @@ const PreFormOneInterviewResults = () => {
   const { isAuthenticated: isAuth } = useAuth();
   const isAuthenticated = isAuth();
   const queryClient = useQueryClient();
+  const goBack = useGoBack('/admin/pre-form-one-results');
 
   const [subjectScores, setSubjectScores] = useState({});
   const [scoresLoading, setScoresLoading] = useState(false);
@@ -441,12 +443,13 @@ const PreFormOneInterviewResults = () => {
               </p>
             </div>
           </div>
-          <Link
-            to={`/admin/pre-form-one/${reportYear}`}
+          <button
+            type="button"
+            onClick={goBack}
             className="excel-btn secondary small"
           >
             <i className="fas fa-arrow-left"></i> Back to Modules
-          </Link>
+          </button>
         </div>
 
         {/* Summary Stats */}
@@ -793,9 +796,9 @@ const PreFormOneInterviewResults = () => {
             </div>
 
             <div className="back-margin">
-              <Link to={`/admin/pre-form-one/${reportYear}`} className="excel-btn">
+              <button type="button" onClick={goBack} className="excel-btn">
                 <i className="fas fa-arrow-left"></i> Back
-              </Link>
+              </button>
               <button type="button" onClick={handleDownloadCSV} className="excel-btn csv-btn">
                 <i className="fas fa-file-csv"></i> {CSV_BULK_LABELS.filled}
               </button>

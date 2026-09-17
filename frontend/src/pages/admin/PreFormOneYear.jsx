@@ -1,10 +1,12 @@
 import { useParams, Link } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
+import { useGoBack } from '../../hooks/useGoBack';
 import './PreFormOneYear.css';
 import './preform-one-modern.css';
 
 const PreFormOneYear = () => {
   const { year } = useParams();
+  const goBack = useGoBack('/admin/pre-form-one');
 
   const navigationItems = [
     {
@@ -84,10 +86,10 @@ const PreFormOneYear = () => {
             </p>
           </div>
         </div>
-        <Link to="/admin/pre-form-one" className="back-button">
+        <button type="button" onClick={goBack} className="back-button">
           <i className="fas fa-arrow-left" aria-hidden="true"></i>
           Back to Years
-        </Link>
+        </button>
       </div>
 
       <div className="pre-form-one-year-section-heading">
@@ -103,27 +105,31 @@ const PreFormOneYear = () => {
             className="navigation-card"
             aria-label={`${item.title}: ${item.description}`}
           >
-            <div className="navigation-card-content">
+            <div className="navigation-card-body">
               <div className="navigation-icon">
                 <i className={`fas ${item.icon}`}></i>
               </div>
-              <div className="navigation-info">
+              <div className="navigation-copy">
                 <h3>{item.title}</h3>
                 <p>{item.description}</p>
               </div>
-              <div className="navigation-arrow">
-                <i className="fas fa-arrow-right"></i>
-              </div>
+              <span className="navigation-index">
+                {String(index + 1).padStart(2, '0')}
+              </span>
+            </div>
+            <div className="navigation-card-footer">
+              <span>Open Module</span>
+              <i className="fas fa-arrow-right"></i>
             </div>
           </Link>
         ))}
       </div>
 
       <div className="back-navigation-bottom">
-        <Link to="/admin/pre-form-one" className="back-button">
+        <button type="button" onClick={goBack} className="back-button">
           <i className="fas fa-arrow-left"></i>
           Back to Years
-        </Link>
+        </button>
       </div>
     </div>
     </AdminLayout>

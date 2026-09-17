@@ -26,8 +26,10 @@ const preFormOneStudentsService = {
     return response.data;
   },
 
-  getStudentScoresBySubject: async (subjectId, scoreType) => {
-    const response = await api.get(`/preformone-scores/subject/${subjectId}?type=${scoreType}`);
+  getStudentScoresBySubject: async (subjectId, scoreType, year = new Date().getFullYear()) => {
+    const response = await api.get(
+      `/preformone-scores/subject/${subjectId}?type=${scoreType}&year=${encodeURIComponent(year)}`
+    );
     return response.data;
   },
 

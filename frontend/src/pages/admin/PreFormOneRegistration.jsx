@@ -1,14 +1,16 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Link, useParams } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { preFormOneService } from '../../services/preFormOneService';
 import AdminLayout from '../../components/layout/AdminLayout';
+import { useGoBack } from '../../hooks/useGoBack';
 import { CSV_BULK_LABELS, CSV_BULK_TITLES } from '../../constants/csvBulkActions';
 import './PreFormOneRegistration.css';
 import './preform-one-modern.css';
 
 const PreFormOneRegistration = () => {
   const { year } = useParams();
+  const goBack = useGoBack('/admin/pre-form-one');
   const [students, setStudents] = useState([]);
   const [currentStudent, setCurrentStudent] = useState({
     serialNumber: '',
@@ -381,10 +383,10 @@ const PreFormOneRegistration = () => {
             <p>Register and manage Pre-Form One students for the {year} intake</p>
           </div>
         </div>
-        <Link to={`/admin/pre-form-one/${year}`} className="back-button">
+        <button type="button" onClick={goBack} className="back-button">
           <i className="fas fa-arrow-left"></i>
           Back to Modules
-        </Link>
+        </button>
       </div>
 
       {/* Summary Stats */}
@@ -532,54 +534,48 @@ const PreFormOneRegistration = () => {
                 </div>
               </div>
               
-              <div className="form-field form-actions-field">
-                <div className="form-group">
-                  <span className="form-actions-label-gap" aria-hidden="true">
-                    &nbsp;
-                  </span>
-                  <div className="form-actions">
-                    <button
-                      type="submit"
-                      className="excel-btn primary"
-                      disabled={loading}
-                    >
-                      {loading ? (
-                        <>
-                          <i className="fas fa-spinner fa-spin"></i>
-                          <span className="btn-text">Processing...</span>
-                        </>
-                      ) : (
-                        <>
-                          <i className="fas fa-save"></i>
-                          <span className="btn-text">
-                            {currentStudent.id ? 'Update' : 'Register'}
-                          </span>
-                        </>
-                      )}
-                    </button>
-
-                    {currentStudent.id && (
-                      <button
-                        type="button"
-                        onClick={() => setCurrentStudent({
-                          serialNumber: '',
-                          firstName: '',
-                          middleName: '',
-                          surname: '',
-                          sex: '',
-                          parish: '',
-                          year: year
-                        })}
-                        className="excel-btn secondary"
-                        disabled={loading}
-                      >
-                        <i className="fas fa-times"></i>
-                        <span className="btn-text">Cancel</span>
-                      </button>
-                    )}
-                  </div>
-                </div>
               </div>
+
+            <div className="registration-form-actions">
+              <button
+                type="submit"
+                className="excel-btn primary"
+                disabled={loading}
+              >
+                {loading ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i>
+                    <span className="btn-text">Processing...</span>
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-save"></i>
+                    <span className="btn-text">
+                      {currentStudent.id ? 'Update' : 'Register'}
+                    </span>
+                  </>
+                )}
+              </button>
+
+              {currentStudent.id && (
+                <button
+                  type="button"
+                  onClick={() => setCurrentStudent({
+                    serialNumber: '',
+                    firstName: '',
+                    middleName: '',
+                    surname: '',
+                    sex: '',
+                    parish: '',
+                    year: year
+                  })}
+                  className="excel-btn secondary"
+                  disabled={loading}
+                >
+                  <i className="fas fa-times"></i>
+                  <span className="btn-text">Cancel</span>
+                </button>
+              )}
             </div>
           </form>
         </div>
@@ -743,10 +739,10 @@ const PreFormOneRegistration = () => {
       </div>
 
       <div className="back-navigation-bottom">
-        <Link to={`/admin/pre-form-one/${year}`} className="back-button">
+        <button type="button" onClick={goBack} className="back-button">
           <i className="fas fa-arrow-left"></i>
           Back to Modules
-        </Link>
+        </button>
       </div>
     </div>
     </AdminLayout>

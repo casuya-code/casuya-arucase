@@ -130,13 +130,21 @@ async function calculateAndSavePreFormOneResults(client, options) {
     );
 
     let totalMarks = 0;
-    const subjectCount = subjectsResult.rows.length;
+    let scoredSubjectCount = 0;
 
     for (const subject of subjectsResult.rows) {
-      totalMarks += matchSubjectScore(scoresResult.rows, subject.id);
+      const sid = String(subject.id);
+      const row = scoresResult.rows.find((s) => String(s.subject_id) === sid);
+      if (row && row.score != null) {
+        const n = Number(row.score);
+        if (Number.isFinite(n)) {
+          totalMarks += n;
+          scoredSubjectCount++;
+        }
+      }
     }
 
-    const average = subjectCount > 0 ? totalMarks / subjectCount : 0;
+    const average = scoredSubjectCount > 0 ? totalMarks / scoredSubjectCount : 0;
     const grade = calculateGrade(average);
 
     results.push({

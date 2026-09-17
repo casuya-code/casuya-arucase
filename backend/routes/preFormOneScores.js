@@ -7,7 +7,7 @@ const express = require('express');
 const router = express.Router();
 const { query, withTransaction } = require('../config/database');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireModule } = require('../middleware/auth');
 
 // Create scores table if it doesn't exist
 const createScoresTable = async () => {
@@ -42,6 +42,51 @@ const createScoresTable = async () => {
 // Initialize table on module load
 createScoresTable();
 
+// Helper to parse the current user's permissions (handles string or object forms)
+function parsePermissions(user) {
+  const raw = user && user.permissions;
+  if (!raw) return {};
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return {};
+    }
+  }
+  if (typeof raw === 'object') return raw;
+  return {};
+}
+
+// Admins and superadmins are unrestricted for Pre-Form One score entry
+function isPreFormOneAdmin(user) {
+  const role = ((user && user.role) || '').toLowerCase();
+  return role === 'admin' || role === 'superadmin';
+}
+
+// Allocation keys are stored per year under users.permissions.preformone_score_subjects,
+// e.g. { '2026': ['interview:1', 'continuing:3'] }. null means unrestricted (admin).
+function getPreFormOneAllocatedKeys(user, year) {
+  if (isPreFormOneAdmin(user)) return null;
+  const permissions = parsePermissions(user);
+  const allocations = permissions.preformone_score_subjects;
+  if (!allocations || typeof allocations !== 'object') return [];
+  const list = allocations[String(year)];
+  return Array.isArray(list) ? list : [];
+}
+
+function isUserAllocatedToPreFormOneSubject(user, year, subjectId, subjectType) {
+  const keys = getPreFormOneAllocatedKeys(user, year);
+  if (keys === null) return true;
+  return keys.includes(`${subjectType}:${String(subjectId)}`);
+}
+
+function hasAnyPreFormOneAllocation(user, year) {
+  if (isPreFormOneAdmin(user)) return true;
+  return getPreFormOneAllocatedKeys(user, year).length > 0;
+}
+
+const NOT_ALLOCATED_MESSAGE = 'You are not allocated to this Pre-Form One subject for this year. Contact an administrator to assign subjects.';
+
 // Helper function to calculate grade from score using system grade configuration
 const calculateGrade = (score) => {
   // Match interview/continuing results grading (average scale applied per subject)
@@ -53,13 +98,17 @@ const calculateGrade = (score) => {
 };
 
 // Get all scores for a Pre-Form One year and type (interview | continuing)
-router.get('/year/:year', requireAuth, async (req, res) => {
+router.get('/year/:year', requireAuth, requireModule('pre_form_one_scores'), async (req, res) => {
   try {
     const { year } = req.params;
     const { type = 'interview' } = req.query;
 
     if (!year || Number.isNaN(parseInt(year, 10))) {
       return sendError(res, 400, 'Invalid year parameter');
+    }
+
+    if (!hasAnyPreFormOneAllocation(req.user, parseInt(year, 10))) {
+      return sendError(res, 403, 'You are not allocated to any Pre-Form One subject for this year. Contact an administrator to assign subjects.');
     }
 
     const subjectsTable =
@@ -90,11 +139,20 @@ router.get('/year/:year', requireAuth, async (req, res) => {
 });
 
 // Get scores for a specific subject and type
-router.get('/subject/:subjectId', requireAuth, async (req, res) => {
+router.get('/subject/:subjectId', requireAuth, requireModule('pre_form_one_scores'), async (req, res) => {
   try {
     const { subjectId } = req.params;
-    const { type = 'interview' } = req.query;
-    
+    const { type = 'interview', year } = req.query;
+
+    const yearNum = parseInt(year, 10);
+    if (!year || Number.isNaN(yearNum)) {
+      return sendError(res, 400, 'Valid year query parameter is required');
+    }
+
+    if (!isUserAllocatedToPreFormOneSubject(req.user, yearNum, subjectId, type)) {
+      return sendError(res, 403, NOT_ALLOCATED_MESSAGE);
+    }
+
     const result = await query(`
       SELECT 
         sc.*,
@@ -119,7 +177,7 @@ router.get('/subject/:subjectId', requireAuth, async (req, res) => {
 });
 
 // Save or update a single student score
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, requireModule('pre_form_one_scores'), async (req, res) => {
   try {
     const {
       student_id,
@@ -138,6 +196,16 @@ router.post('/', requireAuth, async (req, res) => {
     
     if (score < 0 || score > 100) {
       return sendError(res, 400, 'Score must be between 0 and 100');
+    }
+
+    // Determine the student's year so we can enforce the subject/year allocation
+    const studentResult = await query('SELECT year FROM preform_one_students WHERE id = $1', [student_id]);
+    if (studentResult.rows.length === 0) {
+      return sendError(res, 404, 'Student not found');
+    }
+    const studentYear = studentResult.rows[0].year;
+    if (!isUserAllocatedToPreFormOneSubject(req.user, studentYear, subject_id, subject_type)) {
+      return sendError(res, 403, NOT_ALLOCATED_MESSAGE);
     }
     
     const grade = calculateGrade(score);
@@ -179,7 +247,7 @@ router.post('/', requireAuth, async (req, res) => {
 });
 
 // Save multiple scores (bulk save)
-router.post('/bulk', requireAuth, async (req, res) => {
+router.post('/bulk', requireAuth, requireModule('pre_form_one_scores'), async (req, res) => {
   try {
     const { scores } = req.body;
     const created_by = req.user?.id || 1; // Default to user ID 1 if authentication fails
@@ -190,7 +258,19 @@ router.post('/bulk', requireAuth, async (req, res) => {
     
     const results = await withTransaction(async (client) => {
       const savedScores = [];
-      
+
+      // Resolve each student's year up-front so the subject/year allocation
+      // can be enforced per score entry in the loop below.
+      const studentIds = [...new Set(scores.map((s) => s.student_id).filter((id) => id != null))];
+      const studentYears = {};
+      if (studentIds.length > 0) {
+        const studentRes = await client.query(
+          'SELECT id, year FROM preform_one_students WHERE id = ANY($1)',
+          [studentIds]
+        );
+        studentRes.rows.forEach((r) => { studentYears[r.id] = r.year; });
+      }
+
       for (const scoreData of scores) {
         const { student_id, subject_id, subject_type, score, remarks } = scoreData;
         
@@ -202,6 +282,13 @@ router.post('/bulk', requireAuth, async (req, res) => {
         
         if (score < 0 || score > 100) {
           console.warn(`Skipping invalid score value for student ${student_id}: ${score}`);
+          continue;
+        }
+
+        // Enforce subject/year allocation for this user
+        const studentYear = studentYears[student_id];
+        if (studentYear == null || !isUserAllocatedToPreFormOneSubject(req.user, studentYear, subject_id, subject_type)) {
+          console.warn(`Skipping score entry for student ${student_id}: user not allocated to this Pre-Form One subject/year`);
           continue;
         }
         
@@ -245,7 +332,7 @@ router.post('/bulk', requireAuth, async (req, res) => {
 });
 
 // Get score statistics for a subject
-router.get('/stats/:subjectId', requireAuth, async (req, res) => {
+router.get('/stats/:subjectId', requireAuth, requireModule('pre_form_one_scores'), async (req, res) => {
   try {
     const { subjectId } = req.params;
     const { type = 'interview', year } = req.query;
@@ -253,6 +340,10 @@ router.get('/stats/:subjectId', requireAuth, async (req, res) => {
     const yearNum = parseInt(year, 10);
     if (!year || Number.isNaN(yearNum)) {
       return sendError(res, 400, 'Valid year query parameter is required');
+    }
+
+    if (!isUserAllocatedToPreFormOneSubject(req.user, yearNum, subjectId, type)) {
+      return sendError(res, 403, NOT_ALLOCATED_MESSAGE);
     }
 
     const result = await query(`
@@ -285,7 +376,7 @@ router.get('/stats/:subjectId', requireAuth, async (req, res) => {
 });
 
 // Export scores to CSV
-router.get('/export/:subjectId', requireAuth, async (req, res) => {
+router.get('/export/:subjectId', requireAuth, requireModule('pre_form_one_scores'), async (req, res) => {
   try {
     const { subjectId } = req.params;
     const { type = 'interview', year } = req.query;
@@ -293,6 +384,10 @@ router.get('/export/:subjectId', requireAuth, async (req, res) => {
     const yearNum = parseInt(year, 10);
     if (!year || Number.isNaN(yearNum)) {
       return sendError(res, 400, 'Valid year query parameter is required');
+    }
+
+    if (!isUserAllocatedToPreFormOneSubject(req.user, yearNum, subjectId, type)) {
+      return sendError(res, 403, NOT_ALLOCATED_MESSAGE);
     }
 
     const result = await query(`

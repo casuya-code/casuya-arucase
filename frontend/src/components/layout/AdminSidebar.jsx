@@ -140,7 +140,13 @@ const AdminSidebar = () => {
         { path: '/admin/pre-form-one', label: 'Registration (Pre-Form)', icon: 'fa-child', moduleId: 'student_registration_pre_form' },
         { path: '/students/list', label: 'Student List', icon: 'fa-list', moduleId: 'student_registration_form_i_iv' },
         { path: '/admin/students/photos', label: 'Photos', icon: 'fa-camera', moduleId: 'student_photo' },
-        { path: '/admin/students/parishes', label: 'Parishes', icon: 'fa-place-of-worship', moduleId: 'student_parishes' }
+        { path: '/admin/students/parishes', label: 'Parishes', icon: 'fa-place-of-worship', moduleId: 'student_parishes' },
+        { path: '/admin/pre-parishes', label: 'Pre-Parishes', icon: 'fa-place-of-worship', moduleId: 'pre_parishes' },
+        { path: '/admin/pre-form-one-interview-subjects', label: 'Interview Subjects', icon: 'fa-book', moduleId: 'student_registration_pre_form' },
+        { path: '/admin/pre-form-one-continuing-subjects', label: 'Continuing Subjects', icon: 'fa-book-open', moduleId: 'student_registration_pre_form' },
+        { path: '/admin/pre-form-one-scores', label: 'Pre-Form One Score Entry', icon: 'fa-graduation-cap', moduleId: 'pre_form_one_scores' },
+        { path: '/admin/pre-form-one-promotion', label: 'Pre-Form Promotion', icon: 'fa-graduation-cap', moduleId: 'pre_form_one_promotion' },
+        { path: '/admin/pre-form-one-results', label: 'Pre-Form Results', icon: 'fa-clipboard-check', moduleId: 'pre_form_one_results' }
       ]
     },
     {

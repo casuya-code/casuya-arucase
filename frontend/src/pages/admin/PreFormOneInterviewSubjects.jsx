@@ -1,13 +1,15 @@
 import { useState, useEffect } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import './PreFormOneInterviewSubjects.css';
 import './preform-one-modern.css';
 import { preFormOneInterviewSubjectsService } from '../../services/preFormOneInterviewSubjectsService';
 import AdminLayout from '../../components/layout/AdminLayout';
+import { useGoBack } from '../../hooks/useGoBack';
 
 const PreFormOneInterviewSubjects = () => {
   const { year } = useParams();
+  const goBack = useGoBack(`/admin/pre-form-one/${year}`);
   const [subjects, setSubjects] = useState([]);
   const [loading, setLoading] = useState(false);
   const [showAddForm, setShowAddForm] = useState(false);
@@ -371,10 +373,10 @@ const PreFormOneInterviewSubjects = () => {
       </div>
       
       <div className="back-navigation-bottom">
-        <Link to={`/admin/pre-form-one/${year}`} className="back-button">
+        <button type="button" onClick={goBack} className="back-button">
           <i className="fas fa-arrow-left"></i>
           Back to Modules
-        </Link>
+        </button>
       </div>
     </div>
     </AdminLayout>

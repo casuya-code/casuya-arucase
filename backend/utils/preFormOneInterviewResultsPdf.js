@@ -53,15 +53,21 @@ function calculateInterviewMetrics(scoresByCode, activeSubjects) {
     return { total_marks: 0, average: 0, grade: '-', remarks: '-' };
   }
 
-  const subjectScoresList = activeSubjects.map((subject) => {
-    const raw = scoreForSubject(scoresByCode, subject.subject_code);
-    if (raw === null || raw === undefined || raw === '') return 0;
-    const num = Number(raw);
-    return Number.isFinite(num) ? num : 0;
-  });
+  let total_marks = 0;
+  let scoredCount = 0;
 
-  const total_marks = subjectScoresList.reduce((sum, n) => sum + n, 0);
-  const average = total_marks / activeSubjects.length;
+  for (const subject of activeSubjects) {
+    const raw = scoreForSubject(scoresByCode, subject.subject_code);
+    if (raw !== null && raw !== undefined && raw !== '') {
+      const num = Number(raw);
+      if (Number.isFinite(num)) {
+        total_marks += num;
+        scoredCount++;
+      }
+    }
+  }
+
+  const average = scoredCount > 0 ? total_marks / scoredCount : 0;
   const gradeInfo =
     GRADING_SCALE.find((g) => average >= g.min) || GRADING_SCALE[GRADING_SCALE.length - 1];
 
@@ -236,6 +242,7 @@ async function buildPreFormOneResultsPdfData(year, query, kind = 'interview') {
       average:
         avgValue != null && Number.isFinite(avgValue) ? String(Math.round(avgValue)) : '-',
       grade: result.grade || '-',
+      avgValue,
       position: result.position || '-',
       remarks: result.remarks || '-',
     };
@@ -375,8 +382,17 @@ function generatePreFormOneResultsPdfHtml({
 
   const tableRows = rows
     .map(
-      (row) => `
-    <tr>
+      (row) => {
+        let gradeClass = '';
+        if (row.grade && row.grade !== '-') {
+          if (row.grade === 'C' && row.avgValue != null && row.avgValue < 55) {
+            gradeClass = 'grade-row-C-low';
+          } else {
+            gradeClass = `grade-row-${row.grade}`;
+          }
+        }
+        return `
+    <tr class="${gradeClass}">
       <td class="col-sn">${row.sn}</td>
       <td class="col-fname">${escapeHtml(row.first_name)}</td>
       <td class="col-mname">${escapeHtml(row.middle_name)}</td>
@@ -388,7 +404,8 @@ function generatePreFormOneResultsPdfHtml({
       <td class="result-col grd-col">${escapeHtml(row.grade)}</td>
       <td class="result-col">${escapeHtml(row.position)}</td>
       <td class="result-col">${escapeHtml(row.remarks)}</td>
-    </tr>`
+    </tr>`;
+      }
     )
     .join('');
 
@@ -465,9 +482,8 @@ function generatePreFormOneResultsPdfHtml({
       color: #000000;
     }
     .col-sn { min-width: 22px; }
-    .col-fname, .col-mname { min-width: 48px; }
-    .col-sname { min-width: 56px; }
-    .col-parish { min-width: 56px; }
+    .col-fname, .col-mname, .col-sname { min-width: 48px; text-align: left; }
+    .col-parish { min-width: 56px; text-align: left; }
     .subject-col { min-width: 24px; max-width: 34px; }
     .result-col { min-width: 28px; font-weight: 600; }
     .tot-col, .grd-col { font-weight: 700; }
@@ -481,6 +497,15 @@ function generatePreFormOneResultsPdfHtml({
       font-weight: 700;
       white-space: nowrap;
     }
+    .grade-row-A, .grade-row-A td { background: linear-gradient(90deg, #166534 0%, #22c55e 100%) !important; color: white !important; }
+    .grade-row-B, .grade-row-B td { background: #86efac !important; color: #14532d !important; }
+    .grade-row-C, .grade-row-C td { background: #fef9c3 !important; color: #713f12 !important; }
+    .grade-row-C-low, .grade-row-C-low td { background: #fecaca !important; color: #7f1d1d !important; }
+    .grade-row-D, .grade-row-E, .grade-row-S, .grade-row-F { background: #fecaca !important; color: #7f1d1d !important; }
+    .grade-row-D td, .grade-row-E td, .grade-row-S td, .grade-row-F td { background: #fecaca !important; color: #7f1d1d !important; }
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
   </style>
 </head>
 <body>

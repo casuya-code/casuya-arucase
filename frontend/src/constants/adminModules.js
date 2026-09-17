@@ -13,6 +13,10 @@ export const ADMIN_MODULES = [
   { id: 'student_registration_pre_form', label: 'Registration (Pre-Form)', icon: 'fa-child' },
   { id: 'student_photo', label: 'Student Photos', icon: 'fa-camera' },
   { id: 'student_parishes', label: 'Parishes', icon: 'fa-place-of-worship' },
+  { id: 'pre_parishes', label: 'Pre-Parishes', icon: 'fa-place-of-worship' },
+  { id: 'pre_form_one_scores', label: 'Pre-Form One Score Entry', icon: 'fa-graduation-cap' },
+  { id: 'pre_form_one_promotion', label: 'Pre-Form Promotion', icon: 'fa-graduation-cap' },
+  { id: 'pre_form_one_results', label: 'Pre-Form Results', icon: 'fa-clipboard-check' },
 
   // Academic Management
   { id: 'subject_management', label: 'Subjects', icon: 'fa-book' },

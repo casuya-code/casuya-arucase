@@ -192,6 +192,12 @@
   color: #ffffff !important;
 }
 
+/* Back buttons rendered as <button> should inherit font styling */
+.admin-layout .admin-main-content button.back-button {
+  font-family: inherit;
+  line-height: inherit;
+}
+
 /* ===========================================
    MOBILE: full viewport width, no horizontal scroll
    =========================================== */

@@ -5,7 +5,7 @@ import { useGoBack } from '../../hooks/useGoBack';
 import './PreFormOne.css';
 import './preform-one-modern.css';
 
-const PreFormOne = () => {
+const PreFormOneContinuingSubjectsYear = () => {
   const years = [...getSchoolYearOptions()].reverse();
   const goBack = useGoBack('/admin');
 
@@ -13,29 +13,29 @@ const PreFormOne = () => {
     <AdminLayout>
     <div className="pre-form-one-page">
       <div className="pre-form-one-header">
-        <h1><i className="fas fa-user-plus"></i> Pre-Form One Registration</h1>
-        <p>Select a year to register and manage Pre-Form One students</p>
+        <h1>Pre-Form One Continuing Subjects</h1>
+        <p>Select a year to manage continuing subjects</p>
       </div>
 
       <div className="years-grid">
         {years.map((year) => (
           <Link 
             key={year} 
-            to={`/admin/pre-form-one/${year}/registration`}
+            to={`/admin/pre-form-one/${year}/continuing-subjects`}
             className="year-card"
           >
             <div className="year-card-top">
               <div className="year-icon">
-                <i className="fas fa-user-plus"></i>
+                <i className="fas fa-book-open"></i>
               </div>
               <span className="year-badge">{year}</span>
             </div>
             <div className="year-card-body">
-              <h3 className="year-card-title">Pre-Form One Registration</h3>
-              <p className="year-card-desc">Register and manage Pre-Form One students</p>
+              <h3 className="year-card-title">Continuing Subjects</h3>
+              <p className="year-card-desc">Manage continuing subjects for {year}</p>
             </div>
             <div className="year-card-footer">
-              <span>Open Registration</span>
+              <span>Open Subjects</span>
               <i className="fas fa-arrow-right"></i>
             </div>
           </Link>
@@ -53,4 +53,4 @@ const PreFormOne = () => {
   );
 };
 
-export default PreFormOne;
+export default PreFormOneContinuingSubjectsYear;

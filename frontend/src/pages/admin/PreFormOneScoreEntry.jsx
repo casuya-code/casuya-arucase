@@ -13,12 +13,16 @@ import preFormOneStudentsService from '../../services/preFormOneStudentsService'
 import gradeSystemService from '../../services/gradeSystemService';
 import dataPersistenceManager, { normalizeScoresMap } from '../../utils/dataPersistenceManager';
 import AdminLayout from '../../components/layout/AdminLayout';
+import { useGoBack } from '../../hooks/useGoBack';
+import { useAuth } from '../../context/AuthContext';
 import './PreFormOneScoreEntry.css';
 import './preform-one-modern.css';
 
 const PreFormOneScoreEntry = () => {
   const { year, subjectId } = useParams();
   const navigate = useNavigate();
+  const goBack = useGoBack('/admin/pre-form-one-scores');
+  const { getAllowedPreFormOneSubjects } = useAuth();
   
   // Determine if we're on subjects list or subject detail page
   const isSubjectsList = !subjectId;
@@ -35,12 +39,24 @@ const PreFormOneScoreEntry = () => {
   const [selectedCard, setSelectedCard] = useState(null); // 'interview' or 'continuing'
   const [selectedSubject, setSelectedSubject] = useState(null);
   const [scoreStats, setScoreStats] = useState({ total: 0, scored: 0, pending: 0 });
+  const [notAllocated, setNotAllocated] = useState(false);
   const studentScoresRef = useRef({});
+  const selectedSubjectRef = useRef(null);
+  const selectedCardRef = useRef(null);
   const loadedSubjectRef = useRef(null);
+  const autoSaveTimeoutsRef = useRef({});
 
   useEffect(() => {
     studentScoresRef.current = studentScores;
   }, [studentScores]);
+
+  useEffect(() => {
+    selectedSubjectRef.current = selectedSubject;
+  }, [selectedSubject]);
+
+  useEffect(() => {
+    selectedCardRef.current = selectedCard;
+  }, [selectedCard]);
 
   // Show all students directly; search and pagination are intentionally removed
   const paginatedStudents = preFormOneStudents;
@@ -49,9 +65,14 @@ const PreFormOneScoreEntry = () => {
   useEffect(() => {
     return () => {
       stopAutoSave();
-      // Final save before unmount
-      if (selectedSubject && selectedCard && Object.keys(studentScores).length > 0) {
-        saveScoresToPersistence(selectedSubject.id, selectedCard, studentScores);
+      Object.values(autoSaveTimeoutsRef.current).forEach(clearTimeout);
+      autoSaveTimeoutsRef.current = {};
+      // Final save before unmount — use refs to avoid stale closure
+      const subj = selectedSubjectRef.current;
+      const card = selectedCardRef.current;
+      const scores = studentScoresRef.current;
+      if (subj && card && Object.keys(scores).length > 0) {
+        saveScoresToPersistence(subj.id, card, scores);
       }
     };
   }, []);
@@ -128,7 +149,8 @@ const PreFormOneScoreEntry = () => {
       setLoading(true);
       const scoresData = await preFormOneStudentsService.getStudentScoresBySubject(
         subject.id,
-        cardType
+        cardType,
+        year
       );
       const scoresMap = buildScoresMapFromApi(scoresData);
       const persistenceScores = normalizeScoresMap(
@@ -136,15 +158,22 @@ const PreFormOneScoreEntry = () => {
       );
       const mergedScores = normalizeScoresMap({ ...persistenceScores, ...scoresMap });
       setStudentScores(mergedScores);
+      setNotAllocated(false);
       await refreshScoreStats(subject.id, cardType, mergedScores);
     } catch (error) {
+      if (error?.response?.status === 403) {
+        setNotAllocated(true);
+        setStudentScores({});
+        setScoreStats(computeLocalScoreStats({}));
+        return;
+      }
       toast.error('Error loading existing scores. Please try again.');
       setStudentScores({});
       setScoreStats(computeLocalScoreStats({}));
     } finally {
       setLoading(false);
     }
-  }, [year, refreshScoreStats, computeLocalScoreStats]);
+  }, [refreshScoreStats, computeLocalScoreStats]);
 
   // Auto-select subject and card when on subject detail page
   useEffect(() => {
@@ -156,14 +185,22 @@ const PreFormOneScoreEntry = () => {
       if (interviewSubject) {
         setSelectedCard('interview');
         setSelectedSubject(interviewSubject);
-        if (loadedSubjectRef.current !== sid) {
+        const allocated = getAllowedPreFormOneSubjects(year, 'interview');
+        if (allocated !== null && !allocated.includes(Number(interviewSubject.id))) {
+          setNotAllocated(true);
+        } else if (loadedSubjectRef.current !== sid) {
+          setNotAllocated(false);
           loadedSubjectRef.current = sid;
           loadScoresForSubject(interviewSubject, 'interview');
         }
       } else if (continuingSubject) {
         setSelectedCard('continuing');
         setSelectedSubject(continuingSubject);
-        if (loadedSubjectRef.current !== sid) {
+        const allocated = getAllowedPreFormOneSubjects(year, 'continuing');
+        if (allocated !== null && !allocated.includes(Number(continuingSubject.id))) {
+          setNotAllocated(true);
+        } else if (loadedSubjectRef.current !== sid) {
+          setNotAllocated(false);
           loadedSubjectRef.current = sid;
           loadScoresForSubject(continuingSubject, 'continuing');
         }
@@ -172,6 +209,7 @@ const PreFormOneScoreEntry = () => {
       loadedSubjectRef.current = null;
       setSelectedCard(null);
       setSelectedSubject(null);
+      setNotAllocated(false);
     }
   }, [
     isSubjectDetail,
@@ -180,6 +218,8 @@ const PreFormOneScoreEntry = () => {
     interviewSubjects,
     continuingSubjects,
     loadScoresForSubject,
+    getAllowedPreFormOneSubjects,
+    year,
   ]);
 
   // Load grade configuration, subjects and students on component mount
@@ -249,6 +289,7 @@ const PreFormOneScoreEntry = () => {
 
     setLoadingSubjectId(subject.id);
     setSelectedSubject(subject);
+    setNotAllocated(false);
     loadedSubjectRef.current = String(subject.id);
     try {
       await loadScoresForSubject(subject, selectedCard);
@@ -263,29 +304,22 @@ const PreFormOneScoreEntry = () => {
 
   // Breadcrumb navigation
   const getBreadcrumbs = () => {
-    const breadcrumbs = [];
+    const breadcrumbs = [{ label: 'Score Entry', path: '/admin/pre-form-one-scores' }];
     
     if (isSubjectDetail && selectedSubject) {
-      breadcrumbs.push({ label: 'Pre-Form One', path: `/admin/pre-form-one/${year}` });
-      breadcrumbs.push({ label: 'Score Entry', path: `/admin/pre-form-one/${year}/score-entry` });
       breadcrumbs.push({ 
         label: selectedCard === 'interview' ? 'Interview Subjects' : 'Continuing Subjects', 
-        path: `/admin/pre-form-one/${year}/score-entry` 
+        path: `/admin/pre-form-one/${year}/score-entry?card=${selectedCard}` 
       });
       breadcrumbs.push({ 
         label: selectedSubject?.subject_name || 'Subject', 
         path: `/admin/pre-form-one/${year}/score-entry/${selectedSubject?.id}` 
       });
     } else if (selectedCard && !selectedSubject) {
-      breadcrumbs.push({ label: 'Pre-Form One', path: `/admin/pre-form-one/${year}` });
-      breadcrumbs.push({ label: 'Score Entry', path: `/admin/pre-form-one/${year}/score-entry` });
       breadcrumbs.push({ 
         label: selectedCard === 'interview' ? 'Interview Subjects' : 'Continuing Subjects', 
-        path: `/admin/pre-form-one/${year}/score-entry` 
+        path: `/admin/pre-form-one/${year}/score-entry?card=${selectedCard}` 
       });
-    } else {
-      breadcrumbs.push({ label: 'Pre-Form One', path: `/admin/pre-form-one/${year}` });
-      breadcrumbs.push({ label: 'Score Entry', path: `/admin/pre-form-one/${year}/score-entry` });
     }
     
     return breadcrumbs;
@@ -323,9 +357,9 @@ const PreFormOneScoreEntry = () => {
       case 'home':
         setSelectedSubject(null);
         setSelectedCard(null);
-        navigate(`/admin/pre-form-one/${year}`);
+        navigate('/admin/pre-form-one-scores');
         if (options.showFeedback !== false) {
-          toast.info('Returned to Pre-Form One dashboard');
+          toast.info('Returned to Pre-Form One Score Entry');
         }
         break;
         
@@ -334,7 +368,7 @@ const PreFormOneScoreEntry = () => {
   };
 
   // Enhanced back button handler with context awareness
-  const handleBack = () => {
+  const handleBack = useCallback(() => {
     // Determine appropriate back action based on current state
     if (isSubjectDetail && selectedSubject) {
       // We're in subject detail, go back to subjects list
@@ -346,16 +380,16 @@ const PreFormOneScoreEntry = () => {
       // Default fallback
       handleNavigation('home');
     }
-  };
+  }, [isSubjectDetail, selectedSubject, selectedCard, handleNavigation]);
 
   // Calculate grade from score using system grade configuration
   const calculateGrade = (score) => {
     if (!gradeConfig || !gradeConfig.oLevel) {
-      // Fallback to default calculation
-      if (score >= 90) return 'A';
-      if (score >= 80) return 'B';
-      if (score >= 70) return 'C';
-      if (score >= 60) return 'D';
+      // Fallback to default O-Level boundaries (matches system config)
+      if (score >= 85) return 'A';
+      if (score >= 70) return 'B';
+      if (score >= 50) return 'C';
+      if (score >= 40) return 'D';
       return 'F';
     }
     
@@ -386,8 +420,71 @@ const PreFormOneScoreEntry = () => {
     computeLocalScoreStats,
   ]);
 
-  // Handle score input change
-  const handleScoreChange = (studentId, field, value) => {
+  // Comprehensive data persistence functions
+  const saveScoresToPersistence = async (subjectId, scoreType, scores) => {
+    try {
+      const success = await dataPersistenceManager.saveData(
+        subjectId,
+        scoreType,
+        normalizeScoresMap(scores)
+      );
+      if (!success) {
+        toast.warning('Some data protection features are not available, but your scores are still saved locally.');
+      }
+    } catch (error) {
+      toast.error('Error saving scores to backup storage.');
+    }
+  };
+
+  const clearScoresFromPersistence = (subjectId, scoreType) => {
+    try {
+      dataPersistenceManager.clearData(subjectId, scoreType);
+    } catch { /* ignore */ }
+  };
+
+
+
+  // Memoized student name and admission display
+  const getStudentDisplayName = useCallback((student) => {
+    return student.first_name && student.surname 
+      ? `${student.first_name} ${student.surname}` 
+      : student.name || student.student_name || 'Unknown Student';
+  }, []);
+
+  const getStudentAdmissionNumber = useCallback((student) => {
+    return student.admission_number || student.admission_no || student.student_number || `${year}-${student.id || student.student_id}`;
+  }, [year]);
+
+  const getStudentKey = useCallback((student) => {
+    if (!student) return null;
+    return student.id ?? student.student_id ?? null;
+  }, []);
+
+  const scoresByStudentId = useMemo(
+    () => normalizeScoresMap(studentScores),
+    [studentScores]
+  );
+
+  // Auto-save a single student score to API (debounced)
+  const autoSaveScore = useCallback(async (studentId) => {
+    if (!selectedSubject || !selectedCard) return;
+    const scoreData = scoresByStudentId[studentId];
+    if (!scoreData || scoreData.score === '' || scoreData.score === null || scoreData.score === undefined) return;
+
+    try {
+      await preFormOneStudentsService.saveStudentScores({
+        student_id: parseInt(studentId, 10),
+        subject_id: selectedSubject.id,
+        subject_type: selectedCard,
+        score: scoreData.score
+      });
+    } catch {
+      // silent — manual Save button is the fallback
+    }
+  }, [selectedSubject, selectedCard, scoresByStudentId]);
+
+  // Handle score input change with debounced API auto-save
+  const handleScoreChange = useCallback((studentId, field, value) => {
     const updated = { ...normalizeScoresMap(studentScoresRef.current) };
 
     if (!updated[studentId]) {
@@ -413,28 +510,203 @@ const PreFormOneScoreEntry = () => {
     if (selectedSubject && selectedCard) {
       saveScoresToPersistence(selectedSubject.id, selectedCard, updated);
     }
+
+    // Debounced API auto-save per student (3 seconds)
+    if (field === 'score') {
+      if (autoSaveTimeoutsRef.current[studentId]) {
+        clearTimeout(autoSaveTimeoutsRef.current[studentId]);
+      }
+      autoSaveTimeoutsRef.current[studentId] = setTimeout(() => {
+        autoSaveScore(studentId);
+        delete autoSaveTimeoutsRef.current[studentId];
+      }, 3000);
+    }
+  }, [selectedSubject, selectedCard, calculateGrade, saveScoresToPersistence, autoSaveScore]);
+
+  // Handle score blur — immediate API save
+  const handleScoreBlur = useCallback((studentId) => {
+    if (autoSaveTimeoutsRef.current[studentId]) {
+      clearTimeout(autoSaveTimeoutsRef.current[studentId]);
+      delete autoSaveTimeoutsRef.current[studentId];
+    }
+    autoSaveScore(studentId);
+  }, [autoSaveScore]);
+
+  // Save individual student score
+  const saveIndividualScore = useCallback(async (studentId) => {
+    try {
+      setSaving(true);
+      const scoreData = scoresByStudentId[studentId];
+      
+      if (!scoreData || scoreData.score === '' || scoreData.score === null || scoreData.score === undefined) {
+        toast.warning('Please enter a score before saving');
+        return;
+      }
+      
+      const payload = {
+        student_id: parseInt(studentId, 10),
+        subject_id: selectedSubject.id,
+        subject_type: selectedCard,
+        score: scoreData.score
+      };
+      
+      await preFormOneStudentsService.saveStudentScores(payload);
+      
+      toast.success('Score saved successfully!');
+      
+      const mergedScores = {
+        ...normalizeScoresMap(studentScoresRef.current),
+        [studentId]: {
+          score: scoreData.score,
+          grade: calculateGrade(scoreData.score),
+        },
+      };
+      setStudentScores(mergedScores);
+
+      // Clear comprehensive persistence after successful save
+      clearScoresFromPersistence(selectedSubject.id, selectedCard);
+
+      await refreshScoreStats(selectedSubject.id, selectedCard, mergedScores);
+    } catch (error) {
+      if (error?.response?.status === 403) {
+        setNotAllocated(true);
+        toast.warning('This score was not saved: you are no longer allocated to this subject for this year.');
+      } else {
+        toast.error('Error saving score. Please try again.');
+      }
+    } finally {
+      setSaving(false);
+    }
+  }, [scoresByStudentId, selectedSubject, selectedCard, calculateGrade, clearScoresFromPersistence, refreshScoreStats]);
+
+  // Save all scores
+  const saveAllScores = useCallback(async () => {
+    try {
+      setSaving(true);
+      
+      const scoresToSave = [];
+      Object.keys(scoresByStudentId).forEach((studentId) => {
+        const scoreData = scoresByStudentId[studentId];
+        if (
+          scoreData &&
+          scoreData.score !== '' &&
+          scoreData.score !== null &&
+          scoreData.score !== undefined
+        ) {
+          scoresToSave.push({
+            student_id: parseInt(studentId),
+            subject_id: selectedSubject.id,
+            subject_type: selectedCard,
+            score: scoreData.score
+          });
+        }
+      });
+      
+      if (scoresToSave.length === 0) {
+        toast.warning('No scores to save. Please enter at least one score.');
+        return;
+      }
+      
+      const savedRes = await preFormOneStudentsService.saveBulkStudentScores(scoresToSave);
+      const savedCount = Array.isArray(savedRes?.data) ? savedRes.data.length : scoresToSave.length;
+
+      if (savedCount === 0) {
+        toast.warning('No scores were saved. Check your subject/year allocation, or that valid students exist for this subject.');
+        return;
+      }
+
+      toast.success(`${savedCount} scores saved successfully!`);
+      
+      // Update the local state immediately with all saved scores
+      const updatedScores = {};
+      scoresToSave.forEach(score => {
+        updatedScores[score.student_id] = {
+          score: score.score,
+          grade: calculateGrade(score.score)
+        };
+      });
+      
+      const mergedScores = {
+        ...normalizeScoresMap(studentScoresRef.current),
+        ...updatedScores,
+      };
+      setStudentScores(mergedScores);
+
+      // Clear comprehensive persistence after successful save
+      clearScoresFromPersistence(selectedSubject.id, selectedCard);
+
+      await refreshScoreStats(selectedSubject.id, selectedCard, mergedScores);
+    } catch (error) {
+      toast.error('Error saving scores. Please try again.');
+    } finally {
+      setSaving(false);
+    }
+  }, [scoresByStudentId, selectedSubject, selectedCard, calculateGrade, clearScoresFromPersistence, refreshScoreStats]);
+
+  // View student details
+  const viewStudentDetails = useCallback((studentId) => {
+    const student = preFormOneStudents.find(
+      (s) => String(getStudentKey(s)) === String(studentId)
+    );
+    if (!student) return;
+
+    const score = scoresByStudentId[studentId];
+    
+    const details = `
+      Student: ${student.first_name && student.surname ? `${student.first_name} ${student.surname}` : student.name || student.student_name || 'Unknown Student'}
+      Admission: ${student.admission_number || student.admission_no || student.student_number || `${year}-${student.id || student.student_id}`}
+      Score: ${score?.score || 'Not entered'}
+      Grade: ${score?.grade || 'Not graded'}
+    `;
+    
+    toast.info(details, { autoClose: 5000 });
+  }, [preFormOneStudents, getStudentKey, scoresByStudentId, year]);
+
+  // Export scores to CSV
+  const exportScores = useCallback(async () => {
+    if (exporting) return;
+    setExporting(true);
+    try {
+      const response = await preFormOneStudentsService.exportScores(
+        selectedSubject.id,
+        selectedCard,
+        year
+      );
+      
+      // Create download link
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `preformone_${selectedCard}_scores_${selectedSubject.subject_code}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      
+      toast.success('Scores exported successfully!');
+      
+    } catch (error) {
+      toast.error('Error exporting scores. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  }, [exporting, selectedSubject, selectedCard, year]);
+
+  // Auto-save functionality
+  const startAutoSave = () => {
+    if (selectedSubject && selectedCard) {
+      dataPersistenceManager.startAutoSave(selectedSubject.id, selectedCard, () => {
+        saveScoresToPersistence(
+          selectedSubject.id,
+          selectedCard,
+          studentScoresRef.current
+        );
+      });
+    }
   };
 
-  // Memoized student name and admission display
-  const getStudentDisplayName = useCallback((student) => {
-    return student.first_name && student.surname 
-      ? `${student.first_name} ${student.surname}` 
-      : student.name || student.student_name || 'Unknown Student';
-  }, []);
-
-  const getStudentAdmissionNumber = useCallback((student) => {
-    return student.admission_number || student.admission_no || student.student_number || `${year}-${student.id || student.student_id}`;
-  }, [year]);
-
-  const getStudentKey = useCallback((student) => {
-    if (!student) return null;
-    return student.id ?? student.student_id ?? null;
-  }, []);
-
-  const scoresByStudentId = useMemo(
-    () => normalizeScoresMap(studentScores),
-    [studentScores]
-  );
+  const stopAutoSave = () => {
+    dataPersistenceManager.stopAutoSave();
+  };
 
   // Virtual scrolling item renderer
   const renderVirtualItem = useCallback((student) => {
@@ -474,6 +746,7 @@ const PreFormOneScoreEntry = () => {
             max="100"
             value={displayScore}
             onChange={(e) => handleScoreChange(studentKey, 'score', e.target.value)}
+            onBlur={() => handleScoreBlur(studentKey)}
             aria-label={`Score for ${studentName}`}
           />
         </td>
@@ -521,7 +794,7 @@ const PreFormOneScoreEntry = () => {
         </td>
       </tr>
     );
-  }, [scoresByStudentId, handleScoreChange, saving, loading, getStudentDisplayName, getStudentAdmissionNumber, getStudentKey]);
+  }, [scoresByStudentId, handleScoreChange, handleScoreBlur, saving, loading, getStudentDisplayName, getStudentAdmissionNumber, getStudentKey, saveIndividualScore, viewStudentDetails]);
 
   
   // Memoized render function to prevent infinite re-renders
@@ -624,198 +897,25 @@ const PreFormOneScoreEntry = () => {
         </div>
       </div>
     );
-  }, [selectedSubject, selectedCard, preFormOneStudents, loading, scoreStats, paginatedStudents, handleBack, renderVirtualItem]);
+  }, [selectedSubject, selectedCard, preFormOneStudents, loading, scoreStats, paginatedStudents, handleBack, renderVirtualItem, saveAllScores, exportScores, saving, exporting]);
 
-  // Save individual student score
-  const saveIndividualScore = async (studentId) => {
-    try {
-      setSaving(true);
-      const scoreData = scoresByStudentId[studentId];
-      
-      if (!scoreData || scoreData.score === '' || scoreData.score === null || scoreData.score === undefined) {
-        toast.warning('Please enter a score before saving');
-        return;
-      }
-      
-      const payload = {
-        student_id: parseInt(studentId, 10),
-        subject_id: selectedSubject.id,
-        subject_type: selectedCard,
-        score: scoreData.score
-      };
-      
-      const _result =       await preFormOneStudentsService.saveStudentScores(payload);
-      
-      toast.success('Score saved successfully!');
-      
-      const mergedScores = {
-        ...normalizeScoresMap(studentScoresRef.current),
-        [studentId]: {
-          score: scoreData.score,
-          grade: calculateGrade(scoreData.score),
-        },
-      };
-      setStudentScores(mergedScores);
-
-      // Clear comprehensive persistence after successful save
-      clearScoresFromPersistence(selectedSubject.id, selectedCard);
-
-      await refreshScoreStats(selectedSubject.id, selectedCard, mergedScores);
-    } catch (error) {
-      toast.error('Error saving score. Please try again.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Save all scores
-  const saveAllScores = async () => {
-    try {
-      setSaving(true);
-      
-      const scoresToSave = [];
-      Object.keys(scoresByStudentId).forEach((studentId) => {
-        const scoreData = scoresByStudentId[studentId];
-        if (
-          scoreData &&
-          scoreData.score !== '' &&
-          scoreData.score !== null &&
-          scoreData.score !== undefined
-        ) {
-          scoresToSave.push({
-            student_id: parseInt(studentId),
-            subject_id: selectedSubject.id,
-            subject_type: selectedCard,
-            score: scoreData.score
-          });
-        }
-      });
-      
-      if (scoresToSave.length === 0) {
-        toast.warning('No scores to save. Please enter at least one score.');
-        return;
-      }
-      
-      await preFormOneStudentsService.saveBulkStudentScores(scoresToSave);
-      
-      toast.success(`${scoresToSave.length} scores saved successfully!`);
-      
-      // Update the local state immediately with all saved scores
-      const updatedScores = {};
-      scoresToSave.forEach(score => {
-        updatedScores[score.student_id] = {
-          score: score.score,
-          grade: calculateGrade(score.score)
-        };
-      });
-      
-      const mergedScores = {
-        ...normalizeScoresMap(studentScoresRef.current),
-        ...updatedScores,
-      };
-      setStudentScores(mergedScores);
-
-      // Clear comprehensive persistence after successful save
-      clearScoresFromPersistence(selectedSubject.id, selectedCard);
-
-      await refreshScoreStats(selectedSubject.id, selectedCard, mergedScores);
-    } catch (error) {
-      toast.error('Error saving scores. Please try again.');
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  // Export scores to CSV
-  const exportScores = async () => {
-    if (exporting) return;
-    setExporting(true);
-    try {
-      const response = await preFormOneStudentsService.exportScores(
-        selectedSubject.id,
-        selectedCard,
-        year
-      );
-      
-      // Create download link
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement('a');
-      link.href = url;
-      link.setAttribute('download', `preformone_${selectedCard}_scores_${selectedSubject.subject_code}.csv`);
-      document.body.appendChild(link);
-      link.click();
-      link.remove();
-      
-      toast.success('Scores exported successfully!');
-      
-    } catch (error) {
-      toast.error('Error exporting scores. Please try again.');
-    } finally {
-      setExporting(false);
-    }
-  };
-
-  // View student details
-  const viewStudentDetails = (studentId) => {
-    const student = preFormOneStudents.find(
-      (s) => String(getStudentKey(s)) === String(studentId)
-    );
-    if (!student) return;
-
-    const score = scoresByStudentId[studentId];
-    
-    const details = `
-      Student: ${student.first_name && student.surname ? `${student.first_name} ${student.surname}` : student.name || student.student_name || 'Unknown Student'}
-      Admission: ${student.admission_number || student.admission_no || student.student_number || `${year}-${student.id || student.student_id}`}
-      Score: ${score?.score || 'Not entered'}
-      Grade: ${score?.grade || 'Not graded'}
-    `;
-    
-    toast.info(details, { autoClose: 5000 });
-  };
-
-  // Comprehensive data persistence functions
-  const saveScoresToPersistence = async (subjectId, scoreType, scores) => {
-    try {
-      const success = await dataPersistenceManager.saveData(
-        subjectId,
-        scoreType,
-        normalizeScoresMap(scores)
-      );
-      if (!success) {
-        toast.warning('Some data protection features are not available, but your scores are still saved locally.');
-      }
-    } catch (error) {
-      toast.error('Error saving scores to backup storage.');
-    }
-  };
-
-  const clearScoresFromPersistence = (subjectId, scoreType) => {
-    try {
-      dataPersistenceManager.clearData(subjectId, scoreType);
-    } catch { /* ignore */ }
-  };
-
-  // Auto-save functionality
-  const startAutoSave = () => {
-    if (selectedSubject && selectedCard) {
-      dataPersistenceManager.startAutoSave(selectedSubject.id, selectedCard, () => {
-        saveScoresToPersistence(
-          selectedSubject.id,
-          selectedCard,
-          studentScoresRef.current
-        );
-      });
-    }
-  };
-
-  const stopAutoSave = () => {
-    dataPersistenceManager.stopAutoSave();
-  };
+  // True when the user has any allocated subject for a score type in this year.
+  // Admins always true (unrestricted).
+  const hasScoreSubjectAllocation = useCallback((cardType) => {
+    const allocatedIds = getAllowedPreFormOneSubjects(year, cardType);
+    if (allocatedIds === null) return true;
+    const subjects = cardType === 'interview' ? interviewSubjects : continuingSubjects;
+    return subjects.some((s) => allocatedIds.includes(Number(s.id)));
+  }, [year, getAllowedPreFormOneSubjects, interviewSubjects, continuingSubjects]);
 
   // Render subject cards for score entry
   const renderSubjectCards = (subjects, title) => {
-    const activeSubjects = subjects.filter(subject => subject.is_active);
+    const allowedSubjectIds = getAllowedPreFormOneSubjects(year, selectedCard);
+    const activeSubjects = subjects.filter(subject => {
+      if (!subject.is_active) return false;
+      if (allowedSubjectIds === null) return true;
+      return allowedSubjectIds.includes(Number(subject.id));
+    });
     
     return (
       <div className="score-entry-subjects-container">
@@ -916,59 +1016,65 @@ const PreFormOneScoreEntry = () => {
       {/* Main Content */}
       <div className="score-entry-content">
         {/* Score Type Cards - Show on main page */}
-        {isSubjectsList && !selectedCard && (
-          <div className="score-type-cards-container">
+        {isSubjectsList && !selectedCard && (hasScoreSubjectAllocation('interview') || hasScoreSubjectAllocation('continuing')) && (
+          <div className="score-type-cards-grid">
             {/* Interview Score Card */}
+            {hasScoreSubjectAllocation('interview') && (
             <div
-              className="score-type-card interview"
+              className="score-type-card-item interview"
               onClick={() => handleCardClick('interview')}
             >
-              <div className="score-type-card-header">
-                <div className="score-type-icon">
-                  <i className="fas fa-clipboard-list"></i>
-                </div>
-                <h4>Interview Score</h4>
+              <div className="score-type-card-icon">
+                <i className="fas fa-clipboard-list"></i>
               </div>
-              <div className="score-type-card-body">
-                <p>Enter interview assessment scores for prospective students</p>
-              </div>
-              <div className="score-type-card-footer">
-                <button className="excel-btn primary full-width">
-                  <i className="fas fa-arrow-right"></i>
-                  Select Interview Score
-                </button>
+              <div className="score-type-card-title">Interview Score</div>
+              <div className="score-type-card-description">
+                Enter interview assessment scores for prospective students
               </div>
             </div>
+            )}
 
             {/* Continuing Score Card */}
+            {hasScoreSubjectAllocation('continuing') && (
             <div
-              className="score-type-card continuing"
+              className="score-type-card-item continuing"
               onClick={() => handleCardClick('continuing')}
             >
-              <div className="score-type-card-header">
-                <div className="score-type-icon">
-                  <i className="fas fa-book-open"></i>
-                </div>
-                <h4>Continuing Score</h4>
+              <div className="score-type-card-icon">
+                <i className="fas fa-book-open"></i>
               </div>
-              <div className="score-type-card-body">
-                <p>Enter continuing assessment scores for ongoing evaluation</p>
-              </div>
-              <div className="score-type-card-footer">
-                <button className="excel-btn primary full-width">
-                  <i className="fas fa-arrow-right"></i>
-                  Select Continuing Score
-                </button>
+              <div className="score-type-card-title">Continuing Score</div>
+              <div className="score-type-card-description">
+                Enter continuing assessment scores for ongoing evaluation
               </div>
             </div>
+            )}
+          </div>
+        )}
+
+        {/* No allocated subjects message */}
+        {isSubjectsList && !selectedCard && !hasScoreSubjectAllocation('interview') && !hasScoreSubjectAllocation('continuing') && (
+          <div className="empty-state">
+            <i className="fas fa-user-shield"></i>
+            <h3>No Open Score Types</h3>
+            <p>You have not been allocated any Pre-Form One subjects for this year. Contact an administrator to assign subjects.</p>
           </div>
         )}
 
         {/* Subject Cards - Show when card selected but no subject */}
         {selectedCard && !selectedSubject && renderSubjectCards(selectedCard === 'interview' ? interviewSubjects : continuingSubjects, selectedCard === 'interview' ? 'Interview Subjects' : 'Continuing Subjects')}
 
+        {/* Not-allocated state - subject exists but user has no allocation for this year */}
+        {isSubjectDetail && selectedSubject && notAllocated && (
+          <div className="empty-state">
+            <i className="fas fa-user-shield"></i>
+            <h3>Subject Not Allocated</h3>
+            <p>You are not allocated to this Pre-Form One subject for this year. Contact an administrator to assign this subject.</p>
+          </div>
+        )}
+
         {/* Student Score Entry - Show when subject selected */}
-        {isSubjectDetail && selectedSubject && renderStudentScoreEntry()}
+        {isSubjectDetail && selectedSubject && !notAllocated && renderStudentScoreEntry()}
 
         {/* Loading State */}
         {loading && (
@@ -983,10 +1089,10 @@ const PreFormOneScoreEntry = () => {
       </div>
       
       <div className="back-navigation-bottom">
-        <Link to={`/admin/pre-form-one/${year}`} className="back-button">
+        <button type="button" onClick={goBack} className="back-button">
           <i className="fas fa-arrow-left"></i>
-          Back to Modules
-        </Link>
+          Back to Score Entry
+        </button>
       </div>
     </div>
     </AdminLayout>

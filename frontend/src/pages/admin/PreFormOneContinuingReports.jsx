@@ -3,7 +3,7 @@
  * Generate and manage continuing reports
  */
 import React, { useState, useEffect, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { preFormOneService } from '../../services/preFormOneService';
@@ -13,11 +13,14 @@ import { admissionKey, resultsByAdmissionNumber } from '../../services/preFormOn
 import './PreFormOneResults.css';
 import './preform-one-modern.css';
 import AdminLayout from '../../components/layout/AdminLayout';
+import { useGoBack } from '../../hooks/useGoBack';
 
 const PreFormOneContinuingReports = () => {
   const { year } = useParams();
   const { isAuthenticated } = useAuth();
+  const goBack = useGoBack('/admin/pre-form-one-results');
   const [isGenerating, setIsGenerating] = useState({});
+  const [isBulkDownloading, setIsBulkDownloading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const PER_PAGE = 25;
 
@@ -113,6 +116,47 @@ const PreFormOneContinuingReports = () => {
     }
   };
 
+  // Generate all continuing reports PDF (bulk)
+  const generateAllReportsPDF = async () => {
+    if (!isAuthenticated) {
+      toast.error('Please log in to download reports');
+      return;
+    }
+
+    setIsBulkDownloading(true);
+    try {
+      const response = await fetch(buildFetchUrl(`/pre-form-one/${year}/continuing-results/all-pdf`), {
+        headers: { 'Content-Type': 'application/json' },
+        credentials: 'include',
+      });
+
+      if (!response.ok) {
+        let message = 'Failed to generate bulk PDF';
+        try {
+          const errBody = await response.json();
+          message = errBody.message || errBody.error || message;
+        } catch { /* response may not be JSON */ }
+        throw new Error(message);
+      }
+
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `PreFormOne_All_Continuing_Reports_${year}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+
+      toast.success('All continuing reports downloaded successfully!');
+    } catch (error) {
+      toast.error(error.message || 'Failed to generate bulk continuing reports');
+    } finally {
+      setIsBulkDownloading(false);
+    }
+  };
+
   // Sort students by name
   const sortedStudents = useMemo(
     () =>
@@ -140,9 +184,18 @@ const PreFormOneContinuingReports = () => {
           <div className="excel-card-header">
             <i className="fas fa-file-invoice"></i> PRE-FORM ONE CONTINUING REPORTS
             <div className="header-actions">
-              <Link to={`/admin/pre-form-one/${year}`} className="excel-btn secondary small">
+              <button
+                type="button"
+                onClick={generateAllReportsPDF}
+                className="excel-btn primary small"
+                disabled={isBulkDownloading}
+              >
+                <i className="fas fa-file-pdf"></i>
+                {isBulkDownloading ? 'Generating...' : 'Download All Reports'}
+              </button>
+              <button type="button" onClick={goBack} className="excel-btn secondary small">
                 <i className="fas fa-arrow-left"></i> Back
-              </Link>
+              </button>
             </div>
           </div>
           <div className="excel-card-body">

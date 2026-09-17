@@ -1,15 +1,17 @@
 import { useState, useEffect, useMemo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import './PreFormOneParishes.css';
 import './PreFormOneRegistration.css';
 import './preform-one-modern.css';
 import { preFormOneService } from '../../services/preFormOneService';
 import AdminLayout from '../../components/layout/AdminLayout';
+import { useGoBack } from '../../hooks/useGoBack';
 import { CSV_BULK_LABELS, CSV_BULK_TITLES } from '../../constants/csvBulkActions';
 
 const PreFormOneParishes = () => {
   const { year } = useParams();
+  const goBack = useGoBack('/admin/pre-parishes');
   const [students, setStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterParish, setFilterParish] = useState('all');
@@ -348,14 +350,27 @@ const PreFormOneParishes = () => {
     }
   };
 
-  // Download CSV template
+  // Download CSV template with registered students
   const downloadCsvTemplate = () => {
+    const escapeCsv = (value) => {
+      const str = String(value || '');
+      if (str.includes(',') || str.includes('"') || str.includes('\n')) {
+        return `"${str.replace(/"/g, '""')}"`;
+      }
+      return str;
+    };
+
     const templateHeaders = ['S/N', 'FirstName', 'MiddleName', 'Surname', 'Sex', 'Parish'];
-    const templateData = [
-      templateHeaders.join(','),
-      'SN001,John,Doe,Smith,Male,St. Mary\'s Parish',
-      'SN002,Jane,Marie,Johnson,Female,St. Joseph\'s Parish'
-    ].join('\n');
+    const rows = students.map(student => [
+      escapeCsv(student.serial_number),
+      escapeCsv(student.first_name),
+      escapeCsv(student.middle_name),
+      escapeCsv(student.surname),
+      escapeCsv(student.sex),
+      escapeCsv(student.parish)
+    ].join(','));
+
+    const templateData = [templateHeaders.join(','), ...rows].join('\n');
 
     const blob = new Blob([templateData], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
@@ -396,10 +411,10 @@ const PreFormOneParishes = () => {
             <p>Manage parish information for Pre-Form One students &middot; {year}</p>
           </div>
         </div>
-        <Link to={`/admin/pre-form-one/${year}`} className="back-button">
+        <button type="button" onClick={goBack} className="back-button">
           <i className="fas fa-arrow-left"></i>
           Back to Modules
-        </Link>
+        </button>
       </div>
 
       {/* Summary Stats */}
@@ -710,10 +725,10 @@ const PreFormOneParishes = () => {
       </div>
 
       <div className="back-navigation-bottom">
-        <Link to={`/admin/pre-form-one/${year}`} className="back-button">
+        <button type="button" onClick={goBack} className="back-button">
           <i className="fas fa-arrow-left"></i>
           Back to Modules
-        </Link>
+        </button>
       </div>
     </div>
     </AdminLayout>

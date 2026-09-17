@@ -394,6 +394,39 @@ export const AuthProvider = ({ children }) => {
     return months;
   };
 
+  /**
+   * Pre-Form One score-entry allocations: users.permissions.preformone_score_subjects,
+   * e.g. { '2026': ['interview:1', 'continuing:3'] }. Keys are `${subjectType}:${subjectId}`.
+   */
+  const getPreFormOneScoreAllocations = () => {
+    const perms = getParsedPermissions();
+    const allocations = perms.preformone_score_subjects;
+    return allocations && typeof allocations === 'object' ? allocations : {};
+  };
+
+  /** For non-admin: years the user may enter Pre-Form One scores, or null = all years for admin */
+  const getAllowedPreFormOneYears = () => {
+    if (isAdminLike()) return null;
+    const allocations = getPreFormOneScoreAllocations();
+    const years = Object.keys(allocations).filter(
+      (y) => Array.isArray(allocations[y]) && allocations[y].length > 0
+    );
+    return years.map((y) => Number(y));
+  };
+
+  /** For non-admin: subject ids the user may score for a year+type, or null = all subjects for admin */
+  const getAllowedPreFormOneSubjects = (year, subjectType) => {
+    if (isAdminLike()) return null;
+    const allocations = getPreFormOneScoreAllocations();
+    const list = allocations[String(year)];
+    if (!Array.isArray(list)) return [];
+    const prefix = `${subjectType}:`;
+    const ids = list
+      .filter((k) => String(k).startsWith(prefix))
+      .map((k) => Number(String(k).slice(prefix.length)));
+    return ids;
+  };
+
   /** True if user has access to this class (admin always true) */
   const hasClass = (className, { moduleId } = {}) => {
     if (isAdminLike()) return true;
@@ -453,6 +486,8 @@ export const AuthProvider = ({ children }) => {
     getAllowedSubjects,
     getAllowedSubjectsForClass,
     getAllowedScoreEntryMonths,
+    getAllowedPreFormOneYears,
+    getAllowedPreFormOneSubjects,
     hasClass,
     hasModule,
   };

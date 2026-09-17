@@ -3,15 +3,17 @@
  * Handles promotion of Pre-Form One students to Form One
  */
 import React, { useState, useEffect, useCallback, useMemo, memo } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { preFormOnePromotionService } from '../../services/preFormOnePromotionService';
 import AdminLayout from '../../components/layout/AdminLayout';
+import { useGoBack } from '../../hooks/useGoBack';
 import './PreFormOnePromotion.css';
 import './preform-one-modern.css';
 
 const PreFormOnePromotion = () => {
   const { year } = useParams();
+  const goBack = useGoBack('/admin/pre-form-one-promotion');
   const [eligibleStudents, setEligibleStudents] = useState([]);
   const [promotionStatus, setPromotionStatus] = useState(null);
   const [selectedStudents, setSelectedStudents] = useState([]);
@@ -204,10 +206,10 @@ const PreFormOnePromotion = () => {
       <div className="promotion-header">
         <h1>Pre-Form One Promotion - {year}</h1>
         <p>Promote Pre-Form One students to Form One for {parseInt(year) + 1}</p>
-        <Link to={`/admin/pre-form-one/${year}`} className="back-button">
+        <button type="button" onClick={goBack} className="back-button">
           <i className="fas fa-arrow-left"></i>
           Back to Modules
-        </Link>
+        </button>
       </div>
 
       {/* Promotion Status */}

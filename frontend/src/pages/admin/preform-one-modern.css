@@ -32,12 +32,21 @@
 
 .pre-form-one-score-entry .score-entry-page-container {
   background: transparent;
-  padding: clamp(0.5rem, 1.5vw, 1rem);
+  padding: 8px;
 }
 
 /* ------------------------------------------------------------------
    1. Page headings
    ------------------------------------------------------------------ */
+.pre-form-one-page .pre-form-one-header {
+  max-width: 960px;
+  margin: 0 auto;
+  width: 100%;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--pfo-border, #e8e8e0);
+  margin-bottom: 1.25rem;
+}
+
 .pre-form-one-page .pre-form-one-header h1,
 .pre-form-one-page .year-info h3,
 .pre-form-one-year-page .pre-form-one-year-lead,
@@ -49,9 +58,14 @@
 .preform-one-results-page-container .excel-card-title,
 .interview-subjects-page-heading,
 .continuing-subjects-page-heading {
-  color: var(--pfo-text);
+  color: #1a1a1a;
   font-weight: 800;
   letter-spacing: -0.02em;
+}
+
+.pre-form-one-page .pre-form-one-header h1 i {
+  color: var(--accent, #10b981);
+  font-size: 1.1rem;
 }
 
 .pre-form-one-page .pre-form-one-header p,
@@ -60,7 +74,7 @@
 .promotion-page-container .promotion-header p,
 .interview-subjects-page-subtitle,
 .continuing-subjects-page-subtitle {
-  color: var(--pfo-muted);
+  color: #6b6b60;
 }
 
 .pre-form-one-year-page .pre-form-one-year-lead {
@@ -78,7 +92,7 @@
    ------------------------------------------------------------------ */
 .pre-form-one-page .years-grid,
 .pre-form-one-year-page .navigation-grid {
-  max-width: 1200px;
+  max-width: 960px;
 }
 
 .pre-form-one-page .year-card,
@@ -86,34 +100,60 @@
   background: var(--pfo-card);
   border: 1px solid var(--pfo-border);
   border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
-  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
+  box-shadow: none;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.pre-form-one-page .year-card::after,
+.pre-form-one-year-page .navigation-card::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 4px;
+  background: var(--accent, #10b981);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.pre-form-one-page .year-card:hover::after,
+.pre-form-one-year-page .navigation-card:hover::after {
+  opacity: 1;
 }
 
 .pre-form-one-page .year-card:hover,
 .pre-form-one-year-page .navigation-card:hover {
   transform: translateY(-2px);
-  border-color: #e0ddd5;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+  border-color: var(--accent, #10b981);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
 .pre-form-one-page .year-icon,
 .pre-form-one-year-page .navigation-icon {
-  background: color-mix(in srgb, var(--accent) 10%, #fff);
-  color: var(--accent);
+  background: color-mix(in srgb, var(--accent, #10b981) 12%, #fff);
+  color: var(--accent, #10b981);
   border: none;
-  border-radius: 10px;
+  border-radius: 12px;
 }
 
 .pre-form-one-page .year-icon i,
 .pre-form-one-year-page .navigation-icon i {
-  font-size: 1.25rem;
+  font-size: 1.1rem;
 }
 
 .pre-form-one-page .year-info h3,
 .pre-form-one-year-page .navigation-info h3 {
   font-size: clamp(1rem, 2.75vw, 1.2rem);
   font-weight: 700;
+  color: #1a1a1a;
+}
+
+.pre-form-one-page .year-info p,
+.pre-form-one-year-page .navigation-info p {
+  color: #6b6b60;
 }
 
 .pre-form-one-page .year-arrow,
@@ -123,7 +163,38 @@
 
 .pre-form-one-page .year-card:hover .year-arrow,
 .pre-form-one-year-page .navigation-card:hover .navigation-arrow {
-  color: var(--accent);
+  color: var(--accent, #10b981);
+}
+
+/* Back button — override adminTheme orange for year selection pages */
+.pre-form-one-page .back-navigation-bottom .back-button {
+  background: #6b7280 !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: 0 !important;
+  padding: clamp(0.5rem, 1.5vw, 0.625rem) clamp(0.75rem, 2vw, 1rem) !important;
+  font-size: clamp(0.8rem, 2vw, 0.9rem) !important;
+  font-weight: 500 !important;
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 0.375rem !important;
+  min-height: 36px !important;
+  text-decoration: none !important;
+  transition: background 0.2s ease !important;
+  cursor: pointer !important;
+}
+
+.pre-form-one-page .back-navigation-bottom .back-button:hover {
+  background: #4b5563 !important;
+  color: #ffffff !important;
+}
+
+.pre-form-one-page .back-navigation-bottom {
+  text-align: center;
+  margin-top: 2rem;
+  max-width: 960px;
+  margin-left: auto;
+  margin-right: auto;
 }
 
 /* ------------------------------------------------------------------
@@ -146,8 +217,6 @@
 .continuing-subjects-page-container .continuing-subjects-form-card,
 .continuing-subjects-page-container .continuing-subjects-list-card,
 .continuing-subjects-page-container .continuing-subjects-page-header,
-.pre-form-one-score-entry .score-type-card,
-.pre-form-one-score-entry .subject-card,
 .pre-form-one-score-entry .score-form-card,
 .pre-form-one-score-entry .recent-scores-card,
 .pre-form-one-score-entry .students-table-card,
@@ -156,7 +225,21 @@
 .pre-form-one-score-entry .score-entry-subjects-container,
 .pre-form-one-score-entry .score-entry-subjects-header,
 .pre-form-one-score-entry .score-entry-form-header,
-.pre-form-one-score-entry .student-score-entry-header,
+.pre-form-one-score-entry .student-score-entry-header {
+  background: var(--pfo-card);
+  border: 1px solid var(--pfo-border);
+  border-radius: 0;
+  box-shadow: none;
+}
+
+.pre-form-one-score-entry .score-type-card-item,
+.pre-form-one-score-entry .subject-card {
+  background: var(--pfo-card);
+  border: 1px solid var(--pfo-border);
+  border-radius: 12px;
+  box-shadow: none;
+}
+
 .promotion-page-container .promotion-header,
 .promotion-page-container .promotion-status-card,
 .promotion-page-container .promotion-content,
@@ -179,16 +262,19 @@
   transform: translateY(-2px);
 }
 
-.pre-form-one-score-entry .score-type-card:hover,
+.pre-form-one-score-entry .score-type-card-item:hover,
 .pre-form-one-score-entry .subject-card:hover {
   transform: translateY(-2px);
-  border-color: #e0ddd5;
-  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.07);
+  border-color: #3b82f6;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
 }
 
-.pre-form-one-score-entry .score-type-card.interview,
-.pre-form-one-score-entry .score-type-card.continuing {
-  border-left: 3px solid var(--accent);
+.pre-form-one-score-entry .score-type-card-item.interview:hover {
+  border-color: #3b82f6;
+}
+
+.pre-form-one-score-entry .score-type-card-item.continuing:hover {
+  border-color: #10b981;
 }
 
 /* ------------------------------------------------------------------
@@ -201,7 +287,6 @@
 .interview-subjects-page-container .interview-subjects-list-header,
 .continuing-subjects-page-container .continuing-subjects-form-header,
 .continuing-subjects-page-container .continuing-subjects-list-header,
-.pre-form-one-score-entry .score-type-card-header,
 .pre-form-one-score-entry .subject-card-header,
 .pre-form-one-score-entry .score-form-header,
 .pre-form-one-score-entry .recent-scores-header,
@@ -213,7 +298,7 @@
 .promotion-page-container .status-header,
 .preform-one-results-page-container .excel-card-header {
   background: #fff;
-  border-bottom: 1px solid var(--pfo-divider);
+  border-bottom: 1px solid #e5e7eb;
 }
 
 .preform-one-registration-route .registration-form-card-header,
@@ -226,7 +311,12 @@
 .interview-subjects-page-container .interview-subjects-list-header h3,
 .continuing-subjects-page-container .continuing-subjects-form-header h3,
 .continuing-subjects-page-container .continuing-subjects-list-header h3,
-.pre-form-one-score-entry .score-type-card-header h4,
+.promotion-page-container .status-header h3,
+.preform-one-results-page-container .excel-card-title {
+  color: var(--pfo-text);
+  font-weight: 700;
+}
+
 .pre-form-one-score-entry .subject-card-header h4,
 .pre-form-one-score-entry .score-form-header h4,
 .pre-form-one-score-entry .recent-scores-header h4,
@@ -234,12 +324,9 @@
 .pre-form-one-score-entry .students-table-header h4,
 .pre-form-one-score-entry .score-entry-subjects-header h3,
 .pre-form-one-score-entry .score-entry-form-header h3,
-.pre-form-one-score-entry .student-score-entry-header h3,
-.pre-form-one-score-entry .score-cards-header h3,
-.promotion-page-container .status-header h3,
-.preform-one-results-page-container .excel-card-title {
-  color: var(--pfo-text);
-  font-weight: 700;
+.pre-form-one-score-entry .student-score-entry-header h3 {
+  color: #374151;
+  font-weight: 600;
 }
 
 .preform-one-registration-route .registration-form-card-body,
@@ -259,10 +346,26 @@
 /* ------------------------------------------------------------------
    5. Buttons (.excel-btn and friends)
    ------------------------------------------------------------------ */
+.pre-form-one-score-entry .excel-btn {
+  border-radius: 0;
+  border-width: 1px;
+  border-style: solid;
+  font-weight: 500;
+  box-shadow: none;
+  box-sizing: border-box;
+  text-transform: none;
+  letter-spacing: 0;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.375rem;
+  min-height: 36px;
+  white-space: nowrap;
+}
+
 .preform-one-registration-route .excel-btn,
 .interview-subjects-page-container .excel-btn,
 .continuing-subjects-page-container .excel-btn,
-.pre-form-one-score-entry .excel-btn,
 .promotion-page-container .excel-btn,
 .preform-one-results-page-container .excel-btn {
   border-radius: 8px;
@@ -276,10 +379,22 @@
   transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
 }
 
+.pre-form-one-score-entry .excel-btn.primary {
+  background: #3b82f6;
+  color: #fff;
+  border-color: #3b82f6;
+}
+
+.pre-form-one-score-entry .excel-btn.primary:hover:not(:disabled) {
+  background: #2563eb;
+  border-color: #2563eb;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.3);
+}
+
 .preform-one-registration-route .excel-btn.primary,
 .interview-subjects-page-container .excel-btn.primary,
 .continuing-subjects-page-container .excel-btn.primary,
-.pre-form-one-score-entry .excel-btn.primary,
 .promotion-page-container .excel-btn.primary,
 .preform-one-results-page-container .excel-btn.primary {
   background: #1a1a1a;
@@ -290,7 +405,6 @@
 .preform-one-registration-route .excel-btn.primary:hover:not(:disabled),
 .interview-subjects-page-container .excel-btn.primary:hover:not(:disabled),
 .continuing-subjects-page-container .excel-btn.primary:hover:not(:disabled),
-.pre-form-one-score-entry .excel-btn.primary:hover:not(:disabled),
 .promotion-page-container .excel-btn.primary:hover:not(:disabled),
 .preform-one-results-page-container .excel-btn.primary:hover:not(:disabled) {
   background: #000;
@@ -299,10 +413,21 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.18);
 }
 
+.pre-form-one-score-entry .excel-btn.secondary {
+  background: #6b7280;
+  color: #ffffff;
+  border-color: #6b7280;
+}
+
+.pre-form-one-score-entry .excel-btn.secondary:hover:not(:disabled) {
+  background: #4b5563;
+  border-color: #4b5563;
+  transform: translateY(-1px);
+}
+
 .preform-one-registration-route .excel-btn.secondary,
 .interview-subjects-page-container .excel-btn.secondary,
 .continuing-subjects-page-container .excel-btn.secondary,
-.pre-form-one-score-entry .excel-btn.secondary,
 .promotion-page-container .excel-btn.secondary,
 .preform-one-results-page-container .excel-btn.secondary {
   background: var(--pfo-btn-secondary, #f5f5f0);
@@ -313,7 +438,6 @@
 .preform-one-registration-route .excel-btn.secondary:hover:not(:disabled),
 .interview-subjects-page-container .excel-btn.secondary:hover:not(:disabled),
 .continuing-subjects-page-container .excel-btn.secondary:hover:not(:disabled),
-.pre-form-one-score-entry .excel-btn.secondary:hover:not(:disabled),
 .promotion-page-container .excel-btn.secondary:hover:not(:disabled),
 .preform-one-results-page-container .excel-btn.secondary:hover:not(:disabled) {
   background: #ecece4;
@@ -542,8 +666,6 @@
 .interview-subjects-page-container .form-textarea,
 .continuing-subjects-page-container .form-input,
 .continuing-subjects-page-container .form-textarea,
-.pre-form-one-score-entry .form-input,
-.pre-form-one-score-entry .form-textarea,
 .promotion-page-container .stream-select {
   border: 1px solid #d5d2c8;
   border-radius: 8px;
@@ -555,6 +677,17 @@
   font-family: inherit;
 }
 
+.pre-form-one-score-entry .form-input,
+.pre-form-one-score-entry .form-textarea {
+  border: none;
+  border-radius: 0;
+  background: #ffffff;
+  color: #1a1a1a;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  box-sizing: border-box;
+  font-family: inherit;
+}
+
 .preform-one-registration-route .form-input:focus,
 .preform-one-registration-route .search-input:focus,
 .preform-one-registration-route .filter-select:focus,
@@ -562,12 +695,17 @@
 .interview-subjects-page-container .form-textarea:focus,
 .continuing-subjects-page-container .form-input:focus,
 .continuing-subjects-page-container .form-textarea:focus,
-.pre-form-one-score-entry .form-input:focus,
-.pre-form-one-score-entry .form-textarea:focus,
 .promotion-page-container .stream-select:focus {
   outline: none;
   border-color: var(--accent);
   box-shadow: 0 0 0 3px var(--pfo-focus);
+}
+
+.pre-form-one-score-entry .form-input:focus,
+.pre-form-one-score-entry .form-textarea:focus {
+  outline: none;
+  background: #f9fafb;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.15);
 }
 
 .preform-one-registration-route .form-input:hover,
@@ -579,22 +717,23 @@
 
 .pre-form-one-score-entry .score-input,
 .pre-form-one-score-entry .grade-select {
-  border: 1px solid #d5d2c8;
-  border-radius: 8px;
-  background: #fff;
-  color: var(--pfo-text);
-  padding: 6px 10px;
-  min-height: 36px;
+  border: none;
+  border-radius: 0;
+  background: #ffffff;
+  color: #1a1a1a;
+  padding: clamp(0.25rem, 0.75vw, 0.375rem);
+  min-height: 32px;
   box-sizing: border-box;
   font-family: inherit;
-  font-size: 0.85rem;
+  font-size: clamp(0.65rem, 1.5vw, 0.8rem);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
 }
 
 .pre-form-one-score-entry .score-input:focus,
 .pre-form-one-score-entry .grade-select:focus {
   outline: none;
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px var(--pfo-focus);
+  background: #f9fafb;
+  box-shadow: 0 2px 6px rgba(59, 130, 246, 0.15);
 }
 
 /* ------------------------------------------------------------------
@@ -610,7 +749,6 @@
 .preform-one-registration-route .students-table th,
 .interview-subjects-table th,
 .continuing-subjects-table th,
-.pre-form-one-score-entry .students-table th,
 .promotion-page-container .promotion-table th,
 .promotion-page-container .history-table th,
 .preform-one-results-page-container .compact-results-table th {
@@ -623,23 +761,42 @@
   border-bottom: 1px solid var(--pfo-divider);
 }
 
+.pre-form-one-score-entry .students-table th {
+  background: #f3f4f6;
+  color: #374151;
+  font-weight: 600;
+  font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+  text-transform: none;
+  letter-spacing: normal;
+  border-bottom: none;
+  white-space: nowrap;
+}
+
 .preform-one-registration-route .students-table td,
 .interview-subjects-table td,
 .continuing-subjects-table td,
-.pre-form-one-score-entry .students-table td,
 .promotion-page-container .promotion-table td,
 .promotion-page-container .history-table td {
   border-bottom: 1px solid var(--pfo-divider);
   color: #374151;
 }
 
+.pre-form-one-score-entry .students-table td {
+  border-bottom: 1px solid rgba(0, 0, 0, 0.05);
+  color: #374151;
+  font-size: clamp(0.7rem, 1.5vw, 0.8rem);
+}
+
 .preform-one-registration-route .students-table tbody tr:hover,
 .interview-subjects-table tbody tr:hover,
 .continuing-subjects-table tbody tr:hover,
-.pre-form-one-score-entry .students-table tbody tr:hover,
 .promotion-page-container .promotion-table tr:hover,
 .promotion-page-container .history-table tr:hover {
   background: var(--pfo-fill);
+}
+
+.pre-form-one-score-entry .students-table tbody tr:hover {
+  background: #f9fafb;
 }
 
 .promotion-page-container .promotion-table tr.selected {
@@ -648,14 +805,22 @@
 }
 
 .interview-subjects-page-container .subject-code,
-.continuing-subjects-page-container .subject-code,
-.pre-form-one-score-entry .subject-code {
+.continuing-subjects-page-container .subject-code {
   background: #f5f5f0;
   border: 1px solid #e8e8e0;
   border-radius: 6px;
   color: var(--pfo-text);
   font-family: 'Courier New', monospace;
   font-weight: 600;
+}
+
+.pre-form-one-score-entry .subject-code {
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 0;
+  color: #374151;
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
 }
 
 /* ------------------------------------------------------------------
@@ -738,11 +903,11 @@
 }
 
 .pre-form-one-score-entry .status-indicator i.scored {
-  color: var(--accent);
+  color: #6c757d;
 }
 
 .pre-form-one-score-entry .status-indicator i.pending {
-  color: #f59e0b;
+  color: #6c757d;
 }
 
 .pre-form-one-score-entry .year-badge,
@@ -755,45 +920,61 @@
   padding: 4px 12px;
 }
 
-.pre-form-one-score-entry .score-type-icon,
+.pre-form-one-score-entry .score-type-icon {
+  background: color-mix(in srgb, #3b82f6 12%, #fff);
+  color: #3b82f6;
+  border: none;
+  border-radius: 12px;
+}
+
 .pre-form-one-score-entry .subject-icon {
-  background: color-mix(in srgb, var(--accent) 10%, #fff);
-  color: var(--accent);
+  background: color-mix(in srgb, #3b82f6 12%, #fff);
+  color: #3b82f6;
   border: none;
   border-radius: 10px;
 }
 
+.pre-form-one-score-entry .score-type-card-item.interview .score-type-card-icon {
+  background: color-mix(in srgb, #3b82f6 12%, #fff);
+  color: #3b82f6;
+}
+
+.pre-form-one-score-entry .score-type-card-item.continuing .score-type-card-icon {
+  background: color-mix(in srgb, #10b981 12%, #fff);
+  color: #10b981;
+}
+
 .pre-form-one-score-entry .stat-item {
-  background: var(--pfo-fill);
-  border: 1px solid var(--pfo-divider);
-  border-radius: 10px;
-  padding: 10px 12px;
+  background: #f5f5f0;
+  border: 1px solid #e8e8e0;
+  border-radius: 8px;
+  padding: 2px 4px;
 }
 
 .pre-form-one-score-entry .stat-label {
-  color: var(--pfo-muted);
-  font-weight: 700;
+  color: #6b7280;
+  font-weight: 500;
 }
 
 .pre-form-one-score-entry .stat-value {
-  color: var(--pfo-text);
-  font-weight: 800;
+  color: #374151;
+  font-weight: 600;
 }
 
 .pre-form-one-score-entry .summary-item {
-  background: var(--pfo-fill);
-  border: 1px solid var(--pfo-divider);
-  border-radius: 10px;
+  background: #f5f5f0;
+  border: 1px solid #e8e8e0;
+  border-radius: 8px;
 }
 
 .pre-form-one-score-entry .summary-label {
-  color: var(--pfo-muted);
-  font-weight: 700;
+  color: #6b7280;
+  font-weight: 500;
 }
 
 .pre-form-one-score-entry .summary-value {
-  color: var(--pfo-text);
-  font-weight: 800;
+  color: #374151;
+  font-weight: 600;
 }
 
 .pre-form-one-score-entry .progress-bar {
@@ -801,14 +982,24 @@
   border-radius: 999px;
 }
 
-.pre-form-one-score-entry .progress-fill,
-.pre-form-one-score-entry .grade-fill {
+.pre-form-one-score-entry .progress-fill {
   background: var(--accent);
   border-radius: 999px;
 }
 
+.pre-form-one-score-entry .grade-fill {
+  background: #9ca3af;
+  border-radius: 999px;
+}
+
+.pre-form-one-score-entry .grade-fill.a { background: #9ca3af; }
+.pre-form-one-score-entry .grade-fill.b { background: #9ca3af; }
+.pre-form-one-score-entry .grade-fill.c { background: #9ca3af; }
+.pre-form-one-score-entry .grade-fill.d { background: #9ca3af; }
+.pre-form-one-score-entry .grade-fill.f { background: #9ca3af; }
+
 .pre-form-one-score-entry .grade-progress {
-  border-radius: 8px;
+  border-radius: 0;
 }
 
 /* ------------------------------------------------------------------
@@ -937,9 +1128,12 @@
 .promotion-page-container .empty-state,
 .preform-one-results-page-container .empty-state,
 .interview-subjects-page-container .empty-state,
-.continuing-subjects-page-container .empty-state,
-.pre-form-one-score-entry .empty-state {
+.continuing-subjects-page-container .empty-state {
   color: var(--pfo-muted);
+}
+
+.pre-form-one-score-entry .empty-state {
+  color: #6b7280;
 }
 
 .preform-one-registration-route .no-students i,
@@ -947,18 +1141,25 @@
 .promotion-page-container .empty-state i,
 .preform-one-results-page-container .empty-state i,
 .interview-subjects-page-container .empty-state i,
-.continuing-subjects-page-container .empty-state i,
-.pre-form-one-score-entry .empty-state i {
+.continuing-subjects-page-container .empty-state i {
   color: #c9c9bf;
+}
+
+.pre-form-one-score-entry .empty-state i {
+  color: #d1d5db;
 }
 
 .promotion-page-container .empty-state h3,
 .preform-one-results-page-container .empty-state h3,
 .interview-subjects-page-container .empty-state h3,
-.continuing-subjects-page-container .empty-state h3,
-.pre-form-one-score-entry .empty-state h3 {
+.continuing-subjects-page-container .empty-state h3 {
   color: var(--pfo-text);
   font-weight: 700;
+}
+
+.pre-form-one-score-entry .empty-state h3 {
+  color: #374151;
+  font-weight: 600;
 }
 
 /* ------------------------------------------------------------------
@@ -984,6 +1185,109 @@
 
 .pre-form-one-score-entry .breadcrumb-item {
   color: var(--pfo-muted);
+}
+
+/* ------------------------------------------------------------------
+    12b. Score entry page header, stats, rows, actions
+   ------------------------------------------------------------------ */
+.pre-form-one-score-entry .score-entry-page-header h2 {
+  color: #1a1a1a;
+  font-weight: 600;
+  letter-spacing: -0.02em;
+}
+
+.pre-form-one-score-entry .score-entry-page-header h2 i {
+  color: var(--accent);
+}
+
+.pre-form-one-score-entry .score-stats {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+.pre-form-one-score-entry .scored-row {
+  background: #fff;
+}
+
+.pre-form-one-score-entry .pending-row {
+  background: #fff;
+}
+
+.pre-form-one-score-entry .scored-row:hover,
+.pre-form-one-score-entry .pending-row:hover {
+  background: var(--pfo-fill);
+}
+
+.pre-form-one-score-entry .action-buttons-row {
+  display: flex;
+  gap: clamp(0.375rem, 1vw, 0.75rem);
+  flex-wrap: wrap;
+}
+
+.pre-form-one-score-entry .back-navigation-bottom {
+  text-align: center;
+  margin-top: clamp(1.5rem, 4vw, 2.5rem);
+}
+
+.pre-form-one-score-entry .back-navigation-bottom .back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  background: var(--pfo-card);
+  border: 1px solid var(--pfo-border);
+  border-radius: 8px;
+  padding: 0.6rem 1.2rem;
+  color: var(--pfo-text);
+  font-weight: 600;
+  text-decoration: none;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.pre-form-one-score-entry .back-navigation-bottom .back-button:hover {
+  background: #ecece4;
+  border-color: #d5d2c8;
+}
+
+.pre-form-one-score-entry .subject-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: clamp(0.5rem, 1.5vw, 0.75rem);
+  background: var(--pfo-card);
+  border: 1px solid var(--pfo-border);
+  border-radius: 12px;
+  padding: clamp(0.875rem, 2vw, 1.25rem);
+  margin-bottom: clamp(0.75rem, 2vw, 1rem);
+}
+
+.pre-form-one-score-entry .subject-header .subject-info {
+  text-align: center;
+}
+
+.pre-form-one-score-entry .subject-header .subject-info h3 {
+  margin: 0;
+  font-size: clamp(1rem, 2.5vw, 1.2rem);
+  font-weight: 700;
+  color: var(--pfo-text);
+}
+
+.pre-form-one-score-entry .subject-header .subject-info p {
+  margin: 0.15rem 0 0 0;
+  color: var(--pfo-muted);
+  font-size: 0.85rem;
+}
+
+.pre-form-one-score-entry .subject-header .subject-actions {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.pre-form-one-score-entry .score-entry-content {
+  max-width: 1200px;
+  margin: 0 auto;
 }
 
 /* ------------------------------------------------------------------
@@ -1576,4 +1880,296 @@
   font-size: 10.5px !important;
   font-weight: bold;
   max-height: none;
+}
+
+/* ============================================================
+   12. Structured cards — year selection + module hub
+   Applies to every Pre-Form One landing/card page.
+   Hierarchy: header (icon + year/index badge) → body
+   (title + description) → footer (CTA row or action grid).
+   Hover reveals an emerald accent bar across the top.
+   ============================================================ */
+.pre-form-one-page .years-grid,
+.pre-form-one-year-page .years-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(300px, 100%), 1fr));
+  align-items: stretch;
+  width: 100%;
+  max-width: 1100px;
+}
+
+.pre-form-one-page .years-grid {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.pre-form-one-year-page .years-grid {
+  margin: 0 auto clamp(1.5rem, 5vw, 2.5rem);
+}
+
+.pre-form-one-page .year-card,
+.pre-form-one-year-page .year-card,
+.pre-form-one-year-page .navigation-card {
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  width: 100%;
+  border-radius: 14px;
+  border: 1px solid var(--pfo-border, #e8e8e0);
+  background: var(--pfo-card, #ffffff);
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+  text-decoration: none;
+  color: inherit;
+  position: relative;
+  transition: transform 0.18s ease, box-shadow 0.18s ease, border-color 0.18s ease;
+}
+
+.pre-form-one-page .year-card::after,
+.pre-form-one-year-page .year-card::after,
+.pre-form-one-year-page .navigation-card::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: 0;
+  height: 4px;
+  background: var(--accent, #10b981);
+  opacity: 0;
+  transition: opacity 0.18s ease;
+}
+
+.pre-form-one-page .year-card:hover::after,
+.pre-form-one-year-page .year-card:hover::after,
+.pre-form-one-year-page .navigation-card:hover::after,
+.pre-form-one-year-page .navigation-card:focus-visible::after {
+  opacity: 1;
+}
+
+.pre-form-one-page .year-card:hover,
+.pre-form-one-year-page .year-card:hover,
+.pre-form-one-year-page .navigation-card:hover {
+  transform: translateY(-3px);
+  border-color: color-mix(in srgb, var(--accent, #10b981) 45%, var(--pfo-border, #e8e8e0));
+  box-shadow: 0 10px 24px rgba(0, 0, 0, 0.08);
+}
+
+/* Card header: icon (left) + year/index badge (right) */
+.pre-form-one-page .year-card-top,
+.pre-form-one-year-page .year-card-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding: 1.1rem 1.25rem 0.6rem;
+}
+
+.pre-form-one-page .year-icon,
+.pre-form-one-year-page .year-icon {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent, #10b981) 18%, #ffffff);
+  background: color-mix(in srgb, var(--accent, #10b981) 12%, #ffffff);
+  color: var(--accent, #10b981);
+  font-size: 1.15rem;
+  flex-shrink: 0;
+}
+
+.pre-form-one-page .year-badge,
+.pre-form-one-year-page .year-badge {
+  font-size: clamp(1.35rem, 2.5vw, 1.7rem);
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  line-height: 1;
+  white-space: nowrap;
+  color: color-mix(in srgb, var(--accent, #10b981) 72%, var(--pfo-text, #1a1a1a));
+}
+
+/* Card body: title + description */
+.pre-form-one-page .year-card-body,
+.pre-form-one-year-page .year-card-body {
+  padding: 0.25rem 1.25rem 0.95rem;
+}
+
+.pre-form-one-page .year-card-title,
+.pre-form-one-year-page .year-card-title {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--pfo-text, #1a1a1a);
+  margin: 0 0 0.3rem 0;
+  line-height: 1.3;
+}
+
+.pre-form-one-page .year-card-desc,
+.pre-form-one-year-page .year-card-desc {
+  font-size: 0.86rem;
+  color: var(--pfo-muted, #6b6b60);
+  margin: 0;
+  line-height: 1.45;
+}
+
+/* Card footer: single CTA row (standard year cards) */
+.pre-form-one-page .year-card-footer,
+.pre-form-one-year-page .year-card-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border-top: 1px solid var(--pfo-divider, #f0f0ea);
+  background: var(--pfo-fill, #fafaf6);
+  color: var(--pfo-text, #1a1a1a);
+  font-size: 0.85rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.pre-form-one-page .year-card-footer i,
+.pre-form-one-year-page .year-card-footer i {
+  margin-left: auto;
+  color: var(--accent, #10b981);
+  transition: transform 0.18s ease;
+}
+
+.pre-form-one-page .year-card:hover .year-card-footer i,
+.pre-form-one-year-page .year-card:hover .year-card-footer i {
+  transform: translateX(3px);
+}
+
+/* Card footer: action grid (results & reports cards) */
+.pre-form-one-year-page .year-card-actions {
+  margin-top: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.5rem;
+  padding: 0.9rem 1.25rem 1.15rem;
+  border-top: 1px solid var(--pfo-divider, #f0f0ea);
+  background: var(--pfo-fill, #fafaf6);
+}
+
+.pre-form-one-year-page .year-card-actions .excel-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.35rem;
+  padding: 0.5rem 0.55rem;
+  font-size: 0.78rem;
+  font-weight: 700;
+  line-height: 1.2;
+  text-align: center;
+  text-decoration: none;
+  border-radius: 8px;
+  border-width: 1px;
+  border-style: solid;
+  white-space: normal;
+  box-sizing: border-box;
+  transition: background 0.15s ease, color 0.15s ease, border-color 0.15s ease, transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.pre-form-one-year-page .year-card-actions .excel-btn.primary {
+  background: var(--accent, #10b981);
+  border-color: var(--accent, #10b981);
+  color: #ffffff;
+}
+
+.pre-form-one-year-page .year-card-actions .excel-btn.primary:hover {
+  background: color-mix(in srgb, var(--accent, #10b981) 88%, #06302e);
+  border-color: color-mix(in srgb, var(--accent, #10b981) 88%, #06302e);
+  transform: translateY(-1px);
+  box-shadow: 0 3px 8px rgba(16, 185, 129, 0.28);
+}
+
+.pre-form-one-year-page .year-card-actions .excel-btn.secondary {
+  background: #ffffff;
+  border-color: var(--pfo-border, #e8e8e0);
+  color: var(--pfo-text, #1a1a1a);
+}
+
+.pre-form-one-year-page .year-card-actions .excel-btn.secondary:hover {
+  border-color: var(--accent, #10b981);
+  color: var(--accent, #10b981);
+  background: color-mix(in srgb, var(--accent, #10b981) 6%, #ffffff);
+  transform: translateY(-1px);
+}
+
+/* Module hub navigation cards */
+.pre-form-one-year-page .navigation-grid {
+  grid-template-columns: repeat(auto-fill, minmax(min(280px, 100%), 1fr));
+  align-items: stretch;
+  max-width: 1100px;
+}
+
+.pre-form-one-year-page .navigation-card-body {
+  display: flex;
+  align-items: center;
+  gap: 0.9rem;
+  padding: 1.1rem 1.15rem 0.95rem;
+}
+
+.pre-form-one-year-page .navigation-icon {
+  flex-shrink: 0;
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  border: 1px solid color-mix(in srgb, var(--accent, #10b981) 18%, #ffffff);
+  background: color-mix(in srgb, var(--accent, #10b981) 12%, #ffffff);
+  color: var(--accent, #10b981);
+  font-size: 1.1rem;
+}
+
+.pre-form-one-year-page .navigation-copy {
+  flex: 1;
+  min-width: 0;
+}
+
+.pre-form-one-year-page .navigation-copy h3 {
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: -0.015em;
+  color: var(--pfo-text, #1a1a1a);
+  margin: 0 0 0.2rem 0;
+  line-height: 1.3;
+}
+
+.pre-form-one-year-page .navigation-copy p {
+  font-size: 0.83rem;
+  color: var(--pfo-muted, #6b6b60);
+  margin: 0;
+  line-height: 1.4;
+}
+
+.pre-form-one-year-page .navigation-index {
+  flex-shrink: 0;
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  color: #a3a398;
+  background: var(--pfo-fill, #fafaf6);
+  border: 1px solid var(--pfo-border, #e8e8e0);
+  border-radius: 999px;
+  padding: 0.25rem 0.55rem;
+}
+
+.pre-form-one-year-page .navigation-card-footer {
+  margin-top: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.7rem 1.15rem;
+  border-top: 1px solid var(--pfo-divider, #f0f0ea);
+  background: var(--pfo-fill, #fafaf6);
+  color: var(--pfo-text, #1a1a1a);
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.pre-form-one-year-page .navigation-card-footer i {
+  margin-left: auto;
+  color: var(--accent, #10b981);
+  transition: transform 0.18s ease;
+}
+
+.pre-form-one-year-page .navigation-card:hover .navigation-card-footer i {
+  transform: translateX(3px);
 }

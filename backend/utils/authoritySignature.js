@@ -136,6 +136,84 @@ async function sanitizeAuthorityDataRow(row, queryFn) {
   return { ...row, signature_image_path: '' };
 }
 
+const fs = require('fs');
+const path = require('path');
+const https = require('https');
+const http = require('http');
+
+async function fileExists(filePath) {
+  try { await fs.promises.access(filePath); return true; } catch { return false; }
+}
+
+function imageBufferToDataUri(buffer, imagePath) {
+  if (!buffer?.length) return null;
+  let ext = path.extname(String(imagePath || '')).toLowerCase().replace('.', '');
+  if (!ext && buffer[0] === 0x89 && buffer[1] === 0x50) ext = 'png';
+  if (!ext) ext = 'jpeg';
+  const mime = ext === 'png' ? 'image/png' : ext === 'webp' ? 'image/webp' : 'image/jpeg';
+  return `data:${mime};base64,${buffer.toString('base64')}`;
+}
+
+function fetchUrlAsBuffer(url, timeout = 15000) {
+  return new Promise((resolve, reject) => {
+    const client = url.startsWith('https') ? https : http;
+    const req = client.get(url, { timeout }, (res) => {
+      if (res.statusCode >= 300 && res.statusCode < 400 && res.headers.location) {
+        return fetchUrlAsBuffer(res.headers.location, timeout).then(resolve, reject);
+      }
+      if (res.statusCode !== 200) {
+        res.resume();
+        return reject(new Error(`HTTP ${res.statusCode}`));
+      }
+      const chunks = [];
+      res.on('data', (chunk) => chunks.push(chunk));
+      res.on('end', () => resolve(Buffer.concat(chunks)));
+      res.on('error', reject);
+    });
+    req.on('error', reject);
+    req.on('timeout', () => { req.destroy(); reject(new Error('timeout')); });
+  });
+}
+
+async function loadAuthoritySignatureBuffer(imageUrl) {
+  if (!imageUrl) return null;
+  if (/^https?:\/\//i.test(imageUrl)) {
+    return fetchUrlAsBuffer(imageUrl);
+  }
+  const clean = String(imageUrl).replace(/^\/+/, '');
+  const candidates = [
+    path.join(__dirname, '../static', clean),
+    path.join(__dirname, '../static/uploads', path.basename(clean)),
+    path.join(__dirname, '..', clean),
+  ];
+  for (const candidate of candidates) {
+    if (await fileExists(candidate)) {
+      return fs.readFile(candidate);
+    }
+  }
+  return null;
+}
+
+/**
+ * Resolve authority signature image to a data URI for PDF generation.
+ */
+async function resolveAuthoritySignatureDataUri(authorityData) {
+  if (!authorityData) return null;
+  const imagePath = getAuthoritySignatureImageUrl(authorityData);
+  if (!imagePath) return null;
+  const buffer = await loadAuthoritySignatureBuffer(imagePath);
+  return imageBufferToDataUri(buffer, imagePath);
+}
+
+/**
+ * Resolve school stamp image to a data URI for PDF generation.
+ */
+async function resolveSchoolStampDataUri(stampImagePath) {
+  if (!stampImagePath) return null;
+  const buffer = await loadAuthoritySignatureBuffer(stampImagePath);
+  return imageBufferToDataUri(buffer, stampImagePath);
+}
+
 module.exports = {
   isLikelyImageRef,
   isValidAuthoritySignatureImageRef,
@@ -143,4 +221,6 @@ module.exports = {
   getAuthoritySignatureImageUrl,
   getAuthoritySignatureText,
   sanitizeAuthorityDataRow,
+  resolveAuthoritySignatureDataUri,
+  resolveSchoolStampDataUri,
 };
