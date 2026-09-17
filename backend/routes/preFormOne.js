@@ -743,16 +743,28 @@ router.get('/:year/interview-results/:studentId/pdf', requireAuth, async (req, r
     
     const resultData = results.rows[0];
     
-    // Get subjects for PDF generation
-    const subjects = await query('SELECT id, subject_code FROM preformone_interview_subjects WHERE is_active = true ORDER BY subject_code');
-    
-    // Get subject scores for this student
+    // Get subject scores for this student (with subject info)
     const scores = await query(`
-      SELECT sc.score, sc.student_id, sub.subject_code 
+      SELECT sc.score, sc.student_id, sub.id AS subject_id, sub.subject_code, sub.subject_name
         FROM preform_one_scores sc
         JOIN preformone_interview_subjects sub ON sc.subject_id = sub.id
         WHERE sc.subject_type = 'interview' AND sc.student_id = $1
     `, [studentId]);
+    
+    // Derive subjects from scores
+    const subjectSeen = new Map();
+    scores.rows.forEach(row => {
+      if (row.subject_id && !subjectSeen.has(row.subject_id)) {
+        subjectSeen.set(row.subject_id, {
+          id: row.subject_id,
+          subject_code: row.subject_code,
+          subject_name: row.subject_name || row.subject_code,
+        });
+      }
+    });
+    const subjects = { rows: [...subjectSeen.values()].sort((a, b) =>
+      (a.subject_code || '').localeCompare(b.subject_code || '')
+    ) };
     
     // Create a map of subject_code -> score
     const scoresMap = {};
@@ -943,19 +955,29 @@ router.get('/:year/continuing-results/:studentId/pdf', requireAuth, async (req, 
 
     const resultData = results.rows[0];
 
-    const subjects = await query(
-      'SELECT id, subject_code FROM preformone_continuing_subjects WHERE is_active = true ORDER BY subject_code'
-    );
-
     const scores = await query(
       `
-      SELECT sc.score, sc.student_id, sub.subject_code
+      SELECT sc.score, sc.student_id, sub.id AS subject_id, sub.subject_code, sub.subject_name
         FROM preform_one_scores sc
         JOIN preformone_continuing_subjects sub ON sc.subject_id = sub.id
         WHERE sc.subject_type = 'continuing' AND sc.student_id = $1
     `,
       [studentId]
     );
+
+    const subjectSeen = new Map();
+    scores.rows.forEach((row) => {
+      if (row.subject_id && !subjectSeen.has(row.subject_id)) {
+        subjectSeen.set(row.subject_id, {
+          id: row.subject_id,
+          subject_code: row.subject_code,
+          subject_name: row.subject_name || row.subject_code,
+        });
+      }
+    });
+    const subjects = { rows: [...subjectSeen.values()].sort((a, b) =>
+      (a.subject_code || '').localeCompare(b.subject_code || '')
+    ) };
 
     const scoresMap = {};
     scores.rows.forEach((scoreRow) => {
@@ -1219,18 +1241,30 @@ router.get('/:year/interview-results/all-pdf', requireAuth, async (req, res) => 
       return sendError(res, clientError('No interview results found for this year.'), 404);
     }
 
-    // Get subjects
-    const subjects = await query('SELECT id, subject_code FROM preformone_interview_subjects WHERE is_active = true ORDER BY subject_code');
-
-    // Get all scores for this year
+    // Get all scores for this year (with subject info)
     const scores = await query(`
-      SELECT sc.score, sc.student_id, sub.subject_code
+      SELECT sc.score, sc.student_id, sub.id AS subject_id, sub.subject_code, sub.subject_name
         FROM preform_one_scores sc
         JOIN preformone_interview_subjects sub ON sc.subject_id = sub.id
         WHERE sc.subject_type = 'interview' AND sc.student_id IN (
           SELECT id FROM preform_one_students WHERE year = $1
         )
     `, [year]);
+
+    // Derive subjects from scores
+    const subjectSeen = new Map();
+    scores.rows.forEach(row => {
+      if (row.subject_id && !subjectSeen.has(row.subject_id)) {
+        subjectSeen.set(row.subject_id, {
+          id: row.subject_id,
+          subject_code: row.subject_code,
+          subject_name: row.subject_name || row.subject_code,
+        });
+      }
+    });
+    const subjects = { rows: [...subjectSeen.values()].sort((a, b) =>
+      (a.subject_code || '').localeCompare(b.subject_code || '')
+    ) };
 
     // Build scores map: { studentId: { subjectCode: score } }
     const scoresMapByStudent = {};
@@ -1337,18 +1371,30 @@ router.get('/:year/continuing-results/all-pdf', requireAuth, async (req, res) =>
       return sendError(res, clientError('No continuing results found for this year.'), 404);
     }
 
-    // Get subjects
-    const subjects = await query('SELECT id, subject_code FROM preformone_continuing_subjects WHERE is_active = true ORDER BY subject_code');
-
-    // Get all scores for this year
+    // Get all scores for this year (with subject info)
     const scores = await query(`
-      SELECT sc.score, sc.student_id, sub.subject_code
+      SELECT sc.score, sc.student_id, sub.id AS subject_id, sub.subject_code, sub.subject_name
         FROM preform_one_scores sc
         JOIN preformone_continuing_subjects sub ON sc.subject_id = sub.id
         WHERE sc.subject_type = 'continuing' AND sc.student_id IN (
           SELECT id FROM preform_one_students WHERE year = $1
         )
     `, [year]);
+
+    // Derive subjects from scores
+    const subjectSeen = new Map();
+    scores.rows.forEach(row => {
+      if (row.subject_id && !subjectSeen.has(row.subject_id)) {
+        subjectSeen.set(row.subject_id, {
+          id: row.subject_id,
+          subject_code: row.subject_code,
+          subject_name: row.subject_name || row.subject_code,
+        });
+      }
+    });
+    const subjects = { rows: [...subjectSeen.values()].sort((a, b) =>
+      (a.subject_code || '').localeCompare(b.subject_code || '')
+    ) };
 
     // Build scores map
     const scoresMapByStudent = {};

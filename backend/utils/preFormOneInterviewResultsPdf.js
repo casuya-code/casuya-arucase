@@ -145,18 +145,15 @@ async function buildPreFormOneResultsPdfData(year, query, kind = 'interview') {
   const cfg = PDF_KIND_CONFIG[kind] || PDF_KIND_CONFIG.interview;
   const yearNum = parseInt(year, 10);
 
-  const [studentsRes, subjectsRes, savedRes, scoresRes] = await Promise.all([
+  const [studentsRes, savedRes, scoresRes] = await Promise.all([
     query(
       'SELECT * FROM preform_one_students WHERE year = $1 ORDER BY admission_number',
       [yearNum]
     ),
-    query(
-      `SELECT id, subject_name, subject_code FROM ${cfg.subjectsTable} WHERE is_active = true ORDER BY subject_code`
-    ),
     query(`SELECT * FROM ${cfg.resultsTable} WHERE year = $1`, [yearNum]),
     query(
       `
-      SELECT sc.student_id, sc.score, sub.subject_code, st.admission_number
+      SELECT sc.student_id, sc.score, sub.id AS subject_id, sub.subject_code, sub.subject_name, st.admission_number
       FROM preform_one_scores sc
       JOIN ${cfg.subjectsTable} sub ON sc.subject_id = sub.id
       JOIN preform_one_students st ON sc.student_id = st.id
@@ -167,7 +164,23 @@ async function buildPreFormOneResultsPdfData(year, query, kind = 'interview') {
   ]);
 
   const students = studentsRes.rows;
-  const subjects = subjectsRes.rows;
+
+  const seen = new Map();
+  scoresRes.rows.forEach((row) => {
+    const code = normalizeSubjectCode(row.subject_code);
+    if (row.subject_id && code && !seen.has(row.subject_id)) {
+      seen.set(row.subject_id, {
+        id: row.subject_id,
+        subject_code: row.subject_code,
+        subject_name: row.subject_name || row.subject_code,
+      });
+    }
+  });
+  const subjects = [...seen.values()].sort((a, b) =>
+    normalizeSubjectCode(a.subject_code).localeCompare(
+      normalizeSubjectCode(b.subject_code)
+    )
+  );
 
   if (students.length === 0) {
     return { students: [], subjects: [], rows: [] };
