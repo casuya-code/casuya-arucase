@@ -121,6 +121,7 @@ router.get('/year/:year', requireAuth, requireModule('pre_form_one_scores'), asy
         sc.score,
         sc.subject_id,
         sub.subject_code,
+        sub.subject_name,
         st.admission_number
       FROM preform_one_scores sc
       JOIN ${subjectsTable} sub ON sc.subject_id = sub.id

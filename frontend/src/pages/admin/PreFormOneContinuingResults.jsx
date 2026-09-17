@@ -7,7 +7,6 @@ import { useParams } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { toast } from 'react-toastify';
 import { preFormOneService } from '../../services/preFormOneService';
-import preFormOneContinuingSubjectsService from '../../services/preFormOneContinuingSubjectsService';
 import preFormOneStudentsService from '../../services/preFormOneStudentsService';
 import { adminAPI } from '../../services/admin';
 import { useAuth } from '../../context/AuthContext';
@@ -42,6 +41,7 @@ const PreFormOneContinuingResults = () => {
 
   const [currentPage, setCurrentPage] = useState(1);
   const [subjectScores, setSubjectScores] = useState({});
+  const [scoreRows, setScoreRows] = useState([]);
   const [scoresLoading, setScoresLoading] = useState(false);
   const [filter, setFilter] = useState({
     year: year || '',
@@ -84,29 +84,6 @@ const PreFormOneContinuingResults = () => {
     setCurrentPage(1);
   }, [students.length]);
 
-  const { data: subjects = [], isLoading: subjectsLoading } = useQuery({
-    queryKey: ['preform-one-continuing-subjects-config', reportYear],
-    queryFn: async () => {
-      try {
-        const res = await preFormOneContinuingSubjectsService.getSubjects();
-        const list = res?.data ?? res;
-        const active = Array.isArray(list) ? list.filter((s) => s.is_active !== false) : [];
-        return [...active].sort((a, b) =>
-          normalizeSubjectCode(a.subject_code).localeCompare(
-            normalizeSubjectCode(b.subject_code)
-          )
-        );
-      } catch (error) {
-        if (error.response?.status !== 401) {
-          toast.error(error.response?.data?.message || 'Failed to load continuing subjects');
-        }
-        return [];
-      }
-    },
-    enabled: isAuthenticated && !!reportYear,
-    retry: false,
-  });
-
   const { data: existingResults = {}, isLoading: resultsLoading } = useQuery({
     queryKey: ['preform-one-continuing-results', reportYear, filter.month],
     queryFn: async () => {
@@ -139,6 +116,7 @@ const PreFormOneContinuingResults = () => {
   useEffect(() => {
     if (!reportYear || students.length === 0) {
       setSubjectScores({});
+      setScoreRows([]);
       setScoresLoading(false);
       return;
     }
@@ -153,9 +131,15 @@ const PreFormOneContinuingResults = () => {
         );
         const rows = unwrapListPayload(scoresResponse);
         const merged = buildSubjectScoresMap(rows, admissionKey);
-        if (!cancelled) setSubjectScores(merged);
+        if (!cancelled) {
+          setSubjectScores(merged);
+          setScoreRows(rows);
+        }
       } catch {
-        if (!cancelled) setSubjectScores({});
+        if (!cancelled) {
+          setSubjectScores({});
+          setScoreRows([]);
+        }
       } finally {
         if (!cancelled) setScoresLoading(false);
       }
@@ -166,6 +150,26 @@ const PreFormOneContinuingResults = () => {
       cancelled = true;
     };
   }, [reportYear, students.length]);
+
+  const subjects = useMemo(() => {
+    const seen = new Map();
+    scoreRows.forEach((row) => {
+      const id = row.subject_id;
+      const code = normalizeSubjectCode(row.subject_code);
+      if (id && code && !seen.has(id)) {
+        seen.set(id, {
+          id,
+          subject_code: row.subject_code,
+          subject_name: row.subject_name || row.subject_code,
+        });
+      }
+    });
+    return [...seen.values()].sort((a, b) =>
+      normalizeSubjectCode(a.subject_code).localeCompare(
+        normalizeSubjectCode(b.subject_code)
+      )
+    );
+  }, [scoreRows]);
 
   const autoCalculatedResults = useMemo(() => {
     const draft = {};
@@ -385,7 +389,7 @@ const PreFormOneContinuingResults = () => {
     }));
   };
 
-  const isLoading = studentsLoading || subjectsLoading || resultsLoading || scoresLoading;
+  const isLoading = studentsLoading || resultsLoading || scoresLoading;
   const calcPending =
     calculateResultsMutation.isPending ?? calculateResultsMutation.isLoading;
 
