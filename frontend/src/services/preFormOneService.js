@@ -78,6 +78,12 @@ export const preFormOneService = {
     return response.data;
   },
 
+  // Bulk delete Pre-Form One students (with cascade cleanup of scores/results)
+  bulkDeleteStudents: async (ids) => {
+    const response = await api.delete('/pre-form-one/bulk', { data: { ids } });
+    return response.data;
+  },
+
   // Export students to CSV
   exportStudents: async (year) => {
     const response = await api.get(`/pre-form-one/${year}/export`, {

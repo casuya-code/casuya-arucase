@@ -1,6 +1,6 @@
 ﻿const express = require('express');
 const router = express.Router();
-const { requireAuth } = require('../middleware/auth');
+const { requireAuth, requireModule } = require('../middleware/auth');
 const { query, withTransaction } = require('../config/database');
 const { sendError } = require('../utils/safeError');
 
@@ -9,6 +9,21 @@ function clientError(message, statusCode = 400) {
   err.statusCode = statusCode;
   return err;
 }
+
+// ---------------------------------------------------------------------------
+// Pre-Form One permanent delete support.
+// Tables that reference preform_one_students(id). preform_one_scores is the
+// only one declared without ON DELETE CASCADE, so it must be cleaned up
+// explicitly; the rest are deleted defensively in case the live schema lacks
+// the cascade.
+// ---------------------------------------------------------------------------
+const PRE_FORM_ONE_CHILD_TABLES = [
+  'preform_one_scores',
+  'preform_one_interview_scores',
+  'preform_one_continuing_scores',
+  'preform_one_interview_results',
+  'preform_one_continuing_results',
+];
 
 // ---------------------------------------------------------------------------
 // Pre-Form One year access for non-admin users.
@@ -390,8 +405,73 @@ router.put('/:id/parish', requireAuth, async (req, res) => {
   }
 });
 
-// Delete a Pre-Form One student
-router.delete('/:id', requireAuth, async (req, res) => {
+// Permanently delete multiple Pre-Form One students at once, including all
+// associated Pre-Form One data. Promoted records in other classes (Form One,
+// etc.) are not touched.
+// NOTE: this route MUST be registered before the `/:id` route below so the
+// literal path "bulk" is not captured as the `:id` param.
+router.delete('/bulk', requireAuth, requireModule('student_registration_pre_form'), async (req, res) => {
+  try {
+    const ids = Array.isArray(req.body && req.body.ids) ? req.body.ids : [];
+    if (ids.length === 0) {
+      return res.json({ success: false, message: 'No students selected for deletion' });
+    }
+
+    const numericIds = [...new Set(
+      ids
+        .map((id) => parseInt(id, 10))
+        .filter((id) => Number.isInteger(id) && id > 0)
+    )];
+
+    if (numericIds.length === 0) {
+      return res.json({ success: false, message: 'Invalid student IDs provided' });
+    }
+
+    const MAX_BULK_DELETE = 500;
+    if (numericIds.length > MAX_BULK_DELETE) {
+      return res.json({ success: false, message: `Cannot delete more than ${MAX_BULK_DELETE} students at once` });
+    }
+
+    const result = await withTransaction(async (client) => {
+      try {
+        for (const table of PRE_FORM_ONE_CHILD_TABLES) {
+          await client.query(
+            `DELETE FROM ${table} WHERE student_id = ANY($1::int[])`,
+            [numericIds]
+          );
+        }
+
+        const deleteResult = await client.query(
+          'DELETE FROM preform_one_students WHERE id = ANY($1::int[]) RETURNING id, admission_number, first_name, surname',
+          [numericIds]
+        );
+
+        const deletedCount = deleteResult.rowCount || 0;
+
+        return {
+          success: true,
+          message: `${deletedCount} student${deletedCount === 1 ? '' : 's'} deleted successfully`,
+          deletedCount,
+          requestedCount: numericIds.length,
+          data: deleteResult.rows,
+        };
+      } catch (error) {
+        console.error('Error bulk deleting Pre-Form One students:', error);
+        throw error;
+      }
+    });
+    res.json(result);
+  } catch (error) {
+    sendError(res, error, 500);
+  }
+});
+
+// Delete a Pre-Form One student permanently, including all associated
+// Pre-Form One data (scores, results, etc.). If the student was already
+// promoted to Form One or any other class, only the Pre-Form One record is
+// removed here; the promoted record in its other class is left untouched and
+// is only deletable from that class's own module.
+router.delete('/:id', requireAuth, requireModule('student_registration_pre_form'), async (req, res) => {
   
   try {
     const result = await withTransaction(async (client) => {
@@ -408,21 +488,21 @@ router.delete('/:id', requireAuth, async (req, res) => {
           return { success: false, message: 'Student not found' };
         }
 
-        const student = checkResult.rows[0];
-        
+        const studentId = parseInt(id, 10);
+
+        // Remove all Pre-Form One child data first (preform_one_scores has no
+        // ON DELETE CASCADE, so this is required to avoid FK violations).
+        for (const table of PRE_FORM_ONE_CHILD_TABLES) {
+          await client.query(`DELETE FROM ${table} WHERE student_id = $1`, [studentId]);
+        }
+
         const result = await client.query(
           'DELETE FROM preform_one_students WHERE id = $1 RETURNING *',
-          [id]
+          [studentId]
         );
 
-        // Also remove the promoted record from students table if it exists
-        if (student.admission_number && student.year) {
-          const targetYear = parseInt(student.year, 10) + 1;
-          await client.query(
-            `DELETE FROM students WHERE adm_no = $1 AND level = 'FORM I' AND year = $2`,
-            [student.admission_number, targetYear]
-          );
-        }
+        // NOTE: the promoted record in `students` (e.g. FORM I) is intentionally
+        // NOT deleted here so the student is only removed from Pre-Form One.
         
         return { success: true, message: 'Student deleted successfully', data: result.rows[0] };
       } catch (error) {

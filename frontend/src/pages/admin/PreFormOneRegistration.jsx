@@ -23,6 +23,10 @@ const PreFormOneRegistration = () => {
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const ITEMS_PER_PAGE = 25;
+  const [selectedIds, setSelectedIds] = useState(new Set());
+  const [showDeleteMarkedModal, setShowDeleteMarkedModal] = useState(false);
+  const [isDeletingMarked, setIsDeletingMarked] = useState(false);
+  const selectAllRef = React.useRef(null);
 
   // Load students from database on component mount
   useEffect(() => {
@@ -209,6 +213,69 @@ const PreFormOneRegistration = () => {
     }
   };
 
+  // Bulk delete: toggle whether a student is marked for deletion
+  const toggleSelectStudent = (id) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  // Bulk delete: select/deselect all students on the current page
+  const toggleSelectAllOnPage = () => {
+    const pageIds = paginatedStudents.map(s => s.id);
+    const allSelected = pageIds.length > 0 && pageIds.every(id => selectedIds.has(id));
+    setSelectedIds(prev => {
+      const next = new Set(prev);
+      pageIds.forEach(id => {
+        if (allSelected) {
+          next.delete(id);
+        } else {
+          next.add(id);
+        }
+      });
+      return next;
+    });
+  };
+
+  const clearSelection = () => {
+    setSelectedIds(new Set());
+    setShowDeleteMarkedModal(false);
+  };
+
+  // Bulk delete: permanently delete all marked students
+  const handleBulkDelete = async () => {
+    const ids = Array.from(selectedIds);
+    if (ids.length === 0) {
+      toast.error('No students selected for deletion');
+      return;
+    }
+
+    setIsDeletingMarked(true);
+    try {
+      const result = await preFormOneService.bulkDeleteStudents(ids);
+      if (result && result.success) {
+        const deletedIds = new Set((result.data || []).map(s => s.id));
+        setStudents(prev => prev.filter(s => !deletedIds.has(s.id)));
+        toast.success(`${result.deletedCount || ids.length} student${(result.deletedCount || ids.length) === 1 ? '' : 's'} deleted successfully!`);
+      } else {
+        toast.error(result?.message || 'Error deleting students. Please try again.');
+      }
+    } catch (error) {
+      const errorMessage = error.response?.data?.message || error.message || 'Error deleting students. Please try again.';
+      toast.error(errorMessage);
+    } finally {
+      setIsDeletingMarked(false);
+      setShowDeleteMarkedModal(false);
+      setSelectedIds(new Set());
+    }
+  };
+
   // Handle single student registration
   const handleSingleRegistration = async () => {
     // Validate form data
@@ -368,6 +435,16 @@ const PreFormOneRegistration = () => {
     (currentPage - 1) * ITEMS_PER_PAGE,
     currentPage * ITEMS_PER_PAGE
   );
+
+  // Reflect "some but not all" rows selected on the current page
+  useEffect(() => {
+    const pageIds = paginatedStudents.map(s => s.id);
+    const someSelected = pageIds.some(id => selectedIds.has(id));
+    const allSelected = pageIds.length > 0 && pageIds.every(id => selectedIds.has(id));
+    if (selectAllRef.current) {
+      selectAllRef.current.indeterminate = someSelected && !allSelected;
+    }
+  }, [paginatedStudents, selectedIds]);
 
   return (
     <AdminLayout>
@@ -603,9 +680,46 @@ const PreFormOneRegistration = () => {
             </div>
           ) : (
             <div className="students-table-container">
+              {selectedIds.size > 0 && (
+                <div className="bulk-actions-bar">
+                  <span className="bulk-actions-count">
+                    <i className="fas fa-check-square"></i>
+                    {selectedIds.size} student{selectedIds.size === 1 ? '' : 's'} marked
+                  </span>
+                  <div className="bulk-actions-buttons">
+                    <button
+                      type="button"
+                      className="btn-secondary"
+                      onClick={clearSelection}
+                      disabled={isDeletingMarked}
+                    >
+                      <i className="fas fa-times"></i>
+                      Clear
+                    </button>
+                    <button
+                      type="button"
+                      className="btn-danger"
+                      onClick={() => setShowDeleteMarkedModal(true)}
+                      disabled={isDeletingMarked}
+                    >
+                      <i className="fas fa-trash"></i>
+                      Delete marked
+                    </button>
+                  </div>
+                </div>
+              )}
               <table className="students-table">
                 <thead>
                   <tr>
+                    <th className="select-col">
+                      <input
+                        type="checkbox"
+                        ref={selectAllRef}
+                        checked={paginatedStudents.length > 0 && paginatedStudents.every(s => selectedIds.has(s.id))}
+                        onChange={toggleSelectAllOnPage}
+                        title="Select all on this page"
+                      />
+                    </th>
                     <th>#</th>
                     <th>Admission No</th>
                     <th>Serial No</th>
@@ -616,7 +730,15 @@ const PreFormOneRegistration = () => {
                 </thead>
                 <tbody>
                   {paginatedStudents.map((student, index) => (
-                    <tr key={student.id || `student-${index}`}>
+                    <tr key={student.id || `student-${index}`} className={selectedIds.has(student.id) ? 'row-selected' : ''}>
+                      <td className="select-col">
+                        <input
+                          type="checkbox"
+                          checked={selectedIds.has(student.id)}
+                          onChange={() => toggleSelectStudent(student.id)}
+                          title={`Mark ${student.admission_number || 'student'} for deletion`}
+                        />
+                      </td>
                       <td>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</td>
                       <td>{student.admission_number || 'N/A'}</td>
                       <td>{student.serial_number || 'N/A'}</td>
@@ -744,6 +866,61 @@ const PreFormOneRegistration = () => {
           Back to Modules
         </button>
       </div>
+
+      {/* Bulk Delete Confirmation Modal */}
+      {showDeleteMarkedModal && (
+        <div className="modal-overlay" onClick={isDeletingMarked ? null : clearSelection}>
+          <div className="modal-content modal-content-small" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3>Delete Marked Students</h3>
+              <button type="button" className="modal-close" onClick={clearSelection}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body">
+              <div className="clear-warning">
+                <p className="modal-warning-icon">
+                  <i className="fas fa-exclamation-triangle"></i>
+                </p>
+                <p>
+                  This action permanently deletes <strong>{selectedIds.size} student{selectedIds.size === 1 ? '' : 's'}</strong> and ALL their associated Pre-Form One data (scores, results, etc.).
+                </p>
+                <p>
+                  If a selected student was already promoted to another class (Form One, etc.), only their Pre-Form One record is removed here. Their record in the promoted class is not affected.
+                </p>
+              </div>
+            </div>
+            <div className="modal-footer clear-actions">
+              <button
+                type="button"
+                className="btn-secondary"
+                onClick={clearSelection}
+                disabled={isDeletingMarked}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                className="btn-danger"
+                onClick={handleBulkDelete}
+                disabled={isDeletingMarked}
+              >
+                {isDeletingMarked ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <i className="fas fa-trash"></i>
+                    Delete permanently
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
     </AdminLayout>
   );
