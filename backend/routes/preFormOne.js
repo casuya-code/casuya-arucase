@@ -11,6 +11,59 @@ function clientError(message, statusCode = 400) {
 }
 
 // ---------------------------------------------------------------------------
+// Pre-Form One year access for non-admin users.
+// Mirrors the frontend AuthContext.getAllowedPreFormOneModuleYears():
+// restricts to permissions.preformone_module_years, falling back to years
+// derived from preformone_score_subjects allocations. null = unrestricted.
+// ---------------------------------------------------------------------------
+function parsePermissions(user) {
+  const raw = user && user.permissions;
+  if (!raw) return {};
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return {};
+    }
+  }
+  if (typeof raw === 'object') return raw;
+  return {};
+}
+
+function isPreFormOneAdmin(user) {
+  const role = ((user && user.role) || '').toLowerCase();
+  return role === 'admin' || role === 'superadmin';
+}
+
+function getPreFormOneModuleYears(user) {
+  if (isPreFormOneAdmin(user)) return null;
+  const permissions = parsePermissions(user);
+  const explicit = Array.isArray(permissions.preformone_module_years)
+    ? permissions.preformone_module_years.map(Number)
+    : [];
+  const allocs = permissions.preformone_score_subjects;
+  const scoreYears = allocs && typeof allocs === 'object'
+    ? Object.keys(allocs).filter((y) => Array.isArray(allocs[y]) && allocs[y].length > 0).map(Number)
+    : [];
+  const union = [...new Set([...explicit, ...scoreYears])];
+  return union.length ? union : null;
+}
+
+// Express middleware: reject a non-admin user who lacks access to the requested year.
+function requirePreFormOneYear(req, res, next) {
+  const { year } = req.params;
+  if (year === undefined) return next();
+  const y = parseInt(year, 10);
+  const allowedYears = getPreFormOneModuleYears(req.user);
+  if (allowedYears !== null && !allowedYears.includes(y)) {
+    return res.status(403).json({
+      message: 'You do not have access to Pre-Form One data for this year. Contact an administrator.',
+    });
+  }
+  return next();
+}
+
+// ---------------------------------------------------------------------------
 // Schema bridge: detect whether the legacy `adm_no` column still exists so
 // INSERTs work before AND after migration 1779960000000 runs on production.
 // ---------------------------------------------------------------------------
@@ -77,7 +130,7 @@ const { resolveAuthoritySignatureDataUri, resolveSchoolStampDataUri } = require(
  */
 
 // Get all Pre-Form One students for a specific year
-router.get('/:year', requireAuth, async (req, res) => {
+router.get('/:year', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year } = req.params;
     
@@ -384,7 +437,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
 });
 
 // Export Pre-Form One students to CSV
-router.get('/:year/export', requireAuth, async (req, res) => {
+router.get('/:year/export', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year } = req.params;
     
@@ -423,7 +476,7 @@ router.get('/:year/export', requireAuth, async (req, res) => {
 });
 
 // Get interview results for a specific year
-router.get('/:year/interview-results', requireAuth, async (req, res) => {
+router.get('/:year/interview-results', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year } = req.params;
     
@@ -449,7 +502,7 @@ router.get('/:year/interview-results', requireAuth, async (req, res) => {
 });
 
 // Get continuing results for a specific year
-router.get('/:year/continuing-results', requireAuth, async (req, res) => {
+router.get('/:year/continuing-results', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year } = req.params;
     
@@ -475,7 +528,7 @@ router.get('/:year/continuing-results', requireAuth, async (req, res) => {
 });
 
 // Calculate interview results
-router.post('/:year/interview-results/calculate', requireAuth, async (req, res) => {
+router.post('/:year/interview-results/calculate', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year } = req.params;
 
@@ -504,7 +557,7 @@ router.post('/:year/interview-results/calculate', requireAuth, async (req, res) 
 });
 
 // Calculate continuing results
-router.post('/:year/continuing-results/calculate', requireAuth, async (req, res) => {
+router.post('/:year/continuing-results/calculate', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year } = req.params;
 
@@ -645,7 +698,7 @@ router.post('/continuing-score/:studentId/:subjectId', requireAuth, async (req, 
 });
 
 // Download interview results PDF (matches admin page preview)
-router.get('/:year/interview-results/pdf', requireAuth, async (req, res) => {
+router.get('/:year/interview-results/pdf', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year } = req.params;
 
@@ -713,7 +766,7 @@ router.get('/:year/interview-results/pdf', requireAuth, async (req, res) => {
 });
 
 // Download individual interview results PDF for a specific student
-router.get('/:year/interview-results/:studentId/pdf', requireAuth, async (req, res) => {
+router.get('/:year/interview-results/:studentId/pdf', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year, studentId } = req.params;
     
@@ -844,7 +897,7 @@ router.get('/:year/interview-results/:studentId/pdf', requireAuth, async (req, r
 });
 
 // Download continuing results PDF (matches admin page preview)
-router.get('/:year/continuing-results/pdf', requireAuth, async (req, res) => {
+router.get('/:year/continuing-results/pdf', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year } = req.params;
 
@@ -912,7 +965,7 @@ router.get('/:year/continuing-results/pdf', requireAuth, async (req, res) => {
 });
 
 // Download individual continuing results PDF for a specific student
-router.get('/:year/continuing-results/:studentId/pdf', requireAuth, async (req, res) => {
+router.get('/:year/continuing-results/:studentId/pdf', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year, studentId } = req.params;
 
@@ -1213,7 +1266,7 @@ router.delete('/continuing-result/:studentId', requireAuth, async (req, res) => 
 });
 
 // Download all interview results PDF for a specific year (bulk)
-router.get('/:year/interview-results/all-pdf', requireAuth, async (req, res) => {
+router.get('/:year/interview-results/all-pdf', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year } = req.params;
     if (!year || isNaN(parseInt(year))) {
@@ -1343,7 +1396,7 @@ router.get('/:year/interview-results/all-pdf', requireAuth, async (req, res) => 
 });
 
 // Download all continuing results PDF for a specific year (bulk)
-router.get('/:year/continuing-results/all-pdf', requireAuth, async (req, res) => {
+router.get('/:year/continuing-results/all-pdf', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year } = req.params;
     if (!year || isNaN(parseInt(year))) {

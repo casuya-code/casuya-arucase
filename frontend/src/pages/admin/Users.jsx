@@ -132,6 +132,7 @@ const defaultPermissions = () => ({
   score_entry_months: [],
   module_group_permissions: defaultModuleGroupPermissions(),
   preformone_score_subjects: {},
+  preformone_module_years: [],
 });
 
 const Users = () => {
@@ -289,6 +290,7 @@ const Users = () => {
         score_entry_months: Array.isArray(perms.score_entry_months) ? perms.score_entry_months : [],
         module_group_permissions: mgp,
         preformone_score_subjects: perms.preformone_score_subjects && typeof perms.preformone_score_subjects === 'object' ? perms.preformone_score_subjects : {},
+        preformone_module_years: Array.isArray(perms.preformone_module_years) ? perms.preformone_module_years : [],
       },
     });
     setShowAddModal(true);
@@ -352,6 +354,18 @@ const Users = () => {
         : list.filter((k) => k !== key);
       if (pfs[year].length === 0) delete pfs[year];
       return { ...prev, permissions: { ...prev.permissions, preformone_score_subjects: pfs } };
+    });
+  }, []);
+
+  const togglePreFormOneModuleYear = useCallback((year, checked) => {
+    setFormData((prev) => {
+      const years = Array.isArray(prev.permissions.preformone_module_years)
+        ? prev.permissions.preformone_module_years
+        : [];
+      const next = checked
+        ? (years.includes(year) ? years : [...years, year])
+        : years.filter((y) => y !== year);
+      return { ...prev, permissions: { ...prev.permissions, preformone_module_years: next } };
     });
   }, []);
 
@@ -831,6 +845,25 @@ const Users = () => {
                                   </div>
                                 );
                               })}
+                            </div>
+
+                            <div className="permissions-block">
+                              <label className="permissions-block-label">Pre-Form One Modules &ndash; Allowed Years</label>
+                              <p className="permissions-info">
+                                <i className="fas fa-info-circle"></i> Restrict this user to specific Pre-Form One years for Registration, Promotion, Results, Parishes, and Subject management modules. Leave all unchecked for all years (no restriction).
+                              </p>
+                              <div className="permissions-months-grid">
+                                {YEAR_OPTIONS.map((year) => (
+                                  <label key={`pfmy-${year}`} className="permission-check-label">
+                                    <input
+                                      type="checkbox"
+                                      checked={(formData.permissions.preformone_module_years || []).includes(year)}
+                                      onChange={(e) => togglePreFormOneModuleYear(year, e.target.checked)}
+                                    />
+                                    <span>{year}</span>
+                                  </label>
+                                ))}
+                              </div>
                             </div>
 
                             <div className="permissions-block">

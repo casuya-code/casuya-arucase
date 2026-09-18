@@ -1,12 +1,18 @@
 import { Link } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { getSchoolYearOptions } from '../../utils/academicYearUtils';
+import { useAuth } from '../../context/AuthContext';
 import { useGoBack } from '../../hooks/useGoBack';
 import './PreFormOne.css';
 import './preform-one-modern.css';
 
 const PreFormOne = () => {
-  const years = [...getSchoolYearOptions()].reverse();
+  const { getAllowedPreFormOneModuleYears } = useAuth();
+  const allYears = [...getSchoolYearOptions()].reverse();
+  const allowedYears = getAllowedPreFormOneModuleYears();
+  const years = allowedYears === null
+    ? allYears
+    : allYears.filter((year) => allowedYears.includes(Number(year)));
   const goBack = useGoBack('/admin');
 
   return (
@@ -17,6 +23,13 @@ const PreFormOne = () => {
         <p>Select a year to register and manage Pre-Form One students</p>
       </div>
 
+      {years.length === 0 ? (
+        <div className="empty-state">
+          <i className="fas fa-user-plus"></i>
+          <h3>No Pre-Form One Years Allocated</h3>
+          <p>You have not been allocated any Pre-Form One years for registration. Contact an administrator for access.</p>
+        </div>
+      ) : (
       <div className="years-grid">
         {years.map((year) => (
           <Link 
@@ -41,6 +54,7 @@ const PreFormOne = () => {
           </Link>
         ))}
       </div>
+      )}
 
       <div className="back-navigation-bottom">
         <button type="button" onClick={goBack} className="back-button">

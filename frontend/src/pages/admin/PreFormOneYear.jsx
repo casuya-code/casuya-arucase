@@ -1,11 +1,15 @@
 import { useParams, Link } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
+import { useAuth } from '../../context/AuthContext';
 import { useGoBack } from '../../hooks/useGoBack';
 import './PreFormOneYear.css';
 import './preform-one-modern.css';
 
 const PreFormOneYear = () => {
   const { year } = useParams();
+  const { getAllowedPreFormOneModuleYears } = useAuth();
+  const allowedYears = getAllowedPreFormOneModuleYears();
+  const yearAllowed = allowedYears === null || allowedYears.includes(Number(year));
   const goBack = useGoBack('/admin/pre-form-one');
 
   const navigationItems = [
@@ -92,6 +96,8 @@ const PreFormOneYear = () => {
         </button>
       </div>
 
+      {yearAllowed ? (
+      <>
       <div className="pre-form-one-year-section-heading">
         <span className="pre-form-one-year-section-title">Available Modules</span>
         <span className="pre-form-one-year-module-count">{navigationItems.length} modules</span>
@@ -124,6 +130,14 @@ const PreFormOneYear = () => {
           </Link>
         ))}
       </div>
+      </>
+      ) : (
+        <div className="empty-state">
+          <i className="fas fa-lock"></i>
+          <h3>Year Not Allocated</h3>
+          <p>You do not have access to Pre-Form One modules for the year {year}. Contact an administrator.</p>
+        </div>
+      )}
 
       <div className="back-navigation-bottom">
         <button type="button" onClick={goBack} className="back-button">

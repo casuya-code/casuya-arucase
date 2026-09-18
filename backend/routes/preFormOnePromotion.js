@@ -15,10 +15,54 @@ function clientError(message, statusCode = 400) {
   return err;
 }
 
+// Mirrors the frontend AuthContext.getAllowedPreFormOneModuleYears(): restricts
+// non-admin users to permissions.preformone_module_years (falling back to years
+// derived from preformone_score_subjects). null = unrestricted.
+function parsePermissions(user) {
+  const raw = user && user.permissions;
+  if (!raw) return {};
+  if (typeof raw === 'string') {
+    try {
+      return JSON.parse(raw);
+    } catch {
+      return {};
+    }
+  }
+  if (typeof raw === 'object') return raw;
+  return {};
+}
+
+function getPreFormOneModuleYears(user) {
+  const role = ((user && user.role) || '').toLowerCase();
+  if (role === 'admin' || role === 'superadmin') return null;
+  const permissions = parsePermissions(user);
+  const explicit = Array.isArray(permissions.preformone_module_years)
+    ? permissions.preformone_module_years.map(Number)
+    : [];
+  const allocs = permissions.preformone_score_subjects;
+  const scoreYears = allocs && typeof allocs === 'object'
+    ? Object.keys(allocs).filter((y) => Array.isArray(allocs[y]) && allocs[y].length > 0).map(Number)
+    : [];
+  const union = [...new Set([...explicit, ...scoreYears])];
+  return union.length ? union : null;
+}
+
+// Express middleware: reject a non-admin user who lacks access to the requested year.
+function requirePreFormOneYear(req, res, next) {
+  const { year } = req.params;
+  if (year === undefined) return next();
+  const y = parseInt(year, 10);
+  const allowedYears = getPreFormOneModuleYears(req.user);
+  if (allowedYears !== null && !allowedYears.includes(y)) {
+    return sendError(res, clientError('You do not have access to Pre-Form One data for this year. Contact an administrator.', 403));
+  }
+  return next();
+}
+
 /**
  * Get students eligible for promotion from a specific year
  */
-router.get('/eligible/:year', requireAuth, async (req, res) => {
+router.get('/eligible/:year', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year } = req.params;
     
@@ -58,7 +102,7 @@ router.get('/eligible/:year', requireAuth, async (req, res) => {
 /**
  * Get promotion status for a specific year
  */
-router.get('/status/:year', requireAuth, async (req, res) => {
+router.get('/status/:year', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year } = req.params;
 
@@ -106,7 +150,7 @@ router.get('/status/:year', requireAuth, async (req, res) => {
 /**
  * Promote Pre-Form One students to Form One
  */
-router.post('/promote/:year', requireAuth, async (req, res) => {
+router.post('/promote/:year', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year } = req.params;
     const { selectedStudents, targetStreams, promoteAll } = req.body;

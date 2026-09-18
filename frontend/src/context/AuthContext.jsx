@@ -454,6 +454,24 @@ export const AuthProvider = ({ children }) => {
     return modules; // empty array => no access
   };
 
+  /**
+   * Pre-Form One module-year access for non-admin users.
+   * Returns null (all years) for admin/superadmin, or an array of allowed years.
+   * Checks `preformone_module_years` first; falls back to years derived from
+   * per-subject score allocations so existing setups remain functional.
+   */
+  const getAllowedPreFormOneModuleYears = () => {
+    if (isAdminLike()) return null;
+    const perms = getParsedPermissions();
+    const explicit = Array.isArray(perms.preformone_module_years) ? perms.preformone_module_years : [];
+    const allocs = getPreFormOneScoreAllocations();
+    const scoreYears = Object.keys(allocs).filter(
+      (y) => Array.isArray(allocs[y]) && allocs[y].length > 0,
+    ).map(Number);
+    const union = [...new Set([...explicit.map(Number), ...scoreYears])];
+    return union.length ? union : null;
+  };
+
   /** True if user has the given module. Superadmin always true; admins follow their SUPERADMIN-set allowlist (unconfigured/'all' = full access). */
   const hasModule = (moduleId) => {
     const role = user?.role?.toLowerCase?.() ?? user?.role;
@@ -488,6 +506,7 @@ export const AuthProvider = ({ children }) => {
     getAllowedScoreEntryMonths,
     getAllowedPreFormOneYears,
     getAllowedPreFormOneSubjects,
+    getAllowedPreFormOneModuleYears,
     hasClass,
     hasModule,
   };

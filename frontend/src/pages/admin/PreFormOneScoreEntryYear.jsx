@@ -7,9 +7,9 @@ import './PreFormOne.css';
 import './preform-one-modern.css';
 
 const PreFormOneScoreEntryYear = () => {
-  const { getAllowedPreFormOneYears } = useAuth();
+  const { getAllowedPreFormOneModuleYears } = useAuth();
   const allYears = [...getSchoolYearOptions()].reverse();
-  const allowedYears = getAllowedPreFormOneYears();
+  const allowedYears = getAllowedPreFormOneModuleYears();
   const years = allowedYears === null
     ? allYears
     : allYears.filter((year) => allowedYears.includes(Number(year)));
