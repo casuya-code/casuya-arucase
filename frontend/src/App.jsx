@@ -602,7 +602,7 @@ function App() {
             <Route
               path="/students/list"
               element={
-                <ProtectedRoute requiredAnyOfModules={REGISTRATION_MODULES_FORM_I_IV}>
+                <ProtectedRoute requiredAnyOfModules={[...REGISTRATION_MODULES_FORM_I_IV, 'student_list']}>
                   <StudentList />
                 </ProtectedRoute>
               }
@@ -2192,13 +2192,13 @@ function App() {
             <Route path="/admin/pre-form-one-scores" element={<ProtectedRoute requiredModule="pre_form_one_scores"><PreFormOneScoreEntryYear /></ProtectedRoute>} />
             <Route path="/admin/pre-form-one-promotion" element={<ProtectedRoute requiredModule="pre_form_one_promotion"><PreFormOnePromotionYear /></ProtectedRoute>} />
             <Route path="/admin/pre-form-one-results" element={<ProtectedRoute requiredModule="pre_form_one_results"><PreFormOneResultsYear /></ProtectedRoute>} />
-            <Route path="/admin/pre-form-one-interview-subjects" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneInterviewSubjectsYear /></ProtectedRoute>} />
-            <Route path="/admin/pre-form-one-continuing-subjects" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneContinuingSubjectsYear /></ProtectedRoute>} />
+            <Route path="/admin/pre-form-one-interview-subjects" element={<ProtectedRoute requiredAnyOfModules={['student_registration_pre_form', 'interview_subjects']}><PreFormOneInterviewSubjectsYear /></ProtectedRoute>} />
+            <Route path="/admin/pre-form-one-continuing-subjects" element={<ProtectedRoute requiredAnyOfModules={['student_registration_pre_form', 'continuing_subjects']}><PreFormOneContinuingSubjectsYear /></ProtectedRoute>} />
             <Route path="/admin/pre-form-one/:year" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneYear /></ProtectedRoute>} />
             <Route path="/admin/pre-form-one/:year/registration" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneRegistration /></ProtectedRoute>} />
             <Route path="/admin/pre-form-one/:year/parishes" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneParishes /></ProtectedRoute>} />
-            <Route path="/admin/pre-form-one/:year/interview-subjects" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneInterviewSubjects /></ProtectedRoute>} />
-            <Route path="/admin/pre-form-one/:year/continuing-subjects" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneContinuingSubjects /></ProtectedRoute>} />
+            <Route path="/admin/pre-form-one/:year/interview-subjects" element={<ProtectedRoute requiredAnyOfModules={['student_registration_pre_form', 'interview_subjects']}><PreFormOneInterviewSubjects /></ProtectedRoute>} />
+            <Route path="/admin/pre-form-one/:year/continuing-subjects" element={<ProtectedRoute requiredAnyOfModules={['student_registration_pre_form', 'continuing_subjects']}><PreFormOneContinuingSubjects /></ProtectedRoute>} />
             <Route path="/admin/pre-form-one/:year/score-entry" element={<ProtectedRoute requiredModule="pre_form_one_scores"><PreFormOneScoreEntry /></ProtectedRoute>} />
             <Route path="/admin/pre-form-one/:year/score-entry/:subjectId" element={<ProtectedRoute requiredModule="pre_form_one_scores"><PreFormOneScoreEntry /></ProtectedRoute>} />
             <Route path="/admin/pre-form-one/:year/interview-results" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneInterviewResults /></ProtectedRoute>} />
