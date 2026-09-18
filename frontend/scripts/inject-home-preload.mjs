@@ -1,5 +1,14 @@
 /**
- * Post-build: modulepreload the homepage chunk so it downloads in parallel with the entry bundle.
+ * Post-build: sanity-check the homepage chunk.
+ *
+ * This used to inject <link rel="modulepreload" crossorigin href="/js/HomePage-*.js">
+ * so the homepage chunk downloaded in parallel with the entry bundle. On
+ * production the service worker (frontend/public/sw.js) intercepts /js/ asset
+ * fetches with cacheFirst, so browsers log "cross-world service worker
+ * resource mismatch" and "preloaded but not used" for the preload — the
+ * response was never reused and the chunk was fetched twice. The manual
+ * modulepreload is therefore removed; the chunk still loads normally when
+ * the homepage route imports it.
  */
 import fs from 'node:fs';
 import path from 'node:path';
@@ -21,21 +30,14 @@ if (!homeChunk) {
   process.exit(0);
 }
 
-const href = `/js/${homeChunk}`;
-let html = fs.readFileSync(indexPath, 'utf8');
-
-if (html.includes(href)) {
-  console.log('[inject-home-preload] Already present');
-  process.exit(0);
-}
-
-const tag = `    <link rel="modulepreload" crossorigin href="${href}">`;
-const marker = '<!-- HOME_MODULEPRELOAD -->';
-if (html.includes(marker)) {
-  html = html.replace(marker, tag);
+const html = fs.readFileSync(indexPath, 'utf8');
+if (/rel="modulepreload"[^>]*href="\/js\/HomePage-[^"]+\.js"/i.test(html)) {
+  fs.writeFileSync(
+    indexPath,
+    html.replace(/\s*<link\s+rel="modulepreload"[^>]*href="\/js\/HomePage-[^"]+\.js"[^>]*>/gi, ''),
+    'utf8'
+  );
+  console.log(`[inject-home-preload] Removed stale modulepreload for ${homeChunk}`);
 } else {
-  html = html.replace('</head>', `${tag}\n  </head>`);
+  console.log(`[inject-home-preload] HomePage chunk loads normally (no modulepreload)`);
 }
-
-fs.writeFileSync(indexPath, html, 'utf8');
-console.log(`[inject-home-preload] Added modulepreload for ${homeChunk}`);
