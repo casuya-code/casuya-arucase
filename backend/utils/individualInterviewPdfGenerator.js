@@ -20,7 +20,7 @@ function getGrade(score) {
   if (!Number.isFinite(num)) return '-';
   if (num >= 80) return 'A';
   if (num >= 70) return 'B';
-  if (num >= 55) return 'C';
+  if (num >= 65) return 'C';
   if (num >= 45) return 'D';
   return 'F';
 }
@@ -229,16 +229,16 @@ function buildIndividualInterviewReportHtml(
       <tr>
         <td><strong>JUMLA:</strong> ${escapeHtml(formatScore(result.total_marks))}</td>
         <td><strong>WASTANI:</strong> ${escapeHtml(formatScore(result.average))}</td>
-        <td><strong>DARAJA LA WASTANI:</strong> ${result.grade ? `<span class="grade-badge grade-badge-${result.grade === 'C' && result.average != null && Number(result.average) < 55 ? 'C-low' : result.grade}">${escapeHtml(result.grade)}</span>` : 'N/A'}</td>
+        <td><strong>DARAJA LA WASTANI:</strong> ${result.grade ? `<span class="grade-badge grade-badge-${result.grade === 'C' && result.average != null && Number(result.average) < 65 ? 'C-low' : result.grade}">${escapeHtml(result.grade)}</span>` : 'N/A'}</td>
         <td><strong>NAFASI:</strong> ${escapeHtml(result.position != null ? result.position : 'N/A')}</td>
-        <td><strong>MAONI:</strong> ${result.average != null && Number(result.average) >= 55 ? 'Amechaguliwa' : 'Hajachaguliwa. Alama alizopata hazijafikia vigezo vya ufaulu vinavyohitajika ili kujiunga na shule hii.'}</td>
+        <td><strong>MAONI:</strong> ${result.average != null && Number(result.average) >= 65 ? 'Amechaguliwa' : 'Hajachaguliwa. Alama alizopata hazijafikia vigezo vya ufaulu vinavyohitajika ili kujiunga na shule hii.'}</td>
       </tr>
     </table>
   </div>
 
   <div class="signature-section" style="position: relative;">
     ${schoolStampDataUri ? `<img src="${schoolStampDataUri}" style="position: absolute; top: -20px; left: 50%; transform: translateX(-50%); width: 220px; opacity: 0.30; pointer-events: none; z-index: 0;" />` : ''}
-    <p style="position: relative; z-index: 1;"><strong>Maoni ya Baba Gombera:</strong> ${result.average != null && Number(result.average) >= 55 ?       'Hongera sana kwa kuchaguliwa kujiunga na seminari yetu. Karibu sana katika kitalu hiki cha kulea na kukuza miito. Tumia nafasi hii vizuri kwa ajili ya ustawi wa masomo yako na malezi ya kiroho.' : 'Ninakushukuru kwa uthubutu wako mkubwa wa kuja kufanya usaili katika seminari yetu. Ingawa hukuweza kufikia vigezo vya ushindani vya seminari yetu kwa sasa, usikate tamaa kamwe. Ninakutakia baraka njema na milango ya kupata nafasi ya shule huko utakakokwenda.'}</p>
+    <p style="position: relative; z-index: 1;"><strong>Maoni ya Baba Gombera:</strong> ${result.average != null && Number(result.average) >= 65 ?       'Hongera sana kwa kuchaguliwa kujiunga na seminari yetu. Karibu sana katika kitalu hiki cha kulea na kukuza miito. Tumia nafasi hii vizuri kwa ajili ya ustawi wa masomo yako na malezi ya kiroho.' : 'Ninakushukuru kwa uthubutu wako mkubwa wa kuja kufanya usaili katika seminari yetu. Ingawa hukuweza kufikia vigezo vya ushindani vya seminari yetu kwa sasa, usikate tamaa kamwe. Ninakutakia baraka njema na milango ya kupata nafasi ya shule huko utakakokwenda.'}</p>
     <table class="summary-row-table signature-footer-table" style="position: relative; z-index: 1;">
       <tr>
         <td><strong>Sahihi ya Baba Gombera:</strong> ${authoritySigDataUri ? `<img src="${authoritySigDataUri}" style="height: 30px; vertical-align: middle;" />` : '_________________________'}</td>
@@ -247,7 +247,7 @@ function buildIndividualInterviewReportHtml(
       ${authorityName ? `<tr><td colspan="2" style="text-align: center; font-size: 15px; padding-top: 2px;">${escapeHtml(authorityName)}${authorityTitle ? `, ${escapeHtml(authorityTitle)}` : ''}</td></tr>` : ''}
     </table>
   </div>
-  ${result.average != null && Number(result.average) >= 55 ? `<div style="position: absolute; bottom: 0; left: 0; right: 0; text-align: center; padding: 4px; border-top: 1px solid #166534; background-color: #f0fdf4; font-size: 13px;"><strong>Matokeo haya yameambatana na Fomu yako ya kujiunga, ifanyiwe kazi. Seminari itafungua tarehe 02/10/2026.</strong></div>` : ''}
+  ${result.average != null && Number(result.average) >= 65 ? `<div style="position: absolute; bottom: 0; left: 0; right: 0; text-align: center; padding: 4px; border-top: 1px solid #166534; background-color: #f0fdf4; font-size: 13px;"><strong>Matokeo haya yameambatana na Fomu yako ya kujiunga, ifanyiwe kazi. Seminari itafungua tarehe 02/10/2026.</strong></div>` : ''}
 </body>
 </html>`;
 }
