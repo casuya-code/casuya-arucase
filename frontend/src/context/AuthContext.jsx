@@ -1,5 +1,6 @@
 import { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import api from '../services/api';
+import { resetQueryCacheOnAuthChange } from '../utils/queryPersister';
 
 /** Staff app areas that may use httpOnly cookies without a localStorage JWT. */
 function shouldRestoreStaffSession(pathname) {
@@ -100,6 +101,7 @@ export const AuthProvider = ({ children }) => {
   useEffect(() => {
     // Listen for logout events from API interceptor
     const handleLogout = () => {
+      resetQueryCacheOnAuthChange();
       setUser(null);
       setLoading(false);
     };
@@ -222,6 +224,9 @@ export const AuthProvider = ({ children }) => {
         return { success: false, error: pickAuthErrorMessage(data) };
       }
       
+      // Fresh start: drop any cache left by a previous account/session BEFORE
+      // the app re-renders with the new user, so queries mount into a clean cache.
+      await resetQueryCacheOnAuthChange();
       setUser(user);
       return { success: true };
     } catch (error) {
@@ -256,6 +261,9 @@ export const AuthProvider = ({ children }) => {
             try { localStorage.setItem('token', token); } catch (_) { /* storage blocked */ }
           }
           
+          // Fresh start: drop any cache left by a previous account/session BEFORE
+          // the app re-renders with the new user, so queries mount into a clean cache.
+          await resetQueryCacheOnAuthChange();
           setUser(user);
           return { success: true };
         } catch (fallbackError) {
@@ -299,6 +307,8 @@ export const AuthProvider = ({ children }) => {
     try { localStorage.removeItem('token'); } catch (_) { /* storage blocked */ }
     try { localStorage.removeItem('user'); } catch (_) { /* storage blocked */ }
     setUser(null);
+    // Drop in-memory + persisted query cache so the next account never sees this session's data
+    await resetQueryCacheOnAuthChange();
     window.location.href = '/login';
   };
 

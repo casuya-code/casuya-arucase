@@ -5,7 +5,7 @@ import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { QueryClient } from '@tanstack/react-query';
 import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
-import { createIndexedDbPersister } from './utils/queryPersister';
+import { createIndexedDbPersister, setQueryClient } from './utils/queryPersister';
 import App from './App';
 import './styles/index.css';
 import './styles/navigation-feedback.css';
@@ -126,6 +126,8 @@ const queryClient = new QueryClient({
     },
   },
 });
+
+setQueryClient(queryClient);
 
 // Capture phase — suppress extension/Vercel toolbar rejections before Chrome logs them
 window.addEventListener('unhandledrejection', (event) => {

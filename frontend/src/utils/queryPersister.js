@@ -2,6 +2,42 @@ import { get, set, del } from 'idb-keyval';
 
 const CACHE_KEY = 'arucase-query-cache';
 
+let queryClientRef = null;
+
+/**
+ * Registry so non-component modules (auth context) can reach the live
+ * QueryClient without an import cycle through main.jsx.
+ */
+export function setQueryClient(queryClient) {
+  queryClientRef = queryClient;
+}
+
+/**
+ * Wipe the persisted React Query cache so a fresh login never shows
+ * another user's (or a logged-out/expired session's) stale snapshot.
+ * Safe to call anywhere; no-ops if storage is unavailable.
+ */
+export async function clearPersistedQueryCache() {
+  try {
+    await del(CACHE_KEY);
+  } catch (e) {
+    console.warn('[QueryCache] Failed to clear persisted cache:', e);
+  }
+}
+
+/**
+ * Drop BOTH the in-memory query cache and its IndexedDB snapshot.
+ * Prevents stale/foreign data from rendering after login/logout.
+ */
+export async function resetQueryCacheOnAuthChange() {
+  try {
+    queryClientRef?.clear();
+  } catch (e) {
+    console.warn('[QueryCache] Failed to clear in-memory cache:', e);
+  }
+  await clearPersistedQueryCache();
+}
+
 function serialize(data) {
   return JSON.stringify(data, (key, value) => {
     if (typeof value === 'function') return undefined;
@@ -37,10 +73,6 @@ export function createIndexedDbPersister() {
         return undefined;
       }
     },
-    removeClient: async () => {
-      try {
-        await del(CACHE_KEY);
-      } catch { /* ignore */ }
-    },
+    removeClient: clearPersistedQueryCache,
   };
 }

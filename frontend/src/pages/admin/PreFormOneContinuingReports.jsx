@@ -17,7 +17,8 @@ import { useGoBack } from '../../hooks/useGoBack';
 
 const PreFormOneContinuingReports = () => {
   const { year } = useParams();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated: isAuth } = useAuth();
+  const isAuthenticated = isAuth();
   const goBack = useGoBack('/admin/pre-form-one-results');
   const [isGenerating, setIsGenerating] = useState({});
   const [isBulkDownloading, setIsBulkDownloading] = useState(false);
