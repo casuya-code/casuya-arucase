@@ -10,6 +10,16 @@ const {
   getAuthoritySignatureText,
 } = require('./authoritySignature');
 const { formatReportScore, formatReportWeightPercent } = require('./reportScoreFormat');
+const {
+  TRAIT_CODES,
+  getReportDictionary,
+  getMonthAbbreviation,
+  getGradeComment,
+  getTraitDescription,
+  getMarksLegend,
+  isALevelForm,
+  normalizeReportLanguage,
+} = require('./reportLang');
 
 /**
  * Read CSS for the PDF HTML. Prefer a copy shipped with the backend so Railway/backend-only
@@ -48,9 +58,10 @@ async function getCSSContent() {
  * Generate HTML for individual report
  * @param {Object} reportData - Report data from API
  * @param {string} apiUrl - Base API URL for image paths (optional)
+ * @param {string} lang - Report language: 'sw' (default) or 'en'
  * @returns {string} HTML string
  */
-async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') {
+async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000', lang = 'sw') {
   const {
     student,
     subjects,
@@ -72,8 +83,12 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
     authority_data,
     form,
     term,
-    year
+    year,
+    lang: reportLang
   } = reportData;
+
+  const language = normalizeReportLanguage(reportLang || lang);
+  const t = getReportDictionary(language);
 
   // Same origin Puppeteer uses to load /static/* as the JSON API base (avoids prod vs dev drift).
   const staticOrigin = (() => {
@@ -170,21 +185,11 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
     }
   };
 
-  const getComment = (grade) => {
-    const normalizedForm = String(form || '').trim().toUpperCase();
-    const isALevel = normalizedForm.includes('FORM V') || normalizedForm.includes('FORM VI');
-    const commentMap = { A: 'Bora Sana', B: 'Vizuri Sana', C: 'Vizuri', D: 'Dhaifu', E: isALevel ? 'Dhaifu sana' : 'Wastani', S: 'Feli', F: 'Feli' };
-    return commentMap[grade] || 'Feli';
-  };
+  const isALevel = isALevelForm(form);
 
-  const getMonthLabel = (month) => {
-    if (month === 'February' || month === 'August') return 'Jrb1';
-    if (month === 'March' || month === 'September') return 'Robo';
-    if (month === 'April' || month === 'October') return 'Jrb2';
-    if (month === 'May') return isForm5Or6 ? 'Muh' : 'Nusu';
-    if (month === 'November') return isForm5Or6 ? 'Nusu' : 'Muh';
-    return `${month} Test`;
-  };
+  const getComment = (grade) => getGradeComment(language, grade, { isALevel });
+
+  const getMonthLabel = (month) => getMonthAbbreviation(month, isForm5Or6);
 
   const getTabiaEvaluation = (code) => {
     const tabia = tabia_mwenendo?.find(
@@ -300,39 +305,17 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
     </th>`;
   }).join('');
 
-  // Build tabia rows - split into two columns
-  const tabiaItemsLeft = [
-    { code: '901', desc: 'Kufanya kazi kwa bidii' },
-    { code: '902', desc: 'Ubora wa kazi' },
-    { code: '903', desc: 'Kuheshimu kazi' },
-    { code: '904', desc: 'Utunzaji wa mali ya shule / binafsi' },
-    { code: '905', desc: 'Ushirikiano na wenzake' },
-    { code: '906', desc: 'Heshima kwa wenzake / walimu / wafanyakazi' }
-  ];
-  
-  const tabiaItemsRight = [
-    { code: '907', desc: 'Sifa za uongozi' },
-    { code: '908', desc: 'Kutii na kufuata maagizo' },
-    { code: '909', desc: 'Uaminifu' },
-    { code: '910', desc: 'Usafi binafsi' },
-    { code: '911', desc: 'Kushiriki katika Utamaduni / Michezo' }
-  ];
-  
-  const tabiaRowsLeft = tabiaItemsLeft.map((item) => `
+  // Build tabia rows - split into two columns (codes and order are identical in every language)
+  const buildTabiaRows = (codes) => codes.map((code) => `
     <tr>
-      <td>${item.code}</td>
-      <td>${item.desc}</td>
-      <td>${getTabiaEvaluation(item.code)}</td>
+      <td>${code}</td>
+      <td>${getTraitDescription(language, code)}</td>
+      <td>${getTabiaEvaluation(code)}</td>
     </tr>
   `).join('');
-  
-  const tabiaRowsRight = tabiaItemsRight.map((item) => `
-    <tr>
-      <td>${item.code}</td>
-      <td>${item.desc}</td>
-      <td>${getTabiaEvaluation(item.code)}</td>
-    </tr>
-  `).join('');
+
+  const tabiaRowsLeft = buildTabiaRows(TRAIT_CODES.left);
+  const tabiaRowsRight = buildTabiaRows(TRAIT_CODES.right);
 
   // Build instructions
   const instructions = Object.keys(classFeesAnnouncements).length > 0 ? 
@@ -340,18 +323,18 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
       const announcement = classFeesAnnouncements[num.toString()] || classFeesAnnouncements[num];
       return announcement ? `<p class="instruction-line">${num}. ${announcement}</p>` : '';
     }).filter(Boolean).join('') :
-    '<p class="instruction-line instruction-empty">Hakuna matangazo ya ada yaliyowekwa kwa darasa hili.</p>';
+    `<p class="instruction-line instruction-empty">${t.noAnnouncements}</p>`;
 
   // Read CSS
   const cssContent = await getCSSContent();
 
   // Build HTML
   const html = `<!DOCTYPE html>
-<html lang="en">
+<html lang="${language}">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Student Report - ${student.first_name} ${student.surname}</title>
+  <title>${language === 'en' ? 'Student Report' : 'Ripoti ya Mwanafunzi'} - ${student.first_name} ${student.surname}</title>
   ${HEAD_FONT_LINKS}
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" integrity="sha512-iecdLmaskl7CVkqkXNQ/ZH/XLlvWZOJyj7Yy7tcenmpD1ypASozpmT/E0iPtmFIB46ZmdtAc9eNBvH0H/ZpiBw==" crossorigin="anonymous" referrerpolicy="no-referrer" />
   <style>
@@ -402,28 +385,28 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
     </div>
 
     <div class="report-section section-taarifa">
-      <h3>A. TAARIFA YA MAENDELEO YA MWANAFUNZI</h3>
+      <h3>${t.sectionA}</h3>
       <table class="excel-table info-table">
         <tbody>
           <tr>
-            <td><strong>JINA KAMILI</strong></td>
+            <td><strong>${t.fullName}</strong></td>
             <td>${student.first_name} ${student.middle_name || ''} ${student.surname}</td>
-            <td><strong>JINSIA</strong></td>
+            <td><strong>${t.sex}</strong></td>
             <td>${student.sex}</td>
-            <td><strong>KIDATO</strong></td>
+            <td><strong>${t.classLevel}</strong></td>
             <td>${formCode}</td>
           </tr>
           <tr>
-            <td><strong>MUHULA</strong></td>
+            <td><strong>${t.term}</strong></td>
             <td>${term.replace('Term ', '')}</td>
-            <td><strong>MWEZI</strong></td>
+            <td><strong>${t.month}</strong></td>
             <td>${isForm5Or6 ? (term === 'Term I' ? 'DECEMBER' : 'JUNE') : (term === 'Term I' ? 'JUNE' : 'DECEMBER')}</td>
-            <td><strong>MWAKA</strong></td>
+            <td><strong>${t.year}</strong></td>
             <td>${year}</td>
           </tr>
           <tr>
-            <td><strong>PAROKIA YA</strong></td>
-            <td colspan="5">${student_parish || 'Not specified'}</td>
+            <td><strong>${t.parish}</strong></td>
+            <td colspan="5">${student_parish || t.parishMissing}</td>
           </tr>
         </tbody>
       </table>
@@ -431,7 +414,7 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
     <div class="section-spacer-4px"></div>
 
     <div class="report-section section-ufanisi">
-      <h3>B. UFANISI WA MWANAFUNZI KITAALUMA NA MASOMO</h3>
+      <h3>${t.sectionB}</h3>
       <table class="excel-table academic-table">
         <colgroup>
           <col style="width: 33%" />
@@ -447,13 +430,13 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
         </colgroup>
         <thead>
           <tr>
-            <th rowspan="2">SOMO</th>
-            <th colspan="4">ALAMA ZA UFAULU</th>
-            <th rowspan="2" class="rotate-header">JUMLA</th>
-            <th rowspan="2" class="rotate-header table-header-white">DARAJA</th>
-            <th rowspan="2" class="rotate-header table-header-white">NAFASI</th>
-            <th rowspan="2" class="table-header-white">MAONI</th>
-            <th rowspan="2" class="sahihi-header table-header-white">SAHIHI YA<br />MWALIMU</th>
+            <th rowspan="2">${t.subject}</th>
+            <th colspan="4">${t.assessmentMarks}</th>
+            <th rowspan="2" class="rotate-header">${t.total}</th>
+            <th rowspan="2" class="rotate-header table-header-white">${t.grade}</th>
+            <th rowspan="2" class="rotate-header table-header-white">${t.position}</th>
+            <th rowspan="2" class="table-header-white">${t.comments}</th>
+            <th rowspan="2" class="sahihi-header table-header-white">${t.teacherSignature.replace('\n', '<br />')}</th>
           </tr>
           <tr>
             ${monthHeaders}
@@ -464,32 +447,32 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
         </tbody>
       </table>
       <div style="margin-top: 5px; font-size: 12px; text-align: left; padding-left: 2px;">
-        <strong>KEY:</strong> Jrb1 = Jaribio 1, Robo = Robo Muhula, Jrb2 = Jaribio 2, Nusu = Nusu Muhula, Muh = Muhula
+        <strong>KEY:</strong> ${t.monthKey}
       </div>
     </div>
 
     <div class="report-section section-majumuisho">
-      <h3>MAJUMUISHO YA KITAALUMA</h3>
+      <h3>${t.academicSummary}</h3>
       <table class="excel-table summary-table">
         <tbody>
           <tr>
-            <td><strong>JUMLA KUU KATIKA MASOMO NI:</strong></td>
+            <td><strong>${t.totalMarks}</strong></td>
             <td>${formatReportScore(summary.total_marks)}</td>
-            <td><strong>WASTANI</strong></td>
+            <td><strong>${t.average}</strong></td>
             <td>${formatReportScore(summary.average)}</td>
-            <td><strong>DARAJA</strong></td>
+            <td><strong>${t.grade}</strong></td>
             <td class="grade-cell grade-${summary.grade.toLowerCase()}">${summary.grade}</td>
           </tr>
           <tr>
-            <td><strong>DIVISION</strong></td>
+            <td><strong>${t.division}</strong></td>
             <td>${summary.division}</td>
-            <td><strong>POINTI</strong></td>
+            <td><strong>${t.points}</strong></td>
             <td>${summary.division_point}</td>
-            <td><strong>NAFASI YA:</strong></td>
+            <td><strong>${t.positionOf}</strong></td>
             <td>${summary.position}</td>
           </tr>
           <tr>
-            <td colspan="3"><strong>KATI YA WANAFUNZI</strong></td>
+            <td colspan="3"><strong>${t.amongStudents}</strong></td>
             <td colspan="3"><strong>${summary.total_students}</strong></td>
           </tr>
         </tbody>
@@ -497,14 +480,14 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
     </div>
 
     <div class="report-section section-tabia">
-      <h3>C. TABIA NA MWENENDO</h3>
+      <h3>${t.sectionC}</h3>
       <div class="behavior-table-container">
         <table class="excel-table behavior-table behavior-table-left">
           <thead>
             <tr>
-              <th>NA</th>
-              <th>KIPENGELE</th>
-              <th>DARAJA</th>
+              <th>${t.no}</th>
+              <th>${t.item}</th>
+              <th>${t.grade}</th>
             </tr>
           </thead>
           <tbody>
@@ -514,9 +497,9 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
         <table class="excel-table behavior-table behavior-table-right">
           <thead>
             <tr>
-              <th>NA</th>
-              <th>KIPENGELE</th>
-              <th>DARAJA</th>
+              <th>${t.no}</th>
+              <th>${t.item}</th>
+              <th>${t.grade}</th>
             </tr>
           </thead>
           <tbody>
@@ -527,33 +510,30 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
       
       <!-- Grade Key/Legend -->
       <div class="grade-key-legend" style="margin-top: 8px; padding: 4px; font-size: 10.5px; line-height: 1.4; white-space: nowrap; overflow: visible;">
-        ${isForm5Or6 ? `
-          <strong>ALAMA:</strong> A = 85+, Bora Sana, B = 75+, Vizuri Sana, C = 65+, Vizuri, D = 55+, Dhaifu, E = 45+, Dhaifu sana, S = 40+, Feli, F = 0 – 39, Feli<br/>
-          <strong>TABIA:</strong> A, Vizuri Sana, B, Vizuri, C, Wastani, D, Dhaifu, F, Mbaya
-        ` : `
-          <strong>ALAMA:</strong> A = 85 – 100, Bora Sana, B = 70 – 84, Vizuri Sana, C = 50 – 69, Vizuri, D = 40 – 49, Dhaifu, F = 0 – 39, Feli | <strong>TABIA:</strong> A, Vizuri Sana, B, Vizuri, C, Wastani, D, Dhaifu, F, Mbaya
-        `}
+        ${isForm5Or6
+          ? `<strong>${t.marksKey}</strong> ${getMarksLegend(language, true)}<br/>\n          <strong>${t.conductKey}</strong> ${t.conductLegend}`
+          : `<strong>${t.marksKey}</strong> ${getMarksLegend(language, false)} | <strong>${t.conductKey}</strong> ${t.conductLegend}`}
       </div>
     </div>
 
     <div class="report-section section-maoni-taaluma">
-      <h3>D. MAONI KATIKA TAALUMA</h3>
+      <h3>${t.sectionD}</h3>
       <table class="excel-table comments-table">
         <tbody>
           <tr>
-            <td><strong>Mwalimu wa Taaluma:</strong></td>
+            <td><strong>${t.subjectTeacher}</strong></td>
             <td colspan="3">${getCommentValue('mwalimu_taaluma') || ''}</td>
           </tr>
           <tr>
-            <td><strong>Maoni ya Mkuu wa Shule:</strong></td>
+            <td><strong>${t.headTeacherComments}</strong></td>
             <td colspan="3">${getCommentValue('mkuu_shule') || ''}</td>
           </tr>
           <tr>
-            <td><strong>SAHIHI YA MKUU WA SHULE:</strong></td>
+            <td><strong>${t.headTeacherSignature}</strong></td>
             <td class="authority-signature">
               ${authoritySignatureCellHtml}
             </td>
-            <td><strong>TAREHE:</strong></td>
+            <td><strong>${t.date}</strong></td>
             <td class="authority-date">${formatAuthorityDate()}</td>
           </tr>
         </tbody>
@@ -561,31 +541,31 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
     </div>
 
     <div class="report-section section-maoni">
-      <h3>MAONI</h3>
+      <h3>${t.generalComments}</h3>
       <table class="excel-table general-comments maoni-table">
         <tbody>
           <tr class="maoni-taaluma-row">
-            <td class="maoni-label"><strong>TAALUMA:</strong></td>
+            <td class="maoni-label"><strong>${t.studies}</strong></td>
             <td class="maoni-content">${getCommentValue('taaluma') || ''}</td>
           </tr>
           <tr>
-            <td class="maoni-label"><strong>HUDUMA:</strong></td>
+            <td class="maoni-label"><strong>${t.service}</strong></td>
             <td class="maoni-content">${studentHuduma || ''}</td>
           </tr>
           <tr>
-            <td class="maoni-label"><strong>MICHEZO:</strong></td>
+            <td class="maoni-label"><strong>${t.sports}</strong></td>
             <td class="maoni-content">${getCommentValue('michezo') || ''}</td>
           </tr>
           <tr class="maoni-tabia-row">
-            <td class="maoni-label"><strong>TABIA:</strong></td>
+            <td class="maoni-label"><strong>${t.conduct}</strong></td>
             <td class="maoni-content">${getCommentValue('tabia') || ''}</td>
           </tr>
           <tr>
-            <td class="maoni-label"><strong>SALA:</strong></td>
+            <td class="maoni-label"><strong>${t.health}</strong></td>
             <td class="maoni-content">${getCommentValue('sala') || ''}</td>
           </tr>
           <tr>
-            <td class="maoni-label"><strong>FEDHA ANAYODAIWA:</strong></td>
+            <td class="maoni-label"><strong>${t.feesDue}</strong></td>
             <td class="maoni-content">${student_fees_debt || '0.00'}</td>
           </tr>
         </tbody>
@@ -595,7 +575,7 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
 
     <div class="report-closing-block">
       <div class="report-section section-mambo">
-        <h3>MAMBO YA KUFAHAMU</h3>
+        <h3>${t.notes}</h3>
         <div class="instructions">
           ${instructions}
         </div>
@@ -607,7 +587,7 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000') 
           <div class="signature-line">_________________________</div>
           <div class="signature-name">${authority_data?.name || ''}</div>
           <div class="signature-title">${authority_data?.title || ''}</div>
-          <div class="signature-date">Tarehe ${formatAuthorityDate()}</div>
+          <div class="signature-date">${t.dateShort} ${formatAuthorityDate()}</div>
         </div>
         <div class="stamp-block">
           ${school_stamp?.stamp_image_path ? `<img src="${getImageUrl(school_stamp.stamp_image_path)}" alt="School Stamp" class="stamp-img" />` : '<div class="school-stamp"><div class="stamp-border"><div class="stamp-content"><div class="stamp-text-top">ARUSHA CATHOLIC</div><div class="stamp-motto">SEMINARY</div><div class="stamp-text-bottom">OLDONYOSAMBU</div></div></div></div>'}

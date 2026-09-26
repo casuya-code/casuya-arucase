@@ -18,6 +18,7 @@ const { publicOriginFromApiUrl, inlineReportImages } = require('./inlineReportIm
  * @param {string} admNo - Admission number
  * @param {string} apiUrl - Backend API URL (default: http://localhost:5000)
  * @param {string} authToken - Auth token for API requests
+ * @param {string} lang - Report language: 'sw' (default) or 'en'
  * @returns {Promise<Buffer>} PDF buffer
  */
 async function generateIndividualReportPDFWithPuppeteer(
@@ -27,7 +28,8 @@ async function generateIndividualReportPDFWithPuppeteer(
   term,
   admNo,
   apiUrl = process.env.API_URL || 'http://localhost:5000',
-  authToken = null
+  authToken = null,
+  lang = 'sw'
 ) {
   let page = null;
 
@@ -95,7 +97,7 @@ async function generateIndividualReportPDFWithPuppeteer(
       form,
       term,
       year
-    }, apiUrl);
+    }, apiUrl, lang);
 
     const staticOrigin = publicOriginFromApiUrl(apiUrl);
     html = await inlineReportImages(html, staticOrigin, authToken, 'INDIVIDUAL PDF');

@@ -1,7 +1,7 @@
 /**
  * Individual Student Report - Step 5: Report Detail Display
  */
-import { useParams, Link } from 'react-router-dom';
+import { useParams, Link, useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import AdminLayout from '../../components/layout/AdminLayout';
@@ -13,12 +13,27 @@ import {
   getAuthoritySignatureText,
 } from '../../utils/authoritySignature';
 import { formatReportScore, formatReportWeightPercent } from '../../utils/reportScoreFormat';
+import {
+  REPORT_TRAIT_CODES,
+  getReportDictionary,
+  getMonthAbbreviation,
+  getGradeComment,
+  getTraitDescription,
+  getMarksLegend,
+  isALevelForm,
+  normalizeReportLanguage,
+} from '../../utils/reportLang';
 import './IndividualReport.css';
 import './IndividualReportDetail.css';
 
 const IndividualReportDetail = () => {
   const { form, stream, year, term, admNo } = useParams();
+  const [searchParams, setSearchParams] = useSearchParams();
+  // The report language follows ?lang=... so an English report can be linked to
+  // and bookmarked directly. Default stays Swahili.
+  const reportLang = normalizeReportLanguage(searchParams.get('lang'));
   const [isDownloading, setIsDownloading] = useState(false);
+  const [isDownloadingEnglish, setIsDownloadingEnglish] = useState(false);
   const [downloadProgress, setDownloadProgress] = useState(0);
   const [imageErrors, setImageErrors] = useState({
     schoolLogo: false,
@@ -28,6 +43,17 @@ const IndividualReportDetail = () => {
   });
   const [logoDataUrl, setLogoDataUrl] = useState(null);
   const [photoDataUrl, setPhotoDataUrl] = useState(null);
+  const t = getReportDictionary(reportLang);
+
+  const setReportLang = (nextLang) => {
+    const params = new URLSearchParams(searchParams);
+    if (normalizeReportLanguage(nextLang) === 'en') {
+      params.set('lang', 'en');
+    } else {
+      params.delete('lang');
+    }
+    setSearchParams(params, { replace: true });
+  };
 
   // Fetch report data
   const { data: reportData, isLoading, error } = useQuery({
@@ -127,10 +153,20 @@ const IndividualReportDetail = () => {
     }
   }, [reportData]);
 
-  const handleDownloadPDF = async () => {
-    if (isDownloading) return; // Prevent multiple simultaneous downloads
-    
-    setIsDownloading(true);
+  // Downloads the report PDF in the requested language. The current page
+  // language is used by default; the "Download English Report" button passes 'en'.
+  const handleDownloadPDF = async (targetLang = reportLang) => {
+    const language = normalizeReportLanguage(targetLang);
+    const isEnglish = language === 'en';
+
+    if (isEnglish ? isDownloadingEnglish : isDownloading) return; // Prevent multiple simultaneous downloads
+    if (isDownloading || isDownloadingEnglish) return;
+
+    if (isEnglish) {
+      setIsDownloadingEnglish(true);
+    } else {
+      setIsDownloading(true);
+    }
     setDownloadProgress(0);
     
     let blobUrl = null;
@@ -147,7 +183,7 @@ const IndividualReportDetail = () => {
       // Make request with timeout and progress tracking
       const encodedAdm = encodeURIComponent(admNo || '');
       const res = await api.get(
-        `/reports/individual/${encodedForm}/${encodedStream}/${year}/${encodedTerm}/${encodedAdm}/pdf`,
+        `/reports/individual/${encodedForm}/${encodedStream}/${year}/${encodedTerm}/${encodedAdm}/pdf?lang=${language}`,
         { 
           responseType: 'blob',
           timeout: 60000, // 60 second timeout
@@ -222,7 +258,8 @@ const IndividualReportDetail = () => {
       
       // Generate filename with proper formatting
       const sanitizedTerm = term.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
-      const filename = `Report_${admNo}_${form.replace(/\s+/g, '_')}_${year}_${sanitizedTerm}.pdf`;
+      const sanitizedForm = form.replace(/\s+/g, '_').replace(/[^a-zA-Z0-9_]/g, '');
+      const filename = `Report_${isEnglish ? 'English_' : ''}${admNo}_${sanitizedForm}_${year}_${sanitizedTerm}.pdf`;
       
       // Create download link
       const link = document.createElement('a');
@@ -247,7 +284,7 @@ const IndividualReportDetail = () => {
       setDownloadProgress(100);
       
       // Success notification
-      toast.success(`PDF downloaded successfully! (${(blob.size / 1024).toFixed(1)} KB)`, {
+      toast.success(`${isEnglish ? 'English' : 'PDF'} downloaded successfully! (${(blob.size / 1024).toFixed(1)} KB)`, {
         autoClose: 3000,
       });
       
@@ -307,7 +344,11 @@ const IndividualReportDetail = () => {
         }, 1000);
       }
       
-      setIsDownloading(false);
+      if (isEnglish) {
+        setIsDownloadingEnglish(false);
+      } else {
+        setIsDownloading(false);
+      }
       setTimeout(() => setDownloadProgress(0), 500);
     }
   };
@@ -611,18 +652,8 @@ const IndividualReportDetail = () => {
     }
   };
 
-  const getComment = (grade) => {
-    const comments = {
-      A: 'Bora Sana',
-      B: 'Vizuri Sana',
-      C: 'Vizuri',
-      D: 'Dhaifu',
-      E: 'Wastani',
-      S: 'Feli',
-      F: 'Feli'
-    };
-    return comments[grade] || 'Feli';
-  };
+  const getComment = (grade) =>
+    getGradeComment(reportLang, grade, { isALevel: isALevelForm(form) });
 
   // Process monthly results
   // Scores may be stored with either subject_code or subject_abbreviation
@@ -653,14 +684,7 @@ const IndividualReportDetail = () => {
   };
   
   // Get month label helper
-  const getMonthLabel = (month) => {
-    if (month === 'February' || month === 'August') return 'Jrb1';
-    if (month === 'March' || month === 'September') return 'Robo';
-    if (month === 'April' || month === 'October') return 'Jrb2';
-    if (month === 'May') return isForm5Or6 ? 'Muh' : 'Nusu';
-    if (month === 'November') return isForm5Or6 ? 'Nusu' : 'Muh';
-    return `${month} Test`;
-  };
+  const getMonthLabel = (month) => getMonthAbbreviation(month, isForm5Or6);
 
   // Get tabia mwenendo evaluations - convert array to dictionary format like copy
   const studentEvaluations = {};
@@ -735,7 +759,7 @@ const IndividualReportDetail = () => {
     <AdminLayout>
       <div className="report-container" data-version="2.0">
         <div className="breadcrumb">
-          <Link to="/reports/individual">Individual Student Report</Link> &gt;{' '}
+          <Link to="/reports/individual">{t.pageTitle}</Link> &gt;{' '}
           <Link to={`/reports/individual/${form}/${stream}/year`}>{form}</Link> &gt;{' '}
           <Link to={`/reports/individual/${form}/${stream}/${year}/term`}>{year}</Link> &gt;{' '}
           <Link to={`/reports/individual/${form}/${stream}/${year}/${term}/students`}>
@@ -745,26 +769,66 @@ const IndividualReportDetail = () => {
         </div>
 
         <div className="download-section" style={{ marginTop: '16px', textAlign: 'center' }}>
-          <button 
-            type="button"
-            onClick={handleDownloadPDF} 
-            className="download-btn"
-            disabled={isDownloading || isLoading || !reportData}
-            title={isDownloading ? 'Downloading...' : 'Download PDF Report'}
-          >
-            {isDownloading ? (
-              <>
-                <i className="fas fa-spinner fa-spin"></i> 
-                Downloading PDF... {downloadProgress > 0 && `${downloadProgress}%`}
-              </>
-            ) : (
-              <>
-                <i className="fas fa-file-pdf"></i> 
-                Download PDF Report
-              </>
-            )}
-          </button>
-          {isDownloading && downloadProgress > 0 && (
+          <div className="report-language-toggle" role="group" aria-label={t.languageLabel}>
+            <span className="report-language-toggle-label">{t.languageLabel}:</span>
+            <button
+              type="button"
+              onClick={() => setReportLang('sw')}
+              className={`report-language-btn ${reportLang === 'sw' ? 'active' : ''}`}
+              aria-pressed={reportLang === 'sw'}
+            >
+              {t.languageSwahili}
+            </button>
+            <button
+              type="button"
+              onClick={() => setReportLang('en')}
+              className={`report-language-btn ${reportLang === 'en' ? 'active' : ''}`}
+              aria-pressed={reportLang === 'en'}
+            >
+              {t.languageEnglish}
+            </button>
+          </div>
+          <div className="download-buttons">
+            <button
+              type="button"
+              onClick={() => handleDownloadPDF(reportLang)}
+              className="download-btn"
+              disabled={isDownloading || isDownloadingEnglish || isLoading || !reportData}
+              title={isDownloading ? t.downloadingPdf : t.downloadPdf}
+            >
+              {isDownloading ? (
+                <>
+                  <i className="fas fa-spinner fa-spin"></i>
+                  {t.downloadingPdf} {downloadProgress > 0 && `${downloadProgress}%`}
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-file-pdf"></i>
+                  {t.downloadPdf}
+                </>
+              )}
+            </button>
+            <button
+              type="button"
+              onClick={() => handleDownloadPDF('en')}
+              className="download-btn download-btn-english"
+              disabled={isDownloading || isDownloadingEnglish || isLoading || !reportData}
+              title={isDownloadingEnglish ? t.downloadingEnglish : t.downloadEnglish}
+            >
+              {isDownloadingEnglish ? (
+                <>
+                  <i className="fas fa-spinner fa-spin"></i>
+                  {t.downloadingEnglish} {downloadProgress > 0 && `${downloadProgress}%`}
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-file-pdf"></i>
+                  {t.downloadEnglish}
+                </>
+              )}
+            </button>
+          </div>
+          {(isDownloading || isDownloadingEnglish) && downloadProgress > 0 && (
             <div className="download-progress-bar">
               <div 
                 className="download-progress-fill" 
@@ -894,32 +958,32 @@ const IndividualReportDetail = () => {
 
         {/* Section A: Student Information */}
         <div className="report-section section-taarifa">
-          <h3 style={{ marginBottom: '0.5px' }}>A. TAARIFA YA MAENDELEO YA MWANAFUNZI</h3>
+          <h3 style={{ marginBottom: '0.5px' }}>{t.sectionA}</h3>
           <table className="excel-table info-table">
             <tbody>
               <tr>
                 <td>
-                  <strong>JINA KAMILI</strong>
+                  <strong>{t.fullName}</strong>
                 </td>
                 <td>
                   {student.first_name} {student.middle_name || ''} {student.surname}
                 </td>
                 <td>
-                  <strong>JINSIA</strong>
+                  <strong>{t.sex}</strong>
                 </td>
                 <td>{student.sex}</td>
                 <td>
-                  <strong>KIDATO</strong>
+                  <strong>{t.classLevel}</strong>
                 </td>
                 <td>{formCode}</td>
               </tr>
               <tr>
                 <td>
-                  <strong>MUHULA</strong>
+                  <strong>{t.term}</strong>
                 </td>
                 <td>{term.replace('Term ', '')}</td>
                 <td>
-                  <strong>MWEZI</strong>
+                  <strong>{t.month}</strong>
                 </td>
                 <td>
                   {isForm5Or6
@@ -931,15 +995,15 @@ const IndividualReportDetail = () => {
                     : 'DECEMBER'}
                 </td>
                 <td>
-                  <strong>MWAKA</strong>
+                  <strong>{t.year}</strong>
                 </td>
                 <td>{year}</td>
               </tr>
               <tr>
                 <td>
-                  <strong>PAROKIA YA</strong>
+                  <strong>{t.parish}</strong>
                 </td>
-                <td colSpan={5}>{student_parish || 'Not specified'}</td>
+                <td colSpan={5}>{student_parish || t.parishMissing}</td>
               </tr>
             </tbody>
           </table>
@@ -948,7 +1012,7 @@ const IndividualReportDetail = () => {
 
         {/* Section B: Academic Performance */}
         <div className="report-section section-ufanisi">
-          <h3 style={{ marginBottom: '0.5px' }}>B. UFANISI WA MWANAFUNZI KITAALUMA NA MASOMO</h3>
+          <h3 style={{ marginBottom: '0.5px' }}>{t.sectionB}</h3>
           <table className="excel-table academic-table">
             <colgroup>
               <col style={{ width: '33%' }} />
@@ -964,23 +1028,23 @@ const IndividualReportDetail = () => {
             </colgroup>
             <thead>
               <tr>
-                <th rowSpan={2} style={{ width: '33%', verticalAlign: 'middle' }}>SOMO</th>
-                <th colSpan={4} style={{ width: '28%' }}>ALAMA ZA UFAULU</th>
+                <th rowSpan={2} style={{ width: '33%', verticalAlign: 'middle' }}>{t.subject}</th>
+                <th colSpan={4} style={{ width: '28%' }}>{t.assessmentMarks}</th>
                 <th rowSpan={2} className="rotate-header" style={{ width: '5%', verticalAlign: 'middle' }}>
-                  JUMLA
+                  {t.total}
                 </th>
                 <th rowSpan={2} className="rotate-header table-header-white" style={{ width: '4%', verticalAlign: 'middle' }}>
-                  DARAJA
+                  {t.grade}
                 </th>
                 <th rowSpan={2} className="rotate-header table-header-white" style={{ width: '4%', verticalAlign: 'middle' }}>
-                  NAFASI
+                  {t.position}
                 </th>
                 <th rowSpan={2} className="table-header-white" style={{ width: '12%', verticalAlign: 'middle' }}>
-                  MAONI
+                  {t.comments}
                 </th>
                 <th rowSpan={2} className="sahihi-header table-header-white" style={{ width: '14%', verticalAlign: 'middle' }}>
-                  SAHIHI YA<br />
-                  MWALIMU
+                  {t.teacherSignatureTop}<br />
+                  {t.teacherSignatureBottom}
                 </th>
               </tr>
               <tr>
@@ -1064,26 +1128,26 @@ const IndividualReportDetail = () => {
             </tbody>
           </table>
             <div style={{ marginTop: '5px', fontSize: '12px', textAlign: 'left', paddingLeft: '2px' }}>
-              <strong>KEY:</strong> Jrb1 = Jaribio 1, Robo = Robo Muhula, Jrb2 = Jaribio 2, Nusu = Nusu Muhula, Muh = Muhula
+              <strong>KEY:</strong> {t.monthKey}
             </div>
         </div>
 
         {/* Academic Summary */}
         <div className="report-section section-majumuisho">
-          <h3 style={{ marginBottom: '0.5px' }}>MAJUMUISHO YA KITAALUMA</h3>
+          <h3 style={{ marginBottom: '0.5px' }}>{t.academicSummary}</h3>
           <table className="excel-table summary-table">
             <tbody>
               <tr>
                 <td>
-                  <strong>JUMLA KUU KATIKA MASOMO NI:</strong>
+                  <strong>{t.totalMarks}</strong>
                 </td>
                 <td>{formatReportScore(summary.total_marks)}</td>
                 <td>
-                  <strong>WASTANI</strong>
+                  <strong>{t.average}</strong>
                 </td>
                 <td>{formatReportScore(summary.average)}</td>
                 <td>
-                  <strong>DARAJA</strong>
+                  <strong>{t.grade}</strong>
                 </td>
                 <td className={`grade-cell grade-${summary.grade.toLowerCase()}`}>
                   {summary.grade}
@@ -1091,21 +1155,21 @@ const IndividualReportDetail = () => {
               </tr>
               <tr>
                 <td>
-                  <strong>DIVISION</strong>
+                  <strong>{t.division}</strong>
                 </td>
                 <td>{summary.division}</td>
                 <td>
-                  <strong>POINTI</strong>
+                  <strong>{t.points}</strong>
                 </td>
                 <td>{summary.division_point}</td>
                 <td>
-                  <strong>NAFASI YA:</strong>
+                  <strong>{t.positionOf}</strong>
                 </td>
                 <td>{summary.position}</td>
               </tr>
               <tr>
                 <td colSpan={3}>
-                  <strong>KATI YA WANAFUNZI</strong>
+                  <strong>{t.amongStudents}</strong>
                 </td>
                 <td colSpan={3}>
                   <strong>{summary.total_students}</strong>
@@ -1118,7 +1182,7 @@ const IndividualReportDetail = () => {
 
         {/* Section D: Comments */}
         <div className="report-section section-maoni-taaluma">
-          <h3 style={{ marginBottom: '0.5px' }}>D. MAONI KATIKA TAALUMA</h3>
+          <h3 style={{ marginBottom: '0.5px' }}>{t.sectionD}</h3>
           <table className="excel-table comments-table">
             <colgroup>
               <col style={{ width: '25%' }} />
@@ -1129,19 +1193,19 @@ const IndividualReportDetail = () => {
             <tbody>
               <tr>
                 <td>
-                  <strong>Mwalimu wa Taaluma:</strong>
+                  <strong>{t.subjectTeacher}</strong>
                 </td>
                 <td colSpan={3}>{getCommentValue('mwalimu_taaluma') || ''}</td>
               </tr>
               <tr>
                 <td>
-                  <strong>Maoni ya Mkuu wa Shule:</strong>
+                  <strong>{t.headTeacherComments}</strong>
                 </td>
                 <td colSpan={3}>{getCommentValue('mkuu_shule') || ''}</td>
               </tr>
               <tr>
                 <td>
-                  <strong>SAHIHI YA MKUU WA SHULE:</strong>
+                  <strong>{t.headTeacherSignature}</strong>
                 </td>
                 <td className="authority-signature">
                   {showAuthoritySignatureImage ? (
@@ -1164,7 +1228,7 @@ const IndividualReportDetail = () => {
                   )}
                 </td>
                 <td style={{ writingMode: 'horizontal-tb', textOrientation: 'mixed', transform: 'none', whiteSpace: 'normal', direction: 'ltr', textAlign: 'left', verticalAlign: 'middle' }}>
-                  <strong style={{ writingMode: 'horizontal-tb', textOrientation: 'mixed', transform: 'none', display: 'inline' }}>TAREHE:</strong>
+                  <strong style={{ writingMode: 'horizontal-tb', textOrientation: 'mixed', transform: 'none', display: 'inline' }}>{t.date}</strong>
                 </td>
                 <td className="authority-date">
                   {formatAuthorityDate()}
@@ -1177,29 +1241,22 @@ const IndividualReportDetail = () => {
 
         {/* Section C: Behavior and Conduct */}
         <div className="report-section section-tabia">
-          <h3 style={{ marginBottom: '0.5px' }}>C. TABIA NA MWENENDO</h3>
+          <h3 style={{ marginBottom: '0.5px' }}>{t.sectionC}</h3>
           <div className="behavior-table-container">
             <table className="excel-table behavior-table behavior-table-left">
               <thead>
                 <tr>
-                  <th>NA</th>
-                  <th>KIPENGELE</th>
-                  <th>DARAJA</th>
+                  <th>{t.no}</th>
+                  <th>{t.item}</th>
+                  <th>{t.grade}</th>
                 </tr>
               </thead>
               <tbody>
-                {[
-                  { code: '901', desc: 'Kufanya kazi kwa bidii' },
-                  { code: '902', desc: 'Ubora wa kazi' },
-                  { code: '903', desc: 'Kuheshimu kazi' },
-                  { code: '904', desc: 'Utunzaji wa mali ya shule / binafsi' },
-                  { code: '905', desc: 'Ushirikiano na wenzake' },
-                  { code: '906', desc: 'Heshima kwa wenzake / walimu / wafanyakazi' }
-                ].map((item) => (
-                  <tr key={item.code}>
-                    <td>{item.code}</td>
-                    <td>{item.desc}</td>
-                    <td>{getTabiaEvaluation(item.code)}</td>
+                {REPORT_TRAIT_CODES.left.map((code) => (
+                  <tr key={code}>
+                    <td>{code}</td>
+                    <td>{getTraitDescription(reportLang, code)}</td>
+                    <td>{getTabiaEvaluation(code)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1207,23 +1264,17 @@ const IndividualReportDetail = () => {
             <table className="excel-table behavior-table behavior-table-right">
               <thead>
                 <tr>
-                  <th>NA</th>
-                  <th>KIPENGELE</th>
-                  <th>DARAJA</th>
+                  <th>{t.no}</th>
+                  <th>{t.item}</th>
+                  <th>{t.grade}</th>
                 </tr>
               </thead>
               <tbody>
-                {[
-                  { code: '907', desc: 'Sifa za uongozi' },
-                  { code: '908', desc: 'Kutii na kufuata maagizo' },
-                  { code: '909', desc: 'Uaminifu' },
-                  { code: '910', desc: 'Usafi binafsi' },
-                  { code: '911', desc: 'Kushiriki katika Utamaduni / Michezo' }
-                ].map((item) => (
-                  <tr key={item.code}>
-                    <td>{item.code}</td>
-                    <td>{item.desc}</td>
-                    <td>{getTabiaEvaluation(item.code)}</td>
+                {REPORT_TRAIT_CODES.right.map((code) => (
+                  <tr key={code}>
+                    <td>{code}</td>
+                    <td>{getTraitDescription(reportLang, code)}</td>
+                    <td>{getTabiaEvaluation(code)}</td>
                   </tr>
                 ))}
               </tbody>
@@ -1232,48 +1283,48 @@ const IndividualReportDetail = () => {
           
           {/* Grade Key/Legend */}
           <div className="grade-key-legend" style={{ marginTop: '8px', padding: '4px', fontSize: '10.5px', lineHeight: '1.4', whiteSpace: 'nowrap', overflow: 'visible' }}>
-            <strong>ALAMA:</strong> {isForm5Or6 ? 'A = 85+, Bora Sana, B = 75+, Vizuri Sana, C = 65+, Vizuri, D = 55+, Dhaifu, E = 45+, Wastani, S = 40+, Feli, F = 0 – 39, Feli' : 'A = 85 – 100, Bora Sana, B = 70 – 84, Vizuri Sana, C = 50 – 69, Vizuri, D = 40 – 49, Dhaifu, F = 0 – 39, Feli'} | <strong>TABIA:</strong> A, Vizuri Sana, B, Vizuri, C, Wastani, D, Dhaifu, F, Mbaya
+            <strong>{t.marksKey}</strong> {getMarksLegend(reportLang, isForm5Or6)} | <strong>{t.conductKey}</strong> {t.conductLegend}
           </div>
         </div>
 
         {/* General Comments */}
         <div className="report-section section-maoni">
-          <h3 style={{ marginBottom: '0.5px' }}>MAONI</h3>
+          <h3 style={{ marginBottom: '0.5px' }}>{t.generalComments}</h3>
           <table className="excel-table general-comments maoni-table">
             <tbody>
               <tr className="maoni-taaluma-row">
                 <td className="maoni-label">
-                  <strong>TAALUMA:</strong>
+                  <strong>{t.studies}</strong>
                 </td>
                 <td className="maoni-content">{getCommentValue('taaluma') || ''}</td>
               </tr>
               <tr>
                 <td className="maoni-label">
-                  <strong>HUDUMA:</strong>
+                  <strong>{t.service}</strong>
                 </td>
                 <td className="maoni-content">{studentHuduma || ''}</td>
               </tr>
               <tr>
                 <td className="maoni-label">
-                  <strong>MICHEZO:</strong>
+                  <strong>{t.sports}</strong>
                 </td>
                 <td className="maoni-content">{getCommentValue('michezo') || ''}</td>
               </tr>
               <tr className="maoni-tabia-row">
                 <td className="maoni-label">
-                  <strong>TABIA:</strong>
+                  <strong>{t.conduct}</strong>
                 </td>
                 <td className="maoni-content">{getCommentValue('tabia') || ''}</td>
               </tr>
               <tr>
                 <td className="maoni-label">
-                  <strong>SALA:</strong>
+                  <strong>{t.health}</strong>
                 </td>
                 <td className="maoni-content">{getCommentValue('sala') || ''}</td>
               </tr>
               <tr>
                 <td className="maoni-label">
-                  <strong>FEDHA ANAYODAIWA:</strong>
+                  <strong>{t.feesDue}</strong>
                 </td>
                 <td className="maoni-content">{student_fees_debt || '0.00'}</td>
               </tr>
@@ -1283,7 +1334,7 @@ const IndividualReportDetail = () => {
         <div className="section-spacer-4px"></div>
         {/* Instructions Section */}
         <div className="report-section section-mambo">
-          <h3>MAMBO YA KUFAHAMU</h3>
+          <h3>{t.notes}</h3>
           <div className="instructions" style={{ lineHeight: '1.6', fontSize: '12px', textAlign: 'justify' }}>
             {classFeesAnnouncements && Object.keys(classFeesAnnouncements).length > 0 ? (
               Array.from({ length: 10 }, (_, i) => i + 1).map((num) => {
@@ -1296,7 +1347,7 @@ const IndividualReportDetail = () => {
               }).filter(Boolean)
             ) : (
               <p className="instruction-line instruction-empty" style={{ lineHeight: '2', fontSize: '12px', textAlign: 'justify', marginBottom: '12px', marginTop: '0', minHeight: '24px', display: 'block' }}>
-                Hakuna matangazo ya ada yaliyowekwa kwa darasa hili.
+                {t.noAnnouncements}
               </p>
             )}
           </div>
@@ -1333,7 +1384,7 @@ const IndividualReportDetail = () => {
               {authority_data?.title || ''}
             </div>
             <div className="signature-date">
-              Tarehe {formatAuthorityDate()}
+              {t.dateShort} {formatAuthorityDate()}
             </div>
           </div>
           <div className="stamp-block">
