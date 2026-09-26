@@ -8,6 +8,13 @@ const router = express.Router();
 const { query, withTransaction } = require('../config/database');
 const { sendSuccess, sendError } = require('../utils/responseHelper');
 const { requireAuth, requireModule } = require('../middleware/auth');
+const { PASS_MARK, calculateGrade, validateScore } = require('../utils/preFormOneGrading');
+const {
+  NOT_ALLOCATED_MESSAGE,
+  normalizeSubjectType,
+  isUserAllocatedToPreFormOneSubject,
+  hasAnyPreFormOneAllocation,
+} = require('../utils/preFormOneAccess');
 
 // Create scores table if it doesn't exist
 const createScoresTable = async () => {
@@ -21,7 +28,7 @@ const createScoresTable = async () => {
         score INTEGER NOT NULL CHECK (score >= 0 AND score <= 100),
         grade VARCHAR(2) CHECK (grade IN ('A', 'B', 'C', 'D', 'F')),
         remarks TEXT,
-        created_by INTEGER NOT NULL,
+        created_by INTEGER,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         UNIQUE(student_id, subject_id, subject_type)
@@ -42,60 +49,27 @@ const createScoresTable = async () => {
 // Initialize table on module load
 createScoresTable();
 
-// Helper to parse the current user's permissions (handles string or object forms)
-function parsePermissions(user) {
-  const raw = user && user.permissions;
-  if (!raw) return {};
-  if (typeof raw === 'string') {
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return {};
-    }
+/**
+ * preform_one_scores.created_by references users.id (INTEGER) but the JWT only
+ * carries the username, so the numeric id has to be resolved before the write.
+ * `db` accepts either a callable query helper or a pooled client.
+ */
+async function resolveCreatedByUserId(user, db = query) {
+  const username =
+    (user && (user.username || (typeof user.user_id === 'string' ? user.user_id : null))) || null;
+
+  if (!username) return null;
+
+  const run = typeof db === 'function' ? db : db.query.bind(db);
+
+  try {
+    const result = await run('SELECT id FROM users WHERE username = $1', [username]);
+    if (result.rows.length > 0) return result.rows[0].id;
+  } catch (error) {
+    console.warn('Could not resolve created_by user id:', error.message);
   }
-  if (typeof raw === 'object') return raw;
-  return {};
+  return null;
 }
-
-// Admins and superadmins are unrestricted for Pre-Form One score entry
-function isPreFormOneAdmin(user) {
-  const role = ((user && user.role) || '').toLowerCase();
-  return role === 'admin' || role === 'superadmin';
-}
-
-// Allocation keys are stored per year under users.permissions.preformone_score_subjects,
-// e.g. { '2026': ['interview:1', 'continuing:3'] }. null means unrestricted (admin).
-function getPreFormOneAllocatedKeys(user, year) {
-  if (isPreFormOneAdmin(user)) return null;
-  const permissions = parsePermissions(user);
-  const allocations = permissions.preformone_score_subjects;
-  if (!allocations || typeof allocations !== 'object') return [];
-  const list = allocations[String(year)];
-  return Array.isArray(list) ? list : [];
-}
-
-function isUserAllocatedToPreFormOneSubject(user, year, subjectId, subjectType) {
-  const keys = getPreFormOneAllocatedKeys(user, year);
-  if (keys === null) return true;
-  return keys.includes(`${subjectType}:${String(subjectId)}`);
-}
-
-function hasAnyPreFormOneAllocation(user, year) {
-  if (isPreFormOneAdmin(user)) return true;
-  return getPreFormOneAllocatedKeys(user, year).length > 0;
-}
-
-const NOT_ALLOCATED_MESSAGE = 'You are not allocated to this Pre-Form One subject for this year. Contact an administrator to assign subjects.';
-
-// Helper function to calculate grade from score using system grade configuration
-const calculateGrade = (score) => {
-  // Match interview/continuing results grading (average scale applied per subject)
-  if (score >= 80) return 'A';
-  if (score >= 70) return 'B';
-  if (score >= 65) return 'C';
-  if (score >= 45) return 'D';
-  return 'F';
-};
 
 // Get all scores for a Pre-Form One year and type (interview | continuing)
 router.get('/year/:year', requireAuth, requireModule('pre_form_one_scores'), async (req, res) => {
@@ -111,8 +85,13 @@ router.get('/year/:year', requireAuth, requireModule('pre_form_one_scores'), asy
       return sendError(res, 403, 'You are not allocated to any Pre-Form One subject for this year. Contact an administrator to assign subjects.');
     }
 
+    const subjectType = normalizeSubjectType(type);
+    if (subjectType === null) {
+      return sendError(res, 400, 'Invalid subject type');
+    }
+
     const subjectsTable =
-      type === 'continuing' ? 'preformone_continuing_subjects' : 'preformone_interview_subjects';
+      subjectType === 'continuing' ? 'preformone_continuing_subjects' : 'preformone_interview_subjects';
 
     const result = await query(
       `
@@ -129,7 +108,7 @@ router.get('/year/:year', requireAuth, requireModule('pre_form_one_scores'), asy
       WHERE sc.subject_type = $1 AND st.year = $2 AND sub.is_active = true AND sc.score IS NOT NULL
       ORDER BY st.admission_number, sub.subject_code
       `,
-      [type, parseInt(year, 10)]
+      [subjectType, parseInt(year, 10)]
     );
 
     return sendSuccess(res, 200, 'Scores retrieved successfully', result.rows);
@@ -149,8 +128,13 @@ router.get('/active-subjects/:year', requireAuth, async (req, res) => {
       return sendError(res, 400, 'Invalid year parameter');
     }
 
+    const subjectType = normalizeSubjectType(type);
+    if (subjectType === null) {
+      return sendError(res, 400, 'Invalid subject type');
+    }
+
     const subjectsTable =
-      type === 'continuing' ? 'preformone_continuing_subjects' : 'preformone_interview_subjects';
+      subjectType === 'continuing' ? 'preformone_continuing_subjects' : 'preformone_interview_subjects';
 
     const result = await query(
       `
@@ -161,7 +145,7 @@ router.get('/active-subjects/:year', requireAuth, async (req, res) => {
       WHERE sc.subject_type = $1 AND st.year = $2 AND sub.is_active = true AND sc.score IS NOT NULL
       ORDER BY sub.subject_name
       `,
-      [type, parseInt(year, 10)]
+      [subjectType, parseInt(year, 10)]
     );
 
     return sendSuccess(res, 200, 'Active subjects retrieved successfully', result.rows);
@@ -182,7 +166,12 @@ router.get('/subject/:subjectId', requireAuth, requireModule('pre_form_one_score
       return sendError(res, 400, 'Valid year query parameter is required');
     }
 
-    if (!isUserAllocatedToPreFormOneSubject(req.user, yearNum, subjectId, type)) {
+    const subjectType = normalizeSubjectType(type);
+    if (subjectType === null) {
+      return sendError(res, 400, 'Invalid subject type');
+    }
+
+    if (!isUserAllocatedToPreFormOneSubject(req.user, yearNum, subjectId, subjectType)) {
       return sendError(res, 403, NOT_ALLOCATED_MESSAGE);
     }
 
@@ -198,9 +187,9 @@ router.get('/subject/:subjectId', requireAuth, requireModule('pre_form_one_score
         sc.created_at
       FROM preform_one_scores sc
       JOIN preform_one_students st ON sc.student_id = st.id
-      WHERE sc.subject_id = $1 AND sc.subject_type = $2
+      WHERE sc.subject_id = $1 AND sc.subject_type = $2 AND st.year = $3
       ORDER BY st.admission_number
-    `, [subjectId, type]);
+    `, [subjectId, subjectType, yearNum]);
     
     return sendSuccess(res, 200, 'Scores retrieved successfully', result.rows);
   } catch (error) {
@@ -215,39 +204,48 @@ router.post('/', requireAuth, requireModule('pre_form_one_scores'), async (req, 
     const {
       student_id,
       subject_id,
-      subject_type,
-      score,
-      remarks
+      remarks,
+      subject_type: rawSubjectType
     } = req.body;
-    
-    const created_by = req.user?.id || 1; // Default to user ID 1 if authentication fails
-    
+
     // Validate input
-    if (!student_id || !subject_id || !subject_type || score === undefined) {
+    if (!student_id || !subject_id || req.body.score === undefined) {
       return sendError(res, 400, 'Missing required fields');
     }
-    
-    if (score < 0 || score > 100) {
-      return sendError(res, 400, 'Score must be between 0 and 100');
+
+    if (rawSubjectType === undefined || rawSubjectType === null || rawSubjectType === '') {
+      return sendError(res, 400, 'Subject type is required and must be either interview or continuing');
     }
 
+    const subjectType = normalizeSubjectType(rawSubjectType);
+    if (subjectType === null) {
+      return sendError(res, 400, 'Subject type must be either interview or continuing');
+    }
+
+    const scoreCheck = validateScore(req.body.score);
+    if (!scoreCheck.ok) {
+      return sendError(res, 400, scoreCheck.message);
+    }
+    const score = scoreCheck.value;
+
     // Determine the student's year so we can enforce the subject/year allocation
-    const studentResult = await query('SELECT year FROM preform_one_students WHERE id = $1', [student_id]);
+    const studentResult = await query('SELECT id, year FROM preform_one_students WHERE id = $1', [student_id]);
     if (studentResult.rows.length === 0) {
       return sendError(res, 404, 'Student not found');
     }
     const studentYear = studentResult.rows[0].year;
-    if (!isUserAllocatedToPreFormOneSubject(req.user, studentYear, subject_id, subject_type)) {
+    if (!isUserAllocatedToPreFormOneSubject(req.user, studentYear, subject_id, subjectType)) {
       return sendError(res, 403, NOT_ALLOCATED_MESSAGE);
     }
     
     const grade = calculateGrade(score);
+    const created_by = await resolveCreatedByUserId(req.user);
     
     const result = await withTransaction(async (client) => {
       // Check if score already exists
       const existingScore = await client.query(
         'SELECT id FROM preform_one_scores WHERE student_id = $1 AND subject_id = $2 AND subject_type = $3',
-        [student_id, subject_id, subject_type]
+        [student_id, subject_id, subjectType]
       );
       
       if (existingScore.rowCount > 0) {
@@ -257,7 +255,7 @@ router.post('/', requireAuth, requireModule('pre_form_one_scores'), async (req, 
           SET score = $1, grade = $2, remarks = $3, updated_at = CURRENT_TIMESTAMP
           WHERE student_id = $4 AND subject_id = $5 AND subject_type = $6
           RETURNING *
-        `, [score, grade, remarks, student_id, subject_id, subject_type]);
+        `, [score, grade, remarks, student_id, subject_id, subjectType]);
         
         return updateResult.rows[0];
       } else {
@@ -266,7 +264,7 @@ router.post('/', requireAuth, requireModule('pre_form_one_scores'), async (req, 
           INSERT INTO preform_one_scores (student_id, subject_id, subject_type, score, grade, remarks, created_by)
           VALUES ($1, $2, $3, $4, $5, $6, $7)
           RETURNING *
-        `, [student_id, subject_id, subject_type, score, grade, remarks, created_by]);
+        `, [student_id, subject_id, subjectType, score, grade, remarks, created_by]);
         
         return insertResult.rows[0];
       }
@@ -283,45 +281,75 @@ router.post('/', requireAuth, requireModule('pre_form_one_scores'), async (req, 
 router.post('/bulk', requireAuth, requireModule('pre_form_one_scores'), async (req, res) => {
   try {
     const { scores } = req.body;
-    const created_by = req.user?.id || 1; // Default to user ID 1 if authentication fails
-    
+
     if (!scores || !Array.isArray(scores) || scores.length === 0) {
       return sendError(res, 400, 'Invalid scores data');
     }
-    
-    const results = await withTransaction(async (client) => {
+
+    const { results, summary, skipped } = await withTransaction(async (client) => {
       const savedScores = [];
+      const skipped = [];
+      const created_by = await resolveCreatedByUserId(req.user, client);
 
       // Resolve each student's year up-front so the subject/year allocation
       // can be enforced per score entry in the loop below.
-      const studentIds = [...new Set(scores.map((s) => s.student_id).filter((id) => id != null))];
+      const studentIds = [...new Set(
+        scores
+          .map((s) => s && s.student_id)
+          .filter((id) => Number.isInteger(Number(id)) && Number(id) > 0)
+          .map((id) => Number(id))
+      )];
       const studentYears = {};
       if (studentIds.length > 0) {
         const studentRes = await client.query(
-          'SELECT id, year FROM preform_one_students WHERE id = ANY($1)',
+          'SELECT id, year FROM preform_one_students WHERE id = ANY($1::int[])',
           [studentIds]
         );
         studentRes.rows.forEach((r) => { studentYears[r.id] = r.year; });
       }
 
       for (const scoreData of scores) {
-        const { student_id, subject_id, subject_type, score, remarks } = scoreData;
-        
+        const student_id = scoreData && scoreData.student_id;
+        const subject_id = scoreData && scoreData.subject_id;
+        const rawSubjectType = scoreData ? scoreData.subject_type : undefined;
+        const remarks = scoreData ? scoreData.remarks : undefined;
+
+        const skip = (reason) => {
+          skipped.push({
+            student_id: student_id ?? null,
+            subject_id: subject_id ?? null,
+            reason,
+          });
+        };
+
         // Validate input - skip invalid entries instead of failing
-        if (!student_id || !subject_id || !subject_type || score === undefined) {
-          console.warn(`Skipping invalid score data for student ${student_id}`);
-          continue;
-        }
-        
-        if (score < 0 || score > 100) {
-          console.warn(`Skipping invalid score value for student ${student_id}: ${score}`);
+        if (!student_id || !subject_id || !scoreData || scoreData.score === undefined) {
+          skip('missing required fields');
           continue;
         }
 
+        if (rawSubjectType === undefined || rawSubjectType === null || rawSubjectType === '') {
+          skip('subject_type is required and must be either interview or continuing');
+          continue;
+        }
+
+        const subjectType = normalizeSubjectType(rawSubjectType);
+        if (subjectType === null) {
+          skip('subject_type must be either interview or continuing');
+          continue;
+        }
+
+        const scoreCheck = validateScore(scoreData.score);
+        if (!scoreCheck.ok) {
+          skip(scoreCheck.message);
+          continue;
+        }
+        const score = scoreCheck.value;
+
         // Enforce subject/year allocation for this user
         const studentYear = studentYears[student_id];
-        if (studentYear == null || !isUserAllocatedToPreFormOneSubject(req.user, studentYear, subject_id, subject_type)) {
-          console.warn(`Skipping score entry for student ${student_id}: user not allocated to this Pre-Form One subject/year`);
+        if (studentYear == null || !isUserAllocatedToPreFormOneSubject(req.user, studentYear, subject_id, subjectType)) {
+          skip('not allocated to this Pre-Form One subject/year');
           continue;
         }
         
@@ -330,7 +358,7 @@ router.post('/bulk', requireAuth, requireModule('pre_form_one_scores'), async (r
         // Check if score already exists
         const existingScore = await client.query(
           'SELECT id FROM preform_one_scores WHERE student_id = $1 AND subject_id = $2 AND subject_type = $3',
-          [student_id, subject_id, subject_type]
+          [student_id, subject_id, subjectType]
         );
         
         let result;
@@ -341,23 +369,37 @@ router.post('/bulk', requireAuth, requireModule('pre_form_one_scores'), async (r
             SET score = $1, grade = $2, remarks = $3, updated_at = CURRENT_TIMESTAMP
             WHERE student_id = $4 AND subject_id = $5 AND subject_type = $6
             RETURNING *
-          `, [score, grade, remarks, student_id, subject_id, subject_type]);
+          `, [score, grade, remarks, student_id, subject_id, subjectType]);
         } else {
           // Insert new score
           result = await client.query(`
             INSERT INTO preform_one_scores (student_id, subject_id, subject_type, score, grade, remarks, created_by)
             VALUES ($1, $2, $3, $4, $5, $6, $7)
             RETURNING *
-          `, [student_id, subject_id, subject_type, score, grade, remarks, created_by]);
+          `, [student_id, subject_id, subjectType, score, grade, remarks, created_by]);
         }
         
         savedScores.push(result.rows[0]);
       }
-      
-      return savedScores;
+
+      return {
+        results: savedScores,
+        summary: {
+          received: scores.length,
+          saved: savedScores.length,
+          skipped: skipped.length,
+        },
+        skipped,
+      };
     });
-    
-    return sendSuccess(res, 200, 'Scores saved successfully', results);
+
+    return sendSuccess(
+      res,
+      200,
+      `Scores saved successfully: ${summary.saved} saved, ${summary.skipped} skipped`,
+      results,
+      { summary, skipped }
+    );
   } catch (error) {
     console.error('Error bulk saving scores:', error);
     return sendError(res, 500, 'Failed to save scores', error);
@@ -375,7 +417,12 @@ router.get('/stats/:subjectId', requireAuth, requireModule('pre_form_one_scores'
       return sendError(res, 400, 'Valid year query parameter is required');
     }
 
-    if (!isUserAllocatedToPreFormOneSubject(req.user, yearNum, subjectId, type)) {
+    const subjectType = normalizeSubjectType(type);
+    if (subjectType === null) {
+      return sendError(res, 400, 'Invalid subject type');
+    }
+
+    if (!isUserAllocatedToPreFormOneSubject(req.user, yearNum, subjectId, subjectType)) {
       return sendError(res, 403, NOT_ALLOCATED_MESSAGE);
     }
 
@@ -386,7 +433,7 @@ router.get('/stats/:subjectId', requireAuth, requireModule('pre_form_one_scores'
         ROUND(AVG(sc.score), 2) as average_score,
         MAX(sc.score) as highest_score,
         MIN(sc.score) as lowest_score,
-        COUNT(CASE WHEN sc.score >= 60 THEN 1 END) as passed_students,
+        COUNT(CASE WHEN sc.score >= ${PASS_MARK} THEN 1 END) as passed_students,
         COUNT(CASE WHEN sc.grade = 'A' THEN 1 END) as grade_a,
         COUNT(CASE WHEN sc.grade = 'B' THEN 1 END) as grade_b,
         COUNT(CASE WHEN sc.grade = 'C' THEN 1 END) as grade_c,
@@ -395,7 +442,7 @@ router.get('/stats/:subjectId', requireAuth, requireModule('pre_form_one_scores'
       FROM preform_one_students st
       LEFT JOIN preform_one_scores sc ON st.id = sc.student_id AND sc.subject_id = $1 AND sc.subject_type = $2
       WHERE st.year = $3
-    `, [subjectId, type, yearNum]);
+    `, [subjectId, subjectType, yearNum]);
     
     const stats = result.rows[0];
     stats.pass_rate = stats.scored_students > 0 ? 
@@ -419,7 +466,12 @@ router.get('/export/:subjectId', requireAuth, requireModule('pre_form_one_scores
       return sendError(res, 400, 'Valid year query parameter is required');
     }
 
-    if (!isUserAllocatedToPreFormOneSubject(req.user, yearNum, subjectId, type)) {
+    const subjectType = normalizeSubjectType(type);
+    if (subjectType === null) {
+      return sendError(res, 400, 'Invalid subject type');
+    }
+
+    if (!isUserAllocatedToPreFormOneSubject(req.user, yearNum, subjectId, subjectType)) {
       return sendError(res, 403, NOT_ALLOCATED_MESSAGE);
     }
 
@@ -436,7 +488,7 @@ router.get('/export/:subjectId', requireAuth, requireModule('pre_form_one_scores
       LEFT JOIN preform_one_scores sc ON st.id = sc.student_id AND sc.subject_id = $1 AND sc.subject_type = $2
       WHERE st.year = $3
       ORDER BY st.admission_number
-    `, [subjectId, type, yearNum]);
+    `, [subjectId, subjectType, yearNum]);
     
     // Generate CSV
     const csvHeader = 'Admission Number,First Name,Surname,Score,Grade,Remarks,Created At\n';

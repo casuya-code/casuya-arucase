@@ -1,4 +1,4 @@
-﻿const express = require('express');
+const express = require('express');
 const router = express.Router();
 const { requireAuth, requireModule } = require('../middleware/auth');
 const { query, withTransaction } = require('../config/database');
@@ -31,48 +31,14 @@ const PRE_FORM_ONE_CHILD_TABLES = [
 // restricts to permissions.preformone_module_years, falling back to years
 // derived from preformone_score_subjects allocations. null = unrestricted.
 // ---------------------------------------------------------------------------
-function parsePermissions(user) {
-  const raw = user && user.permissions;
-  if (!raw) return {};
-  if (typeof raw === 'string') {
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return {};
-    }
-  }
-  if (typeof raw === 'object') return raw;
-  return {};
-}
-
-function isPreFormOneAdmin(user) {
-  const role = ((user && user.role) || '').toLowerCase();
-  return role === 'admin' || role === 'superadmin';
-}
-
-function getPreFormOneModuleYears(user) {
-  if (isPreFormOneAdmin(user)) return null;
-  const permissions = parsePermissions(user);
-  const explicit = Array.isArray(permissions.preformone_module_years)
-    ? permissions.preformone_module_years.map(Number)
-    : [];
-  const allocs = permissions.preformone_score_subjects;
-  const scoreYears = allocs && typeof allocs === 'object'
-    ? Object.keys(allocs).filter((y) => Array.isArray(allocs[y]) && allocs[y].length > 0).map(Number)
-    : [];
-  const union = [...new Set([...explicit, ...scoreYears])];
-  return union.length ? union : null;
-}
 
 // Express middleware: reject a non-admin user who lacks access to the requested year.
 function requirePreFormOneYear(req, res, next) {
   const { year } = req.params;
   if (year === undefined) return next();
-  const y = parseInt(year, 10);
-  const allowedYears = getPreFormOneModuleYears(req.user);
-  if (allowedYears !== null && !allowedYears.includes(y)) {
+  if (!userHasPreFormOneYearAccess(req.user, year)) {
     return res.status(403).json({
-      message: 'You do not have access to Pre-Form One data for this year. Contact an administrator.',
+      message: NO_YEAR_ACCESS_MESSAGE,
     });
   }
   return next();
@@ -135,6 +101,14 @@ const {
   renderHtmlToPdfBuffer,
 } = require('../utils/preFormOneInterviewResultsPdf');
 const { calculateAndSavePreFormOneResults } = require('../utils/preFormOneResultsCalculate');
+const { calculateGrade, getRemarks, validateScore } = require('../utils/preFormOneGrading');
+const {
+  NO_YEAR_ACCESS_MESSAGE,
+  NOT_ALLOCATED_MESSAGE,
+  getPreFormOneModuleYears,
+  userHasPreFormOneYearAccess,
+  isUserAllocatedToPreFormOneSubject,
+} = require('../utils/preFormOneAccess');
 const { generateIndividualInterviewPDF } = require('../utils/individualInterviewPdfGenerator');
 const { buildIndividualInterviewReportHtml } = require('../utils/individualInterviewPdfGenerator');
 const { resolveAuthoritySignatureDataUri, resolveSchoolStampDataUri } = require('../utils/authoritySignature');
@@ -148,17 +122,17 @@ const { resolveAuthoritySignatureDataUri, resolveSchoolStampDataUri } = require(
 router.get('/:year', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year } = req.params;
-    
+
     // Validate year parameter
     if (!year || isNaN(parseInt(year))) {
       return sendError(res, clientError('Invalid year parameter'), 400);
     }
-    
+
     const result = await query(
       'SELECT * FROM preform_one_students WHERE year = $1 ORDER BY admission_number',
       [year]
     );
-    
+
     res.json({
       success: true,
       data: result.rows,
@@ -172,7 +146,7 @@ router.get('/:year', requireAuth, requirePreFormOneYear, async (req, res) => {
 
 // Create a new Pre-Form One student
 router.post('/', requireAuth, async (req, res) => {
-  
+
   try {
     const result = await withTransaction(async (client) => {
       try {
@@ -205,16 +179,16 @@ router.post('/', requireAuth, async (req, res) => {
         return { success: true, data: result.rows[0] };
       } catch (error) {
         console.error('Error creating Pre-Form One student:', error);
-        
+
         // Handle specific database errors
         if (error.code === '23505') {
           if (error.constraint === 'preform_one_students_admission_number_key') {
             return { success: false, message: 'Admission number already exists. Please try again with a different serial number.' };
           }
-          
+
           return { success: false, message: 'Duplicate data detected. Please check your input and try again.' };
         }
-        
+
         throw error;
       }
     });
@@ -226,7 +200,7 @@ router.post('/', requireAuth, async (req, res) => {
 
 // Create multiple Pre-Form One students (bulk registration)
 router.post('/bulk', requireAuth, async (req, res) => {
-  
+
   try {
     const result = await withTransaction(async (client) => {
       try {
@@ -254,9 +228,9 @@ router.post('/bulk', requireAuth, async (req, res) => {
           return row;
         });
         const { cols, placeholders } = buildBulkInsertParts(hasAdm, students.length);
-        
+
         const bulkInsertQuery = `INSERT INTO preform_one_students ${cols} VALUES ${placeholders} RETURNING *`;
-        
+
         const result = await client.query(bulkInsertQuery, values.flat());
         return { success: true, students: result.rows, count: students.length };
       } catch (error) {
@@ -292,13 +266,13 @@ router.put('/bulk-parish', requireAuth, async (req, res) => {
           if (findResult.rowCount === 0) {
             continue; // Skip this update but continue with others
           }
-          
+
           // Update the parish
           const updateQuery = 'UPDATE preform_one_students SET parish = $1 WHERE serial_number = $2 AND year = $3 RETURNING *';
           const updateResult = await client.query(updateQuery, [update.parish, update.serial_number, year]);
           updatedStudents.push(updateResult.rows[0]);
         }
-        
+
         return { success: true, students: updatedStudents, count: updatedStudents.length };
       } catch (error) {
         console.error('Error bulk updating parishes:', error);
@@ -313,7 +287,7 @@ router.put('/bulk-parish', requireAuth, async (req, res) => {
 
 // Update a Pre-Form One student's details
 router.put('/:id', requireAuth, async (req, res) => {
-  
+
   try {
     const result = await withTransaction(async (client) => {
       try {
@@ -330,7 +304,7 @@ router.put('/:id', requireAuth, async (req, res) => {
         if (!id || isNaN(parseInt(id)) || !serial_number || !first_name || !surname || !sex) {
           return { success: false, message: 'Missing required fields: serial number, first name, surname, and sex' };
         }
-        
+
         // Validate sex value
         if (!['Male', 'Female'].includes(sex)) {
           return { success: false, message: 'Sex must be either Male or Female' };
@@ -338,27 +312,27 @@ router.put('/:id', requireAuth, async (req, res) => {
         // First check if student exists
         const checkQuery = 'SELECT * FROM preform_one_students WHERE id = $1';
         const checkResult = await client.query(checkQuery, [id]);
-        
+
         if (checkResult.rowCount === 0) {
           return { success: false, message: 'Student not found' };
         }
-        
+
         const updateQuery = 'UPDATE preform_one_students SET serial_number = $1, first_name = $2, middle_name = $3, surname = $4, sex = $5, parish = $6, updated_at = CURRENT_TIMESTAMP WHERE id = $7 RETURNING *';
         const updateValues = [serial_number, first_name, middle_name, surname, sex, parish || '', id];
         const result = await client.query(updateQuery, updateValues);
         return { success: true, data: result.rows[0] };
       } catch (error) {
         console.error('Error updating Pre-Form One student:', error);
-        
+
         // Handle specific database errors
         if (error.code === '23505') {
           if (error.constraint === 'preform_one_students_serial_number_key') {
             return { success: false, message: 'Serial number already exists. Please use a different serial number.' };
           }
-          
+
           return { success: false, message: 'Duplicate data detected. Please check your input and try again.' };
         }
-        
+
         throw error;
       }
     });
@@ -378,7 +352,7 @@ router.put('/:id/parish', requireAuth, async (req, res) => {
         if (!id || isNaN(parseInt(id))) {
           return { success: false, message: 'Student ID is required' };
         }
-        
+
         // Allow empty parish (for removal) but not undefined/null
         if (parish === undefined || parish === null) {
           return { success: false, message: 'Parish value is required' };
@@ -389,7 +363,7 @@ router.put('/:id/parish', requireAuth, async (req, res) => {
         if (checkResult.rowCount === 0) {
           return { success: false, message: 'Student not found' };
         }
-        
+
         const updateQuery = 'UPDATE preform_one_students SET parish = $1 WHERE id = $2 RETURNING *';
         const updateValues = [parish, id];
         const result = await client.query(updateQuery, updateValues);
@@ -472,7 +446,7 @@ router.delete('/bulk', requireAuth, requireModule('student_registration_pre_form
 // removed here; the promoted record in its other class is left untouched and
 // is only deletable from that class's own module.
 router.delete('/:id', requireAuth, requireModule('student_registration_pre_form'), async (req, res) => {
-  
+
   try {
     const result = await withTransaction(async (client) => {
       try {
@@ -483,7 +457,7 @@ router.delete('/:id', requireAuth, requireModule('student_registration_pre_form'
         // First check if student exists
         const checkQuery = 'SELECT * FROM preform_one_students WHERE id = $1';
         const checkResult = await client.query(checkQuery, [id]);
-        
+
         if (checkResult.rowCount === 0) {
           return { success: false, message: 'Student not found' };
         }
@@ -503,7 +477,7 @@ router.delete('/:id', requireAuth, requireModule('student_registration_pre_form'
 
         // NOTE: the promoted record in `students` (e.g. FORM I) is intentionally
         // NOT deleted here so the student is only removed from Pre-Form One.
-        
+
         return { success: true, message: 'Student deleted successfully', data: result.rows[0] };
       } catch (error) {
         console.error('Error deleting Pre-Form One student:', error);
@@ -520,16 +494,16 @@ router.delete('/:id', requireAuth, requireModule('student_registration_pre_form'
 router.get('/:year/export', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year } = req.params;
-    
+
     if (!year || isNaN(parseInt(year))) {
       return sendError(res, clientError('Invalid year parameter'), 400);
     }
-    
+
     const result = await query(
       'SELECT * FROM preform_one_students WHERE year = $1 ORDER BY admission_number',
       [year]
     );
-    
+
     // Create CSV content
     const headers = ['admission_number', 'serial_number', 'first_name', 'middle_name', 'surname', 'sex', 'parish', 'year'];
     const csvContent = [
@@ -545,7 +519,7 @@ router.get('/:year/export', requireAuth, requirePreFormOneYear, async (req, res)
         student.year
       ].map(field => field || ''))
     ].join('\n');
-    
+
     res.setHeader('Content-Type', 'text/csv');
     res.setHeader('Content-Disposition', `attachment; filename="preform-one-students-${year}.csv"`);
     res.send(csvContent);
@@ -559,17 +533,17 @@ router.get('/:year/export', requireAuth, requirePreFormOneYear, async (req, res)
 router.get('/:year/interview-results', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year } = req.params;
-    
+
     // Validate year parameter
     if (!year || isNaN(parseInt(year))) {
       return sendError(res, clientError('Invalid year parameter'), 400);
     }
-    
+
     const result = await query(
       'SELECT * FROM preform_one_interview_results WHERE year = $1 ORDER BY position',
       [year]
     );
-    
+
     res.json({
       success: true,
       data: result.rows,
@@ -585,17 +559,17 @@ router.get('/:year/interview-results', requireAuth, requirePreFormOneYear, async
 router.get('/:year/continuing-results', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year } = req.params;
-    
+
     // Validate year parameter
     if (!year || isNaN(parseInt(year))) {
       return sendError(res, clientError('Invalid year parameter'), 400);
     }
-    
+
     const result = await query(
       'SELECT * FROM preform_one_continuing_results WHERE year = $1 ORDER BY position',
       [year]
     );
-    
+
     res.json({
       success: true,
       data: result.rows,
@@ -669,12 +643,12 @@ router.post('/:year/continuing-results/calculate', requireAuth, requirePreFormOn
 router.get('/interview-score/:studentId/:subjectId', requireAuth, async (req, res) => {
   try {
     const { studentId, subjectId } = req.params;
-    
+
     const result = await query(
       'SELECT score FROM preform_one_scores WHERE student_id = $1 AND subject_id = $2 AND subject_type = $3',
       [studentId, subjectId, 'interview']
     );
-    
+
     res.json({
       success: true,
       data: result.rows[0]?.score || 0
@@ -689,12 +663,12 @@ router.get('/interview-score/:studentId/:subjectId', requireAuth, async (req, re
 router.get('/continuing-score/:studentId/:subjectId', requireAuth, async (req, res) => {
   try {
     const { studentId, subjectId } = req.params;
-    
+
     const result = await query(
       'SELECT score FROM preform_one_scores WHERE student_id = $1 AND subject_id = $2 AND subject_type = $3',
       [studentId, subjectId, 'continuing']
     );
-    
+
     res.json({
       success: true,
       data: result.rows[0]?.score || 0
@@ -706,76 +680,94 @@ router.get('/continuing-score/:studentId/:subjectId', requireAuth, async (req, r
 });
 
 // Save individual interview score
-router.post('/interview-score/:studentId/:subjectId', requireAuth, async (req, res) => {
-  try {
-    const { studentId, subjectId } = req.params;
-    const { score } = req.body;
-
-    if (!studentId || !subjectId || isNaN(parseInt(studentId)) || isNaN(parseInt(subjectId))) {
-      return sendError(res, clientError('Invalid student or subject ID'), 400);
-    }
-    if (score === undefined || score === null || isNaN(Number(score)) || Number(score) < 0 || Number(score) > 100) {
-      return sendError(res, clientError('Score must be a number between 0 and 100'), 400);
-    }
-
-    const savedRow = await withTransaction(async (client) => {
-      const result = await client.query(
-        `INSERT INTO preform_one_scores (student_id, subject_id, subject_type, score, created_by)
-         VALUES ($1, $2, $3, $4, $5)
-         ON CONFLICT (student_id, subject_id, subject_type)
-         DO UPDATE SET score = EXCLUDED.score, updated_at = CURRENT_TIMESTAMP
-         RETURNING *`,
-        [studentId, subjectId, 'interview', score, req.user?.id || 1]
-      );
-      return result.rows[0];
-    });
-
-    res.json({
-      success: true,
-      message: 'Interview score saved successfully!',
-      data: savedRow,
-    });
-  } catch (error) {
-    console.error('Error saving interview score:', error);
-    sendError(res, error, 500);
-  }
-});
+router.post('/interview-score/:studentId/:subjectId', requireAuth, (req, res) =>
+  saveIndividualPreFormOneScore(req, res, 'interview')
+);
 
 // Save individual continuing score
-router.post('/continuing-score/:studentId/:subjectId', requireAuth, async (req, res) => {
+router.post('/continuing-score/:studentId/:subjectId', requireAuth, (req, res) =>
+  saveIndividualPreFormOneScore(req, res, 'continuing')
+);
+
+/**
+ * preform_one_scores.created_by references users.id (INTEGER) while the JWT only
+ * carries the username, so the numeric id has to be resolved before the write.
+ */
+async function resolvePreFormOneCreatedBy(user) {
+  const username =
+    (user && (user.username || (typeof user.user_id === 'string' ? user.user_id : null))) || null;
+  if (!username) return null;
+  try {
+    const result = await query('SELECT id FROM users WHERE username = $1', [username]);
+    return result.rows.length > 0 ? result.rows[0].id : null;
+  } catch (error) {
+    console.warn('Could not resolve Pre-Form One created_by user id:', error.message);
+    return null;
+  }
+}
+
+async function saveIndividualPreFormOneScore(req, res, scoreType) {
   try {
     const { studentId, subjectId } = req.params;
-    const { score } = req.body;
+    const subjectsTable =
+      scoreType === 'continuing' ? 'preformone_continuing_subjects' : 'preformone_interview_subjects';
 
     if (!studentId || !subjectId || isNaN(parseInt(studentId)) || isNaN(parseInt(subjectId))) {
       return sendError(res, clientError('Invalid student or subject ID'), 400);
     }
-    if (score === undefined || score === null || isNaN(Number(score)) || Number(score) < 0 || Number(score) > 100) {
-      return sendError(res, clientError('Score must be a number between 0 and 100'), 400);
+
+    const scoreCheck = validateScore(req.body && req.body.score);
+    if (!scoreCheck.ok) {
+      return sendError(res, clientError(scoreCheck.message), 400);
     }
+    const score = scoreCheck.value;
+
+    const subject = await query(
+      `SELECT id FROM ${subjectsTable} WHERE id = $1 AND is_active = true`,
+      [subjectId]
+    );
+    if (subject.rows.length === 0) {
+      return sendError(res, clientError('Subject not found'), 404);
+    }
+
+    const student = await query('SELECT id, year FROM preform_one_students WHERE id = $1', [studentId]);
+    if (student.rows.length === 0) {
+      return sendError(res, clientError('Student not found'), 404);
+    }
+
+    const studentYear = student.rows[0].year;
+    if (!userHasPreFormOneYearAccess(req.user, studentYear)) {
+      return sendError(res, clientError(NO_YEAR_ACCESS_MESSAGE, 403), 403);
+    }
+    if (!isUserAllocatedToPreFormOneSubject(req.user, studentYear, subjectId, scoreType)) {
+      return sendError(res, clientError(NOT_ALLOCATED_MESSAGE, 403), 403);
+    }
+
+    const grade = calculateGrade(score);
+    const created_by = await resolvePreFormOneCreatedBy(req.user);
 
     const savedRow = await withTransaction(async (client) => {
       const result = await client.query(
-        `INSERT INTO preform_one_scores (student_id, subject_id, subject_type, score, created_by)
-         VALUES ($1, $2, $3, $4, $5)
+        `INSERT INTO preform_one_scores (student_id, subject_id, subject_type, score, grade, created_by)
+         VALUES ($1, $2, $3, $4, $5, $6)
          ON CONFLICT (student_id, subject_id, subject_type)
-         DO UPDATE SET score = EXCLUDED.score, updated_at = CURRENT_TIMESTAMP
+         DO UPDATE SET score = EXCLUDED.score, grade = EXCLUDED.grade, updated_at = CURRENT_TIMESTAMP
          RETURNING *`,
-        [studentId, subjectId, 'continuing', score, req.user?.id || 1]
+        [studentId, subjectId, scoreType, score, grade, created_by]
       );
       return result.rows[0];
     });
 
-    res.json({
+    return res.json({
       success: true,
-      message: 'Continuing score saved successfully!',
+      message: `${scoreType === 'continuing' ? 'Continuing' : 'Interview'} score saved successfully!`,
       data: savedRow,
     });
   } catch (error) {
-    console.error('Error saving continuing score:', error);
-    sendError(res, error, 500);
+    console.error(`Error saving ${scoreType} score:`, error);
+    return sendError(res, error, 500);
   }
-});
+}
 
 // Download interview results PDF (matches admin page preview)
 router.get('/:year/interview-results/pdf', requireAuth, requirePreFormOneYear, async (req, res) => {
@@ -849,33 +841,33 @@ router.get('/:year/interview-results/pdf', requireAuth, requirePreFormOneYear, a
 router.get('/:year/interview-results/:studentId/pdf', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year, studentId } = req.params;
-    
+
     if (!year || isNaN(parseInt(year))) {
       return sendError(res, clientError('Invalid year parameter'), 400);
     }
-    
+
     if (!studentId || isNaN(parseInt(studentId))) {
       return sendError(res, clientError('Invalid student ID parameter'), 400);
     }
-    
+
     // Get student information
     const student = await query('SELECT * FROM preform_one_students WHERE id = $1 AND year = $2', [studentId, year]);
-    
+
     if (student.rows.length === 0) {
       return sendError(res, clientError('Student not found'), 404);
     }
-    
+
     const studentData = student.rows[0];
-    
+
     // Get interview results for this student
     const results = await query('SELECT r.*, s.first_name, s.middle_name, s.surname, s.admission_number, s.parish FROM preform_one_interview_results r JOIN preform_one_students s ON r.student_id = s.id WHERE r.student_id = $1 AND r.year = $2', [studentId, year]);
-    
+
     if (results.rows.length === 0) {
       return sendError(res, clientError('No interview results found for this student. Please enter scores and calculate results first.'), 404);
     }
-    
+
     const resultData = results.rows[0];
-    
+
     // Get subject scores for this student (with subject info)
     const scores = await query(`
       SELECT sc.score, sc.student_id, sub.id AS subject_id, sub.subject_code, sub.subject_name
@@ -883,7 +875,7 @@ router.get('/:year/interview-results/:studentId/pdf', requireAuth, requirePreFor
         JOIN preformone_interview_subjects sub ON sc.subject_id = sub.id
         WHERE sc.subject_type = 'interview' AND sub.is_active = true AND sc.score IS NOT NULL AND sc.student_id = $1
     `, [studentId]);
-    
+
     // Derive subjects from scores
     const subjectSeen = new Map();
     scores.rows.forEach(row => {
@@ -898,14 +890,14 @@ router.get('/:year/interview-results/:studentId/pdf', requireAuth, requirePreFor
     const subjects = { rows: [...subjectSeen.values()].sort((a, b) =>
       (a.subject_code || '').localeCompare(b.subject_code || '')
     ) };
-    
+
     // Create a map of subject_code -> score
     const scoresMap = {};
     scores.rows.forEach(scoreRow => {
       const subjectCode = scoreRow.subject_code;
       scoresMap[subjectCode] = scoreRow.score;
     });
-    
+
     let logoUrl = null;
     try {
       logoUrl = await resolveSchoolLogoForPdf(query);
@@ -969,7 +961,7 @@ router.get('/:year/interview-results/:studentId/pdf', requireAuth, requirePreFor
           : `PDF generation failed: ${error.message}`;
       return sendError(res, clientError(message, 500), 500);
     }
-    
+
   } catch (error) {
     console.error('Error generating individual interview results PDF:', error);
     sendError(res, error, 500);
@@ -1184,48 +1176,125 @@ router.get('/:year/continuing-results/:studentId/pdf', requireAuth, requirePreFo
   }
 });
 
-// Helper functions
-function calculateGrade(average) {
-  if (average >= 80) return 'A';
-  if (average >= 70) return 'B';
-  if (average >= 65) return 'C';
-  if (average >= 45) return 'D';
-  return 'F';
+// ---------------------------------------------------------------------------
+// Manual result entry (interview-result / continuing-result).
+// Grade and remarks are always derived server-side from the student's stored
+// scores for the year so a client cannot write a grade that contradicts the
+// canonical scale or the saved subject scores.
+// ---------------------------------------------------------------------------
+async function resolveManualResultFields(client, { studentId, year, scoreType, subjectsTable, suppliedAverage }) {
+  const subjects = await client.query(
+    `SELECT id FROM ${subjectsTable} WHERE is_active = true`
+  );
+  const subjectIds = subjects.rows.map((r) => r.id);
+
+  let totalMarks = null;
+  let average = null;
+
+  if (subjectIds.length > 0) {
+    const scores = await client.query(
+      'SELECT subject_id, score FROM preform_one_scores WHERE student_id = $1 AND subject_type = $2',
+      [studentId, scoreType]
+    );
+
+    let total = 0;
+    let scored = 0;
+    for (const subjectId of subjectIds) {
+      const row = scores.rows.find((s) => String(s.subject_id) === String(subjectId));
+      if (row && row.score != null && Number.isFinite(Number(row.score))) {
+        total += Number(row.score);
+        scored++;
+      }
+    }
+
+    if (scored > 0) {
+      totalMarks = total;
+      average = Math.round((total / scored) * 100) / 100;
+    }
+  }
+
+  if (average === null) {
+    // Only an explicit number is acceptable here: Number('') and Number(null)
+    // both coerce to 0, which would publish a bogus F result for a student who
+    // simply has no scores and no average.
+    if (typeof suppliedAverage !== 'number' && typeof suppliedAverage !== 'string') {
+      return null;
+    }
+    if (typeof suppliedAverage === 'string' && suppliedAverage.trim() === '') {
+      return null;
+    }
+    const num = Number(suppliedAverage);
+    if (!Number.isFinite(num) || num < 0 || num > 100) {
+      return null;
+    }
+    totalMarks = 0;
+    average = Math.round(num * 100) / 100;
+  }
+
+  return {
+    total_marks: totalMarks,
+    average,
+    grade: calculateGrade(average),
+    remarks: getRemarks(average),
+  };
 }
 
-function getRemarks(average) {
-  return average >= 65 ? 'AMECHAGULIWA' : 'HAJACHAGULIWA';
+function normalizeRequestedPosition(position) {
+  const num = Number(position);
+  return Number.isInteger(num) && num > 0 ? num : null;
 }
 
 // Save individual interview result
 router.post('/interview-result', requireAuth, async (req, res) => {
   try {
-    const { year, student_index, total_marks, average, grade, position, remarks } = req.body;
-    
+    const { year, student_index, average, position } = req.body;
+
     if (!year || !student_index) {
       return sendError(res, clientError('Year and student index are required'), 400);
     }
-    
-    const client = await withTransaction(async (client) => {
+
+    const result = await withTransaction(async (client) => {
       // Get student by admission number
       const studentResult = await client.query(
         'SELECT id FROM preform_one_students WHERE admission_number = $1 AND year = $2',
         [student_index, year]
       );
-      
+
       if (studentResult.rowCount === 0) {
         return { success: false, message: 'Student not found' };
       }
-      
+
       const studentId = studentResult.rows[0].id;
-      
+      const derived = await resolveManualResultFields(client, {
+        studentId,
+        year,
+        scoreType: 'interview',
+        subjectsTable: 'preformone_interview_subjects',
+        suppliedAverage: average,
+      });
+
+      if (derived === null) {
+        return {
+          success: false,
+          message: 'Enter at least one subject score, or provide a valid average between 0 and 100.',
+        };
+      }
+
+      const existing = await client.query(
+        'SELECT position FROM preform_one_interview_results WHERE student_id = $1 AND year = $2',
+        [studentId, year]
+      );
+      const resolvedPosition =
+        normalizeRequestedPosition(position) ??
+        (existing.rows.length > 0 ? Number(existing.rows[0].position) || 0 : 0);
+
       // Save or update interview result
-      const result = await client.query(`
-        INSERT INTO preform_one_interview_results 
+      const saved = await client.query(`
+        INSERT INTO preform_one_interview_results
         (student_id, admission_number, total_marks, average, grade, position, remarks, year)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        ON CONFLICT (student_id, year) 
-        DO UPDATE SET 
+        ON CONFLICT (student_id, year)
+        DO UPDATE SET
           total_marks = EXCLUDED.total_marks,
           average = EXCLUDED.average,
           grade = EXCLUDED.grade,
@@ -1233,11 +1302,14 @@ router.post('/interview-result', requireAuth, async (req, res) => {
           remarks = EXCLUDED.remarks,
           updated_at = CURRENT_TIMESTAMP
         RETURNING *
-      `, [studentId, student_index, total_marks, average, grade, position, remarks, year]);
-      
-      return { success: true, data: result.rows[0] };
+      `, [studentId, student_index, derived.total_marks, derived.average, derived.grade, resolvedPosition, derived.remarks, year]);
+
+      return { success: true, data: saved.rows[0] };
     });
-    
+
+    if (!result.success) {
+      return sendError(res, clientError(result.message), 400);
+    }
     res.json(result);
   } catch (error) {
     console.error('Error saving interview result:', error);
@@ -1248,32 +1320,54 @@ router.post('/interview-result', requireAuth, async (req, res) => {
 // Save individual continuing result
 router.post('/continuing-result', requireAuth, async (req, res) => {
   try {
-    const { year, student_index, total_marks, average, grade, position, remarks } = req.body;
-    
+    const { year, student_index, average, position } = req.body;
+
     if (!year || !student_index) {
       return sendError(res, clientError('Year and student index are required'), 400);
     }
-    
-    const client = await withTransaction(async (client) => {
+
+    const result = await withTransaction(async (client) => {
       // Get student by admission number
       const studentResult = await client.query(
         'SELECT id FROM preform_one_students WHERE admission_number = $1 AND year = $2',
         [student_index, year]
       );
-      
+
       if (studentResult.rowCount === 0) {
         return { success: false, message: 'Student not found' };
       }
-      
+
       const studentId = studentResult.rows[0].id;
-      
+      const derived = await resolveManualResultFields(client, {
+        studentId,
+        year,
+        scoreType: 'continuing',
+        subjectsTable: 'preformone_continuing_subjects',
+        suppliedAverage: average,
+      });
+
+      if (derived === null) {
+        return {
+          success: false,
+          message: 'Enter at least one subject score, or provide a valid average between 0 and 100.',
+        };
+      }
+
+      const existing = await client.query(
+        'SELECT position FROM preform_one_continuing_results WHERE student_id = $1 AND year = $2',
+        [studentId, year]
+      );
+      const resolvedPosition =
+        normalizeRequestedPosition(position) ??
+        (existing.rows.length > 0 ? Number(existing.rows[0].position) || 0 : 0);
+
       // Save or update continuing result
-      const result = await client.query(`
-        INSERT INTO preform_one_continuing_results 
+      const saved = await client.query(`
+        INSERT INTO preform_one_continuing_results
         (student_id, admission_number, total_marks, average, grade, position, remarks, year)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-        ON CONFLICT (student_id, year) 
-        DO UPDATE SET 
+        ON CONFLICT (student_id, year)
+        DO UPDATE SET
           total_marks = EXCLUDED.total_marks,
           average = EXCLUDED.average,
           grade = EXCLUDED.grade,
@@ -1281,11 +1375,14 @@ router.post('/continuing-result', requireAuth, async (req, res) => {
           remarks = EXCLUDED.remarks,
           updated_at = CURRENT_TIMESTAMP
         RETURNING *
-      `, [studentId, student_index, total_marks, average, grade, position, remarks, year]);
-      
-      return { success: true, data: result.rows[0] };
+      `, [studentId, student_index, derived.total_marks, derived.average, derived.grade, resolvedPosition, derived.remarks, year]);
+
+      return { success: true, data: saved.rows[0] };
     });
-    
+
+    if (!result.success) {
+      return sendError(res, clientError(result.message), 400);
+    }
     res.json(result);
   } catch (error) {
     console.error('Error saving continuing result:', error);
@@ -1298,16 +1395,16 @@ router.delete('/interview-result/:studentId', requireAuth, async (req, res) => {
   try {
     const { studentId } = req.params;
     const { year } = req.query;
-    
+
     if (!studentId || !year) {
       return sendError(res, clientError('Student ID and year are required'), 400);
     }
-    
+
     const result = await query(
       'DELETE FROM preform_one_interview_results WHERE student_id = $1 AND year = $2 RETURNING *',
       [studentId, year]
     );
-    
+
     res.json({
       success: true,
       message: 'Interview result deleted successfully',
@@ -1324,16 +1421,16 @@ router.delete('/continuing-result/:studentId', requireAuth, async (req, res) => 
   try {
     const { studentId } = req.params;
     const { year } = req.query;
-    
+
     if (!studentId || !year) {
       return sendError(res, clientError('Student ID and year are required'), 400);
     }
-    
+
     const result = await query(
       'DELETE FROM preform_one_continuing_results WHERE student_id = $1 AND year = $2 RETURNING *',
       [studentId, year]
     );
-    
+
     res.json({
       success: true,
       message: 'Continuing result deleted successfully',
@@ -1358,7 +1455,7 @@ router.get('/:year/interview-results/all-pdf', requireAuth, requirePreFormOneYea
       `SELECT s.*, r.total_marks, r.average, r.grade, r.position, r.remarks
        FROM preform_one_students s
        JOIN preform_one_interview_results r ON r.student_id = s.id
-       WHERE s.year = $1
+       WHERE s.year = $1 AND r.year = $1
        ORDER BY r.position, s.surname, s.first_name`,
       [year]
     );
@@ -1488,7 +1585,7 @@ router.get('/:year/continuing-results/all-pdf', requireAuth, requirePreFormOneYe
       `SELECT s.*, r.total_marks, r.average, r.grade, r.position, r.remarks
        FROM preform_one_students s
        JOIN preform_one_continuing_results r ON r.student_id = s.id
-       WHERE s.year = $1
+       WHERE s.year = $1 AND r.year = $1
        ORDER BY r.position, s.surname, s.first_name`,
       [year]
     );

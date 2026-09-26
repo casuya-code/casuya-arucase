@@ -2,27 +2,12 @@
  * Shared Pre-Form One interview/continuing results calculation + upsert.
  */
 
-const PASS_MARK = 65;
-
-function calculateGrade(average) {
-  if (average >= 80) return 'A';
-  if (average >= 70) return 'B';
-  if (average >= 65) return 'C';
-  if (average >= 45) return 'D';
-  return 'F';
-}
-
-function getRemarks(average) {
-  return average >= PASS_MARK ? 'AMECHAGULIWA' : 'HAJACHAGULIWA';
-}
-
-function matchSubjectScore(scoresRows, subjectId) {
-  const sid = String(subjectId);
-  const row = scoresRows.find((s) => String(s.subject_id) === sid);
-  if (!row || row.score == null) return 0;
-  const n = Number(row.score);
-  return Number.isFinite(n) ? n : 0;
-}
+const {
+  calculateGrade,
+  getRemarks,
+  roundAverage,
+  assignResultPositions,
+} = require('./preFormOneGrading');
 
 /**
  * Upsert one result row (works even if UNIQUE index is missing).
@@ -85,6 +70,25 @@ async function upsertPreFormOneResult(client, tableName, row) {
 }
 
 /**
+ * Remove result rows for this year that no longer have a computable result so
+ * withdrawn scores, cleared subjects and zero-score students cannot linger in
+ * the results list or the printed reports.
+ */
+async function deleteStalePreFormOneResults(client, resultsTable, year, keepStudentIds) {
+  const allowed = new Set(['preform_one_interview_results', 'preform_one_continuing_results']);
+  if (!allowed.has(resultsTable)) {
+    throw new Error(`Invalid results table: ${resultsTable}`);
+  }
+
+  const keep = keepStudentIds.length > 0 ? keepStudentIds : [-1];
+  const result = await client.query(
+    `DELETE FROM ${resultsTable} WHERE year = $1 AND NOT (student_id = ANY($2::int[]))`,
+    [year, keep]
+  );
+  return result.rowCount || 0;
+}
+
+/**
  * Calculate and persist results for all students in a year.
  */
 async function calculateAndSavePreFormOneResults(client, options) {
@@ -106,7 +110,13 @@ async function calculateAndSavePreFormOneResults(client, options) {
     `SELECT id, subject_code FROM ${subjectsTable} WHERE is_active = true ORDER BY subject_code`
   );
 
-  if (studentsResult.rows.length === 0 || subjectsResult.rows.length === 0) {
+  if (studentsResult.rows.length === 0) {
+    await deleteStalePreFormOneResults(client, resultsTable, yearNum, []);
+    return [];
+  }
+
+  if (subjectsResult.rows.length === 0) {
+    await deleteStalePreFormOneResults(client, resultsTable, yearNum, []);
     return [];
   }
 
@@ -133,33 +143,36 @@ async function calculateAndSavePreFormOneResults(client, options) {
       }
     }
 
-    const average = scoredSubjectCount > 0 ? totalMarks / scoredSubjectCount : 0;
-    const grade = calculateGrade(average);
+    // No usable score means no result: never publish a fabricated average of 0.
+    if (scoredSubjectCount === 0) {
+      continue;
+    }
+
+    const average = roundAverage(totalMarks / scoredSubjectCount);
 
     results.push({
       student_id: student.id,
       admission_number: student.admission_number,
       total_marks: totalMarks,
       average,
-      grade,
+      grade: calculateGrade(average),
       position: 0,
       remarks: getRemarks(average),
       year: yearNum,
     });
   }
 
-  const sortedResults = [...results].sort((a, b) => b.average - a.average);
+  assignResultPositions(results);
 
-  for (let i = 0; i < sortedResults.length; i++) {
-    const studentResult = sortedResults[i];
-    const position = i + 1;
-    await upsertPreFormOneResult(client, resultsTable, {
-      ...studentResult,
-      position,
-      remarks: getRemarks(studentResult.average),
-    });
-    const original = results.find((r) => r.student_id === studentResult.student_id);
-    if (original) original.position = position;
+  await deleteStalePreFormOneResults(
+    client,
+    resultsTable,
+    yearNum,
+    results.map((r) => r.student_id)
+  );
+
+  for (const studentResult of results) {
+    await upsertPreFormOneResult(client, resultsTable, studentResult);
   }
 
   return results;
@@ -170,4 +183,6 @@ module.exports = {
   getRemarks,
   calculateAndSavePreFormOneResults,
   upsertPreFormOneResult,
+  deleteStalePreFormOneResults,
+  assignResultPositions,
 };

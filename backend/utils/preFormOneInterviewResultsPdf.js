@@ -5,16 +5,12 @@
 const fs = require('fs').promises;
 const path = require('path');
 const axios = require('axios');
-
-const PASS_MARK = 65;
-
-const GRADING_SCALE = [
-  { min: 80, grade: 'A', remarks: 'Excellent' },
-  { min: 70, grade: 'B', remarks: 'Good' },
-  { min: 65, grade: 'C', remarks: 'Satisfactory' },
-  { min: 45, grade: 'D', remarks: 'Needs Improvement' },
-  { min: 0, grade: 'F', remarks: 'Fail' },
-];
+const {
+  calculateGrade,
+  getRemarks,
+  roundAverage,
+  assignResultPositions: assignSharedResultPositions,
+} = require('./preFormOneGrading');
 
 function escapeHtml(value) {
   if (value == null) return '';
@@ -40,6 +36,14 @@ function scoreForSubject(scoresByCode, subjectCode) {
   const key = normalizeSubjectCode(subjectCode);
   if (key && scoresByCode[key] !== undefined) return scoresByCode[key];
   return scoresByCode[subjectCode];
+}
+
+function formatAverageCell(value) {
+  if (value === undefined || value === null || value === '') return '-';
+  const num = typeof value === 'number' ? value : Number(value);
+  if (!Number.isFinite(num)) return '-';
+  const rounded = roundAverage(num);
+  return String(rounded);
 }
 
 function formatSubjectScoreCell(value) {
@@ -70,26 +74,28 @@ function calculateInterviewMetrics(scoresByCode, activeSubjects) {
   }
 
   const average = scoredCount > 0 ? total_marks / scoredCount : 0;
-  const gradeInfo =
-    GRADING_SCALE.find((g) => average >= g.min) || GRADING_SCALE[GRADING_SCALE.length - 1];
-  const remarks = average >= PASS_MARK ? 'AMECHAGULIWA' : 'HAJACHAGULIWA';
+  const grade = calculateGrade(average);
 
   return {
     total_marks,
-    average: Math.round(average * 100) / 100,
-    grade: gradeInfo.grade,
-    remarks,
+    average: roundAverage(average),
+    grade: grade || '-',
+    remarks: getRemarks(average),
   };
 }
 
 function assignResultPositions(resultsObj) {
   const next = { ...resultsObj };
-  const ranked = Object.keys(next)
-    .map((adm) => ({ adm, avg: Number(next[adm]?.average) || 0 }))
-    .sort((a, b) => b.avg - a.avg);
+  const entries = Object.keys(next);
+  if (entries.length === 0) return next;
 
-  ranked.forEach((item, index) => {
-    next[item.adm] = { ...next[item.adm], position: index + 1 };
+  const ranked = assignSharedResultPositions(
+    entries.map((adm) => ({ admission_number: adm, average: Number(next[adm]?.average) || 0 })),
+    (item) => item.average
+  );
+
+  ranked.forEach((item) => {
+    next[item.admission_number] = { ...next[item.admission_number], position: item.position };
   });
   return next;
 }
@@ -266,8 +272,7 @@ async function buildPreFormOneResultsPdfData(year, query, kind = 'interview') {
         result.total_marks != null && result.total_marks !== ''
           ? formatSubjectScoreCell(result.total_marks)
           : '-',
-      average:
-        avgValue != null && Number.isFinite(avgValue) ? String(Math.round(avgValue)) : '-',
+      average: formatAverageCell(avgValue),
       grade: result.grade || '-',
       avgValue,
       position: result.position || '-',

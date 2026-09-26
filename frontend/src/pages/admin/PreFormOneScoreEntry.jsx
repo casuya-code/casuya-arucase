@@ -10,8 +10,11 @@ import { toast } from 'react-toastify';
 import { preFormOneInterviewSubjectsService } from '../../services/preFormOneInterviewSubjectsService';
 import preFormOneContinuingSubjectsService from '../../services/preFormOneContinuingSubjectsService';
 import preFormOneStudentsService from '../../services/preFormOneStudentsService';
-import gradeSystemService from '../../services/gradeSystemService';
 import dataPersistenceManager, { normalizeScoresMap } from '../../utils/dataPersistenceManager';
+import {
+  calculatePreFormOneGrade,
+  isValidPreFormOneScore,
+} from '../../utils/preFormOneGrading';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { useGoBack } from '../../hooks/useGoBack';
 import { useAuth } from '../../context/AuthContext';
@@ -31,7 +34,6 @@ const PreFormOneScoreEntry = () => {
   const [continuingSubjects, setContinuingSubjects] = useState([]);
   const [preFormOneStudents, setPreFormOneStudents] = useState([]);
   const [studentScores, setStudentScores] = useState({});
-  const [gradeConfig, setGradeConfig] = useState(null);
   const [loading, setLoading] = useState(false);
   const [saving, setSaving] = useState(false);
   const [loadingSubjectId, setLoadingSubjectId] = useState(null);
@@ -154,8 +156,9 @@ const PreFormOneScoreEntry = () => {
       );
       const scoresMap = buildScoresMapFromApi(scoresData);
       const persistenceScores = normalizeScoresMap(
-        await dataPersistenceManager.loadData(subject.id, cardType)
+        await dataPersistenceManager.loadData(subject.id, cardType, { year })
       );
+      // Saved API values win; the locally persisted sheet only fills gaps.
       const mergedScores = normalizeScoresMap({ ...persistenceScores, ...scoresMap });
       setStudentScores(mergedScores);
       setNotAllocated(false);
@@ -173,7 +176,7 @@ const PreFormOneScoreEntry = () => {
     } finally {
       setLoading(false);
     }
-  }, [refreshScoreStats, computeLocalScoreStats]);
+  }, [refreshScoreStats, computeLocalScoreStats, year]);
 
   // Auto-select subject and card when on subject detail page
   useEffect(() => {
@@ -222,29 +225,12 @@ const PreFormOneScoreEntry = () => {
     year,
   ]);
 
-  // Load grade configuration, subjects and students on component mount
+  // Load subjects and students on component mount
   useEffect(() => {
     const loadData = async () => {
       try {
         setLoading(true);
-        
-        // Load system grade configuration
-        try {
-          const gradeConfigData = await gradeSystemService.getSystemGradeConfig();
-          setGradeConfig(gradeConfigData.data);
-        } catch (gradeError) {
-          // Continue with default grade configuration
-          setGradeConfig({
-            oLevel: [
-              { grade: 'A', min: 85, max: 100, description: 'Bora Sana' },
-              { grade: 'B', min: 70, max: 84, description: 'Vizuri Sana' },
-              { grade: 'C', min: 50, max: 69, description: 'Vizuri' },
-              { grade: 'D', min: 40, max: 49, description: 'Dhaifu' },
-              { grade: 'F', min: 0, max: 39, description: 'Feli' }
-            ]
-          });
-        }
-        
+
         const interviewData = await preFormOneInterviewSubjectsService.getSubjects();
         setInterviewSubjects(Array.isArray(interviewData) ? interviewData : []);
 
@@ -382,29 +368,9 @@ const PreFormOneScoreEntry = () => {
     }
   }, [isSubjectDetail, selectedSubject, selectedCard, handleNavigation]);
 
-  // Calculate grade from score using system grade configuration
-  const calculateGrade = (score) => {
-    if (!gradeConfig || !gradeConfig.oLevel) {
-      // Fallback to default O-Level boundaries (matches system config)
-      if (score >= 85) return 'A';
-      if (score >= 70) return 'B';
-      if (score >= 50) return 'C';
-      if (score >= 40) return 'D';
-      return 'F';
-    }
-    
-    // Use system grade configuration for O-Level (Pre-Form One)
-    const grades = gradeConfig.oLevel;
-    
-    for (const grade of grades) {
-      if (score >= grade.min && score <= grade.max) {
-        return grade.grade;
-      }
-    }
-    
-    // Default to F if no grade found
-    return 'F';
-  };
+  // Grading uses the canonical Pre-Form One scale so the grade shown here
+  // always matches the grade the API stores and the report prints.
+  const calculateGrade = (score) => calculatePreFormOneGrade(score) || '';
 
 
   // Live local counts while editing; skip during load so API refresh from loadScores wins
@@ -426,7 +392,8 @@ const PreFormOneScoreEntry = () => {
       const success = await dataPersistenceManager.saveData(
         subjectId,
         scoreType,
-        normalizeScoresMap(scores)
+        normalizeScoresMap(scores),
+        { year }
       );
       if (!success) {
         toast.warning('Some data protection features are not available, but your scores are still saved locally.');
@@ -438,7 +405,7 @@ const PreFormOneScoreEntry = () => {
 
   const clearScoresFromPersistence = (subjectId, scoreType) => {
     try {
-      dataPersistenceManager.clearData(subjectId, scoreType);
+      dataPersistenceManager.clearData(subjectId, scoreType, { year });
     } catch { /* ignore */ }
   };
 
@@ -494,8 +461,8 @@ const PreFormOneScoreEntry = () => {
     if (field === 'score') {
       const score = value === '' ? null : Number(value);
 
-      if (score !== null && (Number.isNaN(score) || score < 0 || score > 100)) {
-        toast.error('Score must be between 0 and 100');
+      if (score !== null && !isValidPreFormOneScore(score)) {
+        toast.error('Score must be a whole number between 0 and 100');
         return;
       }
 
@@ -563,8 +530,9 @@ const PreFormOneScoreEntry = () => {
       };
       setStudentScores(mergedScores);
 
-      // Clear comprehensive persistence after successful save
-      clearScoresFromPersistence(selectedSubject.id, selectedCard);
+      // Only this student's score reached the server, so the backup sheet has to
+      // be rewritten with the remaining entries instead of dropped.
+      await saveScoresToPersistence(selectedSubject.id, selectedCard, mergedScores);
 
       await refreshScoreStats(selectedSubject.id, selectedCard, mergedScores);
     } catch (error) {
@@ -577,7 +545,7 @@ const PreFormOneScoreEntry = () => {
     } finally {
       setSaving(false);
     }
-  }, [scoresByStudentId, selectedSubject, selectedCard, calculateGrade, clearScoresFromPersistence, refreshScoreStats]);
+  }, [scoresByStudentId, selectedSubject, selectedCard, calculateGrade, saveScoresToPersistence, refreshScoreStats]);
 
   // Save all scores
   const saveAllScores = useCallback(async () => {
@@ -744,6 +712,7 @@ const PreFormOneScoreEntry = () => {
             placeholder="0-100"
             min="0"
             max="100"
+            step="1"
             value={displayScore}
             onChange={(e) => handleScoreChange(studentKey, 'score', e.target.value)}
             onBlur={() => handleScoreBlur(studentKey)}
