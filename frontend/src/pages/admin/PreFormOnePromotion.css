@@ -194,7 +194,22 @@
   border-left: 4px solid #9ca3af;
 }.promotion-page-container .promotion-table tr.selected td{
   font-weight: 500;
-}.promotion-page-container .select-column{
+}.promotion-page-container .promotion-table tr.already-promoted td{
+  color: #9ca3af;
+}.promotion-page-container .promotion-table tr.already-promoted:hover{
+  background: transparent;
+}.promoted-badge{
+  display: inline-block;
+  padding: 4px 8px;
+  font-size: 12px;
+  font-weight: 500;
+  color: #4b5563;
+  background: #f3f4f6;
+  border: 1px solid #e5e7eb;
+  border-radius: 0px;
+  white-space: nowrap;
+}
+.promotion-page-container .select-column{
   width: 50px;
   text-align: center;
 }.promotion-page-container .stream-select{

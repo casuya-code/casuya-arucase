@@ -1,4 +1,4 @@
-﻿/**
+/**
  * Pre-Form One Promotion Routes
  * Handles promotion of Pre-Form One students to Form One
  */
@@ -8,6 +8,7 @@ const { requireAuth } = require('../middleware/auth');
 const { query, withTransaction } = require('../config/database');
 const { sendError } = require('../utils/safeError');
 const { saveUserActivity } = require('../utils/activityLogger');
+const { userHasPreFormOneYearAccess } = require('../utils/preFormOneAccess');
 
 function clientError(message, statusCode = 400) {
   const err = new Error(message);
@@ -15,76 +16,106 @@ function clientError(message, statusCode = 400) {
   return err;
 }
 
-// Mirrors the frontend AuthContext.getAllowedPreFormOneModuleYears(): restricts
-// non-admin users to permissions.preformone_module_years (falling back to years
-// derived from preformone_score_subjects). null = unrestricted.
-function parsePermissions(user) {
-  const raw = user && user.permissions;
-  if (!raw) return {};
-  if (typeof raw === 'string') {
-    try {
-      return JSON.parse(raw);
-    } catch {
-      return {};
-    }
+const FORM_ONE_STREAMS = new Set(['A', 'B']);
+
+/**
+ * promotion_activities.user_id references users.id (INTEGER) while the JWT
+ * carries the username, so the numeric id has to be resolved from users.
+ * Returns null for a token whose user no longer exists so the FK stays valid.
+ */
+async function resolvePromotionActorId(user) {
+  const username =
+    (user && (user.username || (typeof user.user_id === 'string' ? user.user_id : null))) || null;
+  if (!username) return null;
+  try {
+    const result = await query('SELECT id FROM users WHERE username = $1', [username]);
+    return result.rows.length > 0 ? result.rows[0].id : null;
+  } catch (error) {
+    console.warn('Could not resolve promotion actor id:', error.message);
+    return null;
   }
-  if (typeof raw === 'object') return raw;
-  return {};
 }
 
-function getPreFormOneModuleYears(user) {
-  const role = ((user && user.role) || '').toLowerCase();
-  if (role === 'admin' || role === 'superadmin') return null;
-  const permissions = parsePermissions(user);
-  const explicit = Array.isArray(permissions.preformone_module_years)
-    ? permissions.preformone_module_years.map(Number)
-    : [];
-  const allocs = permissions.preformone_score_subjects;
-  const scoreYears = allocs && typeof allocs === 'object'
-    ? Object.keys(allocs).filter((y) => Array.isArray(allocs[y]) && allocs[y].length > 0).map(Number)
-    : [];
-  const union = [...new Set([...explicit, ...scoreYears])];
-  return union.length ? union : null;
+/**
+ * Writes the promotion audit row inside the promotion transaction. A failing
+ * audit write must abort the whole promotion: committed promotions are never
+ * left without a matching history record, and the caller never sees a 500 for
+ * a promotion that was already saved.
+ */
+async function recordPromotionActivity(client, { actorId, sourceYear, targetYear, promotedCount, failedCount }) {
+  await client.query(
+    `CREATE TABLE IF NOT EXISTS promotion_activities (
+      id SERIAL PRIMARY KEY,
+      user_id INTEGER REFERENCES users(id),
+      source_year INTEGER NOT NULL,
+      target_year INTEGER NOT NULL,
+      promoted_count INTEGER DEFAULT 0,
+      failed_count INTEGER DEFAULT 0,
+      details JSONB,
+      created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    )`
+  );
+
+  await client.query(
+    `INSERT INTO promotion_activities (user_id, source_year, target_year, promoted_count, failed_count, details)
+     VALUES ($1, $2, $3, $4, $5, $6)`,
+    [
+      actorId,
+      sourceYear,
+      targetYear,
+      promotedCount,
+      failedCount,
+      JSON.stringify({ promotedCount, failedCount }),
+    ]
+  );
 }
 
 // Express middleware: reject a non-admin user who lacks access to the requested year.
 function requirePreFormOneYear(req, res, next) {
   const { year } = req.params;
   if (year === undefined) return next();
-  const y = parseInt(year, 10);
-  const allowedYears = getPreFormOneModuleYears(req.user);
-  if (allowedYears !== null && !allowedYears.includes(y)) {
+  if (!userHasPreFormOneYearAccess(req.user, year)) {
     return sendError(res, clientError('You do not have access to Pre-Form One data for this year. Contact an administrator.', 403));
   }
   return next();
 }
 
 /**
- * Get students eligible for promotion from a specific year
+ * Get students eligible for promotion from a specific year.
+ * already_promoted flags students who already have a Form One record for the
+ * target year so the UI can exclude them from selection.
  */
 router.get('/eligible/:year', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year } = req.params;
-    
+
     if (!year || isNaN(parseInt(year, 10))) {
       return sendError(res, clientError('Invalid year parameter'), 400);
     }
 
+    const sourceYear = parseInt(year, 10);
+
     const result = await query(
-      `SELECT 
-        id,
-        admission_number,
-        serial_number,
-        first_name,
-        middle_name,
-        surname,
-        sex,
-        parish,
-        year
-       FROM preform_one_students 
-       WHERE year = $1 
-       ORDER BY admission_number`,
-      [parseInt(year, 10)]
+      `SELECT
+        p.id,
+        p.admission_number,
+        p.serial_number,
+        p.first_name,
+        p.middle_name,
+        p.surname,
+        p.sex,
+        p.parish,
+        p.year,
+        EXISTS (
+          SELECT 1 FROM students s
+          WHERE s.adm_no = p.admission_number
+            AND s.level = 'FORM I'
+            AND s.year = $2
+        ) AS already_promoted
+       FROM preform_one_students p
+       WHERE p.year = $1
+       ORDER BY p.admission_number`,
+      [sourceYear, sourceYear + 1]
     );
 
     res.json({
@@ -153,7 +184,7 @@ router.get('/status/:year', requireAuth, requirePreFormOneYear, async (req, res)
 router.post('/promote/:year', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
     const { year } = req.params;
-    const { selectedStudents, targetStreams, promoteAll } = req.body;
+    const { selectedStudents, targetStreams, promoteAll } = req.body || {};
 
     if (!year || isNaN(parseInt(year, 10))) {
       return sendError(res, clientError('Invalid year parameter'), 400);
@@ -162,32 +193,88 @@ router.post('/promote/:year', requireAuth, requirePreFormOneYear, async (req, re
     const sourceYear = parseInt(year, 10);
     const targetYear = sourceYear + 1;
 
-    const client = await withTransaction(async (client) => {
+    // Stream assignments are only accepted for valid Form One streams; anything
+    // else falls back to the default sex-based assignment.
+    const requestedStreams = {};
+    if (targetStreams && typeof targetStreams === 'object' && !Array.isArray(targetStreams)) {
+      Object.entries(targetStreams).forEach(([studentId, stream]) => {
+        const value = String(stream == null ? '' : stream).trim().toUpperCase();
+        if (FORM_ONE_STREAMS.has(value)) {
+          requestedStreams[studentId] = value;
+        }
+      });
+    }
+
+    let selectedIds = null;
+    if (!promoteAll) {
+      selectedIds = [...new Set(
+        (Array.isArray(selectedStudents) ? selectedStudents : [])
+          .map((id) => parseInt(id, 10))
+          .filter((id) => Number.isInteger(id) && id > 0)
+      )];
+
+      if (selectedIds.length === 0) {
+        return res.json({
+          success: false,
+          message: 'No valid students selected for promotion',
+        });
+      }
+    }
+
+    const actorId = await resolvePromotionActorId(req.user);
+
+    const outcome = await withTransaction(async (client) => {
       try {
-        // Get students to promote
+        const outOfCohortIds = [];
+
+        // Get students to promote. Both the promoteAll and the explicit-selection
+        // paths are scoped to the source cohort and exclude students who already
+        // have a Form One record for the target year.
         let studentsToPromote;
         if (promoteAll) {
           const result = await client.query(
-            'SELECT * FROM preform_one_students WHERE year = $1 ORDER BY admission_number',
-            [sourceYear]
-          );
-          studentsToPromote = result.rows;
-        } else if (selectedStudents && selectedStudents.length > 0) {
-          const placeholders = selectedStudents.map((_, index) => `$${index + 1}`).join(',');
-          const result = await client.query(
-            `SELECT * FROM preform_one_students WHERE id IN (${placeholders}) ORDER BY admission_number`,
-            selectedStudents
+            `SELECT p.*
+             FROM preform_one_students p
+             WHERE p.year = $1
+               AND NOT EXISTS (
+                 SELECT 1 FROM students s
+                 WHERE s.adm_no = p.admission_number
+                   AND s.level = 'FORM I'
+                   AND s.year = $2
+               )
+             ORDER BY p.admission_number`,
+            [sourceYear, targetYear]
           );
           studentsToPromote = result.rows;
         } else {
-          return { success: false, message: 'No students selected for promotion' };
+          const placeholders = selectedIds.map((_, index) => `$${index + 1}`).join(',');
+          const result = await client.query(
+            `SELECT * FROM preform_one_students
+             WHERE id IN (${placeholders}) AND year = $${selectedIds.length + 1}
+             ORDER BY admission_number`,
+            [...selectedIds, sourceYear]
+          );
+          studentsToPromote = result.rows;
+
+          const foundIds = new Set(studentsToPromote.map((s) => s.id));
+          selectedIds
+            .filter((id) => !foundIds.has(id))
+            .forEach((id) => {
+              outOfCohortIds.push(id);
+            });
         }
 
         if (studentsToPromote.length === 0) {
-          return { success: false, message: 'No students found for promotion' };
+          return {
+            success: false,
+            message: outOfCohortIds.length > 0
+              ? 'The selected students do not belong to this Pre-Form One cohort'
+              : 'No students found for promotion',
+            outOfCohortIds: [...outOfCohortIds],
+          };
         }
 
-        console.log(`ðŸ” PROMOTION: Promoting ${studentsToPromote.length} students from ${year} to Form One ${targetYear}`);
+        console.log(`PROMOTION: Promoting ${studentsToPromote.length} students from ${year} to Form One ${targetYear}`);
 
         const promotedStudents = [];
         const errors = [];
@@ -211,13 +298,10 @@ router.post('/promote/:year', requireAuth, requirePreFormOneYear, async (req, re
             }
 
             // Assign stream based on targetStreams or default logic
-            let assignedStream = 'A'; // Default stream
-            if (targetStreams && targetStreams[student.id]) {
-              assignedStream = targetStreams[student.id];
-            } else {
-              // Stream assignment logic for Stream A and B only
-              assignedStream = student.sex === 'Male' ? 'A' : 'B';
-            }
+            const requested = requestedStreams[student.id] || requestedStreams[String(student.id)];
+            const assignedStream = FORM_ONE_STREAMS.has(requested)
+              ? requested
+              : (student.sex === 'Male' ? 'A' : 'B');
 
             // Insert student into main students table
             const insertResult = await client.query(
@@ -241,7 +325,15 @@ router.post('/promote/:year', requireAuth, requirePreFormOneYear, async (req, re
             );
 
             promotedStudents.push({
-              ...student,
+              id: student.id,
+              admission_number: student.admission_number,
+              serial_number: student.serial_number,
+              first_name: student.first_name,
+              middle_name: student.middle_name,
+              surname: student.surname,
+              sex: student.sex,
+              parish: student.parish,
+              year: student.year,
               promotedTo: {
                 level: 'FORM I',
                 stream: assignedStream,
@@ -249,17 +341,26 @@ router.post('/promote/:year', requireAuth, requirePreFormOneYear, async (req, re
                 studentId: insertResult.rows[0].id
               }
             });
-
-            console.log(`ðŸ” PROMOTION: Successfully promoted ${student.admission_number} to Form I ${assignedStream}`);
-
           } catch (error) {
-            console.error(`ðŸ” PROMOTION ERROR: Failed to promote ${student.admission_number}:`, error);
+            console.error(`PROMOTION ERROR: Failed to promote ${student.admission_number}:`, error);
             errors.push({
               admissionNumber: student.admission_number,
               name: `${student.first_name} ${student.surname}`,
               error: error.message
             });
           }
+        }
+
+        if (promotedStudents.length > 0) {
+          // Thrown errors abort the transaction, so a failed audit can never
+          // leave committed promotions behind.
+          await recordPromotionActivity(client, {
+            actorId,
+            sourceYear,
+            targetYear,
+            promotedCount: promotedStudents.length,
+            failedCount: errors.length,
+          });
         }
 
         return {
@@ -269,8 +370,10 @@ router.post('/promote/:year', requireAuth, requirePreFormOneYear, async (req, re
           summary: {
             total: studentsToPromote.length,
             successful: promotedStudents.length,
-            failed: errors.length
-          }
+            failed: errors.length,
+            skipped: outOfCohortIds.length,
+          },
+          outOfCohortIds: [...outOfCohortIds],
         };
       } catch (error) {
         console.error('Error in promotion transaction:', error);
@@ -278,63 +381,43 @@ router.post('/promote/:year', requireAuth, requirePreFormOneYear, async (req, re
       }
     });
 
-    if (client.success) {
+    if (!outcome.success) {
+      return res.json({
+        success: false,
+        message: outcome.message || 'Promotion failed',
+        outOfCohortIds: outcome.outOfCohortIds || [],
+      });
+    }
+
+    // The authoritative audit row is already committed with the promotions, so
+    // this secondary activity log must never turn a completed promotion into a
+    // 500 response for the user.
+    try {
       await saveUserActivity({
         username: req.user?.username || req.user?.email || String(req.user?.id || 'unknown'),
         activity_type: 'PROMOTE_PREFORM_ONE',
-        description: `Pre-Form One promotion: cohort ${year} → Form I ${targetYear}`,
+        description: `Pre-Form One promotion: cohort ${year} ? Form I ${targetYear}`,
         details: {
           sourceYear: year,
           targetYear,
-          promotedCount: client.promoted?.length || 0,
-          failedCount: client.errors?.length || 0
+          promotedCount: outcome.promoted?.length || 0,
+          failedCount: outcome.errors?.length || 0
         }
       });
-
-      await query(
-        `CREATE TABLE IF NOT EXISTS promotion_activities (
-          id SERIAL PRIMARY KEY,
-          user_id INTEGER REFERENCES users(id),
-          source_year INTEGER NOT NULL,
-          target_year INTEGER NOT NULL,
-          promoted_count INTEGER DEFAULT 0,
-          failed_count INTEGER DEFAULT 0,
-          details JSONB,
-          created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
-        )`
-      );
-
-      await query(
-        `INSERT INTO promotion_activities (user_id, source_year, target_year, promoted_count, failed_count, details)
-         VALUES ($1, $2, $3, $4, $5, $6)`,
-        [
-          req.user?.user_id || null,
-          sourceYear,
-          targetYear,
-          client.promoted?.length || 0,
-          client.errors?.length || 0,
-          JSON.stringify({
-            promotedCount: client.promoted?.length || 0,
-            failedCount: client.errors?.length || 0
-          })
-        ]
-      );
-
-      res.json({
-        success: true,
-        data: {
-          promoted: client.promoted || [],
-          errors: client.errors || [],
-          summary: client.summary || { total: 0, successful: 0, failed: 0 }
-        },
-        message: `Promotion completed: ${client.summary?.successful || 0} students promoted successfully`
-      });
-    } else {
-      res.json({
-        success: false,
-        message: client.message || 'Promotion failed'
-      });
+    } catch (activityError) {
+      console.error('Failed to write promotion activity log:', activityError.message);
     }
+
+    return res.json({
+      success: true,
+      data: {
+        promoted: outcome.promoted || [],
+        errors: outcome.errors || [],
+        summary: outcome.summary || { total: 0, successful: 0, failed: 0, skipped: 0 },
+        outOfCohortIds: outcome.outOfCohortIds || [],
+      },
+      message: `Promotion completed: ${outcome.summary?.successful || 0} students promoted successfully`
+    });
   } catch (error) {
     console.error('Error promoting students:', error);
     sendError(res, error, 500);
@@ -347,7 +430,7 @@ router.post('/promote/:year', requireAuth, requirePreFormOneYear, async (req, re
 router.get('/history', requireAuth, async (req, res) => {
   try {
     const result = await query(
-      `SELECT 
+      `SELECT
         pa.*,
         u.username as promoted_by
        FROM promotion_activities pa

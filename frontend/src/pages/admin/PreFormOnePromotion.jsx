@@ -26,7 +26,7 @@ const PreFormOnePromotion = () => {
   const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      
+
       // Load eligible students
       const studentsResponse = await preFormOnePromotionService.getEligibleStudents(year);
       if (studentsResponse.success) {
@@ -48,6 +48,13 @@ const PreFormOnePromotion = () => {
     }
   }, [year]);
 
+  // Students who already have a Form One record for the next year are shown
+  // read-only and excluded from the promotable set.
+  const promotableStudents = useMemo(
+    () => eligibleStudents.filter((student) => !student.already_promoted),
+    [eligibleStudents]
+  );
+
   // Memoized handlers to prevent unnecessary re-renders
   const handleStudentSelection = useCallback((studentId) => {
     setSelectedStudents(prev => {
@@ -61,13 +68,13 @@ const PreFormOnePromotion = () => {
 
   const handleSelectAll = useCallback(() => {
     setSelectedStudents(prev => {
-      if (prev.length === eligibleStudents.length) {
+      if (prev.length === promotableStudents.length) {
         return [];
       } else {
-        return eligibleStudents.map(student => student.id);
+        return promotableStudents.map(student => student.id);
       }
     });
-  }, [eligibleStudents]);
+  }, [promotableStudents]);
 
   const handleStreamChange = useCallback((studentId, stream) => {
     setTargetStreams(prev => ({
@@ -79,7 +86,7 @@ const PreFormOnePromotion = () => {
   const handlePromotion = useCallback(async (promoteAll = false) => {
     try {
       setPromoting(true);
-      
+
       const promotionData = {
         selectedStudents: promoteAll ? [] : selectedStudents,
         targetStreams: targetStreams,
@@ -87,13 +94,13 @@ const PreFormOnePromotion = () => {
       };
 
       const response = await preFormOnePromotionService.promoteStudents(year, promotionData);
-      
+
       if (response.success) {
         const { errors, summary } = response.data;
-        
+
         // Show success message
         toast.success(`Promotion completed: ${summary.successful} students promoted successfully`);
-        
+
         // Show errors if any
         if (errors && errors.length > 0) {
           errors.forEach(error => {
@@ -103,7 +110,7 @@ const PreFormOnePromotion = () => {
 
         // Reload data
         await loadData();
-        
+
         // Clear selection
         setSelectedStudents([]);
         setTargetStreams({});
@@ -124,9 +131,9 @@ const PreFormOnePromotion = () => {
   }, [year, loadData]);
 
   // Memoized computed values
-  const isAllSelected = useMemo(() => 
-    selectedStudents.length === eligibleStudents.length && eligibleStudents.length > 0,
-    [selectedStudents.length, eligibleStudents.length]
+  const isAllSelected = useMemo(() =>
+    selectedStudents.length === promotableStudents.length && promotableStudents.length > 0,
+    [selectedStudents.length, promotableStudents.length]
   );
 
   const selectedCount = useMemo(() => selectedStudents.length, [selectedStudents.length]);
@@ -140,12 +147,15 @@ const PreFormOnePromotion = () => {
 
   // Memoized Student Row Component
   const StudentRow = memo(({ student, isSelected, onSelection, onStreamChange, defaultStream }) => {
+    const alreadyPromoted = !!student.already_promoted;
+
     return (
-      <tr className={isSelected ? 'selected' : ''}>
+      <tr className={isSelected ? 'selected' : alreadyPromoted ? 'already-promoted' : ''}>
         <td className="select-column">
-          <input 
-            type="checkbox" 
+          <input
+            type="checkbox"
             checked={isSelected}
+            disabled={alreadyPromoted}
             onChange={() => onSelection(student.id)}
           />
         </td>
@@ -156,14 +166,18 @@ const PreFormOnePromotion = () => {
         <td>{student.sex}</td>
         <td>{student.parish || 'Not assigned'}</td>
         <td>
-          <select 
-            value={defaultStream}
-            onChange={(e) => onStreamChange(student.id, e.target.value)}
-            className="stream-select"
-          >
-            <option value="A">Stream A</option>
-            <option value="B">Stream B</option>
-          </select>
+          {alreadyPromoted ? (
+            <span className="promoted-badge">Already in Form One</span>
+          ) : (
+            <select
+              value={defaultStream}
+              onChange={(e) => onStreamChange(student.id, e.target.value)}
+              className="stream-select"
+            >
+              <option value="A">Stream A</option>
+              <option value="B">Stream B</option>
+            </select>
+          )}
         </td>
       </tr>
     );
@@ -248,14 +262,14 @@ const PreFormOnePromotion = () => {
 
       {/* Tabs */}
       <div className="promotion-tabs">
-        <button 
+        <button
           className={`tab-button ${activeTab === 'eligible' ? 'active' : ''}`}
           onClick={() => setActiveTab('eligible')}
         >
           <i className="fas fa-users"></i>
           Eligible Students ({eligibleStudents.length})
         </button>
-        <button 
+        <button
           className={`tab-button ${activeTab === 'history' ? 'active' : ''}`}
           onClick={() => setActiveTab('history')}
         >
@@ -278,7 +292,7 @@ const PreFormOnePromotion = () => {
               {/* Actions Bar */}
               <div className="promotion-actions">
                 <div className="selection-actions">
-                  <button 
+                  <button
                     className="excel-btn small"
                     onClick={handleSelectAll}
                   >
@@ -290,7 +304,7 @@ const PreFormOnePromotion = () => {
                   </span>
                 </div>
                 <div className="promotion-buttons">
-                  <button 
+                  <button
                     className="excel-btn primary"
                     onClick={() => handlePromotion(false)}
                     disabled={selectedStudents.length === 0 || promoting}
@@ -298,7 +312,7 @@ const PreFormOnePromotion = () => {
                     <i className="fas fa-arrow-up"></i>
                     {promoting ? 'Promoting...' : 'Promote Selected'}
                   </button>
-                  <button 
+                  <button
                     className="excel-btn secondary"
                     onClick={() => handlePromotion(true)}
                     disabled={promoting}
@@ -315,8 +329,8 @@ const PreFormOnePromotion = () => {
                   <thead>
                     <tr>
                       <th className="select-column">
-                        <input 
-                          type="checkbox" 
+                        <input
+                          type="checkbox"
                           checked={isAllSelected}
                           onChange={handleSelectAll}
                         />
