@@ -39,6 +39,12 @@ const TeachersManagement = ({ formLevel, stream: streamProp }) => {
   // Form VI First Term (Jul-Dec 2026) -> year 2026
   // Form VI Second Term (Jan-Jun 2027) -> year 2027
   const apiYear = parseInt(year, 10);
+  const teacherScope = {
+    level: normalizedLevel,
+    stream: normalizedStream,
+    year: apiYear,
+  };
+  const teacherQueryKey = ['teachers', normalizedLevel, normalizedStream, apiYear, term];
 
   // Fetch subjects for this class
   // For Form V-VI, use apiYear (academic year start) instead of display year
@@ -70,6 +76,27 @@ const TeachersManagement = ({ formLevel, stream: streamProp }) => {
       return res.data?.teachers || {};
     },
     retry: false,
+  });
+
+  const templateMutation = useMutation({
+    mutationFn: () => studentsAPI.getSubjectTeacherTemplate(teacherScope),
+    onSuccess: (response) => {
+      const blob = new Blob([response.data], { type: 'text/csv;charset=utf-8' });
+      const url = URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      const filename = `subject_teachers_${normalizedLevel}_${normalizedStream}_${apiYear}.csv`
+        .replace(/[^A-Za-z0-9_.-]+/g, '_');
+      link.href = url;
+      link.download = filename;
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      URL.revokeObjectURL(url);
+      toast.success('Subject teacher CSV template downloaded');
+    },
+    onError: (error) => {
+      toast.error(error.response?.data?.message || 'Failed to download CSV template');
+    },
   });
 
   // Save teacher mutation
@@ -110,6 +137,28 @@ const TeachersManagement = ({ formLevel, stream: streamProp }) => {
     },
     onError: (error) => {
       toast.error(error.response?.data?.message || 'Failed to remove teacher assignment');
+    },
+  });
+
+  const csvUploadMutation = useMutation({
+    mutationFn: (formData) => studentsAPI.uploadSubjectTeachersCsv(formData),
+    onSuccess: (response) => {
+      const result = response.data;
+      queryClient.invalidateQueries(teacherQueryKey);
+      const message = result.message || `${result.saved || 0} assignment(s) registered successfully`;
+      if (result.skipped > 0) {
+        toast.success(`${message}. ${result.skipped} blank row(s) were skipped.`);
+      } else {
+        toast.success(message);
+      }
+    },
+    onError: (error) => {
+      const data = error.response?.data;
+      const rowErrors = Array.isArray(data?.errors)
+        ? data.errors.slice(0, 3).map((item) => `Row ${item.row}: ${item.error}`)
+        : [];
+      const suffix = rowErrors.length > 0 ? ` ${rowErrors.join(' ')}` : '';
+      toast.error(`${data?.message || 'CSV upload failed'}${suffix}`);
     },
   });
 
@@ -182,6 +231,38 @@ const TeachersManagement = ({ formLevel, stream: streamProp }) => {
     }
   };
 
+  const handleDownloadTemplate = () => {
+    templateMutation.mutate();
+  };
+
+  const handleUploadCsv = (event) => {
+    const input = event.target;
+    const file = input.files?.[0];
+    if (!file) return;
+
+    if (!file.name.toLowerCase().endsWith('.csv')) {
+      toast.error('Please select a CSV file');
+      input.value = '';
+      return;
+    }
+    if (file.size > 2 * 1024 * 1024) {
+      toast.error('CSV file must not exceed 2 MB');
+      input.value = '';
+      return;
+    }
+
+    const formData = new FormData();
+    formData.append('file', file);
+    formData.append('level', normalizedLevel);
+    formData.append('stream', normalizedStream);
+    formData.append('year', apiYear);
+    csvUploadMutation.mutate(formData, {
+      onSettled: () => {
+        input.value = '';
+      },
+    });
+  };
+
   const getBackPath = () => {
     if (normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI') {
       return `/admin/teachers/${formLevel}/stream/${stream}/years`;
@@ -201,6 +282,33 @@ const TeachersManagement = ({ formLevel, stream: streamProp }) => {
             <div>
               <h1 className="teachers-mgmt-title">Subject Teachers Management</h1>
               <p className="teachers-mgmt-sub">{normalizedLevel} {normalizedStream} &middot; {year}{term ? ` &middot; ${term}` : ''}</p>
+            </div>
+            <div className="teachers-mgmt-csv-actions">
+              <button
+                type="button"
+                className="teachers-btn teachers-btn-download"
+                onClick={handleDownloadTemplate}
+                disabled={templateMutation.isLoading || subjectsLoading || subjects.length === 0}
+                title="Download subject teacher CSV template"
+              >
+                <i className="fas fa-file-arrow-down"></i>
+                <span>{templateMutation.isLoading ? 'Preparing...' : 'CSV Template'}</span>
+              </button>
+              <label
+                className={`teachers-btn teachers-btn-primary teachers-csv-upload${csvUploadMutation.isLoading || subjectsLoading || subjects.length === 0 ? ' teachers-btn-disabled' : ''}`}
+                title="Upload subject teacher assignments from CSV"
+                aria-disabled={csvUploadMutation.isLoading || subjectsLoading || subjects.length === 0}
+              >
+                <input
+                  type="file"
+                  accept=".csv,text/csv"
+                  onChange={handleUploadCsv}
+                  disabled={csvUploadMutation.isLoading || subjectsLoading || subjects.length === 0}
+                  className="teachers-csv-file-input"
+                />
+                <i className="fas fa-file-arrow-up"></i>
+                <span>{csvUploadMutation.isLoading ? 'Uploading...' : 'Upload CSV'}</span>
+              </label>
             </div>
           </header>
 

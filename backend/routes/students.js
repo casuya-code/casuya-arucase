@@ -17,6 +17,11 @@ const { query, withTransaction } = require('../config/database');
 const { saveUserActivity } = require('../utils/activityLogger');
 const { generatePhotoEntryFormPDF, generateAllStreamsPhotoEntryFormPDF, generateMonthlyResultsPDF } = require('../utils/pdfGenerator');
 const { normalizeStream } = require('../utils/streamNormalizer');
+const {
+  buildSubjectTeacherCsv,
+  parseSubjectTeacherCsv,
+  validateSubjectTeacherRows,
+} = require('../utils/subjectTeacherCsv');
 const { sendError } = require('../utils/safeError');
 const { cacheRoutes } = require('../middleware/cache');
 const sharp = require('sharp');
@@ -257,6 +262,35 @@ const csvUpload = multer({
     }
   }
 });
+
+const subjectTeacherCsvUpload = multer({
+  storage: multer.memoryStorage(),
+  limits: { fileSize: 2 * 1024 * 1024, files: 1 },
+  fileFilter: (req, file, cb) => {
+    const isCsv = file.originalname.toLowerCase().endsWith('.csv');
+    const allowedType = !file.mimetype || [
+      'text/csv',
+      'application/csv',
+      'application/vnd.ms-excel',
+      'application/octet-stream',
+      'text/plain',
+    ].includes(file.mimetype);
+    if (isCsv && allowedType) {
+      cb(null, true);
+      return;
+    }
+    cb(new Error('Only CSV files are allowed'));
+  },
+});
+
+const uploadSubjectTeacherCsv = (req, res, next) => {
+  subjectTeacherCsvUpload.single('file')(req, res, (error) => {
+    if (error) {
+      return res.status(400).json({ message: error.message });
+    }
+    next();
+  });
+};
 
 // Get available years
 router.get('/years', async (req, res) => {
@@ -3200,6 +3234,237 @@ router.post('/subjects', requireModule('subject_management'), async (req, res) =
   } catch (error) {
     if (error.code === '23505') {
       return res.status(400).json({ message: 'Subject already exists for this class and year' });
+    }
+    return sendError(res, error, 500);
+  }
+});
+
+function subjectTeacherInputError(message) {
+  const error = new Error(message);
+  error.status = 400;
+  return error;
+}
+
+function decodeSubjectTeacherScopeValue(value) {
+  try {
+    return decodeURIComponent(String(value ?? '').replace(/\+/g, ' ')).trim();
+  } catch {
+    throw subjectTeacherInputError('Invalid class scope value');
+  }
+}
+
+function parseSubjectTeacherScope(input) {
+  const level = decodeSubjectTeacherScopeValue(input.level).toUpperCase();
+  const yearText = decodeSubjectTeacherScopeValue(input.year);
+  const rawStream = decodeSubjectTeacherScopeValue(input.stream);
+  const isFormVOrVI = /^FORM\s+(V|VI)$/.test(level);
+
+  if (!/^FORM\s+(I|II|III|IV|V|VI)$/.test(level)) {
+    throw subjectTeacherInputError('Invalid level');
+  }
+  if (!rawStream) {
+    throw subjectTeacherInputError('stream is required');
+  }
+  if (rawStream.length > 50) {
+    throw subjectTeacherInputError('Invalid stream');
+  }
+  if (!/^\d{4}$/.test(yearText)) {
+    throw subjectTeacherInputError('Invalid year');
+  }
+
+  const year = Number(yearText);
+  if (year < 1900 || year > 2200) {
+    throw subjectTeacherInputError('Invalid year');
+  }
+
+  const normalizedStream = normalizeStream(rawStream);
+  return {
+    level,
+    stream: normalizedStream,
+    year,
+    queryStream: isFormVOrVI ? normalizedStream : 'A',
+    queryStreams: isFormVOrVI ? [normalizedStream] : ['A', 'NA'],
+    isFormVOrVI,
+  };
+}
+
+function subjectTeacherFilenamePart(value) {
+  return String(value || '')
+    .trim()
+    .replace(/[^A-Za-z0-9_-]+/g, '_')
+    .replace(/^_+|_+$/g, '');
+}
+
+function buildSubjectTeacherFilename(scope) {
+  return [
+    'subject_teachers',
+    subjectTeacherFilenamePart(scope.level),
+    subjectTeacherFilenamePart(scope.stream),
+    scope.year,
+  ].filter(Boolean).join('_') + '.csv';
+}
+
+async function loadSubjectTeacherTemplateData(scope) {
+  const subjectsSql = scope.isFormVOrVI
+    ? 'SELECT subject_code, subject_name, subject_abbreviation FROM subjects WHERE level = $1 AND stream = $2 AND year = $3 ORDER BY subject_code'
+    : 'SELECT subject_code, subject_name, subject_abbreviation FROM subjects WHERE level = $1 AND stream IN ($2, $3) AND year = $4 ORDER BY subject_code, stream';
+  const teachersSql = scope.isFormVOrVI
+    ? 'SELECT subject_code, teacher_name, teacher_signature FROM subject_teachers WHERE level = $1 AND stream = $2 AND year = $3 ORDER BY subject_code'
+    : 'SELECT subject_code, teacher_name, teacher_signature FROM subject_teachers WHERE level = $1 AND stream IN ($2, $3) AND year = $4 ORDER BY subject_code, stream';
+  const subjectsParams = scope.isFormVOrVI
+    ? [scope.level, scope.queryStream, scope.year]
+    : [scope.level, 'A', 'NA', scope.year];
+  const teachersParams = subjectsParams;
+
+  const [subjectsResult, teachersResult] = await Promise.all([
+    query(subjectsSql, subjectsParams),
+    query(teachersSql, teachersParams),
+  ]);
+
+  const teacherMap = Object.create(null);
+  for (const row of teachersResult.rows || []) {
+    if (!Object.prototype.hasOwnProperty.call(teacherMap, row.subject_code)) {
+      teacherMap[row.subject_code] = {
+        teacher_name: row.teacher_name,
+        teacher_signature: row.teacher_signature,
+      };
+    }
+  }
+
+  const subjects = [];
+  const seenSubjectCodes = new Set();
+  for (const row of subjectsResult.rows || []) {
+    const key = String(row.subject_code || row.subject_abbreviation || '').toUpperCase();
+    if (!key || seenSubjectCodes.has(key)) {
+      continue;
+    }
+    seenSubjectCodes.add(key);
+    subjects.push(row);
+  }
+
+  for (const subject of subjects) {
+    const assignment =
+      teacherMap[subject.subject_code] ||
+      (subject.subject_abbreviation ? teacherMap[subject.subject_abbreviation] : null);
+    if (assignment && subject.subject_abbreviation) {
+      teacherMap[subject.subject_abbreviation] = assignment;
+    }
+  }
+
+  return { subjects, teacherMap };
+}
+
+router.get('/teachers/template', requireModule('teachers_management'), async (req, res) => {
+  try {
+    const scope = parseSubjectTeacherScope(req.query);
+    const { subjects, teacherMap } = await loadSubjectTeacherTemplateData(scope);
+    if (subjects.length === 0) {
+      return res.status(404).json({ message: 'No subjects found for this class' });
+    }
+
+    const filename = buildSubjectTeacherFilename(scope);
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+    return res.send(buildSubjectTeacherCsv(subjects, teacherMap));
+  } catch (error) {
+    if (error.status === 400) {
+      return res.status(400).json({ message: error.message });
+    }
+    return sendError(res, error, 500);
+  }
+});
+
+router.post('/teachers/bulk-upload', requireModule('teachers_management'), uploadSubjectTeacherCsv, async (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ message: 'CSV file is required' });
+    }
+
+    const scope = parseSubjectTeacherScope(req.body);
+    let rows;
+    try {
+      rows = parseSubjectTeacherCsv(req.file.buffer);
+    } catch (error) {
+      return res.status(400).json({ message: error.message });
+    }
+
+    const { subjects } = await loadSubjectTeacherTemplateData(scope);
+    if (subjects.length === 0) {
+      return res.status(404).json({ message: 'No subjects found for this class' });
+    }
+
+    const { assignments, errors, skipped } = validateSubjectTeacherRows(rows, subjects);
+    if (errors.length > 0) {
+      return res.status(400).json({
+        message: 'CSV validation failed. No teacher assignments were saved.',
+        saved: 0,
+        skipped,
+        failed: errors.length,
+        errors,
+      });
+    }
+    if (assignments.length === 0) {
+      return res.status(400).json({
+        message: 'CSV contains no teacher assignments. Enter a Teacher Name for at least one subject.',
+        saved: 0,
+        skipped,
+        failed: 0,
+        errors: [],
+      });
+    }
+
+    await withTransaction(async (client) => {
+      for (const assignment of assignments) {
+        await client.query(
+          `DELETE FROM subject_teachers
+           WHERE level = $1 AND stream = ANY($2::text[]) AND year = $3 AND subject_code = ANY($4::text[])`,
+          [scope.level, scope.queryStreams, scope.year, assignment.subjectCodes]
+        );
+        await client.query(
+          `INSERT INTO subject_teachers (level, stream, year, subject_code, teacher_name, teacher_signature)
+           VALUES ($1, $2, $3, $4, $5, $6)
+           ON CONFLICT (level, stream, year, subject_code)
+           DO UPDATE SET teacher_name = EXCLUDED.teacher_name,
+                         teacher_signature = EXCLUDED.teacher_signature,
+                         updated_at = NOW()`,
+          [
+            scope.level,
+            scope.queryStream,
+            scope.year,
+            assignment.subjectCode,
+            assignment.teacherName,
+            assignment.teacherSignature,
+          ]
+        );
+      }
+    });
+
+    const activityUsername = req.user?.username || req.user?.user_id;
+    if (activityUsername) {
+      await saveUserActivity({
+        username: activityUsername,
+        activity_type: 'subject_teachers_imported',
+        description: `Imported ${assignments.length} subject teacher assignment(s)`,
+        details: {
+          level: scope.level,
+          stream: scope.stream,
+          year: scope.year,
+          saved: assignments.length,
+          skipped,
+        },
+      });
+    }
+
+    return res.json({
+      message: `${assignments.length} teacher assignment(s) registered successfully`,
+      saved: assignments.length,
+      skipped,
+      failed: 0,
+      errors: [],
+    });
+  } catch (error) {
+    if (error.status === 400) {
+      return res.status(400).json({ message: error.message });
     }
     return sendError(res, error, 500);
   }

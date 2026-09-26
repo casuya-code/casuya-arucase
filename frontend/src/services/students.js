@@ -92,6 +92,15 @@ export const studentsAPI = {
     return api.get(`/students/teachers/list?${queryString}`);
   },
 
+  getSubjectTeacherTemplate: (params) => {
+    const queryString = new URLSearchParams(params).toString();
+    return api.get(`/students/teachers/template?${queryString}`, {
+      responseType: 'blob',
+    });
+  },
+
+  uploadSubjectTeachersCsv: (formData) => api.post('/students/teachers/bulk-upload', formData),
+
   // Save teacher
   saveTeacher: (data) => api.post('/students/teachers', data),
 
