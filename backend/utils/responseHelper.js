@@ -3,13 +3,17 @@
  * Standardizes API responses with consistent structure
  */
 
-const sendSuccess = (res, statusCode, message, data = null) => {
+const sendSuccess = (res, statusCode, message, data = null, meta = null) => {
   const response = {
     success: true,
     message,
     data,
     timestamp: new Date().toISOString()
   };
+
+  if (meta && typeof meta === 'object' && !Array.isArray(meta)) {
+    Object.assign(response, meta);
+  }
   
   res.status(statusCode).json(response);
   return response;
