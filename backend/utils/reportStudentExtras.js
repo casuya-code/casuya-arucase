@@ -8,8 +8,43 @@ const {
   dedupeCommentRowsByTypePreferA,
   dedupeTabiaRowsByCriterionPreferA,
 } = require('./reportCommentDedupe');
+const { getTermMatchValues } = require('./termNormalizer');
 
 const FORM_I_TO_IV = /^FORM\s+(I|II|III|IV)$/i;
+const FORM_V_OR_VI = /^FORM\s+(V|VI|5|6)$/i;
+
+function getReportStudentLookupQuery({
+  admNo,
+  form,
+  stream,
+  normalizedStream,
+  yearNum,
+  normalizedTerm,
+}) {
+  const streamsToCheck = normalizedStream === 'A' ? ['A', 'NA'] : [normalizedStream, stream];
+  const uniqueStreams = [...new Set(streamsToCheck)];
+  const params = [admNo, form];
+  let sql = 'SELECT * FROM students WHERE adm_no = $1 AND level = $2';
+
+  if (uniqueStreams.length === 1) {
+    sql += ` AND stream = $${params.length + 1}`;
+    params.push(uniqueStreams[0]);
+  } else {
+    sql += ` AND stream IN ($${params.length + 1}, $${params.length + 2})`;
+    params.push(uniqueStreams[0], uniqueStreams[1]);
+  }
+
+  sql += ` AND year = $${params.length + 1}`;
+  params.push(yearNum);
+
+  if (FORM_V_OR_VI.test(form)) {
+    const termMatchValues = getTermMatchValues(normalizedTerm);
+    sql += ` AND term = ANY($${params.length + 1}::text[])`;
+    params.push(termMatchValues);
+  }
+
+  return { sql, params, uniqueStreams };
+}
 
 /**
  * Format individual debt for reports (individual + bulk).
@@ -43,26 +78,33 @@ function formatStudentFeesDebt(amount, description) {
  * SQL + params for name-ordered class list (same as PhotoManagement / Comments UI).
  * @returns {{ sql: string, params: unknown[] }}
  */
-function getStudentIndexListQuery(form, normalizedStream, yearNum) {
+function getStudentIndexListQuery(form, normalizedStream, yearNum, normalizedTerm) {
   const isFormIToIV = FORM_I_TO_IV.test(form);
+  let sql;
+  let params;
+
   if (isFormIToIV && normalizedStream === 'A') {
-    return {
-      sql: `SELECT adm_no, first_name, middle_name, surname
-            FROM students
-            WHERE level = $1 AND stream IN ($2, $3) AND year = $4
-            ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC
-            LIMIT 500`,
-      params: [form, 'A', 'NA', yearNum],
-    };
+    sql = `SELECT adm_no, first_name, middle_name, surname
+           FROM students
+           WHERE level = $1 AND stream IN ($2, $3) AND year = $4`;
+    params = [form, 'A', 'NA', yearNum];
+  } else {
+    sql = `SELECT adm_no, first_name, middle_name, surname
+           FROM students
+           WHERE level = $1 AND stream = $2 AND year = $3`;
+    params = [form, normalizedStream, yearNum];
   }
-  return {
-    sql: `SELECT adm_no, first_name, middle_name, surname
-          FROM students
-          WHERE level = $1 AND stream = $2 AND year = $3
-          ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC
-          LIMIT 500`,
-    params: [form, normalizedStream, yearNum],
-  };
+
+  if (FORM_V_OR_VI.test(form)) {
+    sql += ` AND term = ANY($${params.length + 1}::text[])`;
+    params.push(getTermMatchValues(normalizedTerm));
+  }
+
+  sql += `
+    ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC
+    LIMIT 500`;
+
+  return { sql, params };
 }
 
 /**
@@ -80,8 +122,8 @@ function studentIndexForAdmNo(admNo, orderedRows) {
  * Build adm_no → student_index map (0-based) for bulk JSON summaries.
  * @returns {Promise<Record<string, string>>}
  */
-async function buildAdmNoToStudentIndexMap(form, normalizedStream, yearNum) {
-  const { sql, params } = getStudentIndexListQuery(form, normalizedStream, yearNum);
+async function buildAdmNoToStudentIndexMap(form, normalizedStream, yearNum, normalizedTerm) {
+  const { sql, params } = getStudentIndexListQuery(form, normalizedStream, yearNum, normalizedTerm);
   const result = await query(sql, params);
   const map = {};
   result.rows.forEach((row, idx) => {
@@ -237,6 +279,7 @@ async function loadReportStudentExtras({
 
 module.exports = {
   FORM_I_TO_IV,
+  getReportStudentLookupQuery,
   formatStudentFeesDebt,
   getStudentIndexListQuery,
   studentIndexForAdmNo,

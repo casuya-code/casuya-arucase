@@ -11,7 +11,10 @@ const { normalizeStream } = require('../utils/streamNormalizer');
 const {
   loadReportStudentExtras,
   buildAdmNoToStudentIndexMap,
+  getReportStudentLookupQuery,
+  getStudentIndexListQuery,
 } = require('../utils/reportStudentExtras');
+const { normalizeTerm, getTermMatchValues } = require('../utils/termNormalizer');
 const { sanitizeAuthorityDataRow } = require('../utils/authoritySignature');
 const { formatReportScore } = require('../utils/reportScoreFormat');
 const { getReportRankings } = require('../utils/reportRankings');
@@ -44,40 +47,27 @@ router.get('/individual/:form/:stream/:year/:term/:admNo', requireModule('indivi
 
     // Normalize stream: NA -> A
     const normalizedStream = normalizeStream(stream);
-
-    // Normalize term to match database format
-    const normalizeTerm = (termParam) => {
-      if (!termParam) return 'Term I';
-      const t = termParam.trim();
-      if (/^Term\s+I$/i.test(t) || /^Term\s+1$/i.test(t)) return 'First Term';
-      if (/^Term\s+II$/i.test(t) || /^Term\s+2$/i.test(t)) return 'Second Term';
-      if (/^First\s+Term$/i.test(t)) return 'First Term';
-      if (/^Second\s+Term$/i.test(t)) return 'Second Term';
-      return t;
-    };
-
+    const formCode = form.replace('FORM ', '').trim();
+    const isFormVOrVI = ['V', 'VI', '5', '6'].includes(formCode);
     const normalizedTerm = normalizeTerm(term);
+    const yearNum = parseInt(year, 10);
 
     // Get student data - check both normalized stream (A) and original stream (NA) 
     // This handles cases where DB might have either value
     // For FORM I-IV, both NA and A refer to the same class
-    const streamsToCheck = normalizedStream === 'A' ? ['A', 'NA'] : [normalizedStream, stream];
-    const uniqueStreams = [...new Set(streamsToCheck)]; // Remove duplicates
-    
-    let studentResult;
-    if (uniqueStreams.length === 1) {
-      // Single stream value
-      studentResult = await query(
-        'SELECT * FROM students WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4',
-        [admNo, form, uniqueStreams[0], parseInt(year)]
-      );
-    } else {
-      // Check both streams
-      studentResult = await query(
-        'SELECT * FROM students WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5',
-        [admNo, form, uniqueStreams[0], uniqueStreams[1], parseInt(year)]
-      );
-    }
+    const {
+      sql: studentLookupSql,
+      params: studentLookupParams,
+      uniqueStreams,
+    } = getReportStudentLookupQuery({
+      admNo,
+      form,
+      stream,
+      normalizedStream,
+      yearNum,
+      normalizedTerm,
+    });
+    const studentResult = await query(studentLookupSql, studentLookupParams);
     
     if (studentResult.rows.length === 0) {
       return res.status(404).json({ 
@@ -128,8 +118,6 @@ router.get('/individual/:form/:stream/:year/:term/:admNo', requireModule('indivi
         .filter((c) => c != null && String(c).trim() !== '')
     );
 
-    const formCode = form.replace('FORM ', '').trim();
-    const isFormVOrVI = ['V', 'VI', '5', '6'].includes(formCode);
     // Get months based on term
     // Form V/VI: Academic year July-June. Term I (Jul-Dec): Aug-Nov, Term II (Jan-Jun): Feb-May
     // Form I-IV: Term I: Feb-May, Term II: Aug-Nov
@@ -224,27 +212,12 @@ router.get('/individual/:form/:stream/:year/:term/:admNo', requireModule('indivi
     // Use database sorting to match /students API exactly (ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC)
     const isFormIToIV = /^FORM\s+(I|II|III|IV)$/i.test(form);
 
-    // For FORM I-IV, PhotoManagement's /students query includes both streams A and NA.
-    const studentIndexStudentsQuery = (isFormIToIV && normalizedStream === 'A')
-      ? `SELECT adm_no, first_name, middle_name, surname
-         FROM students
-         WHERE level = $1 AND stream IN ($2, $3) AND year = $4
-         ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC`
-      : `SELECT adm_no, first_name, middle_name, surname
-         FROM students
-         WHERE level = $1 AND stream = $2 AND year = $3
-         ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC`;
-
-    // PhotoManagement does not pass `limit` to /students, so backend defaults to 500.
-    // To keep student_index consistent with how uploads were stored, apply the same limit here.
-    const studentIndexStudentsQueryWithLimit = `${studentIndexStudentsQuery} LIMIT 500`;
-
-    const studentIndexStudentsParams = (isFormIToIV && normalizedStream === 'A')
-      ? [form, 'A', 'NA', parseInt(year)]
-      : [form, normalizedStream, parseInt(year)];
-
+    const {
+      sql: studentIndexStudentsQuery,
+      params: studentIndexStudentsParams,
+    } = getStudentIndexListQuery(form, normalizedStream, yearNum, normalizedTerm);
     const studentIndexStudentsResult = await query(
-      studentIndexStudentsQueryWithLimit,
+      studentIndexStudentsQuery,
       studentIndexStudentsParams
     );
 
@@ -424,9 +397,11 @@ router.get('/individual/:form/:stream/:year/:term/:admNo/pdf', requireModule('in
   try {
     // Import Puppeteer PDF generator
     const { generateIndividualReportPDFWithPuppeteer } = require('../utils/puppeteerPdfGenerator');
-    
+    const { normalizeReportLanguage } = require('../utils/reportLang');
+
     const authToken = getAuthTokenForInternalCalls(req);
-    
+    const lang = normalizeReportLanguage(req.query.lang);
+
     // Get API URL (use request protocol and host, or env variable)
     const apiUrl = process.env.API_URL || `http://localhost:${process.env.PORT || 5000}`;
     
@@ -437,7 +412,8 @@ router.get('/individual/:form/:stream/:year/:term/:admNo/pdf', requireModule('in
       decodedTerm, 
       admNo,
       apiUrl,
-      authToken
+      authToken,
+      lang
     );
     
     // Validate PDF buffer
@@ -470,7 +446,7 @@ router.get('/individual/:form/:stream/:year/:term/:admNo/pdf', requireModule('in
     res.setHeader('Content-Type', 'application/pdf');
     res.setHeader('Content-Length', buffer.length);
     res.setHeader('Cache-Control', 'no-cache');
-    const filename = `report_${admNo}_${year}_${decodedTerm.replace(/\s+/g, '_')}.pdf`;
+    const filename = `report_${lang === 'en' ? 'English_' : ''}${admNo}_${year}_${decodedTerm.replace(/\s+/g, '_')}.pdf`;
     res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     
     // Send the buffer using end() with binary encoding for better compatibility
@@ -500,17 +476,6 @@ router.get('/bulk/:form/:year/:term', requireModule('bulk_report'), async (req, 
 
     const decodedForm = decodeURIComponent(String(form).replace(/\+/g, ' ')).trim();
     const decodedTerm = decodeURIComponent(String(term).replace(/\+/g, ' ')).trim();
-
-    // Normalize term to match database format
-    const normalizeTerm = (termParam) => {
-      if (!termParam) return 'Term I';
-      const t = termParam.trim();
-      if (/^Term\s+I$/i.test(t) || /^Term\s+1$/i.test(t)) return 'First Term';
-      if (/^Term\s+II$/i.test(t) || /^Term\s+2$/i.test(t)) return 'Second Term';
-      if (/^First\s+Term$/i.test(t)) return 'First Term';
-      if (/^Second\s+Term$/i.test(t)) return 'Second Term';
-      return t;
-    };
 
     const normalizedTerm = normalizeTerm(decodedTerm);
 
@@ -553,8 +518,8 @@ router.get('/bulk/:form/:year/:term', requireModule('bulk_report'), async (req, 
 
     // For Form V/VI, filter by term and only active students (exclude promoted)
     if (isForm5Or6) {
-      queryText += ` AND term = $${paramIndex}`;
-      params.push(normalizedTerm);
+      queryText += ` AND term = ANY($${paramIndex}::text[])`;
+      params.push(getTermMatchValues(normalizedTerm));
       paramIndex++;
       queryText += ` AND (status IS DISTINCT FROM 'PROMOTED')`;
     }
@@ -686,7 +651,8 @@ router.get('/bulk/:form/:year/:term', requireModule('bulk_report'), async (req, 
         admNoToIndexByStream[streamKey] = await buildAdmNoToStudentIndexMap(
           decodedForm,
           streamKey,
-          parseInt(year, 10)
+          parseInt(year, 10),
+          isForm5Or6 ? normalizedTerm : null
         );
       })
     );
@@ -863,17 +829,6 @@ router.get('/bulk/:form/:year/:term/pdf', requireModule('bulk_report'), async (r
     const decodedTerm = decodeURIComponent(String(term).replace(/\+/g, ' ')).trim();
     
     
-    // Normalize term to match database format
-    const normalizeTerm = (termParam) => {
-      if (!termParam) return 'Term I';
-      const t = termParam.trim();
-      if (/^Term\s+I$/i.test(t) || /^Term\s+1$/i.test(t)) return 'First Term';
-      if (/^Term\s+II$/i.test(t) || /^Term\s+2$/i.test(t)) return 'Second Term';
-      if (/^First\s+Term$/i.test(t)) return 'First Term';
-      if (/^Second\s+Term$/i.test(t)) return 'Second Term';
-      return t;
-    };
-
     const normalizedTerm = normalizeTerm(decodedTerm);
 
     // Normalize stream: NA -> A
@@ -898,8 +853,8 @@ router.get('/bulk/:form/:year/:term/pdf', requireModule('bulk_report'), async (r
 
     // For Form V/VI, filter by term and only active students (exclude promoted)
     if (isForm5Or6Pdf2) {
-      queryText += ` AND term = $${paramIndex}`;
-      params.push(normalizedTerm);
+      queryText += ` AND term = ANY($${paramIndex}::text[])`;
+      params.push(getTermMatchValues(normalizedTerm));
       paramIndex++;
       queryText += ` AND (status IS DISTINCT FROM 'PROMOTED')`;
     }
@@ -995,25 +950,26 @@ async function getReportData(form, stream, year, term, admNo) {
   // Normalize stream: NA -> A
   const normalizedStream = normalizeStream(stream);
   
-  // Normalize term to match database format
-  let normalizedTerm = term;
-  if (term) {
-    const t = decodeURIComponent(String(term).replace(/\+/g, ' ')).trim();
-    if (/^Term\s+I$/i.test(t) || /^Term\s+1$/i.test(t)) normalizedTerm = 'First Term';
-    else if (/^Term\s+II$/i.test(t) || /^Term\s+2$/i.test(t)) normalizedTerm = 'Second Term';
-    else normalizedTerm = t;
-  }
-  
-  const studentResult = await query(
-    'SELECT * FROM students WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4',
-    [admNo, form, normalizedStream, year]
-  );
+  const decodedTerm = decodeURIComponent(String(term || '').replace(/\+/g, ' ')).trim();
+  const normalizedTerm = normalizeTerm(decodedTerm);
+  const {
+    sql: studentLookupSql,
+    params: studentLookupParams,
+  } = getReportStudentLookupQuery({
+    admNo,
+    form,
+    stream,
+    normalizedStream,
+    yearNum: year,
+    normalizedTerm,
+  });
+  const studentResult = await query(studentLookupSql, studentLookupParams);
   
   let scoresQuery = 'SELECT * FROM individual_scores WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5';
   let scoresParams = [admNo, form, normalizedStream, 'NA', year];
   if (normalizedTerm) {
-    scoresQuery += ' AND term = $6';
-    scoresParams.push(normalizedTerm);
+    scoresQuery += ' AND term = ANY($6::text[])';
+    scoresParams.push(getTermMatchValues(normalizedTerm));
   }
   
   const scoresResult = await query(scoresQuery, scoresParams);

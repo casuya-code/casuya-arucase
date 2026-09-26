@@ -12,6 +12,7 @@ const fs = require('fs').promises;
 const path = require('path');
 const { query } = require('../config/database');
 const { normalizeStream } = require('./streamNormalizer');
+const { normalizeTerm } = require('./termNormalizer');
 const { HEAD_FONT_LINKS, FONT_STACK } = require('./reportPdfFontSnippets');
 const {
   calculateGrade,
@@ -23,6 +24,7 @@ const {
   calculateOverallAverage
 } = require('./calculations');
 const {
+  getReportStudentLookupQuery,
   getStudentIndexListQuery,
   studentIndexForAdmNo,
   loadReportStudentExtras,
@@ -219,17 +221,6 @@ async function getReportDataInternal(form, stream, year, term, admNo, branding) 
   const normalizedStream = normalizeStream(stream);
   const yearNum = parseInt(year, 10);
   
-  // Normalize term to match database format
-  const normalizeTerm = (termParam) => {
-    if (!termParam) return 'Term I';
-    const t = termParam.trim();
-    if (/^Term\s+I$/i.test(t) || /^Term\s+1$/i.test(t)) return 'First Term';
-    if (/^Term\s+II$/i.test(t) || /^Term\s+2$/i.test(t)) return 'Second Term';
-    if (/^First\s+Term$/i.test(t)) return 'First Term';
-    if (/^Second\s+Term$/i.test(t)) return 'Second Term';
-    return t;
-  };
-
   const normalizedTerm = normalizeTerm(term);
   const formCode = form.replace('FORM ', '').trim();
   const isFormVOrVI = ['V', 'VI', '5', '6'].includes(formCode);
@@ -249,21 +240,18 @@ async function getReportDataInternal(form, stream, year, term, admNo, branding) 
   const months = getMonthsForTerm(normalizedTerm);
   
   // Get student data
-  const streamsToCheck = normalizedStream === 'A' ? ['A', 'NA'] : [normalizedStream, stream];
-  const uniqueStreams = [...new Set(streamsToCheck)];
-  
-  let studentResult;
-  if (uniqueStreams.length === 1) {
-    studentResult = await query(
-      'SELECT * FROM students WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4',
-      [admNo, form, uniqueStreams[0], yearNum]
-    );
-  } else {
-    studentResult = await query(
-      'SELECT * FROM students WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5',
-      [admNo, form, uniqueStreams[0], uniqueStreams[1], yearNum]
-    );
-  }
+  const {
+    sql: studentLookupSql,
+    params: studentLookupParams,
+  } = getReportStudentLookupQuery({
+    admNo,
+    form,
+    stream,
+    normalizedStream,
+    yearNum,
+    normalizedTerm,
+  });
+  const studentResult = await query(studentLookupSql, studentLookupParams);
   
   if (studentResult.rows.length === 0) {
     throw new Error(`Student not found: ${admNo} in ${form} ${year}`);
@@ -403,7 +391,8 @@ async function getReportDataInternal(form, stream, year, term, admNo, branding) 
   const { sql: studentIndexSql, params: studentIndexParams } = getStudentIndexListQuery(
     form,
     normalizedStream,
-    yearNum
+    yearNum,
+    normalizedTerm
   );
   const studentIndexStudentsResult = await query(studentIndexSql, studentIndexParams);
   const studentIndex = studentIndexForAdmNo(admNo, studentIndexStudentsResult.rows);
