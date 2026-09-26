@@ -85,8 +85,10 @@ backend/backups/
 .cache/
 
 # Local development / debug tools (not part of production app)
+# Anchored to the repo root: backend/scripts/ holds the deploy start command
+# (node scripts/start-server.js) and must not be excluded.
 dashboard/
-scripts/
+/scripts/
 cleanup-ports.ps1
 init.ps1
 temp_*.js
