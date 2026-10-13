@@ -252,8 +252,8 @@ async function generateIndividualReportPDFWithPuppeteer(
 
       // Force MAONI column visibility
       const forceMaoniColumnVisible = () => {
-        const maoniHeaders = document.querySelectorAll('.academic-table th:nth-child(10)');
-        const maoniCells = document.querySelectorAll('.academic-table td:nth-child(10)');
+        const maoniHeaders = document.querySelectorAll('.academic-table th.sahihi-header');
+        const maoniCells = document.querySelectorAll('.academic-table td.teacher-signature');
         
         maoniHeaders.forEach((header) => {
           header.style.setProperty('display', 'table-cell', 'important');
@@ -286,9 +286,12 @@ async function generateIndividualReportPDFWithPuppeteer(
         academicTable.style.setProperty('table-layout', 'fixed', 'important');
         academicTable.style.setProperty('width', '100%', 'important');
 
-        // Column widths - ensure all 10 columns are properly sized
-        const colWidths = ['33%', '7%', '7%', '7%', '7%', '5%', '4%', '4%', '12%', '14%'];
+        // Column widths - sourced from the report's colgroup so hidden test columns stay in sync
+        const colWidths = Array.from(academicTable.querySelectorAll('colgroup col')).map(
+          (col) => col.style.width || col.getAttribute('width') || ''
+        );
         colWidths.forEach((width, idx) => {
+          if (!width) return;
           const col = academicTable.querySelectorAll(`th:nth-child(${idx + 1}), td:nth-child(${idx + 1})`);
           col.forEach(cell => {
             cell.style.setProperty('width', width, 'important');
@@ -303,8 +306,8 @@ async function generateIndividualReportPDFWithPuppeteer(
         const academicTable = document.querySelector('.academic-table');
         if (!academicTable) return;
         
-        // Find NAFASI header (column 8 with rotate-header class)
-        const nafasiHeader = academicTable.querySelector('thead tr:first-child th:nth-child(8).rotate-header');
+        // Find NAFASI header (class-based so it survives hidden test columns)
+        const nafasiHeader = academicTable.querySelector('thead tr:first-child th.position-col.rotate-header');
         if (nafasiHeader) {
           // Apply rotation with all vendor prefixes for maximum compatibility
           nafasiHeader.style.setProperty('writing-mode', 'vertical-rl', 'important');

@@ -853,8 +853,6 @@ table {
     /* Force borders on Sahihi ya Mwalimu wa Somo column - CRITICAL for print */
     /* Handle rowspan cells - ensure borders are visible */
     .academic-table th[rowspan],
-    .academic-table th:nth-child(10),
-    .academic-table td:nth-child(10),
     .sahihi-header,
     .teacher-signature {
         border: 0.5pt solid #000000 !important;
@@ -871,10 +869,8 @@ table {
     }
     
     /* Ensure all rows in Sahihi column have top and bottom borders - especially important for horizontal lines */
-    .academic-table tbody tr td:nth-child(10),
-    .academic-table thead tr th:nth-child(10),
-    .academic-table thead tr:first-child th:nth-child(10),
-    .academic-table thead tr:last-child th:nth-child(10) {
+    .academic-table tbody tr td.teacher-signature,
+    .academic-table thead tr th.sahihi-header {
         border-top: 0.5pt solid #000000 !important;
         border-bottom: 0.5pt solid #000000 !important;
         border-left: 0.5pt solid #000000 !important;
@@ -899,7 +895,6 @@ table {
     
     /* Ensure header row with rowspan has borders - critical for horizontal line visibility */
     .academic-table thead tr:first-child th.sahihi-header,
-    .academic-table thead tr:first-child th:nth-child(10),
     .academic-table thead tr th[rowspan].sahihi-header,
     .academic-table thead tr th[rowspan="2"].sahihi-header {
         border: 0.5pt solid #000000 !important;
@@ -924,7 +919,7 @@ table {
     }
     
     /* Ensure NAFASI data cells remain horizontal (not rotated) */
-    .academic-table tbody td:nth-child(8) {
+    .academic-table tbody td.position-col {
         writing-mode: horizontal-tb !important;
         text-orientation: mixed !important;
         transform: none !important;
@@ -932,59 +927,8 @@ table {
         vertical-align: middle !important;
     }
     
-    /* Rotate NAFASI header (column 8) text only in print view - NOT the data cells */
-    /* Place at END of print media query for maximum precedence */
-    /* Use very high specificity to override all other rules */
-    .academic-table thead tr:first-child th:nth-child(8).rotate-header.table-header-white,
-    .academic-table thead tr:first-child th.rotate-header.table-header-white:nth-child(8),
-    .academic-table thead tr:first-child th.table-header-white.rotate-header:nth-child(8) {
-        writing-mode: vertical-rl !important;
-        text-orientation: mixed !important;
-        transform: rotate(180deg) !important;
-        white-space: nowrap !important;
-        text-align: center !important;
-        vertical-align: middle !important;
-        height: auto !important;
-        padding: 2px 4px !important;
-        display: table-cell !important;
-        position: relative !important;
-        font-size: 12.5px !important;
-    }
-    
-    /* CRITICAL: Override any rules that might reset transform or writing-mode for column 8 header */
-    .academic-table thead tr:first-child th:nth-child(8).rotate-header {
-        writing-mode: vertical-rl !important;
-        text-orientation: mixed !important;
-        transform: rotate(180deg) !important;
-    }
-    
-    /* ABSOLUTE FINAL RULE: Force NAFASI header rotation with maximum specificity */
-    /* This must be the LAST rule in print media query to override everything */
-    table.academic-table thead tr:first-child th:nth-child(8).rotate-header.table-header-white,
-    .academic-table thead tr:first-child th.table-header-white.rotate-header:nth-child(8),
-    .academic-table thead tr:first-child th:nth-child(8)[class*="rotate-header"] {
-        writing-mode: vertical-rl !important;
-        text-orientation: mixed !important;
-        transform: rotate(180deg) !important;
-        -webkit-transform: rotate(180deg) !important;
-        -moz-transform: rotate(180deg) !important;
-        -ms-transform: rotate(180deg) !important;
-        -o-transform: rotate(180deg) !important;
-        white-space: nowrap !important;
-        height: auto !important;
-        padding: 2px 4px !important;
-        text-align: center !important;
-        vertical-align: middle !important;
-        display: table-cell !important;
-        position: relative !important;
-    }
-    
-    /* Ensure NAFASI header content is also rotated */
-    .academic-table thead tr:first-child th:nth-child(8).rotate-header * {
-        writing-mode: vertical-rl !important;
-        text-orientation: mixed !important;
-        transform: rotate(180deg) !important;
-    }
+    /* Rotate NAFASI header: handled by the class-based `.rotate-header` rules above,
+       which keep working when an empty test column is dropped from the table. */
     
     /* ABSOLUTE FINAL RULE: Force grade key to be visible in PDF - MUST be last */
     .grade-key-legend,
@@ -1451,35 +1395,8 @@ table {
 }
 
 .academic-table colgroup col {
-    width: inherit !important;
-}
-
-.academic-table colgroup col:nth-child(1) {
-    width: 33% !important;
-}
-
-.academic-table colgroup col:nth-child(2),
-.academic-table colgroup col:nth-child(3),
-.academic-table colgroup col:nth-child(4),
-.academic-table colgroup col:nth-child(5) {
-    width: 7% !important;
-}
-
-.academic-table colgroup col:nth-child(6) {
-    width: 5% !important;
-}
-
-.academic-table colgroup col:nth-child(7),
-.academic-table colgroup col:nth-child(8) {
-    width: 4% !important;
-}
-
-.academic-table colgroup col:nth-child(9) {
-    width: 12% !important;
-}
-
-.academic-table colgroup col:nth-child(10) {
-    width: 14% !important;
+    /* Widths are written inline by the renderer (dynamic: hidden test columns drop out). */
+    box-sizing: border-box;
 }
 
 .academic-table th,
@@ -1518,8 +1435,8 @@ table {
     border: 1px solid #000000 !important;
 }
 
-.academic-table th:nth-child(1),
-.academic-table td:nth-child(1) {
+.academic-table .subject-header,
+.academic-table .subject-name {
     width: 33% !important;
     min-width: 33% !important;
     max-width: 33% !important;
@@ -1527,9 +1444,8 @@ table {
     border: 1px solid #000000 !important;
 }
 
-.academic-table th:nth-child(2),
-.academic-table td:nth-child(2),
-.academic-table thead tr:nth-child(2) th:nth-child(1) {
+.academic-table .month-header,
+.academic-table .month-cell {
     width: 7% !important;
     min-width: 7% !important;
     max-width: 7% !important;
@@ -1540,47 +1456,7 @@ table {
     text-overflow: ellipsis !important;
 }
 
-.academic-table th:nth-child(3),
-.academic-table td:nth-child(3),
-.academic-table thead tr:nth-child(2) th:nth-child(2) {
-    width: 7% !important;
-    min-width: 7% !important;
-    max-width: 7% !important;
-    text-align: center !important;
-    border: 1px solid #000000 !important;
-    overflow: hidden !important;
-    white-space: nowrap !important;
-    text-overflow: ellipsis !important;
-}
-
-.academic-table th:nth-child(4),
-.academic-table td:nth-child(4),
-.academic-table thead tr:nth-child(2) th:nth-child(3) {
-    width: 7% !important;
-    min-width: 7% !important;
-    max-width: 7% !important;
-    text-align: center !important;
-    border: 1px solid #000000 !important;
-    overflow: hidden !important;
-    white-space: nowrap !important;
-    text-overflow: ellipsis !important;
-}
-
-.academic-table th:nth-child(5),
-.academic-table td:nth-child(5),
-.academic-table thead tr:nth-child(2) th:nth-child(4) {
-    width: 7% !important;
-    min-width: 7% !important;
-    max-width: 7% !important;
-    text-align: center !important;
-    border: 1px solid #000000 !important;
-    overflow: hidden !important;
-    white-space: nowrap !important;
-    text-overflow: ellipsis !important;
-}
-
-.academic-table th:nth-child(6),
-.academic-table td:nth-child(6) {
+.academic-table .total-col {
     width: 5% !important;
     min-width: 5% !important;
     max-width: 5% !important;
@@ -1588,8 +1464,7 @@ table {
     border: 1px solid #000000 !important;
 }
 
-.academic-table th:nth-child(7),
-.academic-table td:nth-child(7) {
+.academic-table .grade-col {
     width: 4% !important;
     min-width: 4% !important;
     max-width: 4% !important;
@@ -1597,8 +1472,7 @@ table {
     border: 1px solid #000000 !important;
 }
 
-.academic-table th:nth-child(8),
-.academic-table td:nth-child(8) {
+.academic-table .position-col {
     width: 4% !important;
     min-width: 4% !important;
     max-width: 4% !important;
@@ -1606,30 +1480,7 @@ table {
     border: 1px solid #000000 !important;
 }
 
-/* CRITICAL: Ensure NAFASI header rotates in ALL views (screen and print) */
-/* Use multiple selector patterns for maximum compatibility */
-.academic-table thead tr:first-child th:nth-child(8).rotate-header,
-.academic-table thead tr:first-child th.rotate-header:nth-child(8),
-.academic-table thead tr:first-child th:nth-child(8)[class*="rotate-header"],
-table.academic-table thead tr:first-child th:nth-child(8).rotate-header.table-header-white {
-    writing-mode: vertical-rl !important;
-    text-orientation: mixed !important;
-    transform: rotate(180deg) !important;
-    -webkit-transform: rotate(180deg) !important;
-    -moz-transform: rotate(180deg) !important;
-    -ms-transform: rotate(180deg) !important;
-    -o-transform: rotate(180deg) !important;
-    white-space: nowrap !important;
-    height: auto !important;
-    padding: 2px 4px !important;
-    text-align: center !important;
-    vertical-align: middle !important;
-    display: table-cell !important;
-    position: relative !important;
-}
-
-.academic-table th:nth-child(9),
-.academic-table td:nth-child(9) {
+.academic-table .comments-col {
     width: 12% !important;
     min-width: 12% !important;
     max-width: 12% !important;
@@ -1640,8 +1491,8 @@ table.academic-table thead tr:first-child th:nth-child(8).rotate-header.table-he
     word-wrap: break-word !important;
 }
 
-.academic-table th:nth-child(10),
-.academic-table td:nth-child(10) {
+.academic-table .sahihi-header,
+.academic-table .teacher-signature {
     width: 14% !important;
     min-width: 14% !important;
     max-width: 14% !important;
@@ -1672,7 +1523,7 @@ table.academic-table thead tr:first-child th:nth-child(8).rotate-header.table-he
     border: 1px solid #000000 !important;
 }
 
-.academic-table td:nth-child(8) {
+.academic-table td.position-col {
     background: #ffffff !important;
     font-weight: bold;
     color: #000000;

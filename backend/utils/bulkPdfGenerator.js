@@ -5,7 +5,7 @@
  */
 const { acquirePage, releasePage, PAGE_TIMEOUT_MS } = require('./puppeteerPool');
 const axios = require('axios');
-const { generateReportHTML } = require('./htmlReportRenderer');
+const { generateReportHTML, buildMonthlyDataMap, computeMonthColumnAvailability } = require('./htmlReportRenderer');
 const { formatReportScore } = require('./reportScoreFormat');
 const { getReportRankings } = require('./reportRankings');
 const fs = require('fs').promises;
@@ -34,6 +34,7 @@ const {
   inlineReportImages,
 } = require('./inlineReportImages');
 const { sanitizeAuthorityDataRow } = require('./authoritySignature');
+const { BULK_MULTI_PAGE_HEADER_CSS } = require('./bulkReportHeaderCss');
 
 /** Must match htmlReportRenderer.js (single-report HTML slice for bulk merge). */
 const REPORT_INNER_START = '<!-- __ARUCASE_REPORT_INNER_START__ -->';
@@ -67,90 +68,6 @@ function uniquifyBulkReportImageSrc(html) {
   }
   return out;
 }
-
-/** Bulk multi-page PDF: grid header so logo/photo stay on every student (flex+absolute breaks after page 1). */
-const BULK_MULTI_PAGE_HEADER_CSS = `
-    @media print {
-      .bulk-pdf-document .report-container {
-        min-height: 0 !important;
-        overflow: visible !important;
-        overflow-x: visible !important;
-        page-break-after: always;
-        break-after: page;
-      }
-      .bulk-pdf-document .report-container:last-child {
-        page-break-after: auto;
-        break-after: auto;
-      }
-      .bulk-pdf-document .report-container .report-header {
-        display: grid !important;
-        grid-template-columns: 90px minmax(0, 1fr) 90px !important;
-        align-items: center !important;
-        gap: 8px !important;
-        min-height: 104px !important;
-        position: relative !important;
-        overflow: visible !important;
-        box-sizing: border-box !important;
-        margin-bottom: 4px !important;
-        padding: 10px 4px 8px 4px !important;
-      }
-      .bulk-pdf-document .report-container .report-header .school-info {
-        grid-column: 2 !important;
-        min-width: 0 !important;
-      }
-      .bulk-pdf-document .report-container .logo-section {
-        grid-column: 1 !important;
-        position: relative !important;
-        left: auto !important;
-        right: auto !important;
-        top: auto !important;
-      }
-      .bulk-pdf-document .report-container .student-photo {
-        grid-column: 3 !important;
-        position: relative !important;
-        left: auto !important;
-        right: auto !important;
-        top: auto !important;
-      }
-      .bulk-pdf-document .report-container .logo-section,
-      .bulk-pdf-document .report-container .student-photo {
-        display: flex !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-      }
-      .bulk-pdf-document .report-container .school-logo,
-      .bulk-pdf-document .report-container .photo {
-        display: block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-      }
-      /* Keep MAMBO + signature/stamp on page 2 (match individual 2-page layout) */
-      .bulk-pdf-document .report-closing-block {
-        page-break-inside: avoid !important;
-        break-inside: avoid-page !important;
-      }
-      .bulk-pdf-document .report-closing-block .signature-stamp-section {
-        page-break-before: avoid !important;
-        break-before: avoid-page !important;
-        margin-top: 4px !important;
-        min-height: 0 !important;
-        padding: 2px 0 !important;
-      }
-      .bulk-pdf-document .report-section.section-mambo {
-        padding-bottom: 2px !important;
-        margin-bottom: 0 !important;
-      }
-      .bulk-pdf-document .report-section.section-maoni-taaluma,
-      .bulk-pdf-document .report-section.section-maoni {
-        margin-bottom: 1px !important;
-        padding-bottom: 2px !important;
-      }
-      .bulk-pdf-document .stamp-img {
-        max-width: 100px !important;
-        max-height: 100px !important;
-      }
-    }
-`;
 
 /**
  * Read CSS for bulk PDF HTML. Same resolution order as htmlReportRenderer: prefer copies under
@@ -640,7 +557,9 @@ async function generateBulkReportPDFWithBatches(
 
     const branding = await fetchSchoolBranding();
     
-    // Fetch report data for all students and generate HTML
+    // Pass 1: gather every student's report data first. Class-wide assessment columns
+    // need the whole cohort before rendering so a test column stays hidden for the entire PDF.
+    const reportDataList = [];
     for (let i = 0; i < students.length; i++) {
       const student = students[i];
       const admNo = student.adm_no || student.admNo;
@@ -649,20 +568,42 @@ async function generateBulkReportPDFWithBatches(
       try {
         // Get report data directly from database (no HTTP requests)
         const reportData = await getReportDataInternal(form, studentStream, year, term, admNo, branding);
-        
+        reportDataList.push(reportData);
+      } catch (error) {
+        console.error(`[BULK PDF] Error loading report data for student ${admNo}:`, error.message);
+        errors.push({ admNo, error: error.message });
+      }
+    }
+
+    // A test column is hidden for the whole bulk PDF when no student in the class has a result in it.
+    const reportMonths = reportDataList[0]?.months || [];
+    const classColumnAvailability = reportMonths.map((_, idx) =>
+      reportDataList.some((reportData) => {
+        const monthlyData = buildMonthlyDataMap(reportData.monthly_results);
+        const availability = computeMonthColumnAvailability(reportData.months, reportData.subjects, monthlyData);
+        return availability[idx] === true;
+      })
+    );
+
+    // Pass 2: render each report with the shared class-wide column visibility.
+    for (let i = 0; i < reportDataList.length; i++) {
+      const reportData = reportDataList[i];
+      const admNo = reportData.student?.adm_no;
+      try {
         // Generate HTML for this report (just the container content)
         const reportHTML = await generateSingleReportHTML({
           ...reportData,
           form,
           term,
-          year
+          year,
+          column_availability: classColumnAvailability
         }, apiUrl);
         
         reportHTMLs.push(reportHTML);
         
         // Log progress every 10 students
         if ((i + 1) % 10 === 0) {
-          console.log(`[BULK PDF] Generated HTML for ${i + 1}/${students.length} students`);
+          console.log(`[BULK PDF] Generated HTML for ${i + 1}/${reportDataList.length} students`);
         }
       } catch (error) {
         console.error(`[BULK PDF] Error generating HTML for student ${admNo}:`, error.message);
@@ -873,8 +814,8 @@ async function generateBulkReportPDFWithBatches(
 
         // Force MAONI column visibility within each report
         const forceMaoniColumnVisible = () => {
-          const maoniHeaders = container.querySelectorAll('.academic-table th:nth-child(10)');
-          const maoniCells = container.querySelectorAll('.academic-table td:nth-child(10)');
+          const maoniHeaders = container.querySelectorAll('.academic-table th.sahihi-header');
+          const maoniCells = container.querySelectorAll('.academic-table td.teacher-signature');
           
           maoniHeaders.forEach((header) => {
             header.style.setProperty('display', 'table-cell', 'important');
@@ -907,9 +848,12 @@ async function generateBulkReportPDFWithBatches(
           academicTable.style.setProperty('table-layout', 'fixed', 'important');
           academicTable.style.setProperty('width', '100%', 'important');
 
-          // Column widths - ensure all 10 columns are properly sized
-          const colWidths = ['33%', '7%', '7%', '7%', '7%', '5%', '4%', '4%', '12%', '14%'];
+          // Widths come from the report's own colgroup so hidden test columns stay in sync.
+          const colWidths = Array.from(academicTable.querySelectorAll('colgroup col')).map(
+            (col) => col.style.width || col.getAttribute('width') || ''
+          );
           colWidths.forEach((width, idx) => {
+            if (!width) return;
             const col = academicTable.querySelectorAll(`th:nth-child(${idx + 1}), td:nth-child(${idx + 1})`);
             col.forEach(cell => {
               cell.style.setProperty('width', width, 'important');
@@ -924,8 +868,8 @@ async function generateBulkReportPDFWithBatches(
           const academicTable = container.querySelector('.academic-table');
           if (!academicTable) return;
           
-          // Find NAFASI header (column 8 with rotate-header class)
-          const nafasiHeader = academicTable.querySelector('thead tr:first-child th:nth-child(8).rotate-header');
+          // Find NAFASI header (class-based so it survives hidden test columns)
+          const nafasiHeader = academicTable.querySelector('thead tr:first-child th.position-col.rotate-header');
           if (nafasiHeader) {
             // Apply rotation with all vendor prefixes for maximum compatibility
             nafasiHeader.style.setProperty('writing-mode', 'vertical-rl', 'important');

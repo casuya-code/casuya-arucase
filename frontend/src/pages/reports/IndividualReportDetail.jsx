@@ -1028,18 +1028,18 @@ const IndividualReportDetail = () => {
             </colgroup>
             <thead>
               <tr>
-                <th rowSpan={2} style={{ width: '33%', verticalAlign: 'middle' }}>{t.subject}</th>
+                <th rowSpan={2} className="subject-header" style={{ width: '33%', verticalAlign: 'middle' }}>{t.subject}</th>
                 <th colSpan={4} style={{ width: '28%' }}>{t.assessmentMarks}</th>
-                <th rowSpan={2} className="rotate-header" style={{ width: '5%', verticalAlign: 'middle' }}>
+                <th rowSpan={2} className="rotate-header total-col" style={{ width: '5%', verticalAlign: 'middle' }}>
                   {t.total}
                 </th>
-                <th rowSpan={2} className="rotate-header table-header-white" style={{ width: '4%', verticalAlign: 'middle' }}>
+                <th rowSpan={2} className="rotate-header table-header-white grade-col" style={{ width: '4%', verticalAlign: 'middle' }}>
                   {t.grade}
                 </th>
-                <th rowSpan={2} className="rotate-header table-header-white" style={{ width: '4%', verticalAlign: 'middle' }}>
+                <th rowSpan={2} className="rotate-header table-header-white position-col" style={{ width: '4%', verticalAlign: 'middle' }}>
                   {t.position}
                 </th>
-                <th rowSpan={2} className="table-header-white" style={{ width: '12%', verticalAlign: 'middle' }}>
+                <th rowSpan={2} className="table-header-white comments-col" style={{ width: '12%', verticalAlign: 'middle' }}>
                   {t.comments}
                 </th>
                 <th rowSpan={2} className="sahihi-header table-header-white" style={{ width: '14%', verticalAlign: 'middle' }}>
@@ -1051,7 +1051,7 @@ const IndividualReportDetail = () => {
                 {months.map((month, idx) => {
                   const weight = marks_config?.month_weights?.[month] || (idx === 0 ? 100.0 : 0.0);
                   return (
-                    <th key={idx} className="table-header-white" style={{ width: '7%', lineHeight: '1.2' }}>
+                    <th key={idx} className="month-header table-header-white" style={{ width: '7%', lineHeight: '1.2' }}>
                       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
                         <div>{getMonthLabel(month)}</div>
                         <div style={{ fontSize: '0.85em', marginTop: '2px' }}>({formatReportWeightPercent(weight)}%)</div>
@@ -1105,19 +1105,19 @@ const IndividualReportDetail = () => {
 
                 return (
                   <tr key={subject.id || subject.subject_code}>
-                    <td>{subject.subject_name}</td>
-                    <td>{formatReportScore(test1)}</td>
-                    <td>{formatReportScore(midterm)}</td>
-                    <td>{formatReportScore(test2)}</td>
-                    <td>{formatReportScore(exam)}</td>
-                    <td>
+                    <td className="subject-name">{subject.subject_name}</td>
+                    <td className="month-cell">{formatReportScore(test1)}</td>
+                    <td className="month-cell">{formatReportScore(midterm)}</td>
+                    <td className="month-cell">{formatReportScore(test2)}</td>
+                    <td className="month-cell">{formatReportScore(exam)}</td>
+                    <td className="total-col">
                       <strong>{formatReportScore(total)}</strong>
                     </td>
-                    <td>
+                    <td className="grade-col">
                       <strong>{grade}</strong>
                     </td>
-                    <td>{rank}</td>
-                    <td>{comment}</td>
+                    <td className="position-col">{rank}</td>
+                    <td className="comments-col">{comment}</td>
                     <td className="teacher-signature">
                       {subject_teacher_signatures?.[subject.subject_code] || 
                        subject_teacher_signatures?.[subject.subject_abbreviation] || ''}

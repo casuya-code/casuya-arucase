@@ -54,6 +54,39 @@ async function getCSSContent() {
     `;
 }
 
+/** Build `{ subjectCode: { month: score } }` from individual_scores rows. */
+function buildMonthlyDataMap(monthlyResults) {
+  const monthlyData = {};
+  monthlyResults?.forEach((result) => {
+    if (!monthlyData[result.subject_code]) {
+      monthlyData[result.subject_code] = {};
+    }
+    monthlyData[result.subject_code][result.month] = result.score || 0;
+  });
+  return monthlyData;
+}
+
+/** True when a score was recorded for this subject in this month (code or abbreviation). */
+function hasMonthScore(monthlyData, subject, month) {
+  const isScore = (value) => value !== undefined && value !== null && value !== '' && value !== '-';
+  if (isScore(monthlyData[subject.subject_code]?.[month])) return true;
+  if (subject.subject_abbreviation && isScore(monthlyData[subject.subject_abbreviation]?.[month])) return true;
+  return false;
+}
+
+/**
+ * Which assessment month columns actually contain at least one result.
+ * @param {string[]} months - Assessment months for the term (e.g. February..May)
+ * @param {Array} subjects - Report subjects
+ * @param {Object} monthlyData - Output of buildMonthlyDataMap
+ * @returns {boolean[]} one flag per month
+ */
+function computeMonthColumnAvailability(months, subjects, monthlyData) {
+  const monthList = Array.isArray(months) ? months : [];
+  const subjectList = Array.isArray(subjects) ? subjects : [];
+  return monthList.map((month) => subjectList.some((subject) => hasMonthScore(monthlyData, subject, month)));
+}
+
 /**
  * Generate HTML for individual report
  * @param {Object} reportData - Report data from API
@@ -158,13 +191,7 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000', 
   const months = reportMonths || getDefaultMonths();
 
   // Process monthly results
-  const monthlyData = {};
-  monthly_results?.forEach((result) => {
-    if (!monthlyData[result.subject_code]) {
-      monthlyData[result.subject_code] = {};
-    }
-    monthlyData[result.subject_code][result.month] = result.score || 0;
-  });
+  const monthlyData = buildMonthlyDataMap(monthly_results);
 
   // Helper functions
   const getGrade = (total) => {
@@ -234,6 +261,19 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000', 
   const studentHuduma = getCommentValue('huduma') || getCommentValue('huduma_comments') || '';
   const classFeesAnnouncements = class_fees_announcements || {};
 
+  // A test column is hidden only when at least one column has results but this one has none.
+  // Bulk generation passes class-wide availability so every report in the PDF matches.
+  const suppliedAvailability = Array.isArray(reportData.column_availability)
+    ? reportData.column_availability.map(Boolean)
+    : null;
+  const monthAvailability = (suppliedAvailability && suppliedAvailability.length === months.length)
+    ? suppliedAvailability
+    : computeMonthColumnAvailability(months, subjects, monthlyData);
+  const anyMonthHasResults = monthAvailability.some(Boolean);
+  // Keep all four columns when nothing has results yet (blank report).
+  const visibleMonthFlags = monthAvailability.map((hasResults) => (anyMonthHasResults ? hasResults : true));
+  const visibleMonths = months.filter((_, idx) => visibleMonthFlags[idx]);
+
   // Build subject rows HTML
   // Scores may be stored with either subject_code or subject_abbreviation
   const subjectRows = subjects?.map((subject) => {
@@ -250,45 +290,35 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000', 
       return null;
     };
     
-    const month1 = getScore(months[0]);
-    const month2 = getScore(months[1]);
-    const month3 = getScore(months[2]);
-    const month4 = getScore(months[3]);
+    const monthScores = months.map((month) => getScore(month));
     
-    // Check if all scores are null (no scores for this subject)
-    const allScoresNull = month1 === null && month2 === null && month3 === null && month4 === null;
-    
-    // Skip this subject if all scores are null
-    if (allScoresNull) {
+    // Skip this subject if every assessment month is empty
+    if (monthScores.every((score) => score === null)) {
       return null;
     }
     
-    const weight1 = (marks_config?.month_weights?.[months[0]] || 100) / 100;
-    const weight2 = (marks_config?.month_weights?.[months[1]] || 0) / 100;
-    const weight3 = (marks_config?.month_weights?.[months[2]] || 0) / 100;
-    const weight4 = (marks_config?.month_weights?.[months[3]] || 0) / 100;
-    
-    const test1 = (month1 || 0) * weight1;
-    const midterm = (month2 || 0) * weight2;
-    const test2 = (month3 || 0) * weight3;
-    const exam = (month4 || 0) * weight4;
-    const total = test1 + midterm + test2 + exam;
+    const weightedScores = months.map((month, idx) => {
+      const weight = (marks_config?.month_weights?.[month] || (idx === 0 ? 100 : 0)) / 100;
+      return (monthScores[idx] || 0) * weight;
+    });
+    const total = weightedScores.reduce((sum, value) => sum + value, 0);
     
     const grade = getGrade(total);
     const comment = getComment(grade);
     const rank = subject_rankings?.[subject.subject_code]?.[student.adm_no] || '-';
 
+    const monthCells = weightedScores
+      .map((value, idx) => (visibleMonthFlags[idx] ? `<td class="month-cell">${formatReportScore(value)}</td>` : ''))
+      .join('');
+
     return `
       <tr>
-        <td>${subject.subject_name}</td>
-        <td>${formatReportScore(test1)}</td>
-        <td>${formatReportScore(midterm)}</td>
-        <td>${formatReportScore(test2)}</td>
-        <td>${formatReportScore(exam)}</td>
-        <td><strong>${formatReportScore(total)}</strong></td>
-        <td><strong>${grade}</strong></td>
-        <td>${rank}</td>
-        <td>${comment}</td>
+        <td class="subject-name">${subject.subject_name}</td>
+        ${monthCells}
+        <td class="total-col"><strong>${formatReportScore(total)}</strong></td>
+        <td class="grade-col"><strong>${grade}</strong></td>
+        <td class="position-col">${rank}</td>
+        <td class="comments-col">${comment}</td>
         <td class="teacher-signature">${subject_teacher_signatures?.[subject.subject_code] || subject_teacher_signatures?.[subject.subject_abbreviation] || ''}</td>
       </tr>
     `;
@@ -296,8 +326,9 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000', 
 
   // Build month header cells with percentage below text
   const monthHeaders = months.map((month, idx) => {
+    if (!visibleMonthFlags[idx]) return '';
     const weight = marks_config?.month_weights?.[month] || (idx === 0 ? 100.0 : 0.0);
-    return `<th class="table-header-white" style="width: 7%; line-height: 1.2;">
+    return `<th class="month-header table-header-white" style="width: 7%; line-height: 1.2;">
       <div style="display: flex; flex-direction: column; align-items: center; justify-content: center;">
         <div>${getMonthLabel(month)}</div>
         <div style="font-size: 0.85em; margin-top: 2px;">(${formatReportWeightPercent(weight)}%)</div>
@@ -418,24 +449,21 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000', 
       <table class="excel-table academic-table">
         <colgroup>
           <col style="width: 33%" />
-          <col style="width: 7%" />
-          <col style="width: 7%" />
-          <col style="width: 7%" />
-          <col style="width: 7%" />
+          ${visibleMonths.map(() => '<col style="width: 7%" />').join('\n          ')}
           <col style="width: 5%" />
           <col style="width: 4%" />
           <col style="width: 4%" />
-          <col style="width: 9%" />
-          <col style="width: 17%" />
+          <col style="width: 12%" />
+          <col style="width: 14%" />
         </colgroup>
         <thead>
           <tr>
-            <th rowspan="2">${t.subject}</th>
-            <th colspan="4">${t.assessmentMarks}</th>
-            <th rowspan="2" class="rotate-header">${t.total}</th>
-            <th rowspan="2" class="rotate-header table-header-white">${t.grade}</th>
-            <th rowspan="2" class="rotate-header table-header-white">${t.position}</th>
-            <th rowspan="2" class="table-header-white">${t.comments}</th>
+            <th rowspan="2" class="subject-header">${t.subject}</th>
+            <th colspan="${visibleMonths.length}">${t.assessmentMarks}</th>
+            <th rowspan="2" class="rotate-header total-col">${t.total}</th>
+            <th rowspan="2" class="rotate-header table-header-white grade-col">${t.grade}</th>
+            <th rowspan="2" class="rotate-header table-header-white position-col">${t.position}</th>
+            <th rowspan="2" class="table-header-white comments-col">${t.comments}</th>
             <th rowspan="2" class="sahihi-header table-header-white">${t.teacherSignature.replace('\n', '<br />')}</th>
           </tr>
           <tr>
@@ -603,5 +631,8 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000', 
 }
 
 module.exports = {
-  generateReportHTML
+  generateReportHTML,
+  getCSSContent,
+  buildMonthlyDataMap,
+  computeMonthColumnAvailability
 };
