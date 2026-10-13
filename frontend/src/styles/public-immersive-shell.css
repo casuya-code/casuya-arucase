@@ -1,7 +1,7 @@
 .public-immersive-shell {
-  --public-surface-radius: 10px;
-  --public-surface-radius-lg: 12px;
-  --public-surface-radius-icon: 8px;
+  --public-surface-radius: 12px;
+  --public-surface-radius-lg: 16px;
+  --public-surface-radius-icon: 14px;
   scroll-behavior: smooth;
   position: relative;
   width: 100%;
@@ -24,8 +24,8 @@
 @media (max-width: 768px) {
   .public-immersive-shell {
     --public-surface-radius: 12px;
-    --public-surface-radius-lg: 14px;
-    --public-surface-radius-icon: 10px;
+    --public-surface-radius-lg: 16px;
+    --public-surface-radius-icon: 14px;
   }
 }
 

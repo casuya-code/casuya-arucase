@@ -8,7 +8,7 @@ const SUBJECTS = [
   { id: 2, subject_code: 'MATH' },
 ];
 
-function makeClient({ students, scores, existingResults = [] }) {
+function makeClient({ students, scores, existingResults = [], resultsTable = 'preform_one_interview_results' }) {
   const queries = [];
   const client = {
     queries,
@@ -28,14 +28,14 @@ function makeClient({ students, scores, existingResults = [] }) {
           .map((s) => ({ subject_id: s.subject_id, score: s.score }));
         return { rows, rowCount: rows.length };
       }
-      if (normalized.includes('SELECT id FROM preform_one_interview_results')) {
+      if (normalized.includes(`SELECT id FROM ${resultsTable}`)) {
         const [studentId, year] = params;
         const rows = existingResults.filter(
           (r) => String(r.student_id) === String(studentId) && String(r.year) === String(year)
         );
         return { rows, rowCount: rows.length };
       }
-      if (normalized.startsWith('INSERT INTO preform_one_interview_results')) {
+      if (normalized.startsWith(`INSERT INTO ${resultsTable}`)) {
         const [studentId, admissionNumber, totalMarks, average, grade, position, remarks, year] = params;
         const row = {
           student_id: studentId,
@@ -52,7 +52,7 @@ function makeClient({ students, scores, existingResults = [] }) {
         else existingResults.push(row);
         return { rows: [row], rowCount: 1 };
       }
-      if (normalized.startsWith('UPDATE preform_one_interview_results')) {
+      if (normalized.startsWith(`UPDATE ${resultsTable}`)) {
         const [studentId, admissionNumber, totalMarks, average, grade, position, remarks, year] = params;
         const row = {
           student_id: studentId,
@@ -68,7 +68,7 @@ function makeClient({ students, scores, existingResults = [] }) {
         if (index >= 0) existingResults[index] = row;
         return { rows: [row], rowCount: 1 };
       }
-      if (normalized.startsWith('DELETE FROM preform_one_interview_results')) {
+      if (normalized.startsWith(`DELETE FROM ${resultsTable}`)) {
         const [year, keep] = params;
         const keepIds = keep.map(Number);
         const before = existingResults.length;
@@ -268,6 +268,89 @@ describe('calculateAndSavePreFormOneResults', () => {
     const results = await calculateAndSavePreFormOneResults(client, OPTIONS);
     expect(results[0].average).toBe(70.5);
     expect(results[0].grade).toBe('B');
+  });
+});
+
+describe('calculateAndSavePreFormOneResults (O-Level continuing)', () => {
+  const CONTINUING_OPTIONS = {
+    year: 2026,
+    scoreType: 'continuing',
+    subjectsTable: 'preformone_continuing_subjects',
+    resultsTable: 'preform_one_continuing_results',
+    grading: 'oLevel',
+  };
+
+  it('grades continuing results on the O-Level scale with Swahili remarks', async () => {
+    const client = makeClient({
+      resultsTable: 'preform_one_continuing_results',
+      students: [
+        { id: 11, admission_number: '2001' },
+        { id: 12, admission_number: '2002' },
+        { id: 13, admission_number: '2003' },
+        { id: 14, admission_number: '2004' },
+      ],
+      scores: [
+        { student_id: 11, subject_id: 1, subject_type: 'continuing', score: 85 },
+        { student_id: 11, subject_id: 2, subject_type: 'continuing', score: 85 },
+        { student_id: 12, subject_id: 1, subject_type: 'continuing', score: 70 },
+        { student_id: 12, subject_id: 2, subject_type: 'continuing', score: 70 },
+        { student_id: 13, subject_id: 1, subject_type: 'continuing', score: 50 },
+        { student_id: 13, subject_id: 2, subject_type: 'continuing', score: 50 },
+        { student_id: 14, subject_id: 1, subject_type: 'continuing', score: 40 },
+        { student_id: 14, subject_id: 2, subject_type: 'continuing', score: 40 },
+      ],
+    });
+
+    const results = await calculateAndSavePreFormOneResults(client, CONTINUING_OPTIONS);
+    const byId = Object.fromEntries(results.map((r) => [r.student_id, r]));
+
+    expect(byId[11]).toMatchObject({ average: 85, grade: 'A', remarks: 'Bora Sana', position: 1 });
+    expect(byId[12]).toMatchObject({ average: 70, grade: 'B', remarks: 'Vizuri Sana', position: 2 });
+    expect(byId[13]).toMatchObject({ average: 50, grade: 'C', remarks: 'Vizuri', position: 3 });
+    expect(byId[14]).toMatchObject({ average: 40, grade: 'D', remarks: 'Dhaifu', position: 4 });
+  });
+
+  it('uses O-Level boundaries rather than the interview bands', async () => {
+    const client = makeClient({
+      resultsTable: 'preform_one_continuing_results',
+      students: [
+        { id: 21, admission_number: '3001' },
+        { id: 22, admission_number: '3002' },
+      ],
+      scores: [
+        // 60 would be interview grade D but is O-Level grade C.
+        { student_id: 21, subject_id: 1, subject_type: 'continuing', score: 60 },
+        // 42 would fail the interview band but passes at O-Level grade D.
+        { student_id: 22, subject_id: 1, subject_type: 'continuing', score: 42 },
+      ],
+    });
+
+    const results = await calculateAndSavePreFormOneResults(client, CONTINUING_OPTIONS);
+    const byId = Object.fromEntries(results.map((r) => [r.student_id, r]));
+
+    expect(byId[21]).toMatchObject({ grade: 'C', remarks: 'Vizuri' });
+    expect(byId[22]).toMatchObject({ grade: 'D', remarks: 'Dhaifu' });
+  });
+
+  it('persists the O-Level row in the continuing table', async () => {
+    const existingResults = [];
+    const client = makeClient({
+      resultsTable: 'preform_one_continuing_results',
+      students: [{ id: 31, admission_number: '4001' }],
+      scores: [{ student_id: 31, subject_id: 1, subject_type: 'continuing', score: 90 }],
+      existingResults,
+    });
+
+    await calculateAndSavePreFormOneResults(client, CONTINUING_OPTIONS);
+
+    expect(existingResults).toHaveLength(1);
+    expect(existingResults[0]).toMatchObject({
+      year: 2026,
+      average: 90,
+      grade: 'A',
+      remarks: 'Bora Sana',
+      position: 1,
+    });
   });
 });
 

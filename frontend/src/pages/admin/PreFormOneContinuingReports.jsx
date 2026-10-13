@@ -14,6 +14,7 @@ import './PreFormOneResults.css';
 import './preform-one-modern.css';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { useGoBack } from '../../hooks/useGoBack';
+import PreFormOnePagination from '../../components/common/PreFormOnePagination';
 
 const PreFormOneContinuingReports = () => {
   const { year } = useParams();
@@ -105,12 +106,12 @@ const PreFormOneContinuingReports = () => {
       window.URL.revokeObjectURL(url);
 
       toast.success(
-        `${student.first_name} ${student.surname}'s continuing report downloaded successfully!`
+        `${student.first_name} ${student.middle_name || ''} ${student.surname}'s continuing report downloaded successfully!`
       );
     } catch (error) {
       toast.error(
         error.message ||
-          `Failed to generate continuing report for ${student.first_name} ${student.surname}`
+          `Failed to generate continuing report for ${student.first_name} ${student.middle_name || ''} ${student.surname}`
       );
     } finally {
       setIsGenerating((prev) => ({ ...prev, [student.id]: false }));
@@ -162,8 +163,8 @@ const PreFormOneContinuingReports = () => {
   const sortedStudents = useMemo(
     () =>
       [...students].sort((a, b) => {
-        const an = `${a.first_name || ''} ${a.surname || ''}`.trim();
-        const bn = `${b.first_name || ''} ${b.surname || ''}`.trim();
+        const an = `${a.first_name || ''} ${a.middle_name || ''} ${a.surname || ''}`.trim();
+        const bn = `${b.first_name || ''} ${b.middle_name || ''} ${b.surname || ''}`.trim();
         return an.localeCompare(bn);
       }),
     [students]
@@ -251,7 +252,6 @@ const PreFormOneContinuingReports = () => {
                                 </strong>
                               </div>
                               <div className="student-meta">
-                                <span className="adm-number">Adm: {student.admission_number}</span>
                                 {student.parish && (
                                   <span className="parish">Parish: {student.parish}</span>
                                 )}
@@ -282,7 +282,7 @@ const PreFormOneContinuingReports = () => {
                               disabled={isGenerating[student.id] || !hasReport}
                               title={
                                 hasReport
-                                  ? `Generate PDF continuing report for ${student.first_name} ${student.surname}`
+                                  ? `Generate PDF continuing report for ${student.first_name} ${student.middle_name || ''} ${student.surname}`
                                   : 'No continuing report data available'
                               }
                             >
@@ -295,27 +295,11 @@ const PreFormOneContinuingReports = () => {
                     })}
                   </div>
 
-                  <div className="pagination-controls">
-                    <button
-                      type="button"
-                      className="pagination-btn"
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    >
-                      <i className="fas fa-chevron-left"></i> Prev
-                    </button>
-                    <span className="pagination-info">
-                      {currentPage} / {Math.ceil(sortedStudents.length / PER_PAGE) || 1}
-                    </span>
-                    <button
-                      type="button"
-                      className="pagination-btn"
-                      disabled={currentPage >= Math.ceil(sortedStudents.length / PER_PAGE)}
-                      onClick={() => setCurrentPage((p) => p + 1)}
-                    >
-                      Next <i className="fas fa-chevron-right"></i>
-                    </button>
-                  </div>
+                  <PreFormOnePagination
+                    currentPage={currentPage}
+                    totalPages={Math.ceil(sortedStudents.length / PER_PAGE) || 1}
+                    onPageChange={setCurrentPage}
+                  />
                 </div>
 
                 <div className="print-spacer-bottom"></div>

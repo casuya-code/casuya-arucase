@@ -159,7 +159,6 @@ const PreFormOnePromotion = () => {
             onChange={() => onSelection(student.id)}
           />
         </td>
-        <td>{student.admission_number}</td>
         <td>
           {student.first_name} {student.middle_name} {student.surname}
         </td>
@@ -335,7 +334,6 @@ const PreFormOnePromotion = () => {
                           onChange={handleSelectAll}
                         />
                       </th>
-                      <th>Admission Number</th>
                       <th>Name</th>
                       <th>Sex</th>
                       <th>Parish</th>

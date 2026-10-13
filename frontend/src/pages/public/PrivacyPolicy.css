@@ -22,12 +22,8 @@
   gap: clamp(0.75rem, 2vw, 1rem);
 }
 
-/* Hero (PublicPageHero → public-cms-hero) — no coloured left stripe */
-.public-layout .public-main .privacy-policy-page--immersive .public-cms-hero {
-  border-left-width: 1px;
-  border-left-color: rgba(15, 23, 42, 0.14);
-}
-
+/* Hero (PublicPageHero → public-cms-hero) — inherits the shared branded hero.
+   Only the icon medallion needs a lighter treatment on the navy background. */
 .privacy-policy-page--immersive .public-cms-hero__title--with-icon i {
   display: inline-flex;
   align-items: center;
@@ -35,8 +31,8 @@
   width: 1.75em;
   height: 1.75em;
   border-radius: 50%;
-  background: rgba(30, 64, 175, 0.1);
-  color: #1e3a8a;
+  background: rgba(255, 255, 255, 0.16);
+  color: var(--public-gold-light);
   font-size: 0.72em;
   flex-shrink: 0;
 }

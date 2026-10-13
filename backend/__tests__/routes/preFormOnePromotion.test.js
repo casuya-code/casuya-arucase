@@ -198,7 +198,7 @@ describe('Pre-Form One promotion routes', () => {
       expect(selectAll[1]).toEqual([2026, 2027]);
       expect(res.body.data.promoted.map((p) => p.admission_number)).toEqual(['P1001', 'P1003']);
       expect(res.body.data.errors).toEqual([
-        { admissionNumber: 'P1002', name: 'B Two', error: 'Student already exists in Form One' },
+        { admissionNumber: 'P1002', name: 'B M Two', error: 'Student already exists in Form One' },
       ]);
       expect(res.body.data.summary).toEqual({ total: 3, successful: 2, failed: 1, skipped: 0 });
     });

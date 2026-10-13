@@ -192,7 +192,7 @@
 
 /* Form Card with Streams */
 .form-card-with-streams {
-  grid-column: span 1;
+  grid-column: span 2;
   background: #fff;
   border: 1px solid #e8e8e0;
   border-radius: 12px;
@@ -1085,8 +1085,10 @@
 
 /* iPad / tablet layout */
 @media (min-width: 769px) and (max-width: 1024px) {
+  /* Keep 4 columns so the Form V/VI cards (span 2) tile the grid evenly,
+     matching the desktop layout in IndividualReport. */
   .forms-grid {
-    grid-template-columns: repeat(3, 1fr);
+    grid-template-columns: repeat(4, 1fr);
   }
 
   .streams-grid {

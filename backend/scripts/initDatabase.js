@@ -1145,6 +1145,43 @@ async function initDatabase() {
     `);
     console.log('✅ Pre-Form One Students indexes and updated_at trigger ensured');
 
+    // Pre-Form One comment modules (PRE-SALA, PRE-TAALUMA, PRE-TABIA NA MWENENDO …)
+    await query(`
+      CREATE TABLE IF NOT EXISTS preform_one_comments (
+        id SERIAL PRIMARY KEY,
+        student_id INTEGER NOT NULL REFERENCES preform_one_students(id) ON DELETE CASCADE,
+        year INTEGER NOT NULL,
+        comment_type VARCHAR(64) NOT NULL,
+        comment_text TEXT,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await query(
+      'CREATE UNIQUE INDEX IF NOT EXISTS uq_preform_one_comments_student_year_type ON preform_one_comments(student_id, year, comment_type)'
+    );
+    await query(
+      'CREATE INDEX IF NOT EXISTS idx_preform_one_comments_year_type ON preform_one_comments(year, comment_type)'
+    );
+    await query(`
+      CREATE TABLE IF NOT EXISTS preform_one_tabia_mwenendo (
+        id SERIAL PRIMARY KEY,
+        student_id INTEGER NOT NULL REFERENCES preform_one_students(id) ON DELETE CASCADE,
+        year INTEGER NOT NULL,
+        criterion VARCHAR(16) NOT NULL,
+        evaluation VARCHAR(8) NOT NULL,
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+      )
+    `);
+    await query(
+      'CREATE UNIQUE INDEX IF NOT EXISTS uq_preform_one_tabia_mwenendo_student_year_criterion ON preform_one_tabia_mwenendo(student_id, year, criterion)'
+    );
+    await query(
+      'CREATE INDEX IF NOT EXISTS idx_preform_one_tabia_mwenendo_year ON preform_one_tabia_mwenendo(year)'
+    );
+    console.log('✅ Pre-Form One comments + tabia mwenendo tables created');
+
     // Seed the default admin user (creates or updates password hash)
     try {
       await seedAdminUser();

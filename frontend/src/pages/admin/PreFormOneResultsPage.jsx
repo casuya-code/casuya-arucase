@@ -5,8 +5,10 @@
  * now share this implementation and differ only by the config their wrapper
  * passes in (see PreFormOneInterviewResults.jsx / PreFormOneContinuingResults.jsx).
  *
- * Grade, remarks and position always come from preFormOneResultsUtils, which
- * mirrors backend/utils/preFormOneGrading.js.
+ * Grade, remarks and position always come from preFormOneResultsUtils. The
+ * interview path mirrors backend/utils/preFormOneGrading.js while the continuing
+ * path mirrors backend/utils/oLevelGrading.js, so the live grid can never
+ * disagree with the stored row or the printed report.
  */
 import React, { useState, useEffect, useMemo } from 'react';
 import { useParams } from 'react-router-dom';
@@ -16,7 +18,10 @@ import preFormOneStudentsService from '../../services/preFormOneStudentsService'
 import { adminAPI } from '../../services/admin';
 import { useAuth } from '../../context/AuthContext';
 import YearMonthFilter from '../../components/common/YearMonthFilter';
+import PreFormOnePagination from '../../components/common/PreFormOnePagination';
 import { resolveStaticUrl } from '../../utils/backendUrl';
+import { calculatePreFormOneGrade } from '../../utils/preFormOneGrading';
+import { calculateOLevelGrade } from '../../utils/oLevelGrading';
 import {
   admissionKey,
   resultsByAdmissionNumber,
@@ -25,6 +30,7 @@ import {
 import {
   assignResultPositions,
   buildSubjectScoresMap,
+  calculateContinuingMetrics,
   calculateInterviewMetrics,
   calculateResultsStats,
   formatSubjectScoreCell,
@@ -48,6 +54,7 @@ const PreFormOneResultsPage = ({ config }) => {
     fetchResults,
     calculateResults,
     downloadResultsPDF,
+    downloadParishResultsPDF,
     pageTitle,
     cardTitle,
     cardIconClass,
@@ -55,7 +62,15 @@ const PreFormOneResultsPage = ({ config }) => {
     pdfButtonTextId,
     showSummaryHeader,
     showBackButtonInCardHeader,
+    grading = 'interview',
+    cLowThreshold = 65,
+    showParishColumn = true,
   } = config;
+
+  const calculateMetricsForType =
+    grading === 'oLevel' ? calculateContinuingMetrics : calculateInterviewMetrics;
+  const calculateGradeForType =
+    grading === 'oLevel' ? calculateOLevelGrade : calculatePreFormOneGrade;
 
   const { year } = useParams();
   const { isAuthenticated: isAuth } = useAuth();
@@ -67,6 +82,7 @@ const PreFormOneResultsPage = ({ config }) => {
   const [scoreRows, setScoreRows] = useState([]);
   const [scoresLoading, setScoresLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [parishResultsOpen, setParishResultsOpen] = useState(true);
   const [filter, setFilter] = useState({
     year: year || '',
     month: 'all',
@@ -202,10 +218,10 @@ const PreFormOneResultsPage = ({ config }) => {
       if (!key) return;
       const scores = subjectScores[key];
       if (!scores || Object.keys(scores).length === 0) return;
-      draft[key] = calculateInterviewMetrics(scores, subjects);
+      draft[key] = calculateMetricsForType(scores, subjects);
     });
     return assignResultPositions(draft);
-  }, [subjectScores, students, subjects]);
+  }, [subjectScores, students, subjects, calculateMetricsForType]);
 
   const displayResults = useMemo(() => {
     const merged = {};
@@ -221,6 +237,55 @@ const PreFormOneResultsPage = ({ config }) => {
   }, [autoCalculatedResults, existingResults, students]);
 
   const resultsStats = useMemo(() => calculateResultsStats(displayResults), [displayResults]);
+
+  const parishResults = useMemo(() => {
+    const map = new Map();
+    students.forEach((student) => {
+      const parish = (student.parish || '').trim() || 'Unknown';
+      if (!map.has(parish)) {
+        map.set(parish, {
+          parish,
+          sat: 0,
+          gradeCounts: { A: 0, B: 0, C: 0, D: 0, F: 0 },
+          avgSum: 0,
+          gradedCount: 0,
+        });
+      }
+      const entry = map.get(parish);
+      const key = admissionKey(student.admission_number);
+      const result = displayResults[key];
+      const grade = result?.grade;
+      if (grade && grade !== '-' && grade !== '') {
+        entry.sat += 1;
+        if (grade in entry.gradeCounts) entry.gradeCounts[grade] += 1;
+        const avg = result?.average != null ? Number(result.average) : NaN;
+        if (Number.isFinite(avg) && avg > 0) {
+          entry.avgSum += avg;
+          entry.gradedCount += 1;
+        }
+      }
+    });
+
+    const list = [...map.values()].map((entry) => {
+      const average = entry.gradedCount > 0 ? entry.avgSum / entry.gradedCount : null;
+      return {
+        parish: entry.parish,
+        sat: entry.sat,
+        gradeCounts: entry.gradeCounts,
+        average: average != null ? Math.round(average * 10) / 10 : null,
+        avgGrade: average != null ? calculateGradeForType(average) : '-',
+      };
+    });
+
+    list.sort((a, b) => {
+      const avgA = a.average ?? -1;
+      const avgB = b.average ?? -1;
+      if (avgA !== avgB) return avgB - avgA;
+      return a.parish.localeCompare(b.parish);
+    });
+
+    return list.map((entry, index) => ({ ...entry, position: index + 1 }));
+  }, [students, displayResults, calculateGradeForType]);
 
   const calculateResultsMutation = useMutation({
     mutationFn: async () => calculateResults(reportYear, filter.month),
@@ -413,6 +478,95 @@ const PreFormOneResultsPage = ({ config }) => {
     toast.success('CSV file downloaded successfully!');
   };
 
+  const downloadParishPDF = async () => {
+    if (!downloadParishResultsPDF) {
+      toast.warning('Parish results PDF is not available for this module.');
+      return;
+    }
+    try {
+      const response = await downloadParishResultsPDF(reportYear);
+      const blob = new Blob([response.data], { type: 'application/pdf' });
+      if (blob.size === 0) throw new Error('PDF file is empty');
+
+      const url = window.URL.createObjectURL(blob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = `${fileStem}_ParishResults_${reportYear}.pdf`;
+      link.click();
+      window.URL.revokeObjectURL(url);
+      toast.success('Parish results PDF downloaded successfully!');
+    } catch (error) {
+      let message = error.message || 'Failed to generate parish results PDF';
+      if (error.response?.data instanceof Blob) {
+        try {
+          const text = await error.response.data.text();
+          const parsed = JSON.parse(text);
+          message = parsed.message || message;
+        } catch {
+          /* keep default */
+        }
+      } else if (error.response?.data?.message) {
+        message = error.response.data.message;
+      }
+      toast.error(message);
+    }
+  };
+
+  const handleParishCSV = () => {
+    if (parishResults.length === 0) {
+      toast.warning('No parish results to export.');
+      return;
+    }
+
+    const csv = [];
+    csv.push(['CATHOLIC ARCHDIOCESE OF ARUSHA']);
+    csv.push(['ARUSHA CATHOLIC SEMINARY-OLDONYOSAMBU']);
+    csv.push(['P.O BOX 3102 Arusha, Tanzania']);
+    csv.push([]);
+    csv.push([`${reportHeading} — PARISH RESULTS ${reportYear}`]);
+    csv.push([]);
+    csv.push(['POS', 'PARISH', 'SAT', 'A', 'B', 'C', 'D', 'F', 'AVERAGE', 'AVERAGE GRADE']);
+
+    parishResults.forEach((parish) => {
+      csv.push([
+        parish.position,
+        parish.parish,
+        parish.sat,
+        parish.gradeCounts.A,
+        parish.gradeCounts.B,
+        parish.gradeCounts.C,
+        parish.gradeCounts.D,
+        parish.gradeCounts.F,
+        parish.average != null ? parish.average : '',
+        parish.avgGrade,
+      ]);
+    });
+
+    const BOM = '\uFEFF';
+    const csvContent =
+      BOM +
+      csv
+        .map((row) =>
+          row
+            .map((cell) => {
+              const cellStr = String(cell ?? '');
+              if (cellStr.includes(',') || cellStr.includes('"') || cellStr.includes('\n')) {
+                return `"${cellStr.replace(/"/g, '""')}"`;
+              }
+              return cellStr;
+            })
+            .join(',')
+        )
+        .join('\n');
+
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = `${fileStem}_ParishResults_${reportYear}.csv`;
+    link.click();
+    toast.success('Parish results CSV downloaded successfully!');
+  };
+
   const handleFilterChange = (newFilter) => {
     setFilter((prev) => ({
       ...prev,
@@ -432,7 +586,7 @@ const PreFormOneResultsPage = ({ config }) => {
     const gradeClass = result.grade || 'none';
     const avgValue = result.average != null ? parseFloat(result.average) : null;
     const gradeRowClass =
-      gradeClass === 'C' && avgValue !== null && avgValue < 65
+      gradeClass === 'C' && avgValue !== null && avgValue < cLowThreshold
         ? `grade-row-${gradeClass}-low`
         : `grade-row-${gradeClass}`;
     const fullName =
@@ -521,6 +675,84 @@ const PreFormOneResultsPage = ({ config }) => {
               </div>
             </div>
           </>
+        )}
+
+        {!isLoading && students.length > 0 && subjects.length > 0 && parishResults.length > 0 && (
+          <section className="pfo-parish-results-card" aria-label={`${labelTitle} parish results`}>
+            <div className="pfo-parish-results-card-header">
+              <button
+                type="button"
+                className="pfo-parish-results-toggle"
+                onClick={() => setParishResultsOpen((open) => !open)}
+                aria-expanded={parishResultsOpen}
+                aria-controls="pfo-parish-results-body"
+              >
+                <span className="pfo-parish-results-icon">
+                  <i className="fas fa-church" aria-hidden="true"></i>
+                </span>
+                <span className="pfo-parish-results-heading">
+                  <span className="pfo-parish-results-heading-title">Parish Results</span>
+                  <span className="pfo-parish-results-heading-sub">
+                    Performance by parish — ranked from best to last
+                  </span>
+                </span>
+                <i
+                  className={`fas fa-chevron-down pfo-parish-results-chevron${
+                    parishResultsOpen ? ' is-open' : ''
+                  }`}
+                  aria-hidden="true"
+                ></i>
+              </button>
+              <div className="pfo-parish-results-actions">
+                <button type="button" onClick={downloadParishPDF} className="download-btn-monthly">
+                  <i className="fas fa-file-pdf"></i> Download Parish Results (PDF)
+                </button>
+                <button
+                  type="button"
+                  onClick={handleParishCSV}
+                  className="download-btn-monthly download-btn-monthly--secondary"
+                >
+                  <i className="fas fa-file-csv"></i> Download Parish Results (CSV)
+                </button>
+              </div>
+            </div>
+            <div id="pfo-parish-results-body" hidden={!parishResultsOpen}>
+              <div className="pfo-parish-results-table-wrap">
+                <table className="pfo-parish-results-table">
+                  <thead>
+                    <tr>
+                      <th>POS</th>
+                      <th className="parish-col">PARISH</th>
+                      <th>SAT</th>
+                      <th>A</th>
+                      <th>B</th>
+                      <th>C</th>
+                      <th>D</th>
+                      <th>F</th>
+                      <th>AVERAGE</th>
+                      <th>AVERAGE GRADE</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {parishResults.map((parish) => (
+                      <tr key={parish.parish}>
+                        <td>{parish.position}</td>
+                        <td className="parish-col parish-name">{parish.parish}</td>
+                        <td>{parish.sat}</td>
+                        <td>{parish.gradeCounts.A}</td>
+                        <td>{parish.gradeCounts.B}</td>
+                        <td>{parish.gradeCounts.C}</td>
+                        <td>{parish.gradeCounts.D}</td>
+                        <td>{parish.gradeCounts.F}</td>
+                        <td>{parish.average != null ? parish.average : '—'}</td>
+                        <td className="avg-grade-cell">{parish.avgGrade}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </section>
         )}
 
         <div className="excel-card preform-one-results">
@@ -684,9 +916,11 @@ const PreFormOneResultsPage = ({ config }) => {
                       <span className="results-mobile-card__sn">{sn}</span>
                       <div className="results-mobile-card__identity">
                         <p className="results-mobile-card__name">{fullName}</p>
-                        <p className="results-mobile-card__parish">
-                          <i className="fas fa-church" aria-hidden="true"></i> {parish}
-                        </p>
+                        {showParishColumn ? (
+                          <p className="results-mobile-card__parish">
+                            <i className="fas fa-church" aria-hidden="true"></i> {parish}
+                          </p>
+                        ) : null}
                       </div>
                       <div className="results-mobile-card__badge" aria-label="Grade and position">
                         <span className="results-mobile-card__grade">{result.grade || '—'}</span>
@@ -753,7 +987,9 @@ const PreFormOneResultsPage = ({ config }) => {
                       <th className="sticky-col col-fname">First Name</th>
                       <th className="sticky-col col-mname">Middle Name</th>
                       <th className="sticky-col col-sname">Surname</th>
-                      <th className="sticky-col col-parish">Parish</th>
+                      {showParishColumn ? (
+                        <th className="sticky-col col-parish">Parish</th>
+                      ) : null}
                       {subjects.map((subject) => (
                         <th key={subject.id} className="subject-col" title={subject.subject_name}>
                           <div className="rotate-header">{subject.subject_code}</div>
@@ -783,7 +1019,9 @@ const PreFormOneResultsPage = ({ config }) => {
                           <td className="sticky-col col-fname">{student.first_name || '-'}</td>
                           <td className="sticky-col col-mname">{student.middle_name || '-'}</td>
                           <td className="sticky-col col-sname">{student.surname || '-'}</td>
-                          <td className="sticky-col col-parish">{student.parish || '-'}</td>
+                          {showParishColumn ? (
+                            <td className="sticky-col col-parish">{student.parish || '-'}</td>
+                          ) : null}
                           {subjects.map((subject) => (
                             <td key={subject.id} className="subject-col">
                               {formatSubjectScoreCell(
@@ -812,29 +1050,11 @@ const PreFormOneResultsPage = ({ config }) => {
               </div>
             </div>
 
-            {totalPages > 1 && (
-              <div className="pagination-controls">
-                <button
-                  type="button"
-                  className="pagination-btn"
-                  disabled={currentPage === 1}
-                  onClick={() => setCurrentPage((p) => p - 1)}
-                >
-                  <i className="fas fa-chevron-left"></i> Prev
-                </button>
-                <span className="pagination-info">
-                  Page {currentPage} of {totalPages}
-                </span>
-                <button
-                  type="button"
-                  className="pagination-btn"
-                  disabled={currentPage >= totalPages}
-                  onClick={() => setCurrentPage((p) => p + 1)}
-                >
-                  Next <i className="fas fa-chevron-right"></i>
-                </button>
-              </div>
-            )}
+            <PreFormOnePagination
+              currentPage={currentPage}
+              totalPages={totalPages}
+              onPageChange={setCurrentPage}
+            />
 
             <div className="back-margin">
               <button type="button" onClick={goBack} className="excel-btn">

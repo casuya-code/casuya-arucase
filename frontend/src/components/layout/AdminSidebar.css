@@ -243,7 +243,13 @@
 }
 
 .category-items.open {
-  max-height: 600px;
+  max-height: 1400px;
+}
+
+/* Collapsed rail wraps labels onto multiple lines, so its content can be far
+   taller than the expanded sidebar — never clip it. */
+.admin-sidebar.collapsed .category-items.open {
+  max-height: none;
 }
 
 .admin-sidebar.always-open-nav .category-items,
@@ -667,7 +673,7 @@
   }
 
   .mobile-category-items.open {
-    max-height: 600px;
+    max-height: 1400px;
   }
 
   .mobile-nav-items {

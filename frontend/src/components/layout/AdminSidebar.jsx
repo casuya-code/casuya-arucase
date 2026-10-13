@@ -170,7 +170,15 @@ const AdminSidebar = () => {
         { path: '/admin/taaluma', label: 'Taaluma', icon: 'fa-book-open', moduleId: 'taaluma_comments' },
         { path: '/admin/mwalimu-comments', label: 'Mwalimu Comments', icon: 'fa-user-graduate', moduleId: 'mwalimu_taaluma_comments' },
         { path: '/admin/mkuu-comments', label: 'Mkuu Comments', icon: 'fa-crown', moduleId: 'mkuu_shule_comments' },
-        { path: '/admin/tabia-mwenendo', label: 'Tabia & Mwenendo', icon: 'fa-balance-scale', moduleId: 'tabia_mwenendo_comments' }
+        { path: '/admin/tabia-mwenendo', label: 'Tabia & Mwenendo', icon: 'fa-balance-scale', moduleId: 'tabia_mwenendo_comments' },
+        { path: '/admin/pre-sala', label: 'PRE-Sala', icon: 'fa-comments', moduleId: 'pre_sala_comments' },
+        { path: '/admin/pre-taaluma', label: 'PRE-Taaluma', icon: 'fa-book-open', moduleId: 'pre_taaluma_comments' },
+        { path: '/admin/pre-tabia', label: 'PRE-Tabia', icon: 'fa-user-check', moduleId: 'pre_tabia_comments' },
+        { path: '/admin/pre-huduma', label: 'PRE-Huduma', icon: 'fa-hands-helping', moduleId: 'pre_huduma_comments' },
+        { path: '/admin/pre-michezo', label: 'PRE-Michezo', icon: 'fa-running', moduleId: 'pre_michezo_comments' },
+        { path: '/admin/pre-mwalimu-comments', label: 'PRE-Mwalimu wa Taaluma', icon: 'fa-user-graduate', moduleId: 'pre_mwalimu_taaluma_comments' },
+        { path: '/admin/pre-mkuu-comments', label: 'PRE-Mkuu wa Shule', icon: 'fa-crown', moduleId: 'pre_mkuu_shule_comments' },
+        { path: '/admin/pre-tabia-mwenendo', label: 'PRE-Tabia na Mwenendo', icon: 'fa-balance-scale', moduleId: 'pre_tabia_mwenendo_comments' }
       ]
     },
     {
@@ -186,7 +194,9 @@ const AdminSidebar = () => {
       items: [
         { path: '/admin/news', label: 'News', icon: 'fa-newspaper', moduleId: 'news_announcements' },
         { path: '/admin/fees', label: 'Fees', icon: 'fa-money-bill-wave', moduleId: 'fees_announcements' },
-        { path: '/admin/debts', label: 'Debts', icon: 'fa-money-bill-wave', moduleId: 'individual_debt' }
+        { path: '/admin/debts', label: 'Debts', icon: 'fa-money-bill-wave', moduleId: 'individual_debt' },
+        { path: '/admin/pre-form-one-fees', label: 'Pre-Form One Fees', icon: 'fa-money-bill-wave', moduleId: 'pre_form_one_fees' },
+        { path: '/admin/pre-form-one-debts', label: 'Pre-Form One Debts', icon: 'fa-money-bill-wave', moduleId: 'pre_form_one_debts' }
       ]
     },
     {

@@ -14,6 +14,7 @@ import './PreFormOneResults.css';
 import './preform-one-modern.css';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { useGoBack } from '../../hooks/useGoBack';
+import PreFormOnePagination from '../../components/common/PreFormOnePagination';
 
 const PreFormOneInterviewReports = () => {
   const { year } = useParams();
@@ -103,11 +104,11 @@ const PreFormOneInterviewReports = () => {
       document.body.removeChild(link);
       window.URL.revokeObjectURL(url);
       
-      toast.success(`${student.first_name} ${student.surname}'s interview report downloaded successfully!`);
+      toast.success(`${student.first_name} ${student.middle_name || ''} ${student.surname}'s interview report downloaded successfully!`);
     } catch (error) {
       toast.error(
         error.message ||
-          `Failed to generate interview report for ${student.first_name} ${student.surname}`
+          `Failed to generate interview report for ${student.first_name} ${student.middle_name || ''} ${student.surname}`
       );
     } finally {
       setIsGenerating(prev => ({ ...prev, [student.id]: false }));
@@ -159,8 +160,8 @@ const PreFormOneInterviewReports = () => {
   const sortedStudents = useMemo(
     () =>
       [...students].sort((a, b) => {
-        const an = `${a.first_name || ''} ${a.surname || ''}`.trim();
-        const bn = `${b.first_name || ''} ${b.surname || ''}`.trim();
+        const an = `${a.first_name || ''} ${a.middle_name || ''} ${a.surname || ''}`.trim();
+        const bn = `${b.first_name || ''} ${b.middle_name || ''} ${b.surname || ''}`.trim();
         return an.localeCompare(bn);
       }),
     [students]
@@ -238,7 +239,6 @@ const PreFormOneInterviewReports = () => {
                               <strong>{student.first_name} {student.middle_name || ''} {student.surname}</strong>
                             </div>
                             <div className="student-meta">
-                              <span className="adm-number">Adm: {student.admission_number}</span>
                               {student.parish && <span className="parish">Parish: {student.parish}</span>}
                             </div>
                           </div>
@@ -265,7 +265,7 @@ const PreFormOneInterviewReports = () => {
                             onClick={() => generateStudentPDF(student)}
                             className="excel-btn primary small"
                             disabled={isGenerating[student.id] || !hasReport}
-                            title={hasReport ? `Generate PDF interview report for ${student.first_name} ${student.surname}` : 'No interview report data available'}
+                            title={hasReport ? `Generate PDF interview report for ${student.first_name} ${student.middle_name || ''} ${student.surname}` : 'No interview report data available'}
                           >
                             <i className="fas fa-file-pdf"></i>
                             {isGenerating[student.id] ? 'Generating...' : 'Generate PDF'}
@@ -276,27 +276,11 @@ const PreFormOneInterviewReports = () => {
                   })}
                   </div>
 
-                  <div className="pagination-controls">
-                    <button
-                      type="button"
-                      className="pagination-btn"
-                      disabled={currentPage === 1}
-                      onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-                    >
-                      <i className="fas fa-chevron-left"></i> Prev
-                    </button>
-                    <span className="pagination-info">
-                      {currentPage} / {Math.ceil(sortedStudents.length / PER_PAGE) || 1}
-                    </span>
-                    <button
-                      type="button"
-                      className="pagination-btn"
-                      disabled={currentPage >= Math.ceil(sortedStudents.length / PER_PAGE)}
-                      onClick={() => setCurrentPage((p) => p + 1)}
-                    >
-                      Next <i className="fas fa-chevron-right"></i>
-                    </button>
-                  </div>
+                  <PreFormOnePagination
+                    currentPage={currentPage}
+                    totalPages={Math.ceil(sortedStudents.length / PER_PAGE) || 1}
+                    onPageChange={setCurrentPage}
+                  />
                 </div>
                 
                 <div className="print-spacer-bottom"></div>

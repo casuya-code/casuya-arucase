@@ -264,7 +264,7 @@ const HomePage = () => {
 
           <div className="hero-content-overlay hero-content-overlay--cta-only">
             <div className="hero-cta-group">
-              <Link to="/admissions/apply" className="hero-cta">
+              <Link to="/admissions/apply" className="hero-cta hero-cta--primary">
                 <i className="fas fa-pen-to-square" aria-hidden />
                 Omba Udahili
               </Link>

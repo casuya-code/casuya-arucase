@@ -24,12 +24,22 @@ const MODULE_GUIDELINES = [
   { module: 'mkuu_shule_comments', icon: 'fa-crown', title: 'Mkuu wa Shule Comments', path: '/admin/mkuu-comments', description: 'Provide overall assessment and direction.' },
   { module: 'taaluma_comments', icon: 'fa-book-open', title: 'Taaluma Comments', path: '/admin/taaluma', description: 'Provide comprehensive academic feedback.' },
   { module: 'tabia_mwenendo_comments', icon: 'fa-balance-scale', title: 'Tabia na Mwenendo', path: '/admin/tabia-mwenendo', description: 'Evaluate behavior and conduct comprehensively.' },
+  { module: 'pre_sala_comments', icon: 'fa-comments', title: 'PRE-Sala', path: '/admin/pre-sala', description: 'Pre-Form One feedback on prayer life and spiritual participation.' },
+  { module: 'pre_taaluma_comments', icon: 'fa-book-open', title: 'PRE-Taaluma', path: '/admin/pre-taaluma', description: 'Pre-Form One academic feedback.' },
+  { module: 'pre_tabia_comments', icon: 'fa-user-check', title: 'PRE-Tabia', path: '/admin/pre-tabia', description: 'Pre-Form One behaviour and character.' },
+  { module: 'pre_huduma_comments', icon: 'fa-hands-helping', title: 'PRE-Huduma', path: '/admin/pre-huduma', description: 'Pre-Form One service to the community.' },
+  { module: 'pre_michezo_comments', icon: 'fa-running', title: 'PRE-Michezo', path: '/admin/pre-michezo', description: 'Pre-Form One sports and physical activities.' },
+  { module: 'pre_mwalimu_taaluma_comments', icon: 'fa-user-graduate', title: 'PRE-Mwalimu wa Taaluma', path: '/admin/pre-mwalimu-comments', description: 'Pre-Form One academic guidance from the subject teacher.' },
+  { module: 'pre_mkuu_shule_comments', icon: 'fa-crown', title: 'PRE-Mkuu wa Shule', path: '/admin/pre-mkuu-comments', description: 'Pre-Form One overall assessment and direction.' },
+  { module: 'pre_tabia_mwenendo_comments', icon: 'fa-balance-scale', title: 'PRE-Tabia na Mwenendo', path: '/admin/pre-tabia-mwenendo', description: 'Pre-Form One behaviour and conduct grid.' },
   { module: 'monthly_results', icon: 'fa-clipboard-list', title: 'Arucase Monthly Results', path: '/admin/results/monthly', description: 'Enter and review monthly academic results.' },
   { module: 'individual_debt', icon: 'fa-money-bill-wave', title: 'Individual Debt', path: '/admin/debts', description: 'Track student fee payments and outstanding balances.' },
   { module: 'individual_report', icon: 'fa-file-alt', title: 'Individual Student Report', path: '/reports/individual', description: 'Generate comprehensive student report cards.' },
   { module: 'bulk_report', icon: 'fa-copy', title: 'Student Bulk Report', path: '/reports/bulk', description: 'Generate reports for entire classes efficiently.' },
   { module: 'news_announcements', icon: 'fa-newspaper', title: 'News & Announcements', path: '/admin/news', description: 'Post important school news and public announcements.' },
   { module: 'fees_announcements', icon: 'fa-money-bill-wave', title: 'Fees Announcements', path: '/admin/fees', description: 'Communicate fee-related information to students and parents.' },
+  { module: 'pre_form_one_fees', icon: 'fa-money-bill-wave', title: 'Pre-Form One Fees', path: '/admin/pre-form-one-fees', description: 'Communicate fee-related information to Pre-Form One students.' },
+  { module: 'pre_form_one_debts', icon: 'fa-money-bill-wave', title: 'Pre-Form One Debts', path: '/admin/pre-form-one-debts', description: 'Track Pre-Form One student fee balances.' },
 ];
 
 const ADMIN_LIKE_ROLES = ['admin', 'superadmin', 'rector', 'vice_rector', 'academic_master'];

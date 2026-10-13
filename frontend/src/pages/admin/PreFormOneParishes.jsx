@@ -7,6 +7,7 @@ import './preform-one-modern.css';
 import { preFormOneService } from '../../services/preFormOneService';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { useGoBack } from '../../hooks/useGoBack';
+import PreFormOnePagination from '../../components/common/PreFormOnePagination';
 import { CSV_BULK_LABELS, CSV_BULK_TITLES } from '../../constants/csvBulkActions';
 
 const PreFormOneParishes = () => {
@@ -15,7 +16,7 @@ const PreFormOneParishes = () => {
   const [students, setStudents] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [filterParish, setFilterParish] = useState('all');
-  const [sortBy, setSortBy] = useState('admission_number');
+  const [sortBy, setSortBy] = useState('first_name');
   const [sortOrder, setSortOrder] = useState('asc');
   const [editingParish, setEditingParish] = useState('');
   const [editingId, setEditingId] = useState(null);
@@ -58,8 +59,8 @@ const PreFormOneParishes = () => {
       const term = searchTerm.toLowerCase();
       filtered = filtered.filter(student => 
         student && (
-          student.admission_number?.toLowerCase().includes(term) ||
           student.first_name?.toLowerCase().includes(term) ||
+          student.middle_name?.toLowerCase().includes(term) ||
           student.surname?.toLowerCase().includes(term) ||
           student.parish?.toLowerCase().includes(term)
         )
@@ -463,21 +464,14 @@ const PreFormOneParishes = () => {
           <div className="registration-form-card-header">
             <i className="fas fa-church"></i>
             <span>Edit Parish Assignment - {year}</span>
-            <span className="parishes-header-chip">
-              <small>{editingStudent.admission_number}</small>
-            </span>
           </div>
           <div className="registration-form-card-body">
             <form onSubmit={(e) => { e.preventDefault(); handleSaveParish(); }} className="registration-form">
               <div className="student-info-display">
                 <div className="student-details-grid">
                   <div className="detail-item">
-                    <label>Admission Number:</label>
-                    <span>{editingStudent.admission_number}</span>
-                  </div>
-                  <div className="detail-item">
                     <label>Name:</label>
-                    <span>{editingStudent.first_name} {editingStudent.surname}</span>
+                    <span>{editingStudent.first_name} {editingStudent.middle_name || ''} {editingStudent.surname}</span>
                   </div>
                   <div className="detail-item">
                     <label>Sex:</label>
@@ -592,7 +586,7 @@ const PreFormOneParishes = () => {
                 type="text"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
-                placeholder="Search by name, admission no or parish..."
+                placeholder="Search by name or parish..."
                 className="form-input"
               />
             </div>
@@ -612,7 +606,6 @@ const PreFormOneParishes = () => {
                 onChange={(e) => setSortBy(e.target.value)}
                 className="form-input"
               >
-                <option value="admission_number">Sort by Admission No</option>
                 <option value="first_name">Sort by First Name</option>
                 <option value="surname">Sort by Surname</option>
                 <option value="parish">Sort by Parish</option>
@@ -643,8 +636,6 @@ const PreFormOneParishes = () => {
                 <thead>
                   <tr>
                     <th>#</th>
-                    <th>Admission No</th>
-                    <th>Serial No</th>
                     <th>Name</th>
                     <th>Sex</th>
                     <th>Parish</th>
@@ -655,8 +646,6 @@ const PreFormOneParishes = () => {
                   {paginatedStudents.map((student, index) => (
                     <tr key={student.id || `student-${index}`}>
                       <td>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</td>
-                      <td>{student.admission_number || 'N/A'}</td>
-                      <td>{student.serial_number || 'N/A'}</td>
                       <td>{`${student.first_name || ''} ${student.middle_name || ''} ${student.surname || ''}`.trim() || 'N/A'}</td>
                       <td>
                         <span className={`sex-badge ${student.sex?.toLowerCase() || 'unknown'}`}>
@@ -690,35 +679,11 @@ const PreFormOneParishes = () => {
                   ))}
                 </tbody>
               </table>
-              {totalPages > 1 && (
-                <div className="pagination-controls">
-                  <button
-                    className="excel-btn secondary small"
-                    onClick={() => handlePageChange(currentPage - 1)}
-                    disabled={currentPage === 1}
-                  >
-                    <i className="fas fa-chevron-left"></i> Previous
-                  </button>
-                  <div className="pagination-pages">
-                    {Array.from({ length: totalPages }, (_, i) => i + 1).map(page => (
-                      <button
-                        key={page}
-                        className={`excel-btn small ${page === currentPage ? 'primary' : 'secondary'}`}
-                        onClick={() => handlePageChange(page)}
-                      >
-                        {page}
-                      </button>
-                    ))}
-                  </div>
-                  <button
-                    className="excel-btn secondary small"
-                    onClick={() => handlePageChange(currentPage + 1)}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next <i className="fas fa-chevron-right"></i>
-                  </button>
-                </div>
-              )}
+              <PreFormOnePagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={handlePageChange}
+              />
             </div>
           )}
         </div>

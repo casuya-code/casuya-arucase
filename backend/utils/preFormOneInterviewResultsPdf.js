@@ -11,6 +11,11 @@ const {
   roundAverage,
   assignResultPositions: assignSharedResultPositions,
 } = require('./preFormOneGrading');
+const {
+  calculateOLevelGrade,
+  getOLevelRemarks,
+  O_LEVEL_C_LOW_THRESHOLD,
+} = require('./oLevelGrading');
 
 function escapeHtml(value) {
   if (value == null) return '';
@@ -54,7 +59,7 @@ function formatSubjectScoreCell(value) {
   return String(num);
 }
 
-function calculateInterviewMetrics(scoresByCode, activeSubjects) {
+function calculateInterviewMetrics(scoresByCode, activeSubjects, grading = 'interview') {
   if (!activeSubjects?.length) {
     return { total_marks: 0, average: 0, grade: '-', remarks: '-' };
   }
@@ -74,13 +79,14 @@ function calculateInterviewMetrics(scoresByCode, activeSubjects) {
   }
 
   const average = scoredCount > 0 ? total_marks / scoredCount : 0;
-  const grade = calculateGrade(average);
+  const useOLevel = grading === 'oLevel';
+  const grade = useOLevel ? calculateOLevelGrade(average) : calculateGrade(average);
 
   return {
     total_marks,
     average: roundAverage(average),
     grade: grade || '-',
-    remarks: getRemarks(average),
+    remarks: useOLevel ? getOLevelRemarks(average) : getRemarks(average),
   };
 }
 
@@ -134,6 +140,7 @@ const PDF_KIND_CONFIG = {
     subjectsTable: 'preformone_interview_subjects',
     resultsTable: 'preform_one_interview_results',
     scoreType: 'interview',
+    grading: 'interview',
     barLabel: 'PRE-FORM ONE INTERVIEW RESULTS',
     pageTitle: 'Pre-Form One Interview Results',
   },
@@ -141,6 +148,7 @@ const PDF_KIND_CONFIG = {
     subjectsTable: 'preformone_continuing_subjects',
     resultsTable: 'preform_one_continuing_results',
     scoreType: 'continuing',
+    grading: 'oLevel',
     barLabel: 'PRE-FORM ONE CONTINUING RESULTS',
     pageTitle: 'Pre-Form One Continuing Results',
   },
@@ -226,7 +234,7 @@ async function buildPreFormOneResultsPdfData(year, query, kind = 'interview') {
     const adm = admissionKey(student.admission_number);
     const scores = subjectScores[adm];
     if (!adm || !scores || Object.keys(scores).length === 0) return;
-    autoCalculated[adm] = calculateInterviewMetrics(scores, subjects);
+    autoCalculated[adm] = calculateInterviewMetrics(scores, subjects, cfg.grading);
   });
 
   const displayResults = assignResultPositions(
@@ -404,6 +412,8 @@ function generatePreFormOneResultsPdfHtml({
   logoUrl,
   barLabel = 'PRE-FORM ONE RESULTS',
   pageTitle = 'Pre-Form One Results',
+  cLowThreshold = 65,
+  showParishColumn = true,
 }) {
   const subjectHeaders = subjects
     .map(
@@ -417,7 +427,7 @@ function generatePreFormOneResultsPdfHtml({
       (row) => {
         let gradeClass = '';
         if (row.grade && row.grade !== '-') {
-          if (row.grade === 'C' && row.avgValue != null && row.avgValue < 65) {
+          if (row.grade === 'C' && row.avgValue != null && row.avgValue < cLowThreshold) {
             gradeClass = 'grade-row-C-low';
           } else {
             gradeClass = `grade-row-${row.grade}`;
@@ -429,7 +439,7 @@ function generatePreFormOneResultsPdfHtml({
       <td class="col-fname">${escapeHtml(row.first_name)}</td>
       <td class="col-mname">${escapeHtml(row.middle_name)}</td>
       <td class="col-sname">${escapeHtml(row.surname)}</td>
-      <td class="col-parish">${escapeHtml(row.parish)}</td>
+      ${showParishColumn ? `<td class="col-parish">${escapeHtml(row.parish)}</td>` : ''}
       ${row.subjectCells.map((cell) => `<td class="subject-col">${escapeHtml(cell)}</td>`).join('')}
       <td class="result-col tot-col">${escapeHtml(row.total)}</td>
       <td class="result-col">${escapeHtml(row.average)}</td>
@@ -504,7 +514,7 @@ function generatePreFormOneResultsPdfHtml({
     table.compact-results-table td {
       border: 1px solid #000000;
       padding: 3px 4px;
-      text-align: center;
+      text-align: left;
       vertical-align: middle;
       color: #000000;
     }
@@ -562,7 +572,7 @@ function generatePreFormOneResultsPdfHtml({
         <th class="col-fname">First Name</th>
         <th class="col-mname">Middle Name</th>
         <th class="col-sname">Surname</th>
-        <th class="col-parish">Parish</th>
+        ${showParishColumn ? '<th class="col-parish">Parish</th>' : ''}
         ${subjectHeaders}
         <th class="result-col">TOT</th>
         <th class="result-col">AVR</th>
@@ -580,9 +590,216 @@ function generatePreFormOneResultsPdfHtml({
 }
 
 /**
- * Render HTML to PDF buffer using shared Puppeteer launch (Railway/local).
+ * Aggregate result rows into per-parish performance stats, ranked best first.
+ * @param {Array<{parish: string, grade: string, avgValue: (number|null)}>} rows
+ * @param {'interview'|'oLevel'} grading grade profile for the average-grade cell
  */
-async function renderHtmlToPdfBuffer(htmlContent) {
+function buildParishResultsData(rows, grading = 'interview') {
+  const gradeFor = grading === 'oLevel' ? calculateOLevelGrade : calculateGrade;
+  const map = new Map();
+  (rows || []).forEach((row) => {
+    const parish = String(row.parish || '').trim() || 'Unknown';
+    if (!map.has(parish)) {
+      map.set(parish, {
+        parish,
+        sat: 0,
+        gradeCounts: { A: 0, B: 0, C: 0, D: 0, F: 0 },
+        avgSum: 0,
+        avgCount: 0,
+      });
+    }
+    const entry = map.get(parish);
+    const grade = row.grade;
+    if (grade && grade !== '-') {
+      entry.sat += 1;
+      if (grade in entry.gradeCounts) entry.gradeCounts[grade] += 1;
+      const avg = Number(row.avgValue);
+      if (Number.isFinite(avg) && avg > 0) {
+        entry.avgSum += avg;
+        entry.avgCount += 1;
+      }
+    }
+  });
+
+  const list = [...map.values()].map((entry) => {
+    const average = entry.avgCount > 0 ? Math.round((entry.avgSum / entry.avgCount) * 100) / 100 : null;
+    return {
+      parish: entry.parish,
+      sat: entry.sat,
+      gradeCounts: entry.gradeCounts,
+      average,
+      avgGrade: average != null ? gradeFor(average) || '-' : '-',
+    };
+  });
+
+  list.sort(
+    (a, b) =>
+      (b.average ?? -1) - (a.average ?? -1) || a.parish.localeCompare(b.parish)
+  );
+
+  return list.map((entry, index) => ({ ...entry, position: index + 1 }));
+}
+
+function generateParishResultsPdfHtml({
+  rows,
+  year,
+  logoUrl,
+  barLabel = 'PRE-FORM ONE PARISH RESULTS',
+  pageTitle = 'Pre-Form One Parish Results',
+}) {
+  const tableRows = rows
+    .map(
+      (row) => `
+    <tr>
+      <td class="col-sn">${row.position}</td>
+      <td class="col-parish">${escapeHtml(row.parish)}</td>
+      <td>${row.sat}</td>
+      <td>${row.gradeCounts.A}</td>
+      <td>${row.gradeCounts.B}</td>
+      <td>${row.gradeCounts.C}</td>
+      <td>${row.gradeCounts.D}</td>
+      <td>${row.gradeCounts.F}</td>
+      <td class="result-col">${row.average != null ? escapeHtml(String(row.average)) : '-'}</td>
+      <td class="result-col grd-col">${escapeHtml(row.avgGrade)}</td>
+    </tr>`
+    )
+    .join('');
+
+  const logoBlock = buildLogoBlockHtml(logoUrl);
+
+  const FONT_LINKS = `
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Tinos:ital,wght@0,400;0,700;1,400;1,700&display=swap" rel="stylesheet">
+`;
+  const FONT_STACK = "'Tinos', 'Times New Roman', 'Liberation Serif', 'Times', serif";
+
+  return `<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>${escapeHtml(pageTitle)} ${escapeHtml(year)}</title>
+  ${FONT_LINKS}
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: ${FONT_STACK};
+      margin: 0;
+      padding: 12px;
+      font-size: 14px;
+      color: #000000;
+      line-height: 1.3;
+    }
+    .report-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px 16px;
+      border: 1px solid #000000;
+      margin-bottom: 0;
+    }
+    .logo-section { flex: 0 0 130px; text-align: center; }
+    .school-logo { width: 120px; height: 120px; object-fit: contain; }
+    .school-logo-placeholder {
+      width: 120px; height: 120px; background: #ffffff; border: 1px solid #000000;
+    }
+    .school-info { flex: 1; text-align: center; padding: 0 8px; }
+    .school-info h1 { margin: 0 0 4px; font-size: 17px; font-weight: 700; color: #000000; }
+    .school-info h2 { margin: 0 0 8px; font-size: 17px; font-weight: 700; color: #000000; }
+    .contact-info p { margin: 2px 0; font-size: 14px; color: #000000; }
+    .test-info-bar {
+      text-align: center;
+      padding: 10px;
+      font-size: 14px;
+      font-weight: 700;
+      letter-spacing: 0.02em;
+      border: 1px solid #000000;
+      border-top: none;
+      margin-bottom: 12px;
+      color: #000000;
+    }
+    table.parish-results-table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 13px;
+      line-height: 1.3;
+    }
+    table.parish-results-table th,
+    table.parish-results-table td {
+      border: 1px solid #000000;
+      padding: 5px 8px;
+      text-align: left;
+      vertical-align: middle;
+      color: #000000;
+    }
+    table.parish-results-table th {
+      background: #ffffff;
+      font-weight: 700;
+      color: #000000;
+    }
+    .col-sn { min-width: 34px; }
+    .col-parish { min-width: 140px; text-align: left; font-weight: 700; }
+    .result-col { min-width: 48px; }
+    .grd-col { font-weight: 700; }
+    .grade-A { background: #166534 !important; color: white !important; }
+    .grade-B { background: #86efac !important; }
+    .grade-C { background: #fef9c3 !important; }
+    .grade-D, .grade-F { background: #fecaca !important; }
+    -webkit-print-color-adjust: exact !important;
+    color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  </style>
+</head>
+<body>
+  <div class="report-header">
+    <div class="logo-section">${logoBlock}</div>
+    <div class="school-info">
+      <h1>CATHOLIC ARCHDIOCESE OF ARUSHA</h1>
+      <h2>ARUSHA CATHOLIC SEMINARY-OLDONYOSAMBU</h2>
+      <div class="contact-info">
+        <p>P.O BOX 3102 Arusha, Tanzania</p>
+        <p>+255 754 92 60 22 / +255 765 394 802</p>
+        <p>Email: arucase@gmail.com</p>
+      </div>
+    </div>
+    <div class="logo-section">${logoBlock}</div>
+  </div>
+  <div class="test-info-bar">${escapeHtml(barLabel)} ${escapeHtml(year)}</div>
+  <table class="parish-results-table">
+    <thead>
+      <tr>
+        <th class="col-sn">POS</th>
+        <th class="col-parish">PARISH</th>
+        <th>SAT</th>
+        <th>A</th>
+        <th>B</th>
+        <th>C</th>
+        <th>D</th>
+        <th>F</th>
+        <th class="result-col">AVERAGE</th>
+        <th class="result-col grd-col">GRADE</th>
+      </tr>
+    </thead>
+    <tbody>
+      ${tableRows}
+    </tbody>
+  </table>
+</body>
+</html>`;
+}
+
+/**
+ * Render HTML to PDF buffer using shared Puppeteer launch (Railway/local).
+ * @param {string} htmlContent
+ * @param {Object} [options]
+ * @param {boolean} [options.landscape=true] - Landscape (results tables) vs portrait (report cards).
+ * @param {Object} [options.margin] - Puppeteer page margins. Defaults to the landscape 12px frame.
+ */
+async function renderHtmlToPdfBuffer(htmlContent, options = {}) {
+  const { landscape = true } = options;
+  const margin = options.margin || (landscape
+    ? { top: '12px', right: '12px', bottom: '12px', left: '12px' }
+    : { top: '5mm', right: '2.5mm', bottom: '5mm', left: '2.5mm' });
   const { launchBrowser } = require('./puppeteerLaunch');
   const browser = await launchBrowser({ timeout: 120000 });
   try {
@@ -610,9 +827,9 @@ async function renderHtmlToPdfBuffer(htmlContent) {
     await new Promise((resolve) => setTimeout(resolve, 250));
     const rawPdf = await page.pdf({
       format: 'A4',
-      landscape: true,
+      landscape,
       printBackground: true,
-      margin: { top: '12px', right: '12px', bottom: '12px', left: '12px' },
+      margin,
       timeout: 60000,
     });
     // page.pdf() returns Uint8Array; normalize so callers can validate/send reliably
@@ -635,6 +852,8 @@ function generateContinuingResultsPdfHtml(opts) {
     ...opts,
     barLabel: 'PRE-FORM ONE CONTINUING RESULTS',
     pageTitle: 'Pre-Form One Continuing Results',
+    cLowThreshold: O_LEVEL_C_LOW_THRESHOLD,
+    showParishColumn: opts?.showParishColumn ?? false,
   });
 }
 
@@ -642,9 +861,11 @@ module.exports = {
   buildInterviewResultsPdfData,
   buildContinuingResultsPdfData,
   buildPreFormOneResultsPdfData,
+  buildParishResultsData,
   generateInterviewResultsPdfHtml,
   generateContinuingResultsPdfHtml,
   generatePreFormOneResultsPdfHtml,
+  generateParishResultsPdfHtml,
   getStaticImageUrl,
   resolveStaticOrigin,
   resolveSchoolLogoDataUri,

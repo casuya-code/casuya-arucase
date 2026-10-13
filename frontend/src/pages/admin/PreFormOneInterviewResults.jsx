@@ -16,6 +16,7 @@ const INTERVIEW_CONFIG = {
   fetchResults: (year, month) => preFormOneService.getInterviewResults(year, month),
   calculateResults: (year, month) => preFormOneService.calculateInterviewResults(year, month),
   downloadResultsPDF: (year) => preFormOneService.downloadInterviewResultsPDF(year),
+  downloadParishResultsPDF: (year) => preFormOneService.downloadInterviewParishResultsPDF(year),
   pageTitle: 'Interview Results',
   cardTitle: 'Calculate Results',
   cardIconClass: 'fa-calculator',

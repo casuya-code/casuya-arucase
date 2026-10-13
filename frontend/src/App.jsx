@@ -11,6 +11,7 @@ import PwaInstallBanner from './components/common/PwaInstallBanner';
 import PublicChatbotLayer from './components/public/PublicChatbotLayer';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import Loading from './components/common/Loading';
+import { PRE_FORM_ONE_COMMENT_TYPES } from './constants/preFormOneComments';
 /** Split modules + legacy `student_registration` for registration routes */
 const REGISTRATION_MODULES_FORM_I_IV = ['student_registration_form_i_iv', 'student_registration'];
 const REGISTRATION_MODULES_FORM_V_VI = ['student_registration_form_v_vi', 'student_registration'];
@@ -169,6 +170,11 @@ const PreFormOneContinuingResults = lazy(() => import('./pages/admin/PreFormOneC
 const PreFormOneInterviewReports = lazy(() => import('./pages/admin/PreFormOneInterviewReports'));
 const PreFormOneContinuingReports = lazy(() => import('./pages/admin/PreFormOneContinuingReports'));
 const PreFormOnePromotion = lazy(() => import('./pages/admin/PreFormOnePromotion'));
+const PreFormOneCommentsYear = lazy(() => import('./pages/admin/PreFormOneCommentsYear'));
+const PreFormOneCommentsManagement = lazy(() => import('./pages/admin/PreFormOneCommentsManagement'));
+const PreFormOneTabiaMwenendoManagement = lazy(() => import('./pages/admin/PreFormOneTabiaMwenendoManagement'));
+const PreFormOneFeesManagement = lazy(() => import('./pages/admin/PreFormOneFeesManagement'));
+const PreFormOneDebtsManagement = lazy(() => import('./pages/admin/PreFormOneDebtsManagement'));
 
 // Analytics (lazy)
 const AnalyticsTrackSelection = lazy(() => import('./pages/analytics/AnalyticsTrackSelection'));
@@ -2206,6 +2212,82 @@ function App() {
             <Route path="/admin/pre-form-one/:year/interview-reports" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneInterviewReports /></ProtectedRoute>} />
             <Route path="/admin/pre-form-one/:year/continuing-reports" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneContinuingReports /></ProtectedRoute>} />
             <Route path="/admin/pre-form-one/:year/promotion" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOnePromotion /></ProtectedRoute>} />
+
+            {/* Pre-Form One comment modules (PRE-Sala, PRE-Taaluma, PRE-Tabia na Mwenendo, …) */}
+            {PRE_FORM_ONE_COMMENT_TYPES.map((t) => (
+              <Route
+                key={t.key}
+                path={`/admin/${t.path}`}
+                element={
+                  <ProtectedRoute requiredModule={t.moduleId}>
+                    <PreFormOneCommentsYear moduleConfig={t} />
+                  </ProtectedRoute>
+                }
+              />
+            ))}
+            {PRE_FORM_ONE_COMMENT_TYPES.map((t) => (
+              <Route
+                key={`${t.key}-year`}
+                path={`/admin/${t.path}/:year`}
+                element={
+                  <ProtectedRoute requiredModule={t.moduleId}>
+                    {t.isGrid ? (
+                      <PreFormOneTabiaMwenendoManagement moduleConfig={t} />
+                    ) : (
+                      <PreFormOneCommentsManagement moduleConfig={t} />
+                    )}
+                  </ProtectedRoute>
+                }
+              />
+            ))}
+
+            {/* Pre-Form One fees announcements & individual debt */}
+            <Route
+              path="/admin/pre-form-one-fees"
+              element={
+                <ProtectedRoute requiredModule="pre_form_one_fees">
+                  <PreFormOneCommentsYear
+                    moduleConfig={{
+                      basePath: '/admin/pre-form-one-fees',
+                      label: 'Pre-Form One Fees',
+                      moduleLabel: 'Fees Announcements',
+                      icon: 'fa-money-bill-wave',
+                    }}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/pre-form-one-fees/:year"
+              element={
+                <ProtectedRoute requiredModule="pre_form_one_fees">
+                  <PreFormOneFeesManagement />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/pre-form-one-debts"
+              element={
+                <ProtectedRoute requiredModule="pre_form_one_debts">
+                  <PreFormOneCommentsYear
+                    moduleConfig={{
+                      basePath: '/admin/pre-form-one-debts',
+                      label: 'Pre-Form One Debts',
+                      moduleLabel: 'Individual Debt',
+                      icon: 'fa-money-bill-wave',
+                    }}
+                  />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/pre-form-one-debts/:year"
+              element={
+                <ProtectedRoute requiredModule="pre_form_one_debts">
+                  <PreFormOneDebtsManagement />
+                </ProtectedRoute>
+              }
+            />
 
             {/* Catch all - redirect to home */}
             <Route path="*" element={<Navigate to="/" replace />} />

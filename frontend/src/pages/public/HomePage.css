@@ -1,6 +1,7 @@
 /* Import common public page styles */
 @import '../../styles/public-common.css';
 @import '../../styles/home-math-theme.css';
+@import '../../styles/home-refresh.css';
 /* Homepage fonts load after first paint (see HomePage.jsx) */
 
 /* Branded text selection */

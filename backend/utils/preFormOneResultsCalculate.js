@@ -8,6 +8,7 @@ const {
   roundAverage,
   assignResultPositions,
 } = require('./preFormOneGrading');
+const { calculateOLevelGrade, getOLevelRemarks } = require('./oLevelGrading');
 
 /**
  * Upsert one result row (works even if UNIQUE index is missing).
@@ -90,6 +91,10 @@ async function deleteStalePreFormOneResults(client, resultsTable, year, keepStud
 
 /**
  * Calculate and persist results for all students in a year.
+ *
+ * `grading` selects the grade/remarks profile: 'interview' (default) keeps the
+ * Pre-Form One pass/fail scale, while 'oLevel' grades continuing students on the
+ * school's regular O-Level scale.
  */
 async function calculateAndSavePreFormOneResults(client, options) {
   const {
@@ -97,7 +102,12 @@ async function calculateAndSavePreFormOneResults(client, options) {
     scoreType,
     subjectsTable,
     resultsTable,
+    grading = 'interview',
   } = options;
+
+  const useOLevel = grading === 'oLevel';
+  const gradeFor = useOLevel ? calculateOLevelGrade : calculateGrade;
+  const remarksFor = useOLevel ? getOLevelRemarks : getRemarks;
 
   const yearNum = parseInt(year, 10);
 
@@ -155,9 +165,9 @@ async function calculateAndSavePreFormOneResults(client, options) {
       admission_number: student.admission_number,
       total_marks: totalMarks,
       average,
-      grade: calculateGrade(average),
+      grade: gradeFor(average),
       position: 0,
-      remarks: getRemarks(average),
+      remarks: remarksFor(average),
       year: yearNum,
     });
   }

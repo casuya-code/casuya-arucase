@@ -15,6 +15,7 @@ import {
   calculatePreFormOneGrade,
   isValidPreFormOneScore,
 } from '../../utils/preFormOneGrading';
+import { calculateOLevelGrade } from '../../utils/oLevelGrading';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { useGoBack } from '../../hooks/useGoBack';
 import { useAuth } from '../../context/AuthContext';
@@ -368,9 +369,17 @@ const PreFormOneScoreEntry = () => {
     }
   }, [isSubjectDetail, selectedSubject, selectedCard, handleNavigation]);
 
-  // Grading uses the canonical Pre-Form One scale so the grade shown here
-  // always matches the grade the API stores and the report prints.
-  const calculateGrade = (score) => calculatePreFormOneGrade(score) || '';
+  // Grading uses the canonical scale for the selected card: the Pre-Form One
+  // interview scale for interview scores, and the O-Level scale for continuing
+  // scores (continuing students are graded on the school's O-Level system). The
+  // grade shown here always matches the grade the API stores.
+  const calculateGrade = useCallback(
+    (score) =>
+      (selectedCard === 'continuing'
+        ? calculateOLevelGrade(score)
+        : calculatePreFormOneGrade(score)) || '',
+    [selectedCard]
+  );
 
 
   // Live local counts while editing; skip during load so API refresh from loadScores wins
@@ -411,16 +420,15 @@ const PreFormOneScoreEntry = () => {
 
 
 
-  // Memoized student name and admission display
+  // Memoized student name display
   const getStudentDisplayName = useCallback((student) => {
-    return student.first_name && student.surname 
-      ? `${student.first_name} ${student.surname}` 
-      : student.name || student.student_name || 'Unknown Student';
+    if (student.first_name && student.surname) {
+      return [student.first_name, student.middle_name, student.surname]
+        .filter((part) => part && String(part).trim())
+        .join(' ');
+    }
+    return student.name || student.student_name || 'Unknown Student';
   }, []);
-
-  const getStudentAdmissionNumber = useCallback((student) => {
-    return student.admission_number || student.admission_no || student.student_number || `${year}-${student.id || student.student_id}`;
-  }, [year]);
 
   const getStudentKey = useCallback((student) => {
     if (!student) return null;
@@ -620,15 +628,16 @@ const PreFormOneScoreEntry = () => {
 
     const score = scoresByStudentId[studentId];
     
+    const displayName = getStudentDisplayName(student);
+    
     const details = `
-      Student: ${student.first_name && student.surname ? `${student.first_name} ${student.surname}` : student.name || student.student_name || 'Unknown Student'}
-      Admission: ${student.admission_number || student.admission_no || student.student_number || `${year}-${student.id || student.student_id}`}
+      Student: ${displayName}
       Score: ${score?.score || 'Not entered'}
       Grade: ${score?.grade || 'Not graded'}
     `;
     
     toast.info(details, { autoClose: 5000 });
-  }, [preFormOneStudents, getStudentKey, scoresByStudentId, year]);
+  }, [preFormOneStudents, getStudentKey, scoresByStudentId, getStudentDisplayName]);
 
   // Export scores to CSV
   const exportScores = useCallback(async () => {
@@ -687,13 +696,9 @@ const PreFormOneScoreEntry = () => {
     const hasScore = displayScore !== '' || !!displayGrade;
     
     const studentName = getStudentDisplayName(student);
-    const admissionNumber = getStudentAdmissionNumber(student);
     
     return (
       <tr key={studentKey} className={hasScore ? 'scored-row' : 'pending-row'}>
-        <td className="admission-number">
-          <span className="student-id">{admissionNumber}</span>
-        </td>
         <td className="student-name">
           <div className="student-info">
             <span className="name">{studentName}</span>
@@ -763,7 +768,7 @@ const PreFormOneScoreEntry = () => {
         </td>
       </tr>
     );
-  }, [scoresByStudentId, handleScoreChange, handleScoreBlur, saving, loading, getStudentDisplayName, getStudentAdmissionNumber, getStudentKey, saveIndividualScore, viewStudentDetails]);
+  }, [scoresByStudentId, handleScoreChange, handleScoreBlur, saving, loading, getStudentDisplayName, getStudentKey, saveIndividualScore, viewStudentDetails]);
 
   
   // Memoized render function to prevent infinite re-renders
@@ -839,7 +844,6 @@ const PreFormOneScoreEntry = () => {
           <table className="students-table">
             <thead>
               <tr>
-                <th scope="col">Admission Number</th>
                 <th scope="col">Student Name</th>
                 <th scope="col">Score (0-100)</th>
                 <th scope="col">Grade</th>
@@ -850,7 +854,7 @@ const PreFormOneScoreEntry = () => {
             <tbody>
               {paginatedStudents.length === 0 ? (
                 <tr>
-                  <td colSpan="6" className="no-students-message">
+                  <td colSpan="5" className="no-students-message">
                     <div className="empty-state">
                       <i className="fas fa-user-graduate"></i>
                       <h3>No Pre-Form One Students Found</h3>

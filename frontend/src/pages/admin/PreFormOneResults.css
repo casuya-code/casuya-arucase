@@ -340,7 +340,7 @@
 }.preform-one-results-page-container .compact-results-table th{
   background: #ffffff;
   padding: 0.75rem 0.5rem;
-  text-align: center;
+  text-align: left;
   font-weight: 600;
   color: #374151;
   border: 1px solid #e5e7eb;
@@ -350,7 +350,7 @@
   z-index: 10;
 }.preform-one-results-page-container .compact-results-table td{
   padding: 0.5rem;
-  text-align: center;
+  text-align: left;
   border: 1px solid #e5e7eb;
   white-space: nowrap;
 }.preform-one-results-page-container .sticky-col{

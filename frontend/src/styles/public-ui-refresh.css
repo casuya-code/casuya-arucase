@@ -1,0 +1,555 @@
+/* ============================================================================
+   PUBLIC SITE UI REFRESH — "Sacred Horizon"
+   ----------------------------------------------------------------------------
+   A single, cohesive visual upgrade for the public pages (About, Admissions,
+   Contact, Staff, Student Life, Fees, Gallery, Announcements, Student Report,
+   Privacy, CMS pages …).
+
+   Design goals
+   ------------
+   • Dignified, editorial navy + gold identity (fits a Catholic seminary).
+   • Real depth: soft layered shadows, 1px hairlines, generous radii.
+   • Branded page heroes with architectural texture and a gold hairline.
+   • Consistent alignment, rhythm and responsive behaviour.
+
+   Load order
+   ----------
+   Imported from public-common.css AFTER public-flat-cards.css and
+   public-immersive-shell.css, so its tokens win and its rules can override the
+   deliberately flat defaults. All rules are scoped to `.public-layout
+   .public-main` (and the public page shells) so the admin app, the authenticated
+   student area and the marketing homepage are untouched.
+   ============================================================================ */
+
+:root {
+  /* --- Brand ramp ---------------------------------------------------------- */
+  --public-brand-900: #081525;
+  --public-brand-800: #0f2f51;
+  --public-brand-700: #14406f;
+  --public-brand: #1a5490;
+  --public-brand-light: #2d7bc4;
+  --public-gold: #c9a227;
+  --public-gold-light: #f0d98a;
+
+  /* --- Radii --------------------------------------------------------------- */
+  --public-radius-sm: 10px;
+  --public-radius: 16px;
+  --public-radius-lg: 22px;
+  --public-radius-pill: 999px;
+
+  /* --- Elevation ----------------------------------------------------------- */
+  --public-shadow-1: 0 1px 2px rgba(15, 23, 42, 0.04),
+    0 10px 30px -18px rgba(15, 23, 42, 0.35);
+  --public-shadow-2: 0 2px 4px rgba(15, 23, 42, 0.05),
+    0 22px 46px -20px rgba(15, 23, 42, 0.42);
+  --public-shadow-hero: 0 1px 2px rgba(9, 20, 36, 0.18),
+    0 30px 55px -30px rgba(9, 30, 58, 0.78);
+
+  /* --- Card tokens (override public-flat-cards.css) ------------------------ */
+  --public-card-border-color: rgba(15, 23, 42, 0.08);
+  --public-card-border: 1px solid var(--public-card-border-color);
+  --public-card-shadow: var(--public-shadow-1);
+  --public-card-shadow-hover: var(--public-shadow-2);
+  --public-hairline: rgba(15, 23, 42, 0.08);
+
+  /* --- Surfaces ------------------------------------------------------------ */
+  --public-surface-tier-1: #f7f5f1;
+  --public-surface-tier-2: #f2eee8;
+  --public-surface-tier-3: #fbfaf7;
+}
+
+/* ============================================================================
+   1. Page canvas
+   ========================================================================== */
+
+.public-layout .public-main [class$='-page-static'] {
+  background-color: var(--public-surface-tier-1);
+  background-image: radial-gradient(
+      ellipse 90% 55% at 50% -12%,
+      #ffffff 0%,
+      rgba(255, 255, 255, 0) 58%
+    ),
+    radial-gradient(
+      ellipse 80% 55% at 102% 104%,
+      rgba(26, 84, 144, 0.05) 0%,
+      rgba(26, 84, 144, 0) 56%
+    );
+  background-repeat: no-repeat;
+  background-size: 100% 100%, 100% 100%;
+}
+
+/* Slightly tighter, consistent gutters */
+.public-layout .public-main [class$='-page-static__inner'] {
+  width: 100%;
+  max-width: min(80rem, 100%);
+  box-sizing: border-box;
+}
+
+/* ============================================================================
+   2. Branded page hero
+   ========================================================================== */
+
+.public-layout .public-main [class$='-page-static'] [class$='-hero']:not([class*='-surface']),
+.public-layout .public-main .public-cms-hero {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  text-align: center;
+  color: #eaf1fb;
+  margin: 0;
+  padding: clamp(2.35rem, 5.4vw, 3.6rem) clamp(1.35rem, 4.2vw, 2.9rem);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: clamp(var(--public-radius), 2.4vw, var(--public-radius-lg));
+  background-color: var(--public-brand-900);
+  background-image: radial-gradient(
+      115% 150% at 90% -25%,
+      rgba(201, 162, 39, 0.3) 0%,
+      rgba(201, 162, 39, 0) 46%
+    ),
+    radial-gradient(
+      105% 135% at -12% 125%,
+      rgba(45, 123, 196, 0.44) 0%,
+      rgba(45, 123, 196, 0) 54%
+    ),
+    linear-gradient(140deg, #081525 0%, #0f2f51 48%, #1a5490 100%);
+  box-shadow: var(--public-shadow-hero);
+}
+
+/* Gold hairline along the top edge */
+.public-layout .public-main [class$='-page-static'] [class$='-hero']:not([class*='-surface'])::before,
+.public-layout .public-main .public-cms-hero::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  z-index: 3;
+  background: linear-gradient(
+    90deg,
+    rgba(201, 162, 39, 0) 0%,
+    #c9a227 16%,
+    #f6e6b0 50%,
+    #c9a227 84%,
+    rgba(201, 162, 39, 0) 100%
+  );
+}
+
+/* Subtle architectural grid texture, fading out toward the top-left */
+.public-layout .public-main [class$='-page-static'] [class$='-hero']:not([class*='-surface'])::after,
+.public-layout .public-main .public-cms-hero::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.75;
+  background-image: linear-gradient(rgba(255, 255, 255, 0.06) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 255, 255, 0.06) 1px, transparent 1px);
+  background-size: 40px 40px;
+  -webkit-mask-image: radial-gradient(130% 125% at 100% 0%, #000 0%, transparent 68%);
+  mask-image: radial-gradient(130% 130% at 100% 0%, #000 0%, transparent 68%);
+}
+
+/* Keep hero content above the texture layer */
+.public-layout .public-main [class$='-page-static'] [class$='-hero']:not([class*='-surface']) > *,
+.public-layout .public-main .public-cms-hero > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* --- Hero typography ----------------------------------------------------- */
+.public-layout .public-main [class$='-page-static'] [class$='-hero'] [class*='__eyebrow'],
+.public-layout .public-main [class$='-page-static'] [class$='-hero'] .g-hero__eyebrow,
+.public-layout .public-main .public-cms-hero__eyebrow {
+  color: var(--public-gold-light);
+  opacity: 1;
+  font-weight: 700;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+}
+
+.public-layout .public-main [class$='-page-static'] [class$='-hero'] [class*='__title'],
+.public-layout .public-main .public-cms-hero__title,
+.public-layout .public-main .public-cms-hero__title--with-icon {
+  color: #ffffff;
+  font-family: var(--font-display, Georgia, serif);
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  line-height: 1.14;
+  text-shadow: 0 2px 22px rgba(0, 0, 0, 0.32);
+}
+
+.public-layout .public-main [class$='-page-static'] [class$='-hero'] [class*='__title'] i,
+.public-layout .public-main .public-cms-hero__title i {
+  color: var(--public-gold-light);
+}
+
+.public-layout .public-main [class$='-page-static'] [class$='-hero'] [class*='__lead'],
+.public-layout .public-main .public-cms-hero__lead {
+  color: rgba(226, 236, 250, 0.88);
+  font-weight: 400;
+  margin-left: auto;
+  margin-right: auto;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.28);
+}
+
+/* --- Hero inner / actions ------------------------------------------------ */
+.public-layout .public-main .public-cms-hero__inner {
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: clamp(0.95rem, 2.4vw, 1.35rem);
+}
+
+.public-layout .public-main .public-cms-hero__text {
+  flex: 0 1 auto;
+}
+
+.public-layout .public-main [class$='-page-static'] [class$='-hero'] [class*='__actions'],
+.public-layout .public-main .public-cms-hero__cta {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
+  gap: 0.65rem;
+}
+
+/* --- Hero buttons -------------------------------------------------------- */
+.public-layout .public-main [class$='-page-static'] [class$='-hero'] [class*='__btn'],
+.public-layout .public-main .public-cms-hero .public-cms-hero__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  min-height: 46px;
+  padding: 0.72rem 1.45rem;
+  font-size: clamp(0.86rem, 2vw, 0.95rem);
+  font-weight: 700;
+  text-align: center;
+  text-decoration: none;
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  border-radius: var(--public-radius-pill);
+  background: rgba(255, 255, 255, 0.1);
+  color: #ffffff;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.14);
+  -webkit-backdrop-filter: blur(2px);
+  backdrop-filter: blur(2px);
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease,
+    box-shadow 0.18s ease;
+}
+
+.public-layout .public-main [class$='-page-static'] [class$='-hero'] [class*='__btn']:hover,
+.public-layout .public-main .public-cms-hero .public-cms-hero__btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+  border-color: rgba(255, 255, 255, 0.55);
+  transform: translateY(-2px);
+}
+
+.public-layout .public-main [class$='-page-static'] [class$='-hero'] [class*='__btn--primary'],
+.public-layout .public-main .public-cms-hero .public-cms-hero__btn--primary {
+  border-color: transparent;
+  background: linear-gradient(135deg, #f6e6b0 0%, var(--public-gold) 100%);
+  color: #2a1f04;
+  box-shadow: 0 12px 26px -12px rgba(201, 162, 39, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.public-layout .public-main [class$='-page-static'] [class$='-hero'] [class*='__btn--primary']:hover,
+.public-layout .public-main .public-cms-hero .public-cms-hero__btn--primary:hover {
+  background: linear-gradient(135deg, #fdf1c9 0%, #d8b13a 100%);
+  color: #241a03;
+}
+
+.public-layout .public-main [class$='-page-static'] [class$='-hero'] [class*='__btn--whatsapp'],
+.public-layout .public-main .public-cms-hero .public-cms-hero__btn--whatsapp {
+  background: rgba(37, 211, 102, 0.16);
+  border-color: rgba(37, 211, 102, 0.55);
+  color: #d9ffe9;
+}
+
+/* ============================================================================
+   3. Cards & surfaces — soft depth, hairlines, generous radii
+   ========================================================================== */
+
+.public-layout .public-main [class$='-page-static'] :is(
+    [class$='-intro-card'],
+    [class$='-card-static'],
+    [class$='-requirements'],
+    [class$='-steps-section'],
+    [class$='-dates'],
+    [class$='-contact'],
+    [class$='-support-section'],
+    [class$='-dev-card'],
+    [class$='-schedule'],
+    [class$='-values-section'],
+    [class$='-patron-card'],
+    [class$='-annual'],
+    [class$='-extra'],
+    [class$='-section']:not([class*='admissions-apply']),
+    .ann-surface,
+    .g-surface,
+    .contact-card,
+    .admissions-apply-card
+  ),
+.public-layout .public-main .public-immersive-shell :is(
+    .public-cms-card,
+    .content-card,
+    .staff-surface,
+    .sl-surface,
+    .admissions-card,
+    .admissions-surface,
+    .admissions-apply-card,
+    .contact-card,
+    .policy-surface,
+    .student-report-card,
+    .student-report-surface,
+    .gallery-surface,
+    .gallery-item-card,
+    .announcement-card,
+    .announcements-surface,
+    .about-card,
+    .necta-card,
+    .necta-stat-card
+  ) {
+  background: #ffffff;
+  border: 1px solid var(--public-card-border-color);
+  border-radius: var(--public-radius);
+  box-shadow: var(--public-card-shadow);
+  transition: box-shadow 0.25s ease, transform 0.25s ease, border-color 0.25s ease;
+}
+
+/* Lift on hover — re-enables the interaction the flat theme disabled */
+.public-layout .public-main :is(
+    [class$='-card-static'],
+    .public-cms-card,
+    .gallery-item-card,
+    .announcement-card,
+    .about-card,
+    .necta-card:not(.necta-card--hero)
+  ):hover {
+  transform: translateY(-3px);
+  box-shadow: var(--public-card-shadow-hover);
+  border-color: rgba(26, 84, 144, 0.24);
+}
+
+/* Card headers get a hairline instead of the heavy 2px rule */
+.public-layout .public-main :is([class$='-page-static'], .public-immersive-shell) :is(
+    [class$='-card__head'],
+    [class$='-chunk__head']
+  ) {
+  border-bottom: 1px solid var(--public-card-border-color);
+}
+
+/* Section titles inside forms use a hairline divider too */
+.public-layout .public-main [class$='-page-static'] [class$='-form-section__title'] {
+  border-top-width: 1px;
+  border-top-color: var(--public-card-border-color);
+}
+
+/* ============================================================================
+   4. Icon badges — gradient medallions
+   ========================================================================== */
+
+.public-layout .public-main :is([class$='-page-static'], .public-immersive-shell) :is(
+    [class*='-card-static__icon-box'],
+    [class*='__icon-box'],
+    [class*='-value-item__icon'],
+    [class*='-patron-card__icon'],
+    [class*='-dev-card__icon'],
+    [class*='-card__icon'],
+    [class*='-chunk__icon'],
+    [class*='-fact__icon'],
+    [class*='-contact__icon']
+  ) {
+  width: 3rem;
+  height: 3rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+  border-radius: 14px;
+  color: #ffffff;
+  font-size: 1.15rem;
+  background: linear-gradient(140deg, #3d8ed6 0%, #1a5490 58%, #0f2f51 100%);
+  box-shadow: 0 10px 22px -12px rgba(26, 84, 144, 0.85),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+/* Keep centred icon badges centred */
+.public-layout .public-main :is([class$='-page-static'], .public-immersive-shell)
+  [class*='-value-item__icon'] {
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* ============================================================================
+   5. List rows — soft chips
+   ========================================================================== */
+
+.public-layout .public-main :is([class$='-page-static'], .public-immersive-shell) :is(
+    [class$='-list'] li,
+    [class$='__list'] li,
+    [class$='-checklist'] li,
+    [class$='-list__item'],
+    [class$='-step-card'],
+    [class$='-date-item'],
+    [class$='-value-item'],
+    [class$='-schedule-item'],
+    [class$='-detail-item']
+  ) {
+  border: 1px solid var(--public-card-border-color);
+  border-radius: 12px;
+  background: #f8fafc;
+  transition: background 0.18s ease, border-color 0.18s ease, transform 0.18s ease;
+}
+
+.public-layout .public-main :is([class$='-page-static'], .public-immersive-shell) :is(
+    [class$='-list'] li,
+    [class$='__list'] li,
+    [class$='-checklist'] li,
+    [class$='-list__item'],
+    [class$='-step-card'],
+    [class$='-date-item'],
+    [class$='-schedule-item'],
+    [class$='-detail-item']
+  ):hover {
+  background: #ffffff;
+  border-color: rgba(26, 84, 144, 0.26);
+  transform: translateY(-1px);
+}
+
+/* ============================================================================
+   6. Section headings — gold accent rule
+   ========================================================================== */
+
+.public-layout .public-main [class$='-page-static'] :is(
+    [class$='-section__title'],
+    [class$='-requirements__title'],
+    [class$='-steps-section__title'],
+    [class$='-dates__title'],
+    [class$='-annual__title'],
+    [class$='-extra__title'],
+    [class$='-schedule__title']
+  ) {
+  position: relative;
+  padding-bottom: 0.7rem;
+}
+
+.public-layout .public-main [class$='-page-static'] :is(
+    [class$='-section__title'],
+    [class$='-requirements__title'],
+    [class$='-steps-section__title'],
+    [class$='-dates__title'],
+    [class$='-annual__title'],
+    [class$='-extra__title'],
+    [class$='-schedule__title']
+  )::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 58px;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--public-gold), var(--public-gold-light));
+}
+
+.public-layout .public-main [class$='-page-static']
+  :is(.about-values-section__title, .staff-support-section__title) {
+  text-align: center;
+}
+
+.public-layout .public-main [class$='-page-static']
+  :is(.about-values-section__title, .staff-support-section__title)::after {
+  left: 50%;
+  transform: translateX(-50%);
+}
+
+/* ============================================================================
+   7. CMS prose — richer headings & accents
+   ========================================================================== */
+
+.public-layout .public-main .public-cms-body h2,
+.public-layout .public-main .public-cms-body--prose h2 {
+  position: relative;
+  padding-bottom: 0.5rem;
+  border-bottom: none;
+}
+
+.public-layout .public-main .public-cms-body h2::after,
+.public-layout .public-main .public-cms-body--prose h2::after {
+  content: '';
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  width: 66px;
+  height: 3px;
+  border-radius: 3px;
+  background: linear-gradient(90deg, var(--public-gold), var(--public-gold-light));
+}
+
+.public-layout .public-main .public-cms-body--prose blockquote {
+  border-left-color: var(--public-gold);
+  background: linear-gradient(90deg, rgba(201, 162, 39, 0.07), rgba(201, 162, 39, 0.015));
+}
+
+/* ============================================================================
+   8. Entrance motion
+   ========================================================================== */
+
+@keyframes public-rise {
+  from {
+    opacity: 0;
+    transform: translateY(16px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.public-layout .public-main [class$='-page-static'] [class$='-hero']:not([class*='-surface']),
+.public-layout .public-main .public-cms-hero {
+  animation: public-rise 0.6s cubic-bezier(0.22, 0.7, 0.2, 1) both;
+}
+
+/* ============================================================================
+   9. Responsive tuning
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  .public-layout .public-main [class$='-page-static'] [class$='-hero']:not([class*='-surface']),
+  .public-layout .public-main .public-cms-hero {
+    border-radius: var(--public-radius);
+    padding: 2rem 1.15rem;
+    text-align: center;
+  }
+
+  .public-layout .public-main [class$='-page-static'] [class$='-hero'] [class*='__actions'],
+  .public-layout .public-main .public-cms-hero__cta {
+    flex-direction: column;
+    align-items: stretch;
+    width: 100%;
+  }
+
+  .public-layout .public-main [class$='-page-static'] [class$='-hero'] [class*='__btn'],
+  .public-layout .public-main .public-cms-hero .public-cms-hero__btn {
+    width: 100%;
+  }
+}
+
+@media (max-width: 400px) {
+  .public-layout .public-main [class$='-page-static'] [class$='-hero']:not([class*='-surface']),
+  .public-layout .public-main .public-cms-hero {
+    padding: 1.75rem 0.95rem;
+  }
+}
+
+/* Respect reduced-motion users */
+@media (prefers-reduced-motion: reduce) {
+  .public-layout .public-main [class$='-page-static'] [class$='-hero'],
+  .public-layout .public-main .public-cms-hero {
+    animation: none;
+  }
+}

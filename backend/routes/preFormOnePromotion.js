@@ -291,7 +291,7 @@ router.post('/promote/:year', requireAuth, requirePreFormOneYear, async (req, re
             if (existingStudent.rows.length > 0) {
               errors.push({
                 admissionNumber: student.admission_number,
-                name: `${student.first_name} ${student.surname}`,
+                name: `${student.first_name} ${student.middle_name || ''} ${student.surname}`.replace(/\s+/g, ' ').trim(),
                 error: 'Student already exists in Form One'
               });
               continue;
@@ -345,7 +345,7 @@ router.post('/promote/:year', requireAuth, requirePreFormOneYear, async (req, re
             console.error(`PROMOTION ERROR: Failed to promote ${student.admission_number}:`, error);
             errors.push({
               admissionNumber: student.admission_number,
-              name: `${student.first_name} ${student.surname}`,
+              name: `${student.first_name} ${student.middle_name || ''} ${student.surname}`.replace(/\s+/g, ' ').trim(),
               error: error.message
             });
           }

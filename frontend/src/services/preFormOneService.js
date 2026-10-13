@@ -384,7 +384,141 @@ export const preFormOneService = {
       
       throw error;
     }
-  }
+  },
+
+  // Download interview parish results PDF
+  downloadInterviewParishResultsPDF: async (year) => {
+    try {
+      const response = await api.get(`/pre-form-one/${year}/interview-results/parish-pdf`, {
+        responseType: 'blob'
+      });
+      if (!response.data || !(response.data instanceof Blob)) {
+        throw new Error('Invalid PDF response from server');
+      }
+      return response;
+    } catch (error) {
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        throw new Error('Request timed out. Please check your connection and try again.');
+      }
+      
+      if (error.response?.status === 401) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+      
+      if (error.response?.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      }
+      
+      throw error;
+    }
+  },
+
+  // Download continuing parish results PDF
+  downloadContinuingParishResultsPDF: async (year) => {
+    try {
+      const response = await api.get(`/pre-form-one/${year}/continuing-results/parish-pdf`, {
+        responseType: 'blob'
+      });
+      if (!response.data || !(response.data instanceof Blob)) {
+        throw new Error('Invalid PDF response from server');
+      }
+      return response;
+    } catch (error) {
+      if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+        throw new Error('Request timed out. Please check your connection and try again.');
+      }
+
+      if (error.response?.status === 401) {
+        throw new Error('Authentication required. Please log in again.');
+      }
+
+      if (error.response?.status === 500) {
+        throw new Error('Server error. Please try again later.');
+      }
+
+      throw error;
+    }
+  },
+
+  // ==================== Pre-Form One comment modules (PRE-*) ====================
+
+  // List comments for a year, optionally for one comment_type.
+  // Returns { success, comments: { studentId: text }, byType: { studentId: { type: text } } }
+  getComments: async (year, commentType = null) => {
+    const params = new URLSearchParams();
+    if (commentType) params.append('comment_type', commentType);
+    const qs = params.toString();
+    const response = await api.get(`/pre-form-one/${year}/comments${qs ? `?${qs}` : ''}`);
+    return response.data;
+  },
+
+  // Upsert one comment (student_id, comment_type, comment_text)
+  saveComment: async (year, data) => {
+    const response = await api.post(`/pre-form-one/${year}/comments`, data);
+    return response.data;
+  },
+
+  // Upsert many comments of one type: { comment_type, comments: [{ student_id, comment_text }] }
+  saveCommentsBulk: async (year, data) => {
+    const response = await api.post(`/pre-form-one/${year}/comments/bulk`, data);
+    return response.data;
+  },
+
+  // Tabia na Mwenendo evaluations as { studentId: { code: grade } }
+  getTabiaMwenendo: async (year) => {
+    const response = await api.get(`/pre-form-one/${year}/tabia-mwenendo`);
+    return response.data;
+  },
+
+  // Batch upsert tabia na mwenendo: { evaluations: [{ student_id, criterion, evaluation }], replaceScope }
+  saveTabiaMwenendo: async (year, data) => {
+    const response = await api.post(`/pre-form-one/${year}/tabia-mwenendo`, data);
+    return response.data;
+  },
+
+  // O-Level class grades (per student) used by the comment auto-fill helpers
+  getClassGrades: async (year) => {
+    const response = await api.get(`/pre-form-one/${year}/class-grades`);
+    return response.data;
+  },
+
+  // ==================== Pre-Form One fees announcements & debts ====================
+
+  // Fees announcement slots for a year as { "1": text, ... }
+  getFeesAnnouncements: async (year) => {
+    const response = await api.get(`/pre-form-one/${year}/fees-announcements`);
+    return response.data;
+  },
+
+  // Save the 10 fees announcement slots: { announcements: { "1": text, ... } }
+  saveFeesAnnouncements: async (year, announcements) => {
+    const response = await api.post(`/pre-form-one/${year}/fees-announcements`, { announcements });
+    return response.data;
+  },
+
+  // Pre-Form One students with their debt records: { students: [...], debts: { [studentId]: {...} } }
+  getDebts: async (year) => {
+    const response = await api.get(`/pre-form-one/${year}/debts`);
+    return response.data;
+  },
+
+  // Save (or clear) one student's debt: { student_id, amount, description, due_date, status }
+  saveDebt: async (year, data) => {
+    const response = await api.post(`/pre-form-one/${year}/debts`, data);
+    return response.data;
+  },
+
+  // Bulk upsert debts: { debts: [{ student_id, amount, description }] }
+  saveDebtsBulk: async (year, debts) => {
+    const response = await api.post(`/pre-form-one/${year}/debts/bulk`, { debts });
+    return response.data;
+  },
+
+  // Delete one student's debt record
+  deleteDebt: async (year, studentId) => {
+    const response = await api.delete(`/pre-form-one/${year}/debts/${studentId}`);
+    return response.data;
+  },
 };
 
 export default preFormOneService;

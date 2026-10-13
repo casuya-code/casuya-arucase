@@ -4,6 +4,7 @@ import {
   scoreForSubject,
   buildSubjectScoresMap,
   calculateInterviewMetrics,
+  calculateContinuingMetrics,
   assignResultPositions,
   mergeAutoAndSavedResult,
   formatSubjectScoreCell,
@@ -149,6 +150,57 @@ describe('calculateInterviewMetrics', () => {
       average: 0,
       grade: 'F',
       remarks: 'HAJACHAGULIWA',
+    });
+  });
+});
+
+describe('calculateContinuingMetrics', () => {
+  it('reports no result when there are no active subjects', () => {
+    expect(calculateContinuingMetrics({ ENG: 90 }, [])).toEqual({
+      total_marks: 0,
+      average: 0,
+      grade: '-',
+      remarks: '-',
+    });
+  });
+
+  it('uses the school O-Level bands with Swahili remarks', () => {
+    const top = calculateContinuingMetrics({ ENG: 85 }, subjects('ENG'));
+    expect(top).toMatchObject({ average: 85, grade: 'A', remarks: 'Bora Sana' });
+
+    const good = calculateContinuingMetrics({ ENG: 70 }, subjects('ENG'));
+    expect(good).toMatchObject({ average: 70, grade: 'B', remarks: 'Vizuri Sana' });
+
+    const average = calculateContinuingMetrics({ ENG: 50 }, subjects('ENG'));
+    expect(average).toMatchObject({ average: 50, grade: 'C', remarks: 'Vizuri' });
+
+    const weak = calculateContinuingMetrics({ ENG: 40 }, subjects('ENG'));
+    expect(weak).toMatchObject({ average: 40, grade: 'D', remarks: 'Dhaifu' });
+
+    const fail = calculateContinuingMetrics({ ENG: 39 }, subjects('ENG'));
+    expect(fail).toMatchObject({ average: 39, grade: 'F', remarks: 'Feli' });
+  });
+
+  it('does not use the interview/pre-form-one boundaries', () => {
+    // 60 is Pre-Form One grade D but O-Level grade C; 42 passes O-Level (D) but fails the interview band.
+    expect(calculateContinuingMetrics({ ENG: 60 }, subjects('ENG'))).toMatchObject({
+      grade: 'C',
+      remarks: 'Vizuri',
+    });
+    expect(calculateContinuingMetrics({ ENG: 42 }, subjects('ENG'))).toMatchObject({
+      grade: 'D',
+      remarks: 'Dhaifu',
+    });
+  });
+
+  it('keeps showing a fail row for a student with no usable score', () => {
+    const metrics = calculateContinuingMetrics({ ENG: null, MATH: '' }, subjects('ENG', 'MATH'));
+
+    expect(metrics).toEqual({
+      total_marks: 0,
+      average: 0,
+      grade: 'F',
+      remarks: 'Feli',
     });
   });
 });

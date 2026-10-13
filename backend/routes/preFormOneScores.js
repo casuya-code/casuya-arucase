@@ -10,6 +10,10 @@ const { sendSuccess, sendError } = require('../utils/responseHelper');
 const { requireAuth, requireModule } = require('../middleware/auth');
 const { PASS_MARK, calculateGrade, validateScore } = require('../utils/preFormOneGrading');
 const {
+  calculateOLevelGrade,
+  O_LEVEL_PASS_MARK,
+} = require('../utils/oLevelGrading');
+const {
   NOT_ALLOCATED_MESSAGE,
   normalizeSubjectType,
   isUserAllocatedToPreFormOneSubject,
@@ -238,7 +242,7 @@ router.post('/', requireAuth, requireModule('pre_form_one_scores'), async (req, 
       return sendError(res, 403, NOT_ALLOCATED_MESSAGE);
     }
     
-    const grade = calculateGrade(score);
+    const grade = subjectType === 'continuing' ? calculateOLevelGrade(score) : calculateGrade(score);
     const created_by = await resolveCreatedByUserId(req.user);
     
     const result = await withTransaction(async (client) => {
@@ -353,7 +357,7 @@ router.post('/bulk', requireAuth, requireModule('pre_form_one_scores'), async (r
           continue;
         }
         
-        const grade = calculateGrade(score);
+        const grade = subjectType === 'continuing' ? calculateOLevelGrade(score) : calculateGrade(score);
         
         // Check if score already exists
         const existingScore = await client.query(
@@ -426,6 +430,8 @@ router.get('/stats/:subjectId', requireAuth, requireModule('pre_form_one_scores'
       return sendError(res, 403, NOT_ALLOCATED_MESSAGE);
     }
 
+    const passMark = subjectType === 'continuing' ? O_LEVEL_PASS_MARK : PASS_MARK;
+
     const result = await query(`
       SELECT 
         COUNT(*) as total_students,
@@ -433,7 +439,7 @@ router.get('/stats/:subjectId', requireAuth, requireModule('pre_form_one_scores'
         ROUND(AVG(sc.score), 2) as average_score,
         MAX(sc.score) as highest_score,
         MIN(sc.score) as lowest_score,
-        COUNT(CASE WHEN sc.score >= ${PASS_MARK} THEN 1 END) as passed_students,
+        COUNT(CASE WHEN sc.score >= ${passMark} THEN 1 END) as passed_students,
         COUNT(CASE WHEN sc.grade = 'A' THEN 1 END) as grade_a,
         COUNT(CASE WHEN sc.grade = 'B' THEN 1 END) as grade_b,
         COUNT(CASE WHEN sc.grade = 'C' THEN 1 END) as grade_c,
@@ -479,6 +485,7 @@ router.get('/export/:subjectId', requireAuth, requireModule('pre_form_one_scores
       SELECT 
         st.admission_number,
         st.first_name,
+        st.middle_name,
         st.surname,
         sc.score,
         sc.grade,
@@ -491,9 +498,9 @@ router.get('/export/:subjectId', requireAuth, requireModule('pre_form_one_scores
     `, [subjectId, subjectType, yearNum]);
     
     // Generate CSV
-    const csvHeader = 'Admission Number,First Name,Surname,Score,Grade,Remarks,Created At\n';
+    const csvHeader = 'Admission Number,First Name,Middle Name,Surname,Score,Grade,Remarks,Created At\n';
     const csvData = result.rows.map(row => 
-      `"${row.admission_number}","${row.first_name}","${row.surname}","${row.score || ''}","${row.grade || ''}","${row.remarks || ''}","${row.created_at || ''}"`
+      `"${row.admission_number}","${row.first_name}","${row.middle_name || ''}","${row.surname}","${row.score || ''}","${row.grade || ''}","${row.remarks || ''}","${row.created_at || ''}"`
     ).join('\n');
     
     const csv = csvHeader + csvData;

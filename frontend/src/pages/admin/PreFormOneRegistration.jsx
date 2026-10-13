@@ -7,6 +7,7 @@ import { useGoBack } from '../../hooks/useGoBack';
 import { CSV_BULK_LABELS, CSV_BULK_TITLES } from '../../constants/csvBulkActions';
 import './PreFormOneRegistration.css';
 import './preform-one-modern.css';
+import PreFormOnePagination from '../../components/common/PreFormOnePagination';
 
 const PreFormOneRegistration = () => {
   const { year } = useParams();
@@ -162,7 +163,7 @@ const PreFormOneRegistration = () => {
           year: year
         });
         
-        toast.success(`${updatedStudent.data.first_name} ${updatedStudent.data.surname} updated successfully!`);
+        toast.success(`${updatedStudent.data.first_name} ${updatedStudent.data.middle_name || ''} ${updatedStudent.data.surname} updated successfully!`);
       } else {
         // Handle specific error messages from backend
         toast.error(updatedStudent.message || 'Error updating student. Please try again.');
@@ -311,7 +312,7 @@ const PreFormOneRegistration = () => {
           return newStudents;
         });
         
-        toast.success(`${createdStudent.data.first_name} ${createdStudent.data.surname} registered successfully!`);
+        toast.success(`${createdStudent.data.first_name} ${createdStudent.data.middle_name || ''} ${createdStudent.data.surname} registered successfully!`);
       } else {
         // Handle specific error messages from backend
         toast.error(createdStudent.message || 'Error registering student. Please try again.');
@@ -782,29 +783,11 @@ const PreFormOneRegistration = () => {
                     ))}
                 </tbody>
               </table>
-              {totalPages > 1 && (
-                <div className="pagination-controls">
-                  <button
-                    className="excel-btn secondary small"
-                    onClick={() => setCurrentPage(p => Math.max(1, p - 1))}
-                    disabled={currentPage === 1}
-                  >
-                    <i className="fas fa-chevron-left"></i>
-                    Prev
-                  </button>
-                  <span className="pagination-info">
-                    Page {currentPage} of {totalPages}
-                  </span>
-                  <button
-                    className="excel-btn secondary small"
-                    onClick={() => setCurrentPage(p => Math.min(totalPages, p + 1))}
-                    disabled={currentPage === totalPages}
-                  >
-                    Next
-                    <i className="fas fa-chevron-right"></i>
-                  </button>
-                </div>
-              )}
+              <PreFormOnePagination
+                currentPage={currentPage}
+                totalPages={totalPages}
+                onPageChange={setCurrentPage}
+              />
             </div>
           )}
         </div>

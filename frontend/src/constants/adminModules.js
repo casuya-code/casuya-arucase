@@ -39,6 +39,16 @@ export const ADMIN_MODULES = [
   { id: 'mkuu_shule_comments', label: 'Mkuu Comments', icon: 'fa-crown' },
   { id: 'tabia_mwenendo_comments', label: 'Tabia & Mwenendo', icon: 'fa-balance-scale' },
 
+  // Pre-Form One Comments (PRE-*)
+  { id: 'pre_sala_comments', label: 'PRE-Sala', icon: 'fa-comments' },
+  { id: 'pre_taaluma_comments', label: 'PRE-Taaluma', icon: 'fa-book-open' },
+  { id: 'pre_tabia_comments', label: 'PRE-Tabia', icon: 'fa-user-check' },
+  { id: 'pre_huduma_comments', label: 'PRE-Huduma', icon: 'fa-hands-helping' },
+  { id: 'pre_michezo_comments', label: 'PRE-Michezo', icon: 'fa-running' },
+  { id: 'pre_mwalimu_taaluma_comments', label: 'PRE-Mwalimu wa Taaluma', icon: 'fa-user-graduate' },
+  { id: 'pre_mkuu_shule_comments', label: 'PRE-Mkuu wa Shule', icon: 'fa-crown' },
+  { id: 'pre_tabia_mwenendo_comments', label: 'PRE-Tabia na Mwenendo', icon: 'fa-balance-scale' },
+
   // Results & Reports
   { id: 'monthly_results', label: 'Monthly Results', icon: 'fa-clipboard-list' },
   { id: 'individual_report', label: 'Student Report', icon: 'fa-file-alt' },
@@ -48,6 +58,8 @@ export const ADMIN_MODULES = [
   { id: 'news_announcements', label: 'News', icon: 'fa-newspaper' },
   { id: 'fees_announcements', label: 'Fees', icon: 'fa-money-bill-wave' },
   { id: 'individual_debt', label: 'Debts', icon: 'fa-money-bill-wave' },
+  { id: 'pre_form_one_fees', label: 'Pre-Form One Fees', icon: 'fa-money-bill-wave' },
+  { id: 'pre_form_one_debts', label: 'Pre-Form One Debts', icon: 'fa-money-bill-wave' },
 
   // Analytics
   { id: 'analytics_view', label: 'Analytics View', icon: 'fa-chart-line' },

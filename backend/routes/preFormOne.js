@@ -23,6 +23,8 @@ const PRE_FORM_ONE_CHILD_TABLES = [
   'preform_one_continuing_scores',
   'preform_one_interview_results',
   'preform_one_continuing_results',
+  'preform_one_comments',
+  'preform_one_tabia_mwenendo',
 ];
 
 // ---------------------------------------------------------------------------
@@ -95,13 +97,20 @@ const { saveUserActivity } = require('../utils/activityLogger');
 const {
   buildInterviewResultsPdfData,
   buildContinuingResultsPdfData,
+  buildParishResultsData,
   generateInterviewResultsPdfHtml,
   generateContinuingResultsPdfHtml,
+  generateParishResultsPdfHtml,
   resolveSchoolLogoForPdf,
   renderHtmlToPdfBuffer,
 } = require('../utils/preFormOneInterviewResultsPdf');
 const { calculateAndSavePreFormOneResults } = require('../utils/preFormOneResultsCalculate');
 const { calculateGrade, getRemarks, validateScore } = require('../utils/preFormOneGrading');
+const {
+  calculateOLevelGrade,
+  getOLevelRemarks,
+  O_LEVEL_C_LOW_THRESHOLD,
+} = require('../utils/oLevelGrading');
 const {
   NO_YEAR_ACCESS_MESSAGE,
   NOT_ALLOCATED_MESSAGE,
@@ -112,6 +121,20 @@ const {
 const { generateIndividualInterviewPDF } = require('../utils/individualInterviewPdfGenerator');
 const { buildIndividualInterviewReportHtml } = require('../utils/individualInterviewPdfGenerator');
 const { resolveAuthoritySignatureDataUri, resolveSchoolStampDataUri } = require('../utils/authoritySignature');
+const {
+  buildPreFormOneContinuingReportData,
+  buildPreFormOneContinuingBulkReportData,
+} = require('../utils/preFormOneContinuingReportData');
+const {
+  generatePreFormOneContinuingReportHtml,
+  buildPreFormOneContinuingBulkHtml,
+} = require('../utils/preFormOneContinuingReportHtml');
+
+/** Shared Puppeteer margins/options for the Pre-Form One continuing report cards (A4 portrait). */
+const CONTINUING_REPORT_PDF_OPTIONS = {
+  landscape: false,
+  margin: { top: '5mm', right: '2.5mm', bottom: '5mm', left: '2.5mm' },
+};
 
 /**
  * Pre-Form One Routes
@@ -625,6 +648,7 @@ router.post('/:year/continuing-results/calculate', requireAuth, requirePreFormOn
         scoreType: 'continuing',
         subjectsTable: 'preformone_continuing_subjects',
         resultsTable: 'preform_one_continuing_results',
+        grading: 'oLevel',
       })
     );
 
@@ -743,7 +767,7 @@ async function saveIndividualPreFormOneScore(req, res, scoreType) {
       return sendError(res, clientError(NOT_ALLOCATED_MESSAGE, 403), 403);
     }
 
-    const grade = calculateGrade(score);
+    const grade = scoreType === 'continuing' ? calculateOLevelGrade(score) : calculateGrade(score);
     const created_by = await resolvePreFormOneCreatedBy(req.user);
 
     const savedRow = await withTransaction(async (client) => {
@@ -833,6 +857,77 @@ router.get('/:year/interview-results/pdf', requireAuth, requirePreFormOneYear, a
     }
   } catch (error) {
     console.error('Error generating interview results PDF:', error);
+    sendError(res, error, 500);
+  }
+});
+
+// Download Pre-Form One interview parish results PDF
+router.get('/:year/interview-results/parish-pdf', requireAuth, requirePreFormOneYear, async (req, res) => {
+  try {
+    const { year } = req.params;
+
+    if (!year || isNaN(parseInt(year))) {
+      return sendError(res, clientError('Invalid year parameter'), 400);
+    }
+
+    const { rows } = await buildInterviewResultsPdfData(year, query);
+
+    if (!rows.length) {
+      return sendError(
+        res,
+        clientError('No Pre-Form One students found for this year.'),
+        404
+      );
+    }
+
+    const parishRows = buildParishResultsData(rows);
+
+    let logoUrl = null;
+    try {
+      logoUrl = await resolveSchoolLogoForPdf(query);
+      if (!logoUrl) {
+        console.warn('Interview parish results PDF: school logo not embedded (missing or failed to load)');
+      }
+    } catch (logoErr) {
+      console.warn('Interview parish results PDF: could not load school logo:', logoErr.message);
+    }
+
+    const htmlContent = generateParishResultsPdfHtml({
+      rows: parishRows,
+      year,
+      logoUrl,
+      barLabel: 'PRE-FORM ONE INTERVIEW RESULTS — PARISH PERFORMANCE',
+      pageTitle: 'Pre-Form One Interview Parish Results',
+    });
+
+    if (!htmlContent || htmlContent.length === 0) {
+      return sendError(res, clientError('Failed to build PDF content', 500), 500);
+    }
+
+    try {
+      const pdfBuffer = Buffer.from(await renderHtmlToPdfBuffer(htmlContent));
+
+      if (!pdfBuffer.length || pdfBuffer.toString('ascii', 0, 4) !== '%PDF') {
+        return sendError(res, clientError('Generated file is not a valid PDF', 500), 500);
+      }
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="preform-one-interview-parish-results-${year}.pdf"`
+      );
+      res.setHeader('Content-Length', pdfBuffer.length);
+      res.send(pdfBuffer);
+    } catch (error) {
+      console.error('Interview parish results PDF generation failed:', error);
+      const message =
+        error.message?.includes('Chrome') || error.message?.includes('Puppeteer')
+          ? error.message
+          : `PDF generation failed: ${error.message}`;
+      return sendError(res, clientError(message, 500), 500);
+    }
+  } catch (error) {
+    console.error('Error generating interview parish results PDF:', error);
     sendError(res, error, 500);
   }
 });
@@ -1036,6 +1131,77 @@ router.get('/:year/continuing-results/pdf', requireAuth, requirePreFormOneYear, 
   }
 });
 
+// Download Pre-Form One continuing parish results PDF
+router.get('/:year/continuing-results/parish-pdf', requireAuth, requirePreFormOneYear, async (req, res) => {
+  try {
+    const { year } = req.params;
+
+    if (!year || isNaN(parseInt(year))) {
+      return sendError(res, clientError('Invalid year parameter'), 400);
+    }
+
+    const { rows } = await buildContinuingResultsPdfData(year, query);
+
+    if (!rows.length) {
+      return sendError(
+        res,
+        clientError('No Pre-Form One students found for this year.'),
+        404
+      );
+    }
+
+    const parishRows = buildParishResultsData(rows, 'oLevel');
+
+    let logoUrl = null;
+    try {
+      logoUrl = await resolveSchoolLogoForPdf(query);
+      if (!logoUrl) {
+        console.warn('Continuing parish results PDF: school logo not embedded (missing or failed to load)');
+      }
+    } catch (logoErr) {
+      console.warn('Continuing parish results PDF: could not load school logo:', logoErr.message);
+    }
+
+    const htmlContent = generateParishResultsPdfHtml({
+      rows: parishRows,
+      year,
+      logoUrl,
+      barLabel: 'PRE-FORM ONE CONTINUING RESULTS — PARISH PERFORMANCE',
+      pageTitle: 'Pre-Form One Continuing Parish Results',
+    });
+
+    if (!htmlContent || htmlContent.length === 0) {
+      return sendError(res, clientError('Failed to build PDF content', 500), 500);
+    }
+
+    try {
+      const pdfBuffer = Buffer.from(await renderHtmlToPdfBuffer(htmlContent));
+
+      if (!pdfBuffer.length || pdfBuffer.toString('ascii', 0, 4) !== '%PDF') {
+        return sendError(res, clientError('Generated file is not a valid PDF', 500), 500);
+      }
+
+      res.setHeader('Content-Type', 'application/pdf');
+      res.setHeader(
+        'Content-Disposition',
+        `attachment; filename="preform-one-continuing-parish-results-${year}.pdf"`
+      );
+      res.setHeader('Content-Length', pdfBuffer.length);
+      res.send(pdfBuffer);
+    } catch (error) {
+      console.error('Continuing parish results PDF generation failed:', error);
+      const message =
+        error.message?.includes('Chrome') || error.message?.includes('Puppeteer')
+          ? error.message
+          : `PDF generation failed: ${error.message}`;
+      return sendError(res, clientError(message, 500), 500);
+    }
+  } catch (error) {
+    console.error('Error generating continuing parish results PDF:', error);
+    sendError(res, error, 500);
+  }
+});
+
 // Download individual continuing results PDF for a specific student
 router.get('/:year/continuing-results/:studentId/pdf', requireAuth, requirePreFormOneYear, async (req, res) => {
   try {
@@ -1049,26 +1215,16 @@ router.get('/:year/continuing-results/:studentId/pdf', requireAuth, requirePreFo
       return sendError(res, clientError('Invalid student ID parameter'), 400);
     }
 
-    const student = await query(
-      'SELECT * FROM preform_one_students WHERE id = $1 AND year = $2',
-      [studentId, year]
-    );
+    const { reportData, student, result } = await buildPreFormOneContinuingReportData(query, {
+      year: parseInt(year, 10),
+      studentId: parseInt(studentId, 10),
+    });
 
-    if (student.rows.length === 0) {
+    if (!student) {
       return sendError(res, clientError('Student not found'), 404);
     }
 
-    const studentData = student.rows[0];
-
-    const results = await query(
-      `SELECT r.*, s.first_name, s.middle_name, s.surname, s.admission_number, s.parish
-       FROM preform_one_continuing_results r
-       JOIN preform_one_students s ON r.student_id = s.id
-       WHERE r.student_id = $1 AND r.year = $2`,
-      [studentId, year]
-    );
-
-    if (results.rows.length === 0) {
+    if (!result) {
       return sendError(
         res,
         clientError(
@@ -1078,78 +1234,11 @@ router.get('/:year/continuing-results/:studentId/pdf', requireAuth, requirePreFo
       );
     }
 
-    const resultData = results.rows[0];
-
-    const scores = await query(
-      `
-      SELECT sc.score, sc.student_id, sub.id AS subject_id, sub.subject_code, sub.subject_name
-        FROM preform_one_scores sc
-        JOIN preformone_continuing_subjects sub ON sc.subject_id = sub.id
-        WHERE sc.subject_type = 'continuing' AND sub.is_active = true AND sc.score IS NOT NULL AND sc.student_id = $1
-    `,
-      [studentId]
-    );
-
-    const subjectSeen = new Map();
-    scores.rows.forEach((row) => {
-      if (row.subject_id && !subjectSeen.has(row.subject_id)) {
-        subjectSeen.set(row.subject_id, {
-          id: row.subject_id,
-          subject_code: row.subject_code,
-          subject_name: row.subject_name || row.subject_code,
-        });
-      }
-    });
-    const subjects = { rows: [...subjectSeen.values()].sort((a, b) =>
-      (a.subject_code || '').localeCompare(b.subject_code || '')
-    ) };
-
-    const scoresMap = {};
-    scores.rows.forEach((scoreRow) => {
-      scoresMap[scoreRow.subject_code] = scoreRow.score;
-    });
-
-    let logoUrl = null;
     try {
-      logoUrl = await resolveSchoolLogoForPdf(query);
-    } catch (logoErr) {
-      console.warn('Individual continuing PDF: could not load school logo:', logoErr.message);
-    }
-
-    let authorityData = null;
-    let authoritySigDataUri = null;
-    let schoolStampDataUri = null;
-    try {
-      const authResult = await query('SELECT * FROM authority_data WHERE id = 1');
-      authorityData = authResult.rows[0] || null;
-      if (authorityData) {
-        authoritySigDataUri = await resolveAuthoritySignatureDataUri(authorityData);
-      }
-      const stampResult = await query('SELECT * FROM school_stamp WHERE id = 1');
-      const stampRow = stampResult.rows[0];
-      if (stampRow?.stamp_image_path) {
-        schoolStampDataUri = await resolveSchoolStampDataUri(stampRow.stamp_image_path);
-      }
-    } catch (authErr) {
-      console.warn('Individual continuing PDF: could not load authority/stamp data:', authErr.message);
-    }
-
-    try {
-      const pdfBuffer = Buffer.from(
-        await generateIndividualInterviewPDF(
-          studentData,
-          resultData,
-          subjects.rows,
-          scoresMap,
-          year,
-          logoUrl,
-          'continuing',
-          authoritySigDataUri,
-          authorityData?.name,
-          authorityData?.title,
-          schoolStampDataUri
-        )
-      );
+      const html = await generatePreFormOneContinuingReportHtml(reportData, {
+        apiUrl: process.env.API_URL || `http://localhost:${process.env.PORT || 5000}`,
+      });
+      const pdfBuffer = await renderHtmlToPdfBuffer(html, CONTINUING_REPORT_PDF_OPTIONS);
 
       if (!pdfBuffer.length || pdfBuffer.toString('ascii', 0, 4) !== '%PDF') {
         return sendError(res, clientError('Generated file is not a valid PDF', 500), 500);
@@ -1158,12 +1247,12 @@ router.get('/:year/continuing-results/:studentId/pdf', requireAuth, requirePreFo
       res.setHeader('Content-Type', 'application/pdf');
       res.setHeader(
         'Content-Disposition',
-        `attachment; filename="PreFormOne_Continuing_Report_${studentData.admission_number}_${year}.pdf"`
+        `attachment; filename="PreFormOne_Continuing_Report_${student.admission_number}_${year}.pdf"`
       );
       res.setHeader('Content-Length', pdfBuffer.length);
       res.send(pdfBuffer);
     } catch (error) {
-      console.error('Individual continuing PDF generation failed:', error);
+      console.error('Individual continuing report PDF generation failed:', error);
       const message =
         error.message?.includes('Chrome') || error.message?.includes('Puppeteer')
           ? error.message
@@ -1182,7 +1271,7 @@ router.get('/:year/continuing-results/:studentId/pdf', requireAuth, requirePreFo
 // scores for the year so a client cannot write a grade that contradicts the
 // canonical scale or the saved subject scores.
 // ---------------------------------------------------------------------------
-async function resolveManualResultFields(client, { studentId, year, scoreType, subjectsTable, suppliedAverage }) {
+async function resolveManualResultFields(client, { studentId, year, scoreType, subjectsTable, suppliedAverage, grading = 'interview' }) {
   const subjects = await client.query(
     `SELECT id FROM ${subjectsTable} WHERE is_active = true`
   );
@@ -1231,11 +1320,12 @@ async function resolveManualResultFields(client, { studentId, year, scoreType, s
     average = Math.round(num * 100) / 100;
   }
 
+  const useOLevel = grading === 'oLevel';
   return {
     total_marks: totalMarks,
     average,
-    grade: calculateGrade(average),
-    remarks: getRemarks(average),
+    grade: useOLevel ? calculateOLevelGrade(average) : calculateGrade(average),
+    remarks: useOLevel ? getOLevelRemarks(average) : getRemarks(average),
   };
 }
 
@@ -1344,6 +1434,7 @@ router.post('/continuing-result', requireAuth, async (req, res) => {
         scoreType: 'continuing',
         subjectsTable: 'preformone_continuing_subjects',
         suppliedAverage: average,
+        grading: 'oLevel',
       });
 
       if (derived === null) {
@@ -1580,113 +1671,19 @@ router.get('/:year/continuing-results/all-pdf', requireAuth, requirePreFormOneYe
       return sendError(res, clientError('Invalid year parameter'), 400);
     }
 
-    // Get all students with continuing results for this year
-    const students = await query(
-      `SELECT s.*, r.total_marks, r.average, r.grade, r.position, r.remarks
-       FROM preform_one_students s
-       JOIN preform_one_continuing_results r ON r.student_id = s.id
-       WHERE s.year = $1 AND r.year = $1
-       ORDER BY r.position, s.surname, s.first_name`,
-      [year]
-    );
+    // Build O-Level-style report data for every student with a saved continuing result.
+    const reportDataList = await buildPreFormOneContinuingBulkReportData(query, {
+      year: parseInt(year, 10),
+    });
 
-    if (students.rows.length === 0) {
+    if (reportDataList.length === 0) {
       return sendError(res, clientError('No continuing results found for this year.'), 404);
     }
 
-    // Get all scores for this year (with subject info)
-    const scores = await query(`
-      SELECT sc.score, sc.student_id, sub.id AS subject_id, sub.subject_code, sub.subject_name
-        FROM preform_one_scores sc
-        JOIN preformone_continuing_subjects sub ON sc.subject_id = sub.id
-        WHERE sc.subject_type = 'continuing' AND sub.is_active = true AND sc.score IS NOT NULL AND sc.student_id IN (
-          SELECT id FROM preform_one_students WHERE year = $1
-        )
-    `, [year]);
-
-    // Derive subjects from scores
-    const subjectSeen = new Map();
-    scores.rows.forEach(row => {
-      if (row.subject_id && !subjectSeen.has(row.subject_id)) {
-        subjectSeen.set(row.subject_id, {
-          id: row.subject_id,
-          subject_code: row.subject_code,
-          subject_name: row.subject_name || row.subject_code,
-        });
-      }
+    const combinedHtml = await buildPreFormOneContinuingBulkHtml(reportDataList, {
+      apiUrl: process.env.API_URL || `http://localhost:${process.env.PORT || 5000}`,
     });
-    const subjects = { rows: [...subjectSeen.values()].sort((a, b) =>
-      (a.subject_code || '').localeCompare(b.subject_code || '')
-    ) };
-
-    // Build scores map
-    const scoresMapByStudent = {};
-    scores.rows.forEach(row => {
-      if (!scoresMapByStudent[row.student_id]) scoresMapByStudent[row.student_id] = {};
-      scoresMapByStudent[row.student_id][row.subject_code] = row.score;
-    });
-
-    // Resolve shared resources
-    let logoUrl = null;
-    let authoritySigDataUri = null;
-    let authorityName = '';
-    let authorityTitle = '';
-    let schoolStampDataUri = null;
-    try {
-      logoUrl = await resolveSchoolLogoForPdf(query);
-    } catch (e) {
-      console.warn('Bulk continuing PDF: could not load logo:', e.message);
-    }
-    try {
-      const authResult = await query('SELECT * FROM authority_data WHERE id = 1');
-      const authData = authResult.rows[0];
-      if (authData) {
-        authoritySigDataUri = await resolveAuthoritySignatureDataUri(authData);
-        authorityName = authData.name || '';
-        authorityTitle = authData.title || '';
-      }
-    } catch (e) {
-      console.warn('Bulk continuing PDF: could not load authority:', e.message);
-    }
-    try {
-      const stampResult = await query('SELECT * FROM school_stamp WHERE id = 1');
-      const stampRow = stampResult.rows[0];
-      if (stampRow?.stamp_image_path) {
-        schoolStampDataUri = await resolveSchoolStampDataUri(stampRow.stamp_image_path);
-      }
-    } catch (e) {
-      console.warn('Bulk continuing PDF: could not load stamp:', e.message);
-    }
-
-    // Generate HTML for each student
-    const htmlPages = students.rows.map(studentData => {
-      const studentScores = scoresMapByStudent[studentData.id] || {};
-      const resultData = {
-        total_marks: studentData.total_marks,
-        average: studentData.average,
-        grade: studentData.grade,
-        position: studentData.position,
-        remarks: studentData.remarks,
-      };
-      return buildIndividualInterviewReportHtml(
-        studentData,
-        resultData,
-        subjects.rows,
-        studentScores,
-        year,
-        logoUrl,
-        'continuing',
-        authoritySigDataUri,
-        authorityName,
-        authorityTitle,
-        schoolStampDataUri
-      );
-    });
-
-    // Combine into single PDF with page breaks
-    const { renderHtmlToPdfBuffer } = require('../utils/preFormOneInterviewResultsPdf');
-    const combinedHtml = htmlPages.join('<div style="page-break-after: always;"></div>');
-    const pdfBuffer = await renderHtmlToPdfBuffer(combinedHtml);
+    const pdfBuffer = await renderHtmlToPdfBuffer(combinedHtml, CONTINUING_REPORT_PDF_OPTIONS);
 
     if (!pdfBuffer.length || pdfBuffer.toString('ascii', 0, 4) !== '%PDF') {
       return sendError(res, clientError('Generated file is not a valid PDF', 500), 500);
@@ -1697,7 +1694,556 @@ router.get('/:year/continuing-results/all-pdf', requireAuth, requirePreFormOneYe
     res.setHeader('Content-Length', pdfBuffer.length);
     res.send(pdfBuffer);
   } catch (error) {
-    console.error('Error generating bulk continuing PDF:', error);
+    console.error('Error generating bulk continuing reports PDF:', error);
+    sendError(res, error, 500);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Pre-Form One comment modules (PRE-SALA, PRE-TAALUMA, PRE-TABIA NA MWENENDO …).
+//
+// These mirror the Forms I–VI comment modules but key by student_id + year
+// because Pre-Form One students have no stream/term. Free-text comments share
+// preform_one_comments (comment_type discriminates the module); the 11-criterion
+// behaviour grid lives in preform_one_tabia_mwenendo.
+// ---------------------------------------------------------------------------
+const PRE_FORM_ONE_COMMENT_TYPE_RE = /^[a-z0-9_]{1,64}$/i;
+const PRE_FORM_ONE_TABIA_GRADES = new Set(['A', 'B', 'C', 'D', 'F']);
+
+function normalizePreFormOneCommentType(value) {
+  const type = String(value ?? '').trim();
+  return PRE_FORM_ONE_COMMENT_TYPE_RE.test(type) ? type : null;
+}
+
+function parsePreFormOneYear(res, raw) {
+  const year = parseInt(raw, 10);
+  if (!year || Number.isNaN(year)) {
+    sendError(res, clientError('Invalid year parameter'), 400);
+    return null;
+  }
+  return year;
+}
+
+// List comments for a year, optionally filtered to a single comment_type.
+// Returns `comments` (flat { studentId: text } when a type is given) plus
+// `byType` ({ studentId: { comment_type: text } }) so the report builder can
+// request every type at once.
+router.get('/:year/comments', requireAuth, requirePreFormOneYear, async (req, res) => {
+  try {
+    const year = parsePreFormOneYear(res, req.params.year);
+    if (year === null) return;
+
+    let requestedType = null;
+    if (req.query.comment_type !== undefined) {
+      requestedType = normalizePreFormOneCommentType(req.query.comment_type);
+      if (!requestedType) {
+        return sendError(res, clientError('Invalid comment_type'), 400);
+      }
+    }
+
+    const params = [year];
+    let sql = 'SELECT student_id, comment_type, comment_text FROM preform_one_comments WHERE year = $1';
+    if (requestedType) {
+      params.push(requestedType);
+      sql += ' AND comment_type = $2';
+    }
+
+    const result = await query(sql, params);
+    const comments = {};
+    const byType = {};
+    result.rows.forEach((row) => {
+      const sid = String(row.student_id);
+      if (!byType[sid]) byType[sid] = {};
+      byType[sid][row.comment_type] = row.comment_text || '';
+      if (requestedType) comments[sid] = row.comment_text || '';
+    });
+
+    res.json({ success: true, comments, byType });
+  } catch (error) {
+    console.error('Error fetching Pre-Form One comments:', error);
+    sendError(res, error, 500);
+  }
+});
+
+// Upsert one comment for one student.
+router.post('/:year/comments', requireAuth, requirePreFormOneYear, async (req, res) => {
+  try {
+    const year = parsePreFormOneYear(res, req.params.year);
+    if (year === null) return;
+
+    const studentId = parseInt(req.body?.student_id, 10);
+    const commentType = normalizePreFormOneCommentType(req.body?.comment_type);
+    const commentText = req.body?.comment_text == null ? '' : String(req.body.comment_text);
+
+    if (!studentId || Number.isNaN(studentId)) {
+      return sendError(res, clientError('student_id is required'), 400);
+    }
+    if (!commentType) {
+      return sendError(res, clientError('A valid comment_type is required'), 400);
+    }
+
+    const student = await query(
+      'SELECT id FROM preform_one_students WHERE id = $1 AND year = $2',
+      [studentId, year]
+    );
+    if (student.rowCount === 0) {
+      return sendError(res, clientError('Student not found for this year'), 404);
+    }
+
+    await query(
+      `INSERT INTO preform_one_comments (student_id, year, comment_type, comment_text)
+       VALUES ($1, $2, $3, $4)
+       ON CONFLICT (student_id, year, comment_type)
+       DO UPDATE SET comment_text = EXCLUDED.comment_text, updated_at = CURRENT_TIMESTAMP`,
+      [studentId, year, commentType, commentText]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error saving Pre-Form One comment:', error);
+    sendError(res, error, 500);
+  }
+});
+
+// Upsert many comments of one type (CSV upload / auto-fill). Silently skips
+// rows whose student_id is not in the requested year.
+router.post('/:year/comments/bulk', requireAuth, requirePreFormOneYear, async (req, res) => {
+  try {
+    const year = parsePreFormOneYear(res, req.params.year);
+    if (year === null) return;
+
+    const commentType = normalizePreFormOneCommentType(req.body?.comment_type);
+    if (!commentType) {
+      return sendError(res, clientError('A valid comment_type is required'), 400);
+    }
+    const comments = Array.isArray(req.body?.comments) ? req.body.comments : [];
+    if (comments.length === 0) {
+      return sendError(res, clientError('No comments provided'), 400);
+    }
+
+    const payload = comments
+      .map((item) => ({
+        studentId: parseInt(item?.student_id, 10),
+        text: item?.comment_text == null ? '' : String(item.comment_text),
+      }))
+      .filter((item) => item.studentId && !Number.isNaN(item.studentId));
+
+    const result = await withTransaction(async (client) => {
+      const ids = [...new Set(payload.map((item) => item.studentId))];
+      let allowed = new Set();
+      if (ids.length > 0) {
+        const rows = await client.query(
+          'SELECT id FROM preform_one_students WHERE year = $1 AND id = ANY($2::int[])',
+          [year, ids]
+        );
+        allowed = new Set(rows.rows.map((row) => String(row.id)));
+      }
+
+      let saved = 0;
+      for (const item of payload) {
+        if (!allowed.has(String(item.studentId))) continue;
+        await client.query(
+          `INSERT INTO preform_one_comments (student_id, year, comment_type, comment_text)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (student_id, year, comment_type)
+           DO UPDATE SET comment_text = EXCLUDED.comment_text, updated_at = CURRENT_TIMESTAMP`,
+          [item.studentId, year, commentType, item.text]
+        );
+        saved += 1;
+      }
+      return saved;
+    });
+
+    res.json({ success: true, saved: result, failed: payload.length - result });
+  } catch (error) {
+    console.error('Error bulk-saving Pre-Form One comments:', error);
+    sendError(res, error, 500);
+  }
+});
+
+// List Tabia na Mwenendo evaluations for a year as { studentId: { code: grade } }.
+router.get('/:year/tabia-mwenendo', requireAuth, requirePreFormOneYear, async (req, res) => {
+  try {
+    const year = parsePreFormOneYear(res, req.params.year);
+    if (year === null) return;
+
+    const result = await query(
+      'SELECT student_id, criterion, evaluation FROM preform_one_tabia_mwenendo WHERE year = $1',
+      [year]
+    );
+
+    const evaluations = {};
+    result.rows.forEach((row) => {
+      const sid = String(row.student_id);
+      if (!evaluations[sid]) evaluations[sid] = {};
+      evaluations[sid][row.criterion] = row.evaluation;
+    });
+
+    res.json({ success: true, evaluations });
+  } catch (error) {
+    console.error('Error fetching Pre-Form One tabia mwenendo:', error);
+    sendError(res, error, 500);
+  }
+});
+
+// Batch upsert Tabia na Mwenendo evaluations. `replaceScope` wipes the year
+// first (CSV upload wins); otherwise the supplied rows are merged.
+router.post('/:year/tabia-mwenendo', requireAuth, requirePreFormOneYear, async (req, res) => {
+  try {
+    const year = parsePreFormOneYear(res, req.params.year);
+    if (year === null) return;
+
+    const evaluations = Array.isArray(req.body?.evaluations) ? req.body.evaluations : [];
+    const replaceScope = req.body?.replaceScope === true;
+    if (evaluations.length === 0 && !replaceScope) {
+      return sendError(res, clientError('No evaluations provided'), 400);
+    }
+
+    const payload = evaluations
+      .map((item) => ({
+        studentId: parseInt(item?.student_id ?? item?.student_index, 10),
+        criterion: String(item?.criterion ?? '').trim(),
+        evaluation: String(item?.evaluation ?? '').trim().toUpperCase(),
+      }))
+      .filter((item) => item.studentId && !Number.isNaN(item.studentId));
+
+    const saved = await withTransaction(async (client) => {
+      const ids = [...new Set(payload.map((item) => item.studentId))];
+      let allowed = new Set();
+      if (ids.length > 0) {
+        const rows = await client.query(
+          'SELECT id FROM preform_one_students WHERE year = $1 AND id = ANY($2::int[])',
+          [year, ids]
+        );
+        allowed = new Set(rows.rows.map((row) => String(row.id)));
+      }
+
+      if (replaceScope) {
+        await client.query('DELETE FROM preform_one_tabia_mwenendo WHERE year = $1', [year]);
+      }
+
+      let count = 0;
+      for (const item of payload) {
+        if (!allowed.has(String(item.studentId))) continue;
+        if (!item.criterion || !PRE_FORM_ONE_TABIA_GRADES.has(item.evaluation)) continue;
+        await client.query(
+          `INSERT INTO preform_one_tabia_mwenendo (student_id, year, criterion, evaluation)
+           VALUES ($1, $2, $3, $4)
+           ON CONFLICT (student_id, year, criterion)
+           DO UPDATE SET evaluation = EXCLUDED.evaluation, updated_at = CURRENT_TIMESTAMP`,
+          [item.studentId, year, item.criterion, item.evaluation]
+        );
+        count += 1;
+      }
+      return count;
+    });
+
+    res.json({ success: true, saved });
+  } catch (error) {
+    console.error('Error saving Pre-Form One tabia mwenendo:', error);
+    sendError(res, error, 500);
+  }
+});
+
+// O-Level class grades (per student) used for the comment auto-fill helpers.
+// Reads the saved continuing results so the grade matches the printed report.
+router.get('/:year/class-grades', requireAuth, requirePreFormOneYear, async (req, res) => {
+  try {
+    const year = parsePreFormOneYear(res, req.params.year);
+    if (year === null) return;
+
+    const result = await query(
+      'SELECT student_id, grade, average FROM preform_one_continuing_results WHERE year = $1',
+      [year]
+    );
+
+    const grades = {};
+    const averages = {};
+    result.rows.forEach((row) => {
+      const sid = String(row.student_id);
+      grades[sid] = row.grade || '';
+      averages[sid] = row.average == null ? null : Number(row.average);
+    });
+
+    res.json({ success: true, grades, averages });
+  } catch (error) {
+    console.error('Error fetching Pre-Form One class grades:', error);
+    sendError(res, error, 500);
+  }
+});
+
+// ---------------------------------------------------------------------------
+// Pre-Form One fees announcements + individual debt.
+//
+// Pre-Form One has no streams or terms and its report is a single end-of-year
+// card, so fees announcements are stored once per year (term 'Second Term')
+// and debts are keyed by the Pre-Form One student id (student_index) instead
+// of the class position used by Forms I–VI. Both reuse the shared
+// fees_announcements / individual_debt tables with level 'PRE-FORM ONE'.
+// ---------------------------------------------------------------------------
+const PRE_FORM_ONE_FEES_LEVEL = 'PRE-FORM ONE';
+const PRE_FORM_ONE_FEES_STREAM = 'NA';
+const PRE_FORM_ONE_FEES_TERM = 'Second Term';
+const PRE_FORM_ONE_ANNOUNCEMENT_SLOTS = 10;
+
+function parsePreFormOneDebtAmount(raw) {
+  if (raw == null || String(raw).trim() === '') return 0;
+  const value = parseFloat(raw);
+  return Number.isFinite(value) ? value : NaN;
+}
+
+// List the fees announcement slots for a year as { "1": text, ... }.
+router.get('/:year/fees-announcements', requireAuth, requirePreFormOneYear, async (req, res) => {
+  try {
+    const year = parsePreFormOneYear(res, req.params.year);
+    if (year === null) return;
+
+    const result = await query(
+      `SELECT announcement_index, announcement_text
+         FROM fees_announcements
+        WHERE UPPER(TRIM(level)) = $1 AND UPPER(TRIM(stream)) = $2 AND year = $3 AND term = $4
+        ORDER BY announcement_index`,
+      [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, PRE_FORM_ONE_FEES_TERM]
+    );
+
+    const announcements = {};
+    result.rows.forEach((row) => {
+      if (row.announcement_index == null) return;
+      announcements[String(row.announcement_index)] = row.announcement_text || '';
+    });
+
+    res.json({ success: true, announcements });
+  } catch (error) {
+    console.error('Error fetching Pre-Form One fees announcements:', error);
+    sendError(res, error, 500);
+  }
+});
+
+// Save the 10 fees announcement slots for a year. Empty slots are deleted.
+router.post('/:year/fees-announcements', requireAuth, requirePreFormOneYear, async (req, res) => {
+  try {
+    const year = parsePreFormOneYear(res, req.params.year);
+    if (year === null) return;
+
+    const announcements = req.body?.announcements;
+    if (!announcements || typeof announcements !== 'object' || Array.isArray(announcements)) {
+      return sendError(res, clientError('announcements object is required'), 400);
+    }
+
+    await withTransaction(async (client) => {
+      for (let i = 1; i <= PRE_FORM_ONE_ANNOUNCEMENT_SLOTS; i += 1) {
+        const index = String(i);
+        const text = announcements[index] == null ? '' : String(announcements[index]).trim();
+
+        if (text === '') {
+          await client.query(
+            `DELETE FROM fees_announcements
+              WHERE UPPER(TRIM(level)) = $1 AND UPPER(TRIM(stream)) = $2 AND year = $3 AND term = $4 AND announcement_index = $5`,
+            [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, PRE_FORM_ONE_FEES_TERM, index]
+          );
+          continue;
+        }
+
+        await client.query(
+          `INSERT INTO fees_announcements (level, stream, year, term, announcement_index, announcement_text)
+           VALUES ($1, $2, $3, $4, $5, $6)
+           ON CONFLICT (level, stream, year, term, announcement_index)
+           DO UPDATE SET announcement_text = EXCLUDED.announcement_text, updated_at = NOW()`,
+          [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, PRE_FORM_ONE_FEES_TERM, index, text]
+        );
+      }
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error saving Pre-Form One fees announcements:', error);
+    sendError(res, error, 500);
+  }
+});
+
+// List Pre-Form One students with their debt records for a year.
+router.get('/:year/debts', requireAuth, requirePreFormOneYear, async (req, res) => {
+  try {
+    const year = parsePreFormOneYear(res, req.params.year);
+    if (year === null) return;
+
+    const studentsResult = await query(
+      `SELECT id, admission_number, serial_number, first_name, middle_name, surname, sex, year, parish
+         FROM preform_one_students
+        WHERE year = $1
+        ORDER BY surname, first_name, middle_name`,
+      [year]
+    );
+
+    const debtsResult = await query(
+      `SELECT student_index, amount, description, due_date, status
+         FROM individual_debt
+        WHERE UPPER(TRIM(level)) = $1 AND UPPER(TRIM(stream)) = $2 AND year = $3`,
+      [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year]
+    );
+
+    const debts = {};
+    debtsResult.rows.forEach((row) => {
+      if (row.student_index == null) return;
+      debts[String(row.student_index)] = {
+        amount: row.amount == null ? 0 : Number(row.amount),
+        description: row.description || '',
+        due_date: row.due_date || '',
+        status: row.status || 'Outstanding',
+      };
+    });
+
+    res.json({ success: true, students: studentsResult.rows, debts });
+  } catch (error) {
+    console.error('Error fetching Pre-Form One debts:', error);
+    sendError(res, error, 500);
+  }
+});
+
+// Save (or clear) one student's debt. An amount of 0 with no description clears it.
+router.post('/:year/debts', requireAuth, requirePreFormOneYear, async (req, res) => {
+  try {
+    const year = parsePreFormOneYear(res, req.params.year);
+    if (year === null) return;
+
+    const studentId = parseInt(req.body?.student_id, 10);
+    if (!studentId || Number.isNaN(studentId)) {
+      return sendError(res, clientError('student_id is required'), 400);
+    }
+
+    const student = await query(
+      'SELECT id FROM preform_one_students WHERE id = $1 AND year = $2',
+      [studentId, year]
+    );
+    if (student.rowCount === 0) {
+      return sendError(res, clientError('Student not found for this year', 404), 404);
+    }
+
+    const amount = parsePreFormOneDebtAmount(req.body?.amount);
+    if (Number.isNaN(amount) || amount < 0) {
+      return sendError(res, clientError('amount must be a non-negative number'), 400);
+    }
+    const description = req.body?.description == null ? '' : String(req.body.description);
+    const dueDate = req.body?.due_date == null ? '' : String(req.body.due_date);
+    const status =
+      req.body?.status == null || String(req.body.status).trim() === ''
+        ? 'Outstanding'
+        : String(req.body.status);
+
+    const studentIndex = String(studentId);
+
+    if (amount === 0 && description.trim() === '') {
+      await query(
+        `DELETE FROM individual_debt
+          WHERE UPPER(TRIM(level)) = $1 AND UPPER(TRIM(stream)) = $2 AND year = $3 AND student_index = $4`,
+        [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, studentIndex]
+      );
+      return res.json({ success: true, deleted: true });
+    }
+
+    await withTransaction(async (client) => {
+      await client.query(
+        `DELETE FROM individual_debt
+          WHERE UPPER(TRIM(level)) = $1 AND UPPER(TRIM(stream)) = $2 AND year = $3 AND student_index = $4`,
+        [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, studentIndex]
+      );
+      await client.query(
+        `INSERT INTO individual_debt (level, stream, year, student_index, amount, description, due_date, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+        [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, studentIndex, amount, description, dueDate, status]
+      );
+    });
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error saving Pre-Form One debt:', error);
+    sendError(res, error, 500);
+  }
+});
+
+// Bulk upsert debts (CSV upload). Rows whose student_id is not in the year are skipped.
+router.post('/:year/debts/bulk', requireAuth, requirePreFormOneYear, async (req, res) => {
+  try {
+    const year = parsePreFormOneYear(res, req.params.year);
+    if (year === null) return;
+
+    const debts = Array.isArray(req.body?.debts) ? req.body.debts : [];
+    if (debts.length === 0) {
+      return sendError(res, clientError('No debts provided'), 400);
+    }
+
+    const payload = debts
+      .map((item) => ({
+        studentId: parseInt(item?.student_id ?? item?.student_index, 10),
+        amount: parsePreFormOneDebtAmount(item?.amount),
+        description: item?.description == null ? '' : String(item.description),
+        dueDate: item?.due_date == null ? '' : String(item.due_date),
+        status:
+          item?.status == null || String(item.status).trim() === ''
+            ? 'Outstanding'
+            : String(item.status),
+      }))
+      .filter((item) => item.studentId && !Number.isNaN(item.studentId) && !Number.isNaN(item.amount) && item.amount >= 0);
+
+    if (payload.length === 0) {
+      return sendError(res, clientError('No valid debt rows provided'), 400);
+    }
+
+    const saved = await withTransaction(async (client) => {
+      const ids = [...new Set(payload.map((item) => item.studentId))];
+      const rows = await client.query(
+        'SELECT id FROM preform_one_students WHERE year = $1 AND id = ANY($2::int[])',
+        [year, ids]
+      );
+      const allowed = new Set(rows.rows.map((row) => String(row.id)));
+
+      let count = 0;
+      for (const item of payload) {
+        if (!allowed.has(String(item.studentId))) continue;
+        const studentIndex = String(item.studentId);
+        await client.query(
+          `DELETE FROM individual_debt
+            WHERE UPPER(TRIM(level)) = $1 AND UPPER(TRIM(stream)) = $2 AND year = $3 AND student_index = $4`,
+          [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, studentIndex]
+        );
+        if (item.amount === 0 && item.description.trim() === '') continue;
+        await client.query(
+          `INSERT INTO individual_debt (level, stream, year, student_index, amount, description, due_date, status)
+           VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
+          [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, studentIndex, item.amount, item.description, item.dueDate, item.status]
+        );
+        count += 1;
+      }
+      return count;
+    });
+
+    res.json({ success: true, saved, failed: payload.length - saved });
+  } catch (error) {
+    console.error('Error bulk-saving Pre-Form One debts:', error);
+    sendError(res, error, 500);
+  }
+});
+
+// Delete one student's debt.
+router.delete('/:year/debts/:studentId', requireAuth, requirePreFormOneYear, async (req, res) => {
+  try {
+    const year = parsePreFormOneYear(res, req.params.year);
+    if (year === null) return;
+
+    const studentId = parseInt(req.params.studentId, 10);
+    if (!studentId || Number.isNaN(studentId)) {
+      return sendError(res, clientError('Invalid student id'), 400);
+    }
+
+    await query(
+      `DELETE FROM individual_debt
+        WHERE UPPER(TRIM(level)) = $1 AND UPPER(TRIM(stream)) = $2 AND year = $3 AND student_index = $4`,
+      [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, String(studentId)]
+    );
+
+    res.json({ success: true });
+  } catch (error) {
+    console.error('Error deleting Pre-Form One debt:', error);
     sendError(res, error, 500);
   }
 });

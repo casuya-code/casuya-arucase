@@ -1,9 +1,11 @@
 /**
  * Shared helpers for Pre-Form One interview/continuing results pages.
  *
- * Grade, average and remarks all come from utils/preFormOneGrading, which
- * mirrors backend/utils/preFormOneGrading.js, so the live grid can never
- * disagree with the stored row or the printed report.
+ * Grade, average and remarks come from utils/preFormOneGrading for interview
+ * results (mirrors backend/utils/preFormOneGrading.js) and from
+ * utils/oLevelGrading for continuing results (mirrors
+ * backend/utils/oLevelGrading.js), so the live grid can never disagree with the
+ * stored row or the printed report.
  */
 
 import {
@@ -11,6 +13,10 @@ import {
   getPreFormOneRemarks,
   roundPreFormOneAverage,
 } from '../../utils/preFormOneGrading';
+import {
+  calculateOLevelGrade,
+  getOLevelRemarks,
+} from '../../utils/oLevelGrading';
 
 export function normalizeSubjectCode(code) {
   if (code == null || code === '') return '';
@@ -40,7 +46,7 @@ export function buildSubjectScoresMap(rows, admissionKeyFn) {
 }
 
 /** Average over scored subjects only (missing/empty scores excluded). */
-export function calculateInterviewMetrics(scoresByCode, activeSubjects) {
+function calculateMetrics(scoresByCode, activeSubjects, gradeFor, remarksFor) {
   if (!activeSubjects?.length) {
     return { total_marks: 0, average: 0, grade: '-', remarks: '-' };
   }
@@ -64,9 +70,30 @@ export function calculateInterviewMetrics(scoresByCode, activeSubjects) {
   return {
     total_marks,
     average,
-    grade: calculatePreFormOneGrade(average),
-    remarks: getPreFormOneRemarks(average),
+    grade: gradeFor(average),
+    remarks: remarksFor(average),
   };
+}
+
+/**
+ * Interview grading: Pre-Form One pass/fail scale
+ * (A >= 80 | B >= 70 | C >= 65 | D >= 45 | F < 45, remarks AMECHAGULIWA/HAJACHAGULIWA).
+ */
+export function calculateInterviewMetrics(scoresByCode, activeSubjects) {
+  return calculateMetrics(
+    scoresByCode,
+    activeSubjects,
+    calculatePreFormOneGrade,
+    getPreFormOneRemarks
+  );
+}
+
+/**
+ * Continuing grading: school O-Level scale
+ * (A >= 85 | B >= 70 | C >= 50 | D >= 40 | F < 40, Swahili remarks).
+ */
+export function calculateContinuingMetrics(scoresByCode, activeSubjects) {
+  return calculateMetrics(scoresByCode, activeSubjects, calculateOLevelGrade, getOLevelRemarks);
 }
 
 /**

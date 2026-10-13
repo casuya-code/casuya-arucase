@@ -1,0 +1,1044 @@
+/* ============================================================================
+   HOMEPAGE — "Sacred Horizon"  ·  SPECTRUM EDITION
+   ----------------------------------------------------------------------------
+   Extends the public-site redesign (public-ui-refresh.css) to the marketing
+   homepage. This file is the single source of truth for the homepage look and
+   is loaded last (via HomePage.css) so it can express a full colour system.
+
+   THE COLOUR SYSTEM
+   -----------------
+   Anchors (structure):   deep navy  →  royal blue
+   Sacred accent:         gold  →  amber
+   Spectrum (rhythm):     azure · emerald · teal · violet · indigo · rose
+
+   The two anchors carry the brand; the spectrum is spent on *small* moments —
+   section medallions, card accent bars, icon tiles, glows and the hero aurora.
+   Every band gets its own tinted "wash" so scrolling the page reads as a
+   deliberate colour progression instead of a run of identical white slabs.
+
+   ENGINEERING NOTES
+   -----------------
+   • Selectors are doubled (`.homepage.homepage`) because @import-ed files load
+     *before* HomePage.css's own body rules — doubling keeps these declarations
+     ahead of equal-specificity rules no matter the cascade order.
+   • Section titles use background-clip:text for a navy→blue gradient, so the
+     gold rule moves to an absolutely-positioned ::after (a flex item would
+     otherwise disturb the title's inline-flex centring).
+   • `-webkit-text-fill-color` is inherited, so every medallion resets it or the
+     glyph would vanish into the clipped title.
+   • All motion is transform/opacity only, and is disabled under
+     prefers-reduced-motion.
+   ============================================================================ */
+
+/* ============================================================================
+   1. COLOUR SYSTEM
+   ========================================================================== */
+
+.homepage {
+  /* Radii + elevation */
+  --home-radius: 20px;
+  --home-radius-sm: 14px;
+
+  /* Anchor — navy */
+  --hx-navy-950: #040c19;
+  --hx-navy-900: #081525;
+  --hx-navy-800: #0b2545;
+  --hx-navy-700: #123a63;
+  --hx-blue-600: #1a5490;
+  --hx-blue-500: #2d7bc4;
+  --hx-blue-400: #4fa3e3;
+
+  /* Sacred accent — gold */
+  --hx-gold-700: #8a6d16;
+  --hx-gold-600: #a98a1f;
+  --hx-gold-500: #c9a227;
+  --hx-gold-400: #e0bb4a;
+  --hx-gold-300: #f0d98a;
+  --hx-gold-200: #f8eecb;
+
+  /* Spectrum accents */
+  --hx-azure: #38bdf8;
+  --hx-cyan: #22d3ee;
+  --hx-emerald: #34d399;
+  --hx-teal: #2dd4bf;
+  --hx-violet: #a78bfa;
+  --hx-indigo: #818cf8;
+  --hx-rose: #fb7185;
+  --hx-crimson: #e11d48;
+  --hx-amber: #fbbf24;
+
+  /* Signature gradients */
+  --hx-grad-gold: linear-gradient(120deg, #f8eecb 0%, #e0bb4a 38%, #c9a227 66%, #a98a1f 100%);
+  --hx-grad-navy: linear-gradient(150deg, #040c19 0%, #0b2545 48%, #123a63 76%, #1a5490 100%);
+  --hx-grad-royal: linear-gradient(140deg, #2d7bc4 0%, #1a5490 50%, #0d2b4d 100%);
+  --hx-grad-title: linear-gradient(100deg, #0b2545 0%, #17456f 46%, #1f6aa8 78%, #2d7bc4 100%);
+
+  /* Hooks other rules + the public pages rely on */
+  --home-gold-gradient: var(--hx-grad-gold);
+  --home-gold-soft: rgba(201, 162, 39, 0.14);
+  --home-card-border-color: rgba(15, 23, 42, 0.08);
+  --home-frame-shadow: 0 1px 2px rgba(15, 23, 42, 0.04),
+    0 16px 36px -24px rgba(15, 45, 82, 0.5);
+  --home-frame-shadow-hover: 0 2px 8px rgba(15, 23, 42, 0.07),
+    0 30px 56px -28px rgba(15, 45, 82, 0.62);
+  --home-frame-shadow-elevated: 0 3px 10px rgba(15, 23, 42, 0.07),
+    0 40px 70px -32px rgba(15, 45, 82, 0.66);
+
+  /* Shared motion */
+  --hx-ease: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+/* ============================================================================
+   2. HERO — aurora duotone
+   ========================================================================== */
+
+/* Shimmering gold hairline across the very top of the hero. */
+.homepage .main-content::after {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 3px;
+  z-index: 6;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgba(201, 162, 39, 0) 0%,
+    #c9a227 16%,
+    #f8eecb 38%,
+    #c9a227 62%,
+    #f0d98a 82%,
+    rgba(201, 162, 39, 0) 100%
+  );
+  background-size: 70% 100%;
+  background-repeat: no-repeat;
+  animation: hx-shimmer 9s linear infinite;
+}
+
+@keyframes hx-shimmer {
+  0% { background-position: -40% 0; }
+  100% { background-position: 140% 0; }
+}
+
+/* Aurora scrim: navy base + gold / azure / violet light bleed. */
+.homepage .hero-content-overlay,
+.homepage .hero-content-overlay--cta-only {
+  background:
+    radial-gradient(120% 90% at 50% 122%, rgba(4, 12, 25, 0.86) 0%, rgba(4, 12, 25, 0) 62%),
+    radial-gradient(58% 62% at 88% 6%, rgba(56, 189, 248, 0.32) 0%, rgba(56, 189, 248, 0) 62%),
+    radial-gradient(52% 58% at 6% 14%, rgba(201, 162, 39, 0.34) 0%, rgba(201, 162, 39, 0) 64%),
+    radial-gradient(66% 66% at 72% 92%, rgba(167, 139, 250, 0.24) 0%, rgba(167, 139, 250, 0) 62%),
+    linear-gradient(
+      180deg,
+      rgba(4, 12, 25, 0.42) 0%,
+      rgba(4, 12, 25, 0.06) 38%,
+      rgba(4, 12, 25, 0.78) 100%
+    );
+}
+
+/* Glass CTAs. */
+.homepage .hero-cta {
+  border: 1px solid rgba(255, 255, 255, 0.32);
+  background: rgba(8, 21, 37, 0.4);
+  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(8px);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 12px 26px -16px rgba(0, 0, 0, 0.85);
+  transition: background 0.25s var(--hx-ease), border-color 0.25s var(--hx-ease),
+    box-shadow 0.25s var(--hx-ease), transform 0.25s var(--hx-ease);
+}
+
+.homepage .hero-cta:hover {
+  background: rgba(8, 21, 37, 0.68);
+  border-color: var(--hx-gold-400);
+  box-shadow: 0 14px 30px -14px rgba(0, 0, 0, 0.78),
+    0 0 0 1px rgba(201, 162, 39, 0.34);
+  transform: translateY(-2px);
+}
+
+/* Primary CTA — solid gold with a travelling sheen. */
+.homepage .hero-cta--primary {
+  position: relative;
+  overflow: hidden;
+  border-color: transparent;
+  background: var(--hx-grad-gold);
+  color: #2a1f04;
+  font-weight: 800;
+  box-shadow: 0 16px 34px -14px rgba(201, 162, 39, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+
+.homepage .hero-cta--primary::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 42%;
+  pointer-events: none;
+  background: linear-gradient(100deg, transparent, rgba(255, 255, 255, 0.75), transparent);
+  transform: translateX(-190%) skewX(-18deg);
+  animation: hx-sheen 5s var(--hx-ease) infinite;
+}
+
+@keyframes hx-sheen {
+  0%, 42% { transform: translateX(-190%) skewX(-18deg); }
+  72%, 100% { transform: translateX(330%) skewX(-18deg); }
+}
+
+.homepage .hero-cta--primary:hover {
+  background: linear-gradient(120deg, #fdf4d3 0%, #e0bb4a 52%, #c39b23 100%);
+  color: #241a03;
+  transform: translateY(-2px) scale(1.03);
+  box-shadow: 0 20px 40px -14px rgba(201, 162, 39, 0.98),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+/* "Ofisi" shortcut — navy glass ringed in gold. */
+.homepage .main-content a.hero-ofisi-link {
+  background: rgba(4, 12, 25, 0.66);
+  border: 1px solid rgba(201, 162, 39, 0.55);
+  color: #f8eecb;
+  box-shadow: 0 8px 20px -10px rgba(0, 0, 0, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.homepage .main-content a.hero-ofisi-link:hover {
+  background: rgba(4, 12, 25, 0.86);
+  border-color: var(--hx-gold-400);
+  color: #fdf4d3;
+}
+
+/* Rector statement marquee — navy glass with a gold hairline. */
+.homepage .scrolling-text-bottom {
+  background: rgba(4, 12, 25, 0.76);
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+}
+
+.homepage .scrolling-text-bottom::before {
+  height: 2px;
+  background: linear-gradient(
+    90deg,
+    rgba(201, 162, 39, 0) 0%,
+    #c9a227 18%,
+    #f8eecb 50%,
+    #c9a227 82%,
+    rgba(201, 162, 39, 0) 100%
+  );
+}
+
+.homepage .scrolling-text-content {
+  color: #f5ecd4;
+  text-shadow: 0 1px 10px rgba(0, 0, 0, 0.4);
+}
+
+/* ============================================================================
+   3. BANDS — a colour wash per section
+   ========================================================================== */
+
+.homepage.homepage .home-stats-section {
+  background-color: #f2eee6;
+  background-image:
+    radial-gradient(60% 96% at 4% 0%, rgba(201, 162, 39, 0.2) 0%, rgba(201, 162, 39, 0) 60%),
+    radial-gradient(60% 96% at 96% 100%, rgba(56, 189, 248, 0.18) 0%, rgba(56, 189, 248, 0) 60%),
+    radial-gradient(90% 130% at 50% 50%, rgba(26, 84, 144, 0.06) 0%, rgba(26, 84, 144, 0) 70%);
+  background-repeat: no-repeat;
+}
+
+.homepage.homepage .home-intro {
+  background-color: #fffefb;
+  background-image:
+    radial-gradient(56% 86% at 0% 0%, rgba(201, 162, 39, 0.18) 0%, rgba(201, 162, 39, 0) 60%),
+    radial-gradient(52% 84% at 100% 100%, rgba(129, 140, 248, 0.14) 0%, rgba(129, 140, 248, 0) 62%);
+  background-repeat: no-repeat;
+}
+
+.homepage.homepage .home-cms-section {
+  background-color: #f7f4ee;
+  background-image:
+    radial-gradient(60% 90% at 8% 0%, rgba(45, 123, 196, 0.12) 0%, rgba(45, 123, 196, 0) 62%),
+    radial-gradient(50% 80% at 100% 100%, rgba(201, 162, 39, 0.14) 0%, rgba(201, 162, 39, 0) 62%);
+  background-repeat: no-repeat;
+}
+
+.homepage.homepage .home-announcements {
+  background-color: #fffefb;
+  background-image:
+    radial-gradient(56% 86% at 100% 0%, rgba(251, 113, 133, 0.16) 0%, rgba(251, 113, 133, 0) 60%),
+    radial-gradient(52% 84% at 0% 100%, rgba(56, 189, 248, 0.14) 0%, rgba(56, 189, 248, 0) 62%);
+  background-repeat: no-repeat;
+}
+
+.homepage.homepage .home-admissions-cta {
+  background-color: #f2eee6;
+  background-image:
+    radial-gradient(60% 100% at 6% 0%, rgba(201, 162, 39, 0.22) 0%, rgba(201, 162, 39, 0) 58%),
+    radial-gradient(58% 100% at 94% 100%, rgba(167, 139, 250, 0.18) 0%, rgba(167, 139, 250, 0) 60%),
+    radial-gradient(50% 90% at 60% 0%, rgba(56, 189, 248, 0.14) 0%, rgba(56, 189, 248, 0) 62%);
+  background-repeat: no-repeat;
+}
+
+.homepage.homepage .home-gallery {
+  background-color: #f5f1ea;
+  background-image:
+    radial-gradient(56% 86% at 8% 0%, rgba(167, 139, 250, 0.2) 0%, rgba(167, 139, 250, 0) 60%),
+    radial-gradient(56% 86% at 92% 100%, rgba(56, 189, 248, 0.18) 0%, rgba(56, 189, 248, 0) 62%),
+    radial-gradient(50% 76% at 50% 0%, rgba(201, 162, 39, 0.12) 0%, rgba(201, 162, 39, 0) 65%);
+  background-repeat: no-repeat;
+}
+
+.homepage.homepage .administration-section {
+  background-color: #fffcf3;
+  background-image:
+    radial-gradient(62% 96% at 50% 0%, rgba(201, 162, 39, 0.24) 0%, rgba(201, 162, 39, 0) 62%),
+    radial-gradient(52% 86% at 100% 100%, rgba(26, 84, 144, 0.12) 0%, rgba(26, 84, 144, 0) 62%),
+    radial-gradient(50% 80% at 0% 100%, rgba(224, 187, 74, 0.14) 0%, rgba(224, 187, 74, 0) 62%);
+  background-repeat: no-repeat;
+}
+
+.homepage.homepage .home-faq {
+  background-color: #f3f6f4;
+  background-image:
+    radial-gradient(56% 90% at 0% 0%, rgba(45, 212, 191, 0.18) 0%, rgba(45, 212, 191, 0) 60%),
+    radial-gradient(56% 90% at 100% 100%, rgba(201, 162, 39, 0.16) 0%, rgba(201, 162, 39, 0) 62%);
+  background-repeat: no-repeat;
+}
+
+.homepage.homepage .home-contact-strip {
+  background-color: #f1f5f8;
+  background-image:
+    radial-gradient(56% 92% at 6% 0%, rgba(56, 189, 248, 0.2) 0%, rgba(56, 189, 248, 0) 60%),
+    radial-gradient(56% 92% at 94% 100%, rgba(52, 211, 153, 0.18) 0%, rgba(52, 211, 153, 0) 62%),
+    radial-gradient(60% 100% at 50% 50%, rgba(201, 162, 39, 0.1) 0%, rgba(201, 162, 39, 0) 70%);
+  background-repeat: no-repeat;
+}
+
+/* Fallbacks in case a band is used without a section-specific class.
+   NOTE: the theme already styles .home-band--white, so we deliberately do NOT
+   redeclare it here — a same-specificity declaration placed after the
+   section rules would clobber their washes. */
+
+/* Section-to-section divider: a soft gold rune. */
+.homepage.homepage > section:not(.main-content):not(.home-contact-strip)::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(96px, 26%);
+  height: 3px;
+  border-radius: 999px;
+  background: linear-gradient(
+    90deg,
+    rgba(201, 162, 39, 0) 0%,
+    #e0bb4a 22%,
+    #a98a1f 50%,
+    #e0bb4a 78%,
+    rgba(201, 162, 39, 0) 100%
+  );
+  opacity: 0.9;
+}
+
+/* ============================================================================
+   4. SECTION RHYTHM — gradient titles, gold rule, spectrum medallions
+   ========================================================================== */
+
+.homepage.homepage .home-section-title,
+.homepage.homepage .administration-title {
+  position: relative;
+  padding-bottom: 0.72rem;
+  background-image: var(--hx-grad-title);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Gold rule lives on ::after so it isn't clipped to the title glyphs. */
+.homepage.homepage .home-section-title::after,
+.homepage.homepage .administration-title::after {
+  content: '';
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: 64px;
+  height: 4px;
+  border-radius: 999px;
+  background: var(--hx-grad-gold);
+  box-shadow: 0 3px 10px -3px rgba(201, 162, 39, 0.7);
+}
+
+.homepage.homepage .home-section-header--left .home-section-title::after,
+.homepage.homepage .home-section-header--row .home-section-title::after {
+  left: 0;
+  transform: none;
+}
+
+/* Centred headers: shrink-wrap the title so the navy→blue gradient hugs the
+   glyphs and the gold rule sits directly beneath the words. */
+.homepage.homepage .home-section-header:not(.home-section-header--left):not(.home-section-header--row) .home-section-title,
+.homepage.homepage .administration-title {
+  width: fit-content;
+  max-width: 100%;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+/* Medallions — the spectrum lives here. */
+.homepage.homepage .home-section-title > i,
+.homepage.homepage .administration-title > .administration-title-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 2.45rem;
+  height: 2.45rem;
+  flex: 0 0 auto;
+  margin: 0;
+  font-size: 1.02rem;
+  line-height: 1;
+  border-radius: 13px;
+  /* Inherited from the clipped title — must be reset or the glyph vanishes. */
+  color: #ffffff;
+  -webkit-text-fill-color: currentColor;
+  background-image: var(--hx-grad-royal);
+  box-shadow: 0 14px 24px -14px rgba(11, 37, 69, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
+}
+
+/* — Stats band has no title; give the medallion base to the *leadership* gold. */
+.homepage.homepage .administration-title > .administration-title-icon {
+  color: #fff6db;
+  background-image: linear-gradient(140deg, #e0bb4a 0%, #c9a227 46%, #7c6014 100%);
+  box-shadow: 0 14px 24px -14px rgba(138, 109, 22, 0.95),
+    inset 0 1px 0 rgba(255, 255, 255, 0.4);
+}
+
+/* Announcements — rose */
+.homepage.homepage .home-announcements .home-section-title > i {
+  color: #ffe4e9;
+  background-image: linear-gradient(140deg, #fb7185 0%, #e11d48 48%, #7f1d2e 100%);
+  box-shadow: 0 14px 24px -14px rgba(225, 29, 72, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.34);
+}
+.homepage.homepage .home-announcements .home-section-title::after {
+  background: linear-gradient(90deg, rgba(225, 29, 72, 0) 0%, #fb7185 24%, #e11d48 50%, #fb7185 76%, rgba(225, 29, 72, 0) 100%);
+  box-shadow: 0 3px 10px -3px rgba(225, 29, 72, 0.6);
+}
+
+/* Gallery — violet */
+.homepage.homepage .home-gallery .home-section-title > i {
+  color: #eee7ff;
+  background-image: linear-gradient(140deg, #a78bfa 0%, #7c3aed 48%, #3b1d78 100%);
+  box-shadow: 0 14px 24px -14px rgba(124, 58, 237, 0.8), inset 0 1px 0 rgba(255, 255, 255, 0.34);
+}
+.homepage.homepage .home-gallery .home-section-title::after {
+  background: linear-gradient(90deg, rgba(124, 58, 237, 0) 0%, #a78bfa 24%, #7c3aed 50%, #a78bfa 76%, rgba(124, 58, 237, 0) 100%);
+  box-shadow: 0 3px 10px -3px rgba(124, 58, 237, 0.6);
+}
+
+/* FAQ — teal */
+.homepage.homepage .home-faq .home-section-title > i {
+  color: #d9fff8;
+  background-image: linear-gradient(140deg, #2dd4bf 0%, #0d9488 48%, #0b4b46 100%);
+  box-shadow: 0 14px 24px -14px rgba(13, 148, 136, 0.85), inset 0 1px 0 rgba(255, 255, 255, 0.34);
+}
+.homepage.homepage .home-faq .home-section-title::after {
+  background: linear-gradient(90deg, rgba(13, 148, 136, 0) 0%, #2dd4bf 24%, #0d9488 50%, #2dd4bf 76%, rgba(13, 148, 136, 0) 100%);
+  box-shadow: 0 3px 10px -3px rgba(13, 148, 136, 0.6);
+}
+
+/* Contact — azure */
+.homepage.homepage .home-contact-strip .home-section-title > i {
+  color: #dcf1ff;
+  background-image: linear-gradient(140deg, #38bdf8 0%, #1a5490 52%, #0b2545 100%);
+  box-shadow: 0 14px 24px -14px rgba(26, 84, 144, 0.9), inset 0 1px 0 rgba(255, 255, 255, 0.34);
+}
+.homepage.homepage .home-contact-strip .home-section-title::after {
+  background: linear-gradient(90deg, rgba(26, 84, 144, 0) 0%, #38bdf8 24%, #1a5490 50%, #38bdf8 76%, rgba(26, 84, 144, 0) 100%);
+  box-shadow: 0 3px 10px -3px rgba(26, 84, 144, 0.55);
+}
+
+/* The intro panel carries its own gold edge — keep its title solid + clean. */
+.homepage.homepage .home-intro-content .home-section-title {
+  padding-bottom: 0;
+  background-image: none;
+  color: var(--home-ink);
+  -webkit-text-fill-color: currentColor;
+}
+.homepage.homepage .home-intro-content .home-section-title::after {
+  display: none;
+}
+
+/* Eyebrow → gold pill. */
+.homepage.homepage .home-section-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin: 0 0 0.55rem;
+  padding: 0.3rem 0.78rem;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.16em;
+  color: #55400a;
+  background: var(--hx-grad-gold);
+  box-shadow: 0 8px 18px -10px rgba(201, 162, 39, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.65);
+}
+
+.homepage.homepage .home-section-eyebrow::after {
+  display: none;
+}
+
+/* View-all link keeps the blue/gold pairing. */
+.homepage.homepage .home-view-all,
+.homepage.homepage .home-text-link,
+.homepage.homepage .home-contact-page-link {
+  color: var(--hx-blue-600);
+  font-weight: 700;
+}
+.homepage.homepage .home-view-all:hover,
+.homepage.homepage .home-text-link:hover,
+.homepage.homepage .home-contact-page-link:hover {
+  color: var(--hx-gold-600);
+}
+
+/* ============================================================================
+   5. STAT CARDS — three hues on one navy glass base
+   ========================================================================== */
+
+.homepage.homepage .home-stat-card {
+  position: relative;
+  border-radius: var(--home-radius-sm);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  background-image:
+    radial-gradient(120% 90% at 50% -18%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 56%),
+    linear-gradient(158deg, #050f1f 0%, #0b2545 52%, #10314f 100%);
+  box-shadow: 0 20px 42px -22px rgba(3, 10, 22, 0.9),
+    inset 0 1px 0 rgba(255, 255, 255, 0.07);
+  overflow: hidden;
+}
+
+.homepage.homepage .home-stat-card--graduates {
+  background-image:
+    radial-gradient(120% 90% at 50% -18%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 56%),
+    radial-gradient(90% 80% at 100% 118%, rgba(56, 189, 248, 0.32) 0%, rgba(56, 189, 248, 0) 60%),
+    linear-gradient(158deg, #050f1f 0%, #0b2a4c 52%, #103a5f 100%);
+}
+
+.homepage.homepage .home-stat-card--enrolled {
+  background-image:
+    radial-gradient(120% 90% at 50% -18%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 56%),
+    radial-gradient(90% 80% at 100% 118%, rgba(52, 211, 153, 0.3) 0%, rgba(52, 211, 153, 0) 60%),
+    linear-gradient(158deg, #050f1f 0%, #0b2a45 52%, #0f3a52 100%);
+}
+
+.homepage.homepage .home-stat-card--year {
+  background-image:
+    radial-gradient(120% 90% at 50% -18%, rgba(255, 255, 255, 0.12) 0%, rgba(255, 255, 255, 0) 56%),
+    radial-gradient(90% 80% at 100% 118%, rgba(251, 191, 36, 0.3) 0%, rgba(251, 191, 36, 0) 60%),
+    linear-gradient(158deg, #0a1120 0%, #1f2a17 52%, #123a63 100%);
+}
+
+/* Accent bar on top — one hue per card. */
+.homepage.homepage .home-stat-card::before,
+.homepage.homepage .home-stat-card--graduates::before,
+.homepage.homepage .home-stat-card--enrolled::before,
+.homepage.homepage .home-stat-card--year::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 5px;
+  opacity: 1;
+}
+.homepage.homepage .home-stat-card--graduates::before {
+  background: linear-gradient(90deg, #38bdf8, #1a5490);
+}
+.homepage.homepage .home-stat-card--enrolled::before {
+  background: linear-gradient(90deg, #34d399, #0d9488);
+}
+.homepage.homepage .home-stat-card--year::before {
+  background: var(--hx-grad-gold);
+}
+
+/* Icon rings. */
+.homepage.homepage .home-stat-card .home-stat-icon,
+.homepage.homepage .home-stat-card--graduates .home-stat-icon,
+.homepage.homepage .home-stat-card--enrolled .home-stat-icon,
+.homepage.homepage .home-stat-card--year .home-stat-icon {
+  color: #eaf4ff;
+  background: rgba(255, 255, 255, 0.09);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.18);
+  transition: transform 0.3s var(--hx-ease), background 0.3s var(--hx-ease),
+    box-shadow 0.3s var(--hx-ease);
+}
+.homepage.homepage .home-stat-card--graduates .home-stat-icon {
+  color: #c7e9ff;
+  background: rgba(56, 189, 248, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(56, 189, 248, 0.5);
+}
+.homepage.homepage .home-stat-card--enrolled .home-stat-icon {
+  color: #b6f5db;
+  background: rgba(52, 211, 153, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(52, 211, 153, 0.5);
+}
+.homepage.homepage .home-stat-card--year .home-stat-icon {
+  color: #ffe9a8;
+  background: rgba(251, 191, 36, 0.16);
+  box-shadow: inset 0 0 0 1px rgba(251, 191, 36, 0.5);
+}
+.homepage.homepage .home-stat-card:hover .home-stat-icon {
+  transform: scale(1.08);
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Numbers — hue-tinted gradient glyphs. */
+.homepage.homepage .home-stat-card .home-stat-number,
+.homepage.homepage .home-stat-card--graduates .home-stat-number,
+.homepage.homepage .home-stat-card--enrolled .home-stat-number,
+.homepage.homepage .home-stat-card--year .home-stat-number {
+  font-family: var(--home-font-display);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+}
+.homepage.homepage .home-stat-card--graduates .home-stat-number {
+  background-image: linear-gradient(180deg, #f2faff 0%, #a9d8ff 100%);
+  text-shadow: 0 0 26px rgba(56, 189, 248, 0.4);
+}
+.homepage.homepage .home-stat-card--enrolled .home-stat-number {
+  background-image: linear-gradient(180deg, #f0fff8 0%, #86efac 100%);
+  text-shadow: 0 0 26px rgba(52, 211, 153, 0.4);
+}
+.homepage.homepage .home-stat-card--year .home-stat-number {
+  background-image: linear-gradient(180deg, #fff9e3 0%, #fbe08a 100%);
+  text-shadow: 0 0 26px rgba(251, 191, 36, 0.45);
+}
+
+.homepage.homepage .home-stat-card .home-stat-label {
+  color: #dce7f6;
+  font-weight: 600;
+}
+
+.homepage.homepage .home-stat-card .home-stat-label-en,
+.homepage.homepage .home-stat-card .home-stat-meta {
+  color: #9fb3ce;
+}
+
+/* Hover: lift + hue ring. */
+.homepage.homepage .home-stat-card--graduates:hover {
+  border-color: rgba(56, 189, 248, 0.6);
+  box-shadow: 0 28px 52px -22px rgba(3, 10, 22, 0.9), 0 0 0 1px rgba(56, 189, 248, 0.4);
+}
+.homepage.homepage .home-stat-card--enrolled:hover {
+  border-color: rgba(52, 211, 153, 0.6);
+  box-shadow: 0 28px 52px -22px rgba(3, 10, 22, 0.9), 0 0 0 1px rgba(52, 211, 153, 0.4);
+}
+.homepage.homepage .home-stat-card--year:hover {
+  border-color: rgba(251, 191, 36, 0.6);
+  box-shadow: 0 28px 52px -22px rgba(3, 10, 22, 0.9), 0 0 0 1px rgba(251, 191, 36, 0.45);
+}
+.homepage.homepage .home-stat-card:hover {
+  transform: translateY(-4px);
+}
+
+/* ============================================================================
+   6. INTRO PANEL
+   ========================================================================== */
+
+.homepage.homepage .home-framed-panel.home-intro-panel {
+  background: linear-gradient(160deg, #ffffff 0%, #fbf7ef 62%, #f6efe0 100%);
+  border-color: var(--home-card-border-color);
+  border-radius: var(--home-radius);
+  box-shadow: var(--home-frame-shadow-elevated);
+  overflow: hidden;
+}
+
+.homepage .home-intro-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0 auto 0 0;
+  width: 5px;
+  background: var(--hx-grad-gold);
+}
+
+.homepage .home-intro-rector .home-intro-rector-frame {
+  box-shadow: 0 12px 26px -12px rgba(15, 45, 82, 0.55),
+    0 0 0 1px rgba(201, 162, 39, 0.4);
+}
+
+.homepage.homepage .home-intro-rector-name {
+  color: var(--home-ink);
+}
+
+/* ============================================================================
+   7. ANNOUNCEMENTS — cycling spectrum accent
+   ========================================================================== */
+
+.homepage.homepage .home-announce-item {
+  position: relative;
+  background: #ffffff;
+  border: 1px solid var(--home-card-border-color);
+  border-radius: var(--home-radius-sm);
+  box-shadow: var(--home-frame-shadow);
+  overflow: hidden;
+  transition: transform 0.3s var(--hx-ease), box-shadow 0.3s var(--hx-ease),
+    border-color 0.3s var(--hx-ease);
+}
+
+.homepage.homepage .home-announce-item::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 4px;
+}
+.homepage.homepage .home-announce-item:nth-child(3n + 1)::before {
+  background: linear-gradient(90deg, #fb7185, #e11d48);
+}
+.homepage.homepage .home-announce-item:nth-child(3n + 2)::before {
+  background: linear-gradient(90deg, #38bdf8, #1a5490);
+}
+.homepage.homepage .home-announce-item:nth-child(3n + 3)::before {
+  background: var(--hx-grad-gold);
+}
+
+.homepage.homepage .home-announce-item:nth-child(3n + 1) {
+  background-image: radial-gradient(120% 100% at 100% 0%, rgba(251, 113, 133, 0.09) 0%, rgba(251, 113, 133, 0) 60%);
+}
+.homepage.homepage .home-announce-item:nth-child(3n + 2) {
+  background-image: radial-gradient(120% 100% at 100% 0%, rgba(56, 189, 248, 0.09) 0%, rgba(56, 189, 248, 0) 60%);
+}
+.homepage.homepage .home-announce-item:nth-child(3n + 3) {
+  background-image: radial-gradient(120% 100% at 100% 0%, rgba(201, 162, 39, 0.1) 0%, rgba(201, 162, 39, 0) 60%);
+}
+
+.homepage.homepage .home-announce-item:hover {
+  transform: translateY(-4px);
+  border-color: rgba(26, 84, 144, 0.22);
+  box-shadow: var(--home-frame-shadow-hover);
+}
+
+.homepage.homepage .home-announce-meta time {
+  background: rgba(26, 84, 144, 0.1);
+  color: var(--hx-blue-600);
+  font-weight: 700;
+}
+
+.homepage.homepage .home-announce-title {
+  color: var(--home-ink);
+}
+
+.homepage.homepage .home-announce-readmore {
+  color: var(--hx-blue-600);
+  font-weight: 700;
+}
+.homepage.homepage .home-announce-readmore:hover {
+  color: var(--hx-gold-600);
+}
+
+/* ============================================================================
+   8. ADMISSIONS CTA — jewelled navy band
+   ========================================================================== */
+
+.homepage.homepage .home-admissions-cta .home-admissions-cta__frame {
+  background-color: var(--hx-navy-950);
+  background-image:
+    radial-gradient(80% 120% at 88% -10%, rgba(201, 162, 39, 0.42) 0%, rgba(201, 162, 39, 0) 55%),
+    radial-gradient(70% 110% at -8% 112%, rgba(45, 123, 196, 0.5) 0%, rgba(45, 123, 196, 0) 58%),
+    radial-gradient(60% 90% at 72% 120%, rgba(167, 139, 250, 0.32) 0%, rgba(167, 139, 250, 0) 60%),
+    linear-gradient(140deg, #040c19 0%, #0b2545 46%, #123a63 74%, #1a5490 100%);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  color: #e6eefb;
+  box-shadow: 0 34px 66px -36px rgba(4, 12, 25, 0.95),
+    inset 0 1px 0 rgba(255, 255, 255, 0.09);
+}
+
+.homepage.homepage .home-admissions-cta .home-admissions-cta__frame::before {
+  width: 5px;
+  opacity: 1;
+  background: var(--hx-grad-gold);
+}
+
+.homepage.homepage .home-admissions-cta .home-section-eyebrow {
+  color: #5a4409;
+}
+
+.homepage.homepage .home-admissions-cta__title {
+  color: #ffffff;
+}
+
+.homepage.homepage .home-admissions-cta__lead {
+  color: rgba(226, 236, 250, 0.92);
+}
+
+.homepage.homepage .home-admissions-cta__lead-en {
+  color: rgba(200, 214, 234, 0.86);
+}
+
+.homepage.homepage .home-admissions-cta .home-admissions-steps li {
+  color: #dbe6f5;
+}
+
+.homepage.homepage .home-admissions-cta .home-admissions-steps li span {
+  background: var(--hx-grad-gold);
+  color: #3a2a05;
+  box-shadow: 0 8px 18px -8px rgba(201, 162, 39, 0.9);
+}
+
+/* Buttons: gold primary, glass secondary, azure download, emerald phone. */
+.homepage.homepage .home-admissions-cta .home-admissions-btn {
+  color: #ffffff;
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.32);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+.homepage.homepage .home-admissions-cta .home-admissions-btn:hover {
+  background: rgba(255, 255, 255, 0.16);
+  border-color: var(--hx-gold-400);
+  color: #ffffff;
+  box-shadow: 0 12px 26px -14px rgba(0, 0, 0, 0.72), 0 0 0 1px rgba(201, 162, 39, 0.34);
+}
+
+.homepage.homepage .home-admissions-cta .home-admissions-btn--primary {
+  background: var(--hx-grad-gold);
+  color: #2a1f04;
+  border-color: transparent;
+  box-shadow: 0 16px 32px -14px rgba(201, 162, 39, 0.88);
+}
+.homepage.homepage .home-admissions-cta .home-admissions-btn--primary:hover {
+  background: linear-gradient(120deg, #fdf4d3 0%, #e0bb4a 52%, #c39b23 100%);
+  color: #241a03;
+}
+
+.homepage.homepage .home-admissions-cta .home-admissions-btn--download {
+  border-color: rgba(56, 189, 248, 0.6);
+  background: rgba(56, 189, 248, 0.14);
+  color: #dcf1ff;
+}
+.homepage.homepage .home-admissions-cta .home-admissions-btn--download:hover {
+  background: rgba(56, 189, 248, 0.26);
+  border-color: #38bdf8;
+  color: #ffffff;
+}
+
+.homepage.homepage .home-admissions-cta .home-admissions-btn--phone {
+  border-color: rgba(52, 211, 153, 0.6);
+  background: rgba(52, 211, 153, 0.14);
+  color: #d8fff0;
+}
+.homepage.homepage .home-admissions-cta .home-admissions-btn--phone:hover {
+  background: rgba(52, 211, 153, 0.26);
+  border-color: #34d399;
+  color: #ffffff;
+}
+
+/* ============================================================================
+   9. GALLERY
+   ========================================================================== */
+
+.homepage.homepage .home-gallery-item {
+  border-radius: var(--home-radius-sm);
+  overflow: hidden;
+  transition: transform 0.35s var(--hx-ease), box-shadow 0.35s var(--hx-ease),
+    border-color 0.35s var(--hx-ease);
+}
+
+.homepage.homepage .home-gallery-item:hover {
+  border-color: rgba(167, 139, 250, 0.6);
+  box-shadow: 0 26px 48px -22px rgba(76, 29, 149, 0.55),
+    0 0 0 1px rgba(124, 58, 237, 0.35);
+  transform: translateY(-4px);
+}
+
+.homepage.homepage .home-gallery-item__media::after {
+  background: linear-gradient(
+    180deg,
+    rgba(11, 37, 69, 0) 30%,
+    rgba(76, 29, 149, 0.34) 70%,
+    rgba(4, 12, 25, 0.62) 100%
+  );
+  opacity: 0;
+  transition: opacity 0.35s var(--hx-ease);
+}
+.homepage.homepage .home-gallery-item:hover .home-gallery-item__media::after {
+  opacity: 1;
+}
+
+.homepage.homepage .home-gallery-caption {
+  background: #faf6ee;
+  border-top-color: var(--home-card-border-color);
+  color: var(--home-ink);
+}
+
+/* ============================================================================
+   10. LEADERSHIP
+   ========================================================================== */
+
+.homepage.homepage .admin-card--named {
+  border-radius: var(--home-radius-sm);
+  overflow: hidden;
+  transition: transform 0.3s var(--hx-ease), box-shadow 0.3s var(--hx-ease),
+    border-color 0.3s var(--hx-ease);
+}
+
+.homepage.homepage .admin-card--named:hover {
+  transform: translateY(-4px);
+  border-color: rgba(201, 162, 39, 0.55);
+  box-shadow: 0 26px 48px -22px rgba(138, 109, 22, 0.5),
+    0 0 0 1px rgba(201, 162, 39, 0.32);
+}
+
+.homepage.homepage .admin-card--named .admin-name {
+  color: var(--home-ink);
+}
+
+/* ============================================================================
+   11. FAQ
+   ========================================================================== */
+
+.homepage.homepage .home-faq-item {
+  border-radius: var(--home-radius-sm);
+  background: #ffffff;
+  border: 1px solid var(--home-card-border-color);
+  box-shadow: var(--home-frame-shadow);
+  transition: transform 0.3s var(--hx-ease), box-shadow 0.3s var(--hx-ease),
+    border-color 0.3s var(--hx-ease);
+}
+
+.homepage.homepage .home-faq-item:hover {
+  border-color: rgba(13, 148, 136, 0.35);
+  box-shadow: var(--home-frame-shadow-hover);
+}
+
+.homepage.homepage .home-faq-item.is-open {
+  border-color: rgba(201, 162, 39, 0.5);
+  box-shadow: 0 3px 16px rgba(26, 84, 144, 0.1),
+    0 0 0 1px rgba(201, 162, 39, 0.25);
+}
+
+.homepage.homepage .home-faq-chevron.is-open {
+  color: var(--hx-teal);
+}
+
+.homepage.homepage .home-faq-category {
+  background: rgba(45, 212, 191, 0.16);
+  color: #0b4b46;
+}
+
+/* ============================================================================
+   12. CONTACT CARDS — one hue per channel
+   ========================================================================== */
+
+/* Kept at 0,3,0 so the per-channel rules below (also 0,3,0, declared later)
+   always win the background/border-top overrides. */
+.homepage.homepage .home-contact-card {
+  background: #ffffff;
+  border: 1px solid var(--home-card-border-color);
+  border-radius: var(--home-radius-sm);
+  box-shadow: var(--home-frame-shadow);
+  transition: transform 0.3s var(--hx-ease), box-shadow 0.3s var(--hx-ease),
+    border-color 0.3s var(--hx-ease);
+}
+
+.homepage.homepage .home-contact-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Per-channel top edge + soft wash. */
+.homepage.homepage .home-contact-card--phone {
+  border-top: 4px solid #2d9cdb;
+  background-image: radial-gradient(120% 90% at 50% 0%, rgba(45, 156, 219, 0.1) 0%, rgba(45, 156, 219, 0) 62%);
+}
+.homepage.homepage .home-contact-card--email {
+  border-top: 4px solid #6366f1;
+  background-image: radial-gradient(120% 90% at 50% 0%, rgba(99, 102, 241, 0.1) 0%, rgba(99, 102, 241, 0) 62%);
+}
+.homepage.homepage .home-contact-card--whatsapp {
+  border-top: 4px solid #22c55e;
+  background-image: radial-gradient(120% 90% at 50% 0%, rgba(34, 197, 94, 0.1) 0%, rgba(34, 197, 94, 0) 62%);
+}
+.homepage.homepage .home-contact-card--location {
+  border-top: 4px solid #e0bb4a;
+  background-image: radial-gradient(120% 90% at 50% 0%, rgba(224, 187, 74, 0.12) 0%, rgba(224, 187, 74, 0) 62%);
+}
+
+.homepage.homepage .home-contact-card--phone:hover {
+  box-shadow: 0 26px 46px -22px rgba(45, 156, 219, 0.5), 0 0 0 1px rgba(45, 156, 219, 0.28);
+}
+.homepage.homepage .home-contact-card--email:hover {
+  box-shadow: 0 26px 46px -22px rgba(99, 102, 241, 0.5), 0 0 0 1px rgba(99, 102, 241, 0.28);
+}
+.homepage.homepage .home-contact-card--whatsapp:hover {
+  box-shadow: 0 26px 46px -22px rgba(34, 197, 94, 0.5), 0 0 0 1px rgba(34, 197, 94, 0.28);
+}
+.homepage.homepage .home-contact-card--location:hover {
+  box-shadow: 0 26px 46px -22px rgba(201, 162, 39, 0.5), 0 0 0 1px rgba(201, 162, 39, 0.3);
+}
+
+/* Icon tiles — matching gradients.  (Selector kept at 0,3,0 so the
+   per-channel rules below win the colour/background.) */
+.homepage.homepage .home-contact-card-icon {
+  color: #ffffff;
+  box-shadow: 0 12px 22px -12px rgba(11, 37, 69, 0.7),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+.homepage.homepage .home-contact-card-icon--phone {
+  background: linear-gradient(140deg, #38bdf8 0%, #1a5490 100%);
+}
+.homepage.homepage .home-contact-card-icon--email {
+  background: linear-gradient(140deg, #818cf8 0%, #4338ca 100%);
+}
+.homepage.homepage .home-contact-card-icon--whatsapp {
+  background: linear-gradient(140deg, #4ade80 0%, #15803d 100%);
+}
+.homepage.homepage .home-contact-card-icon--location {
+  background: var(--hx-grad-gold);
+  color: #4a3707;
+}
+
+.homepage.homepage .home-contact-card .home-contact-label {
+  color: var(--home-ink-muted);
+}
+
+/* ============================================================================
+   13. RESPONSIVE
+   ========================================================================== */
+
+@media (max-width: 640px) {
+  .homepage.homepage .home-section-title > i,
+  .homepage.homepage .administration-title > .administration-title-icon {
+    width: 2.05rem;
+    height: 2.05rem;
+    font-size: 0.9rem;
+    border-radius: 11px;
+  }
+
+  .homepage.homepage .home-section-title,
+  .homepage.homepage .administration-title {
+    padding-bottom: 0.62rem;
+  }
+}
+
+/* ============================================================================
+   14. ACCESSIBILITY — respect reduced motion
+   ========================================================================== */
+
+@media (prefers-reduced-motion: reduce) {
+  .homepage .main-content::after,
+  .homepage .hero-cta--primary::after {
+    animation: none;
+  }
+
+  .homepage .hero-cta,
+  .homepage.homepage .home-stat-card,
+  .homepage.homepage .home-announce-item,
+  .homepage.homepage .home-gallery-item,
+  .homepage.homepage .admin-card--named,
+  .homepage.homepage .home-faq-item,
+  .homepage.homepage .home-contact-card {
+    transition: none;
+  }
+}

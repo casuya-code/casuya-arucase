@@ -87,6 +87,14 @@ const MODULE_GROUPS = [
       { id: 'mkuu_shule_comments', label: 'Mkuu wa Shule Comments', icon: 'fa-crown' },
       { id: 'taaluma_comments', label: 'Taaluma Comments', icon: 'fa-book-open' },
       { id: 'tabia_mwenendo_comments', label: 'Tabia na Mwenendo Comments', icon: 'fa-balance-scale' },
+      { id: 'pre_sala_comments', label: 'PRE-Sala', icon: 'fa-comments' },
+      { id: 'pre_taaluma_comments', label: 'PRE-Taaluma', icon: 'fa-book-open' },
+      { id: 'pre_tabia_comments', label: 'PRE-Tabia', icon: 'fa-user-check' },
+      { id: 'pre_huduma_comments', label: 'PRE-Huduma', icon: 'fa-hands-helping' },
+      { id: 'pre_michezo_comments', label: 'PRE-Michezo', icon: 'fa-running' },
+      { id: 'pre_mwalimu_taaluma_comments', label: 'PRE-Mwalimu wa Taaluma', icon: 'fa-user-graduate' },
+      { id: 'pre_mkuu_shule_comments', label: 'PRE-Mkuu wa Shule', icon: 'fa-crown' },
+      { id: 'pre_tabia_mwenendo_comments', label: 'PRE-Tabia na Mwenendo', icon: 'fa-balance-scale' },
     ],
   },
   {
@@ -113,6 +121,8 @@ const MODULE_GROUPS = [
     modules: [
       { id: 'individual_debt', label: 'Individual Debt (View)', icon: 'fa-money-bill-wave' },
       { id: 'fees_announcements', label: 'Fees Announcements (View)', icon: 'fa-bullhorn' },
+      { id: 'pre_form_one_fees', label: 'Pre-Form One Fees', icon: 'fa-money-bill-wave' },
+      { id: 'pre_form_one_debts', label: 'Pre-Form One Debts', icon: 'fa-money-bill-wave' },
       { id: 'student_parishes', label: 'Student Parishes (View)', icon: 'fa-place-of-worship' },
       { id: 'news_announcements', label: 'News & Announcements', icon: 'fa-newspaper' },
     ],

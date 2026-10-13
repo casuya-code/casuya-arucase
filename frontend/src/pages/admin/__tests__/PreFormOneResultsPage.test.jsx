@@ -11,6 +11,8 @@ const { serviceMock, studentsServiceMock, adminAPIMock, toastMock, goBackMock } 
       calculateContinuingResults: vi.fn(),
       downloadInterviewResultsPDF: vi.fn(),
       downloadContinuingResultsPDF: vi.fn(),
+      downloadInterviewParishResultsPDF: vi.fn(),
+      downloadContinuingParishResultsPDF: vi.fn(),
     },
     studentsServiceMock: {
       getPreFormOneStudents: vi.fn(),
@@ -75,6 +77,7 @@ const INTERVIEW_CONFIG = {
   fetchResults: (year, month) => serviceMock.getInterviewResults(year, month),
   calculateResults: (year, month) => serviceMock.calculateInterviewResults(year, month),
   downloadResultsPDF: (year) => serviceMock.downloadInterviewResultsPDF(year),
+  downloadParishResultsPDF: (year) => serviceMock.downloadInterviewParishResultsPDF(year),
   pageTitle: 'Interview Results',
   cardTitle: 'Calculate Results',
   cardIconClass: 'fa-calculator',
@@ -91,6 +94,7 @@ const CONTINUING_CONFIG = {
   fetchResults: (year, month) => serviceMock.getContinuingResults(year, month),
   calculateResults: (year, month) => serviceMock.calculateContinuingResults(year, month),
   downloadResultsPDF: (year) => serviceMock.downloadContinuingResultsPDF(year),
+  downloadParishResultsPDF: (year) => serviceMock.downloadContinuingParishResultsPDF(year),
   pageTitle: 'Continuing Results',
   cardTitle: 'Pre-Form One Continuing Results',
   cardIconClass: 'fa-chart-line',
@@ -151,15 +155,17 @@ async function renderGrid(config) {
     expect(studentsServiceMock.getScoresByYear).toHaveBeenCalledWith('2026', config.scoreType);
   });
   await waitFor(() => {
-    expect(view.container.querySelectorAll('tbody tr')).toHaveLength(STUDENTS.length);
+    expect(view.container.querySelectorAll('.compact-results-table tbody tr')).toHaveLength(
+      STUDENTS.length
+    );
   });
   return view;
 }
 
 function rowCells(container, index) {
-  return Array.from(container.querySelectorAll('tbody tr')[index].querySelectorAll('td')).map((td) =>
-    td.textContent.trim()
-  );
+  return Array.from(
+    container.querySelectorAll('.compact-results-table tbody tr')[index].querySelectorAll('td')
+  ).map((td) => td.textContent.trim());
 }
 
 describe('PreFormOneResultsPage', () => {
@@ -185,9 +191,9 @@ describe('PreFormOneResultsPage', () => {
     expect(container.textContent).toContain('PRE-FORM ONE INTERVIEW RESULTS 2026');
     expect(container.textContent).toContain('Interview Subjects');
 
-    const headerCells = Array.from(container.querySelectorAll('thead th')).map((th) =>
-      th.textContent.trim()
-    );
+    const headerCells = Array.from(container.querySelectorAll('.compact-results-table thead th')).map(
+    (th) => th.textContent.trim()
+  );
     expect(headerCells).toEqual([
       'S/N',
       'First Name',
@@ -344,17 +350,17 @@ describe('PreFormOneResultsPage', () => {
 
     const { container } = renderPage(<PreFormOneResultsPage config={INTERVIEW_CONFIG} />);
     await waitFor(() => {
-      expect(container.querySelectorAll('tbody tr')).toHaveLength(20);
+      expect(container.querySelectorAll('.compact-results-table tbody tr')).toHaveLength(20);
     });
 
     // The interview page used to grow the slice (20 rows, then 40) instead of paging.
     fireEvent.click(screen.getByRole('button', { name: /Next/i }));
 
     await waitFor(() => {
-      expect(container.querySelectorAll('tbody tr')).toHaveLength(5);
+      expect(container.querySelectorAll('.compact-results-table tbody tr')).toHaveLength(5);
     });
-    expect(container.querySelector('.pagination-info').textContent).toContain('Page 2 of 2');
-    expect(container.querySelector('tbody tr td').textContent.trim()).toBe('21');
+    expect(container.querySelector('.pagination-pages .excel-btn[aria-current="page"]').textContent.trim()).toBe('2');
+    expect(container.querySelector('.compact-results-table tbody tr td').textContent.trim()).toBe('21');
   });
 
   it('downloads the PDF through the configured endpoint', async () => {
@@ -382,5 +388,69 @@ describe('PreFormOneResultsPage', () => {
     });
     expect(clickSpy).toHaveBeenCalled();
     expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:results');
+  });
+
+  it('shows the parish results card ranked best-to-last with grade counts', async () => {
+    const view = await renderGrid(INTERVIEW_CONFIG);
+
+    const card = view.container.querySelector('.pfo-parish-results-card');
+    expect(card).not.toBeNull();
+    expect(card.textContent).toContain('Parish Results');
+
+    // Moshi (avg 75) ranks above Arusha (avg 70)
+    const rows = Array.from(card.querySelectorAll('tbody tr')).map((row) =>
+      Array.from(row.querySelectorAll('td')).map((td) => td.textContent.trim())
+    );
+    expect(rows).toEqual([
+      ['1', 'Moshi', '1', '0', '1', '0', '0', '0', '75', 'B'],
+      ['2', 'Arusha', '1', '0', '1', '0', '0', '0', '70', 'B'],
+    ]);
+  });
+
+  it('collapses and expands the parish results card via the dropdown toggle', async () => {
+    const view = await renderGrid(INTERVIEW_CONFIG);
+
+    const toggle = view.container.querySelector('.pfo-parish-results-toggle');
+    const body = view.container.querySelector('#pfo-parish-results-body');
+    expect(toggle).not.toBeNull();
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(body.hasAttribute('hidden')).toBe(false);
+
+    fireEvent.click(toggle);
+
+    expect(toggle.getAttribute('aria-expanded')).toBe('false');
+    expect(body.hasAttribute('hidden')).toBe(true);
+
+    fireEvent.click(toggle);
+
+    expect(toggle.getAttribute('aria-expanded')).toBe('true');
+    expect(body.hasAttribute('hidden')).toBe(false);
+  });
+
+  it('downloads the parish results PDF through the configured endpoint', async () => {
+    serviceMock.downloadInterviewParishResultsPDF.mockResolvedValue({
+      data: new Blob(['%PDF-1.4'], { type: 'application/pdf' }),
+    });
+    Object.defineProperty(URL, 'createObjectURL', {
+      configurable: true,
+      value: vi.fn(() => 'blob:parish'),
+    });
+    Object.defineProperty(URL, 'revokeObjectURL', {
+      configurable: true,
+      value: vi.fn(),
+    });
+    const clickSpy = vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => {});
+
+    await renderGrid(INTERVIEW_CONFIG);
+
+    fireEvent.click(
+      screen.getByRole('button', { name: /Download Parish Results \(PDF\)/i })
+    );
+
+    await waitFor(() => {
+      expect(serviceMock.downloadInterviewParishResultsPDF).toHaveBeenCalledWith('2026');
+    });
+    expect(clickSpy).toHaveBeenCalled();
+    expect(URL.revokeObjectURL).toHaveBeenCalledWith('blob:parish');
   });
 });
