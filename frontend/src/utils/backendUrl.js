@@ -94,6 +94,16 @@ export function getAdmissionFormPreviewUrl() {
   return buildFetchUrl('/public/admission-application-form/download?inline=1');
 }
 
+/** Same-origin API URL that streams the Pre-Form One letter PDF with Content-Disposition: attachment. */
+export function getAdmissionPreformDownloadUrl() {
+  return buildFetchUrl('/public/admission-preform-form/download');
+}
+
+/** Opens the Pre-Form One letter PDF inline in browser (admin preview). */
+export function getAdmissionPreformPreviewUrl() {
+  return buildFetchUrl('/public/admission-preform-form/download?inline=1');
+}
+
 /** Socket.IO server URL (no path). */
 export function getWebSocketUrl() {
   const explicit = import.meta.env.VITE_WS_URL?.trim();

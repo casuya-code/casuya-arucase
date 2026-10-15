@@ -559,6 +559,173 @@ router.delete('/admission-letters', requireModule('admission_letters'), requireR
   }
 });
 
+// ========== ADMISSION PRE-FORM LETTER (public Pre-Form One letter PDF) ==========
+
+async function ensureAdmissionPreformLettersTable() {
+  await query(`
+    CREATE TABLE IF NOT EXISTS admission_preform_letters (
+      id INTEGER PRIMARY KEY DEFAULT 1,
+      file_path VARCHAR(500),
+      original_filename VARCHAR(255),
+      updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+      CONSTRAINT chk_admission_preform_letters_id CHECK (id = 1)
+    )
+  `);
+}
+
+let _admissionPreformLettersStorage = null;
+function getAdmissionPreformLettersStorage() {
+  if (!_admissionPreformLettersStorage) {
+    if (cloudinary.isCloudinaryConfigured()) {
+      console.log('[cloudinary] Creating admissionPreformLettersStorage instance (raw PDF)');
+      _admissionPreformLettersStorage = createCloudinaryStorage({
+        folder: 'admission-preform-letters',
+        allowed_formats: ['pdf'],
+        resource_type: 'raw',
+        publicId: (req, file) => {
+          const safe = (file.originalname || 'pre-form-one-letter.pdf')
+            .replace(/\.pdf$/i, '')
+            .replace(/[^a-zA-Z0-9._-]/g, '_');
+          return `admission-preform-${Date.now()}-${safe}`;
+        },
+        label: 'ADMISSION PRE-FORM LETTERS storage',
+      });
+    } else {
+      console.log('[admission-preform-letters] Cloudinary not configured — using local disk storage');
+      _admissionPreformLettersStorage = multer.diskStorage({
+        destination: async (req, file, cb) => {
+          try {
+            const uploadPath = path.join(__dirname, '../static/uploads/admission-preform-letters');
+            await fs.mkdir(uploadPath, { recursive: true });
+            cb(null, uploadPath);
+          } catch (err) {
+            cb(err, null);
+          }
+        },
+        filename: (req, file, cb) => {
+          const safe = (file.originalname || 'pre-form-one-letter.pdf')
+            .replace(/[^a-zA-Z0-9._-]/g, '_')
+            .replace(/\.pdf$/i, '');
+          cb(null, `admission-preform-${Date.now()}-${safe}.pdf`);
+        },
+      });
+    }
+  }
+  return _admissionPreformLettersStorage;
+}
+
+const admissionPreformLettersUpload = {
+  single: (field) => (req, res, next) => {
+    let storage;
+    try {
+      storage = getAdmissionPreformLettersStorage();
+    } catch (err) {
+      console.error('[admission-preform-letters] storage init failed:', err.message);
+      return res.status(500).json({ message: err.message });
+    }
+    const pdfFilter = (req, file, cb) => {
+      const ext = (path.extname(file.originalname || '') || '').toLowerCase();
+      if (ext === '.pdf') {
+        cb(null, true);
+      } else {
+        cb(new Error('Only PDF files are allowed'));
+      }
+    };
+    return multer({
+      storage,
+      limits: { fileSize: 15 * 1024 * 1024 },
+      fileFilter: pdfFilter,
+    }).single(field)(req, res, next);
+  },
+};
+
+router.get('/admission-preform-letters', requireModule('admission_letters'), requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    await ensureAdmissionPreformLettersTable();
+    const result = await query(
+      'SELECT file_path, original_filename, updated_at FROM admission_preform_letters WHERE id = 1'
+    );
+    const row = result.rows[0];
+    if (!row?.file_path) {
+      return res.json({ form: null });
+    }
+    res.json({ form: row });
+  } catch (error) {
+    return sendError(res, error, 500);
+  }
+});
+
+router.post(
+  '/admission-preform-letters',
+  requireModule('admission_letters'),
+  requireRole('admin', 'superadmin'),
+  admissionPreformLettersUpload.single('pdf_file'),
+  async (req, res) => {
+    try {
+      if (!req.file) {
+        return res.status(400).json({ message: 'No PDF file uploaded' });
+      }
+      await ensureAdmissionPreformLettersTable();
+      const isCloudinaryUpload = /^https?:\/\//i.test(String(req.file.path || ''));
+      const filePath = isCloudinaryUpload
+        ? req.file.path
+        : `uploads/admission-preform-letters/${req.file.filename}`;
+      const originalFilename = req.file.originalname || 'pre-form-one-letter.pdf';
+
+      const existing = await query(
+        'SELECT file_path FROM admission_preform_letters WHERE id = 1'
+      );
+      if (existing.rows[0]?.file_path) {
+        await deleteAdmissionLetterFile(existing.rows[0].file_path);
+      }
+
+      await query(
+        `INSERT INTO admission_preform_letters (id, file_path, original_filename, updated_at)
+         VALUES (1, $1, $2, NOW())
+         ON CONFLICT (id) DO UPDATE SET
+           file_path = EXCLUDED.file_path,
+           original_filename = EXCLUDED.original_filename,
+           updated_at = NOW()`,
+        [filePath, originalFilename]
+      );
+
+      clearCachePattern('public');
+      res.json({
+        message: 'Pre-Form One letter PDF uploaded successfully',
+        form: { file_path: filePath, original_filename: originalFilename },
+      });
+    } catch (error) {
+      if (req.file?.path && !/^https?:\/\//i.test(String(req.file.path))) {
+        await fs.unlink(req.file.path).catch(() => {});
+      }
+      return sendError(res, error, 500);
+    }
+  }
+);
+
+router.delete('/admission-preform-letters', requireModule('admission_letters'), requireRole('admin', 'superadmin'), async (req, res) => {
+  try {
+    await ensureAdmissionPreformLettersTable();
+    const existing = await query('SELECT file_path FROM admission_preform_letters WHERE id = 1');
+    const oldPath = existing.rows[0]?.file_path;
+    if (oldPath) {
+      await deleteAdmissionLetterFile(oldPath);
+    }
+    await query(
+      `INSERT INTO admission_preform_letters (id, file_path, original_filename, updated_at)
+       VALUES (1, NULL, NULL, NOW())
+       ON CONFLICT (id) DO UPDATE SET
+         file_path = NULL,
+         original_filename = NULL,
+         updated_at = NOW()`
+    );
+    clearCachePattern('public');
+    res.json({ message: 'Pre-Form One letter PDF removed' });
+  } catch (error) {
+    return sendError(res, error, 500);
+  }
+});
+
 // Configure multer for file uploads (for non-photo uploads)
 // Use sync fs operations for multer destination to avoid async issues
 

@@ -205,5 +205,13 @@ export const adminAPI = {
       headers: { 'Content-Type': 'multipart/form-data' },
     }),
   deleteAdmissionLettersForm: () => api.delete('/admin/admission-letters'),
+
+  // Admission Pre-Form One letter PDF (homepage Pre-Form One download)
+  getAdmissionPreformLettersForm: () => api.get('/admin/admission-preform-letters'),
+  uploadAdmissionPreformLettersForm: (formData) =>
+    api.post('/admin/admission-preform-letters', formData, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    }),
+  deleteAdmissionPreformLettersForm: () => api.delete('/admin/admission-preform-letters'),
 };
 

@@ -9,7 +9,7 @@ import DOMPurify from 'dompurify';
 import SkeletonLoader from '../../components/common/SkeletonLoader';
 import PublicLayout from '../../components/layout/PublicLayout';
 import { publicAPI } from '../../services/public';
-import { getAdmissionFormDownloadUrl, resolveStaticUrl } from '../../utils/backendUrl';
+import { getAdmissionFormDownloadUrl, getAdmissionPreformDownloadUrl, resolveStaticUrl } from '../../utils/backendUrl';
 import { heroImageSources, galleryThumbUrl } from '../../utils/cloudinaryImage';
 import './HomePage.css';
 import { PublicCmsHtml, usePublicPage } from '../../components/public/PublicCmsPage';
@@ -79,6 +79,7 @@ const HomePage = () => {
           announcements: [],
           school_stats: { graduates_since_1967: 0, current_students: 0, academic_year: null },
           admission_application_form: null,
+          admission_preform_form: null,
         };
       }
     },
@@ -97,6 +98,7 @@ const HomePage = () => {
     announcements = [],
     school_stats = {},
     admission_application_form: admissionForm = null,
+    admission_preform_form: admissionPreformForm = null,
   } = actualData;
 
   const admissionFormUrl = admissionForm?.download_url
@@ -104,6 +106,12 @@ const HomePage = () => {
     : null;
   const admissionFormDownloadName =
     admissionForm?.original_filename || 'fomu-ya-maombi.pdf';
+
+  const admissionPreformUrl = admissionPreformForm?.download_url
+    ? getAdmissionPreformDownloadUrl()
+    : null;
+  const admissionPreformDownloadName =
+    admissionPreformForm?.original_filename || 'fomu-ya-pre-form-one.pdf';
 
   const _schoolName = settingValue(settings, 'school_name');
   const rectorStatement = settingValue(settings, 'rector_statement');
@@ -488,6 +496,18 @@ const HomePage = () => {
                   <i className="fas fa-file-pdf" aria-hidden />
                   <span className="home-admissions-btn__label">
                     Pakua Fomu ya Maombi
+                  </span>
+                </a>
+              )}
+              {admissionPreformUrl && (
+                <a
+                  href={admissionPreformUrl}
+                  className="home-admissions-btn home-admissions-btn--download"
+                  download={admissionPreformDownloadName}
+                >
+                  <i className="fas fa-file-pdf" aria-hidden />
+                  <span className="home-admissions-btn__label">
+                    Pakua Fomu ya Pre-Form One
                   </span>
                 </a>
               )}

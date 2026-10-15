@@ -16,7 +16,7 @@ const { normalizeStream } = require('../utils/streamNormalizer');
 const { getReportRankings } = require('../utils/reportRankings');
 const { sendError } = require('../utils/safeError');
 const { resolvePublicPageSlug } = require('../utils/publicPageSlugs');
-const { getAdmissionApplicationFormRow, streamAdmissionApplicationPdf } = require('../utils/admissionApplicationForm');
+const { getAdmissionApplicationFormRow, streamAdmissionApplicationPdf, getAdmissionPreformLetterRow, streamAdmissionPreformPdf } = require('../utils/admissionApplicationForm');
 const { cacheRoutes } = require('../middleware/cache');
 const { JWT_SECRET } = require('../middleware/auth');
 const bcrypt = require('bcryptjs');
@@ -244,6 +244,14 @@ router.get('/homepage', async (req, res) => {
           download_url: '/public/admission-application-form/download',
         }
       : null;
+
+    const admissionPreformRow = await getAdmissionPreformLetterRow();
+    const admission_preform_form = admissionPreformRow?.file_path
+      ? {
+          original_filename: admissionPreformRow.original_filename,
+          download_url: '/public/admission-preform-form/download',
+        }
+      : null;
     
     res.setHeader('Cache-Control', 'public, max-age=60'); // 1 min cache for fast repeat loads on slow/mobile
     res.json({
@@ -254,6 +262,7 @@ router.get('/homepage', async (req, res) => {
       announcements,
       school_stats,
       admission_application_form,
+      admission_preform_form,
     });
   } catch (error) {
     console.error('Homepage error:', error);
@@ -271,6 +280,22 @@ router.get('/admission-application-form/download', async (req, res) => {
     await streamAdmissionApplicationPdf(res, { inline });
   } catch (error) {
     console.error('[admission-form] download error:', error);
+    if (!res.headersSent) {
+      return sendError(res, error, 500);
+    }
+  }
+});
+
+/** Stream the Pre-Form One letter PDF as application/pdf (attachment or inline preview). */
+router.get('/admission-preform-form/download', async (req, res) => {
+  try {
+    const inline =
+      req.query.inline === '1' ||
+      req.query.inline === 'true' ||
+      req.query.disposition === 'inline';
+    await streamAdmissionPreformPdf(res, { inline });
+  } catch (error) {
+    console.error('[admission-preform] download error:', error);
     if (!res.headersSent) {
       return sendError(res, error, 500);
     }
