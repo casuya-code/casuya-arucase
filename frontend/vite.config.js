@@ -97,6 +97,10 @@ export default defineConfig({
     },
   ],
   server: {
+    // Bind to all interfaces so the dev server is reachable on both IPv4 (127.0.0.1)
+    // and IPv6 (::1). Without this Vite binds ::1 only on Windows, which makes
+    // http://127.0.0.1:3001 fail with ERR_CONNECTION_REFUSED.
+    host: true,
     port: 3001,
     hmr: {
       clientPort: 3001,
