@@ -1,7 +1,7 @@
 /**
  * Admission Letters — upload the PDFs shown on the homepage Udahili card.
- *  - Admission Application Form → homepage "Pakua Fomu ya Maombi"
- *  - Admission Pre-Form One     → homepage "Pakua Fomu ya Pre-Form One"
+ *  - Admission Application Form → homepage "Pakua Fomu ya Kujiunga Form Five"
+ *  - Admission Pre-Form One     → homepage "Pakua Fomu ya Kujiunga Form One"
  */
 import { useRef, useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';

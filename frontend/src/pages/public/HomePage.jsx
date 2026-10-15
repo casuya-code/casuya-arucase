@@ -495,7 +495,7 @@ const HomePage = () => {
                 >
                   <i className="fas fa-file-pdf" aria-hidden />
                   <span className="home-admissions-btn__label">
-                    Pakua Fomu ya Maombi
+                    Pakua Fomu ya Kujiunga Form Five
                   </span>
                 </a>
               )}
@@ -507,7 +507,7 @@ const HomePage = () => {
                 >
                   <i className="fas fa-file-pdf" aria-hidden />
                   <span className="home-admissions-btn__label">
-                    Pakua Fomu ya Pre-Form One
+                    Pakua Fomu ya Kujiunga Form One
                   </span>
                 </a>
               )}
