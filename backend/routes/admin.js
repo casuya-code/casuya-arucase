@@ -2111,13 +2111,16 @@ router.post('/promotion/execute', requireModule('promotion'), async (req, res) =
         const newIndex = newIndexMap[student.adm_no];
         
         if (oldIndex !== undefined && newIndex !== undefined) {
+          // Photos are keyed by adm_no, so a promoted student keeps their photo even
+          // though their position in the sorted class list changes.
           await client.query(
-            `INSERT INTO student_photos (level, stream, year, student_index, photo_filename)
-             SELECT $1, $2, $3, $4, photo_filename
-             FROM student_photos
-             WHERE level = $5 AND stream = $6 AND year = $7 AND student_index = $8`,
-            [normalizedToLevel, normalizedToStream, parseInt(to_year), newIndex, 
-             normalizedFromLevel, normalizedFromStream, parseInt(from_year), oldIndex]
+            `INSERT INTO student_photos (level, stream, year, student_index, adm_no, photo_filename, cloudinary_public_id)
+             SELECT $1, $2, $3, $4, sp.adm_no, sp.photo_filename, sp.cloudinary_public_id
+             FROM student_photos sp
+             WHERE sp.level = $5 AND sp.stream = $6 AND sp.year = $7 AND sp.adm_no = $8
+             ON CONFLICT (level, stream, year, adm_no) DO NOTHING`,
+            [normalizedToLevel, normalizedToStream, parseInt(to_year), newIndex,
+             normalizedFromLevel, normalizedFromStream, parseInt(from_year), student.adm_no]
           );
           
           // Batch copy parish

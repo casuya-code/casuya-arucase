@@ -1313,10 +1313,11 @@ async function generatePhotoEntryFormPDF(level, stream, year, month = null, term
       photosParams.push(parseInt(year));
 
       const photosResult = await query(photosQuery, photosParams);
+      // Keyed by adm_no so the photo follows the student, not their class position.
       const photoMap = {};
       photosResult.rows.forEach(photo => {
-        if (photo.student_index != null && photo.photo_filename) {
-          photoMap[photo.student_index] = photo.photo_filename;
+        if (photo.adm_no && photo.photo_filename) {
+          photoMap[photo.adm_no] = photo.photo_filename;
         }
       });
 
@@ -1371,7 +1372,7 @@ async function generatePhotoEntryFormPDF(level, stream, year, month = null, term
       const drawStudentCell = async (student, index, col, row, gridStartY) => {
         const x = marginX + col * cellWidth;
         const y = gridStartY + row * cellHeight;
-        const photoFilename = photoMap[index];
+        const photoFilename = photoMap[student.adm_no];
         const innerPad = 5;
         const innerX = x + innerPad;
         const innerW = cellWidth - innerPad * 2;

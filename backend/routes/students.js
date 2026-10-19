@@ -1697,24 +1697,25 @@ router.get('/photos/list', async (req, res) => {
 });
 
 // Get student photo
+// Keyed by adm_no: a photo belongs to a student, not to their position in the sorted class list.
 router.get('/:admNo/photo', async (req, res) => {
   try {
     const { admNo } = req.params;
-    const { level, stream, year, student_index } = req.query;
-    
-    if (!level || !stream || !year || (student_index == null || student_index === '')) {
-      return res.status(400).json({ message: 'level, stream, year, and student_index are required' });
+    const { level, stream, year } = req.query;
+
+    if (!level || !stream || !year) {
+      return res.status(400).json({ message: 'level, stream, and year are required' });
     }
-    
+
     const result = await query(
-      `SELECT * FROM student_photos WHERE level = $1 AND stream = $2 AND year = $3 AND student_index = $4`,
-      [level, stream, parseInt(year), parseInt(student_index)]
+      `SELECT * FROM student_photos WHERE level = $1 AND stream = $2 AND year = $3 AND adm_no = $4 ORDER BY id LIMIT 1`,
+      [level, stream, parseInt(year), admNo]
     );
-    
+
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Photo not found' });
     }
-    
+
     res.json({ photo: result.rows.length > 0 ? result.rows[0] : null });
   } catch (error) {
     return sendError(res, error, 500);
@@ -1725,7 +1726,7 @@ router.get('/:admNo/photo', async (req, res) => {
 router.post('/:admNo/photo', upload.single('photo'), async (req, res) => {
   try {
     const { admNo } = req.params;
-    let { level, stream, year, student_index } = req.body;
+    let { level, stream, year } = req.body;
 
     // Per-user rate limit (production: 30/min; development: 20/hour)
     const uploaderUsername = req.user?.user_id || req.user?.username || 'unknown';
@@ -1743,8 +1744,16 @@ router.post('/:admNo/photo', upload.single('photo'), async (req, res) => {
       return res.status(400).json({ message: 'No photo uploaded' });
     }
 
-    if (!level || !stream || !year || (student_index == null || student_index === '')) {
-      return res.status(400).json({ message: 'level, stream, year, and student_index are required' });
+    if (!level || !stream || !year) {
+      return res.status(400).json({ message: 'level, stream, and year are required' });
+    }
+
+    // Photos belong to the student named in the URL. Legacy clients may still send
+    // student_index — it is ignored, because a position shifts whenever the roster changes.
+    const admNoNormalized = String(admNo || '').trim();
+    if (!admNoNormalized) {
+      if (req.file?.path) await fs.unlink(req.file.path).catch(() => {});
+      return res.status(400).json({ message: 'Missing admission number' });
     }
 
     // Normalize level and stream to match students table and photos/list
@@ -1792,11 +1801,11 @@ router.post('/:admNo/photo', upload.single('photo'), async (req, res) => {
       await fs.unlink(req.file.path).catch(() => {});
     } catch (_) {}
 
-    // Check if photo already exists for this student_index
+    // Check if photo already exists for this student
     const existingPhoto = await query(
       `SELECT id, photo_filename, cloudinary_public_id FROM student_photos
-       WHERE level = $1 AND stream = $2 AND year = $3 AND student_index = $4`,
-      [level, stream, parseInt(year), parseInt(student_index)]
+       WHERE level = $1 AND stream = $2 AND year = $3 AND adm_no = $4`,
+      [level, stream, parseInt(year), admNoNormalized]
     );
 
     // Delete old photo from Cloudinary if it exists and is different
@@ -1813,8 +1822,8 @@ router.post('/:admNo/photo', upload.single('photo'), async (req, res) => {
       await query(
         `UPDATE student_photos
          SET photo_filename = $1, cloudinary_public_id = $2, created_at = CURRENT_TIMESTAMP
-         WHERE level = $3 AND stream = $4 AND year = $5 AND student_index = $6`,
-        [photoUrl, cloudinaryPublicId, level, stream, parseInt(year), parseInt(student_index)]
+         WHERE level = $3 AND stream = $4 AND year = $5 AND adm_no = $6`,
+        [photoUrl, cloudinaryPublicId, level, stream, parseInt(year), admNoNormalized]
       );
     } else {
       // Insert new photo record with retry logic
@@ -1828,11 +1837,11 @@ router.post('/:admNo/photo', upload.single('photo'), async (req, res) => {
           await query(`SELECT setval('student_photos_id_seq', $1, true)`, [maxId + 1]);
 
           await query(
-            `INSERT INTO student_photos (level, stream, year, student_index, photo_filename, cloudinary_public_id)
-             VALUES ($1, $2, $3, $4, $5, $6)
-             ON CONFLICT (level, stream, year, student_index)
+            `INSERT INTO student_photos (level, stream, year, student_index, adm_no, photo_filename, cloudinary_public_id)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
+             ON CONFLICT (level, stream, year, adm_no)
              DO UPDATE SET photo_filename = EXCLUDED.photo_filename, cloudinary_public_id = EXCLUDED.cloudinary_public_id`,
-            [level, stream, parseInt(year), parseInt(student_index), photoUrl, cloudinaryPublicId]
+            [level, stream, parseInt(year), null, admNoNormalized, photoUrl, cloudinaryPublicId]
           );
           break;
         } catch (insertError) {
@@ -1844,11 +1853,11 @@ router.post('/:admNo/photo', upload.single('photo'), async (req, res) => {
               await query(`SELECT setval('student_photos_id_seq', $1, true)`, [maxId + 10]);
 
               await query(
-                `INSERT INTO student_photos (level, stream, year, student_index, photo_filename, cloudinary_public_id)
-                 VALUES ($1, $2, $3, $4, $5, $6)
-                 ON CONFLICT (level, stream, year, student_index)
+                `INSERT INTO student_photos (level, stream, year, student_index, adm_no, photo_filename, cloudinary_public_id)
+                 VALUES ($1, $2, $3, $4, $5, $6, $7)
+                 ON CONFLICT (level, stream, year, adm_no)
                  DO UPDATE SET photo_filename = EXCLUDED.photo_filename, cloudinary_public_id = EXCLUDED.cloudinary_public_id`,
-                [level, stream, parseInt(year), parseInt(student_index), photoUrl, cloudinaryPublicId]
+                [level, stream, parseInt(year), null, admNoNormalized, photoUrl, cloudinaryPublicId]
               );
             } else {
               // Wait a bit before retrying (in case of race condition)
@@ -1878,10 +1887,10 @@ router.post('/:admNo/photo', upload.single('photo'), async (req, res) => {
 router.delete('/:admNo/photo', async (req, res) => {
   try {
     const { admNo } = req.params;
-    let { level, stream, year, student_index } = req.query;
+    let { level, stream, year } = req.query;
 
-    if (!level || !stream || !year || (student_index == null || student_index === '')) {
-      return res.status(400).json({ message: 'level, stream, year, and student_index are required' });
+    if (!level || !stream || !year) {
+      return res.status(400).json({ message: 'level, stream, and year are required' });
     }
 
     level = String(level).trim().toUpperCase();
@@ -1889,8 +1898,8 @@ router.delete('/:admNo/photo', async (req, res) => {
 
     // Get photo filename and cloudinary_public_id before deleting
     const photoResult = await query(
-      `SELECT photo_filename, cloudinary_public_id FROM student_photos WHERE level = $1 AND stream = $2 AND year = $3 AND student_index = $4`,
-      [level, stream, parseInt(year), parseInt(student_index)]
+      `SELECT photo_filename, cloudinary_public_id FROM student_photos WHERE level = $1 AND stream = $2 AND year = $3 AND adm_no = $4`,
+      [level, stream, parseInt(year), admNo]
     );
 
     if (photoResult.rows.length === 0) {
@@ -1903,8 +1912,8 @@ router.delete('/:admNo/photo', async (req, res) => {
 
     // Delete from database
     await query(
-      `DELETE FROM student_photos WHERE level = $1 AND stream = $2 AND year = $3 AND student_index = $4`,
-      [level, stream, parseInt(year), parseInt(student_index)]
+      `DELETE FROM student_photos WHERE level = $1 AND stream = $2 AND year = $3 AND adm_no = $4`,
+      [level, stream, parseInt(year), admNo]
     );
 
     // Delete from storage (Cloudinary or local)

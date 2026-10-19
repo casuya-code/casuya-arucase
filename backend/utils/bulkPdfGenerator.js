@@ -28,6 +28,7 @@ const {
   getStudentIndexListQuery,
   studentIndexForAdmNo,
   loadReportStudentExtras,
+  getStudentPhotoFilename,
 } = require('./reportStudentExtras');
 const {
   publicOriginFromApiUrl,
@@ -332,19 +333,14 @@ async function getReportDataInternal(form, stream, year, term, admNo, branding) 
   let studentPhoto = null;
   const isFormIToIV = /^FORM\s+(I|II|III|IV)$/i.test(form);
   try {
-    const photoStreamsToCheck = (isFormIToIV && normalizedStream === 'A') ? ['A', 'NA'] : [normalizedStream];
-    const photoResult = (photoStreamsToCheck.length === 2)
-      ? await query(
-        'SELECT photo_filename FROM student_photos WHERE student_index = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5',
-        [studentIndex, form, photoStreamsToCheck[0], photoStreamsToCheck[1], yearNum]
-      )
-      : await query(
-        'SELECT photo_filename FROM student_photos WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4',
-        [studentIndex, form, photoStreamsToCheck[0], yearNum]
-      );
-    if (photoResult.rows.length > 0 && photoResult.rows[0]?.photo_filename) {
-      studentPhoto = photoResult.rows[0].photo_filename;
-    }
+    // Keyed by adm_no so the photo follows the student, not their class position.
+    studentPhoto = await getStudentPhotoFilename(query, {
+      admNo: student.adm_no,
+      level: form,
+      normalizedStream,
+      yearNum,
+      isFormIToIV,
+    });
   } catch (e) {
     studentPhoto = student.photo_filename || null;
   }

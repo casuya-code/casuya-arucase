@@ -202,6 +202,25 @@ async function initDatabase() {
     `);
     console.log('✅ Student photos table created');
     await query('CREATE INDEX IF NOT EXISTS idx_student_photos_class ON student_photos(level, stream, year)');
+    // Photos belong to a student (adm_no), not to their position in the sorted class list.
+    await query('ALTER TABLE student_photos ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)');
+    await query('ALTER TABLE student_photos ALTER COLUMN student_index DROP NOT NULL');
+    await query(`
+      DO $$
+      DECLARE target TEXT;
+      BEGIN
+        SELECT conname INTO target
+        FROM pg_constraint
+        WHERE conrelid = 'student_photos'::regclass
+          AND contype = 'u'
+          AND pg_get_constraintdef(oid) ILIKE '%student_index%';
+        IF target IS NOT NULL THEN
+          EXECUTE format('ALTER TABLE student_photos DROP CONSTRAINT %I', target);
+        END IF;
+      END $$;
+    `);
+    await query('CREATE UNIQUE INDEX IF NOT EXISTS uq_student_photos_adm_no ON student_photos(level, stream, year, adm_no)');
+    console.log('✅ Student photos linked to adm_no');
     
     // Student parishes table
     await query(`

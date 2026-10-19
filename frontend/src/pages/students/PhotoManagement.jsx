@@ -221,7 +221,10 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
         });
         const photosMap = {};
         (res.data.photos || []).forEach(photo => {
-          photosMap[photo.student_index] = photo;
+          // Keyed by adm_no: a photo belongs to a student, not to their sorted position.
+          if (photo.adm_no) {
+            photosMap[photo.adm_no] = photo;
+          }
         });
         return photosMap;
       } catch (error) {
@@ -256,7 +259,7 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
       // Clear failed images cache for this student
       setFailedImages(prev => {
         const newSet = new Set(prev);
-        photosData[selectedStudent?.index]?.photo_filename && newSet.delete(photosData[selectedStudent.index].photo_filename);
+        photosData[selectedStudent?.adm_no]?.photo_filename && newSet.delete(photosData[selectedStudent.adm_no].photo_filename);
         return newSet;
       });
       toast.success('Photo uploaded successfully!');
@@ -269,13 +272,12 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
 
   // Delete photo mutation
   const deleteMutation = useMutation({
-    mutationFn: async ({ admNo, studentIndex }) => {
+    mutationFn: async ({ admNo }) => {
       return api.delete(`/students/${admNo}/photo`, {
         params: {
           level: normalizedLevel,
           stream: stream,
-          year: apiYear,
-          student_index: studentIndex
+          year: apiYear
         }
       });
     },
@@ -287,7 +289,7 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
       setPhotosVersion(v => v + 1);
       setFailedImages(prev => {
         const newSet = new Set(prev);
-        photosData[deleteStudent?.index]?.photo_filename && newSet.delete(photosData[deleteStudent.index].photo_filename);
+        photosData[deleteStudent?.adm_no]?.photo_filename && newSet.delete(photosData[deleteStudent.adm_no].photo_filename);
         return newSet;
       });
       toast.success('Photo deleted successfully!');
@@ -313,9 +315,7 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
   }
 
   const openPhotoModal = (student) => {
-    // Get student index based on sorted position
-    const studentIndex = getStudentIndex(student);
-    setSelectedStudent({ ...student, index: studentIndex });
+    setSelectedStudent({ ...student });
     setActiveTab('upload');
     setCapturedPhoto(false);
     if (fileInputRef.current) {
@@ -339,9 +339,7 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
   };
 
   const openDeleteModal = (student) => {
-    // Get student index based on sorted position
-    const studentIndex = getStudentIndex(student);
-    setDeleteStudent({ ...student, index: studentIndex });
+    setDeleteStudent({ ...student });
   };
 
   const closeDeleteModal = () => {
@@ -355,15 +353,11 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
       return;
     }
 
-    // Recalculate student index to ensure it matches current sorted order
-    const currentStudentIndex = getStudentIndex(selectedStudent);
-
     const formData = new FormData();
     formData.append('photo', fileInputRef.current.files[0]);
     formData.append('level', normalizedLevel);
     formData.append('stream', stream);
     formData.append('year', apiYear);
-    formData.append('student_index', currentStudentIndex.toString());
 
     uploadMutation.mutate({
       admNo: selectedStudent.adm_no,
@@ -375,8 +369,7 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
     if (!deleteStudent) return;
     
     deleteMutation.mutate({
-      admNo: deleteStudent.adm_no,
-      studentIndex: deleteStudent.index
+      admNo: deleteStudent.adm_no
     });
   };
 
@@ -431,9 +424,6 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
   const saveCameraPhoto = async () => {
     if (!canvasRef.current || !selectedStudent) return;
     
-    // Recalculate student index to ensure it matches current sorted order
-    const currentStudentIndex = getStudentIndex(selectedStudent);
-    
     canvasRef.current.toBlob(async (blob) => {
       if (!blob) {
         toast.error('Could not capture photo. Please try again.');
@@ -445,7 +435,6 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
         formData.append('level', normalizedLevel);
         formData.append('stream', stream);
         formData.append('year', apiYear);
-        formData.append('student_index', currentStudentIndex.toString());
 
         await uploadMutation.mutateAsync({
           admNo: selectedStudent.adm_no,
@@ -472,15 +461,10 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
     return photosVersion > 0 ? `${base}?v=${photosVersion}` : base;
   };
 
-  // Get student index based on sorted position
-  // Students are sorted by name: first_name, then middle_name, then surname (A-Z)
-  const getStudentIndex = (student) => {
-    const sortedStudents = sortStudentsByName(students);
-    return sortedStudents.findIndex(s => s.adm_no === student.adm_no);
-  };
-
-  const hasPhoto = (studentIndex) => {
-    return photosData[studentIndex]?.photo_filename;
+  // Photos are keyed by adm_no — the same student keeps their photo whenever the
+  // class roster changes and everyone's sorted position shifts.
+  const hasPhoto = (admNo) => {
+    return photosData[admNo]?.photo_filename;
   };
 
   const handleImageError = (photoFilename, _studentIndex) => {
@@ -612,9 +596,7 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
                     </thead>
                     <tbody>
                       {paginatedStudents.map((student, index) => {
-                        // Get student index based on sorted position (for photo lookup)
-                        const studentIndex = getStudentIndex(student);
-                        const photoFilename = hasPhoto(studentIndex);
+                        const photoFilename = hasPhoto(student.adm_no);
                         return (
                           <tr key={`${student.adm_no}-${student.level}-${student.stream}-${student.year}`}>
                             <td>{(currentPage - 1) * ITEMS_PER_PAGE + index + 1}</td>
@@ -627,7 +609,7 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
                             <td style={{ position: 'relative', textAlign: 'center' }}>
                               {photoFilename && !isImageFailed(photoFilename) ? (
                                 <img
-                                  key={`photo-${studentIndex}-${photoFilename}`}
+                                  key={`photo-${student.adm_no}-${photoFilename}`}
                                   src={getPhotoUrl(photoFilename)}
                                   alt={`${student.first_name} ${student.surname}`}
                                   className="student-photo"
@@ -638,7 +620,7 @@ const PhotoManagement = ({ formLevel: formLevelProp }) => {
                                   style={{ display: 'block', margin: '0 auto' }}
                                   onError={(e) => {
                                     e.target.style.display = 'none';
-                                    handleImageError(photoFilename, studentIndex);
+                                    handleImageError(photoFilename, student.adm_no);
                                     // Show placeholder
                                     const placeholder = e.target.parentElement.querySelector('.photo-placeholder');
                                     if (placeholder) {

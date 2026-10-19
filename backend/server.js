@@ -203,6 +203,38 @@ async function ensureStudentPhotosCloudinaryPublicIdColumn() {
   }
 }
 
+// Photos must be keyed to the student (adm_no), not to their position in the sorted
+// class list — see scripts/linkStudentPhotosToAdmNo.js for the full rationale.
+async function ensureStudentPhotosAdmNoColumn() {
+  try {
+    await query(`ALTER TABLE student_photos ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)`);
+    // student_index is now vestigial (kept for reference only), so it may be NULL.
+    await query(`ALTER TABLE student_photos ALTER COLUMN student_index DROP NOT NULL`);
+    // The old positional key is retired: positions shift when the roster changes, so it
+    // cannot stay unique. adm_no takes over as the per-class identity.
+    await query(`
+      DO $$
+      DECLARE target TEXT;
+      BEGIN
+        SELECT conname INTO target
+        FROM pg_constraint
+        WHERE conrelid = 'student_photos'::regclass
+          AND contype = 'u'
+          AND pg_get_constraintdef(oid) ILIKE '%student_index%';
+        IF target IS NOT NULL THEN
+          EXECUTE format('ALTER TABLE student_photos DROP CONSTRAINT %I', target);
+        END IF;
+      END $$;
+    `);
+    await query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS uq_student_photos_adm_no
+      ON student_photos(level, stream, year, adm_no)
+    `);
+  } catch (error) {
+    console.warn('[schema] ensure student_photos.adm_no failed:', error.message);
+  }
+}
+
 async function ensureStaffProfilesCloudinaryPublicIdColumn() {
   try {
     await query(`
@@ -348,6 +380,7 @@ async function ensureScoreChangeAuditTable() {
 setImmediate(() => {
   ensureStudentsComColumn().catch((e) => console.warn('[schema] ensureStudentsComColumn fatal:', e.message));
   ensureStudentPhotosCloudinaryPublicIdColumn().catch((e) => console.warn('[schema] ensureStudentPhotosCloudinaryPublicIdColumn fatal:', e.message));
+  ensureStudentPhotosAdmNoColumn().catch((e) => console.warn('[schema] ensureStudentPhotosAdmNoColumn fatal:', e.message));
   ensureStaffProfilesCloudinaryPublicIdColumn().catch((e) => console.warn('[schema] ensureStaffProfilesCloudinaryPublicIdColumn fatal:', e.message));
   ensureAdministratorsCloudinaryPublicIdColumn().catch((e) => console.warn('[schema] ensureAdministratorsCloudinaryPublicIdColumn fatal:', e.message));
   ensureRefreshTokensTable().catch((e) => console.warn('[schema] ensureRefreshTokensTable fatal:', e.message));

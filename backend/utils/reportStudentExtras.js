@@ -277,6 +277,39 @@ async function loadReportStudentExtras({
   };
 }
 
+/**
+ * Fetch a student's photo by adm_no.
+ *
+ * Photos are keyed to the student, not to their position in the sorted class list —
+ * see scripts/linkStudentPhotosToAdmNo.js. FORM I-IV stream A still checks both 'A' and
+ * 'NA' because some deployments stored those photos under either value.
+ *
+ * @param {(sql: string, params?: unknown[]) => Promise<{ rows: Array<{ photo_filename?: string|null }> }>} queryFn
+ * @returns {Promise<string|null>} photo filename, or null when the student has no photo
+ */
+async function getStudentPhotoFilename(
+  queryFn = query,
+  { admNo, level, normalizedStream, yearNum, isFormIToIV = false } = {}
+) {
+  if (!admNo || !level || !yearNum) return null;
+
+  const streams = (isFormIToIV && normalizedStream === 'A')
+    ? ['A', 'NA']
+    : [normalizedStream];
+
+  const params = [admNo, level, ...streams, yearNum];
+  const sql = streams.length === 2
+    ? `SELECT photo_filename FROM student_photos
+       WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5
+       ORDER BY id LIMIT 1`
+    : `SELECT photo_filename FROM student_photos
+       WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4
+       ORDER BY id LIMIT 1`;
+
+  const result = await queryFn(sql, params);
+  return result?.rows?.[0]?.photo_filename || null;
+}
+
 module.exports = {
   FORM_I_TO_IV,
   getReportStudentLookupQuery,
@@ -285,4 +318,5 @@ module.exports = {
   studentIndexForAdmNo,
   buildAdmNoToStudentIndexMap,
   loadReportStudentExtras,
+  getStudentPhotoFilename,
 };

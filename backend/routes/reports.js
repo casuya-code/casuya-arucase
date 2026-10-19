@@ -13,6 +13,7 @@ const {
   buildAdmNoToStudentIndexMap,
   getReportStudentLookupQuery,
   getStudentIndexListQuery,
+  getStudentPhotoFilename,
 } = require('../utils/reportStudentExtras');
 const { normalizeTerm, getTermMatchValues } = require('../utils/termNormalizer');
 const { sanitizeAuthorityDataRow } = require('../utils/authoritySignature');
@@ -262,26 +263,18 @@ router.get('/individual/:form/:stream/:year/:term/:admNo', requireModule('indivi
       : null;
 
     // Get student photo
-    // IMPORTANT: student_index must match photo management sorting (by name, not adm_no)
+    // Keyed by adm_no so the photo follows the student, not their class position.
     let studentPhoto = null;
     let debugPhotoLookup = null;
     try {
-      // Some deployments may have mixed stream values in student_photos for FORM I-IV.
-      const photoStreamsToCheck = (isFormIToIV && normalizedStream === 'A') ? ['A', 'NA'] : [normalizedStream];
-
-      const photoResult = (photoStreamsToCheck.length === 2)
-        ? await query(
-          'SELECT photo_filename FROM student_photos WHERE student_index = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5',
-          [studentIndex, form, photoStreamsToCheck[0], photoStreamsToCheck[1], parseInt(year)]
-        )
-        : await query(
-          'SELECT photo_filename FROM student_photos WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4',
-          [studentIndex, form, photoStreamsToCheck[0], parseInt(year)]
-        );
-
-      if (photoResult.rows.length > 0 && photoResult.rows[0] && photoResult.rows[0].photo_filename) {
-        studentPhoto = photoResult.rows[0].photo_filename;
-      }
+      debugPhotoLookup = { adm_no: admNo, level: form, stream: normalizedStream, year: parseInt(year, 10) };
+      studentPhoto = await getStudentPhotoFilename(query, {
+        admNo,
+        level: form,
+        normalizedStream,
+        yearNum: parseInt(year, 10),
+        isFormIToIV,
+      });
     } catch (e) {
       console.error(`[REPORT] Error fetching photo for student ${admNo}:`, e.message);
       // Photo not found, use student.photo_filename if available
