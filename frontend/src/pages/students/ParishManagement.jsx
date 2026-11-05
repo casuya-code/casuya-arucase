@@ -184,28 +184,62 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
         const parishes = res.data.parishes || [];
         console.log('[PARISHES] Received', parishes.length, 'parishes from API');
 
-        // Key parishes directly by adm_no (no more positional student_index mapping)
+        // Key parishes directly by adm_no. Legacy rows may only carry a positional
+        // student_index, so resolve those against the (already name-sorted) roster.
+        const normalizeLevelValue = (value) =>
+          String(value ?? '').trim().replace(/\s+/g, ' ').toUpperCase();
+        const toYearNumber = (value) => {
+          const num = Number(value);
+          return Number.isFinite(num) ? num : null;
+        };
+
+        const rosterAdmNos = new Set();
+        students.forEach((student) => {
+          const admNo = String(student.adm_no ?? student.admission_number ?? '').trim();
+          if (admNo) rosterAdmNos.add(admNo);
+        });
+
         let mappedCount = 0;
         let skippedCount = 0;
+        const mappedAdmNos = new Set();
 
         parishes.forEach((parish) => {
-          const admNo = String(parish.adm_no ?? '').trim();
+          let admNo = String(parish.adm_no ?? parish.admission_number ?? '').trim();
+
+          // Legacy fallback: positional index into the name-sorted roster.
+          if (!admNo && parish.student_index != null) {
+            const idx = Number(parish.student_index);
+            if (Number.isInteger(idx) && idx >= 0 && idx < students.length) {
+              admNo = String(
+                students[idx].adm_no ?? students[idx].admission_number ?? ''
+              ).trim();
+            }
+          }
+
           if (!admNo) {
             skippedCount++;
             return;
           }
-          // Confirm this adm_no belongs to the current class roster
-          const belongs = students.some(
-            (s) => String(s.adm_no).trim() === admNo && s.level === normalizedLevel && s.year === apiYear
-          );
-          if (belongs) {
-            parishesMap[admNo] = parish;
-            mappedCount++;
-          } else {
+
+          // Only keep parishes that belong to the current class scope.
+          const levelOk =
+            !parish.level || normalizeLevelValue(parish.level) === normalizeLevelValue(normalizedLevel);
+          const yearOk =
+            parish.year == null || toYearNumber(parish.year) === toYearNumber(apiYear);
+
+          if (!levelOk || !yearOk || !rosterAdmNos.has(admNo)) {
             skippedCount++;
+            return;
           }
+
+          // Prefer the row that already has adm_no over a legacy positional row.
+          if (!parishesMap[admNo] || (parish.adm_no && !parishesMap[admNo].adm_no)) {
+            parishesMap[admNo] = { ...parish, adm_no: admNo };
+          }
+          mappedAdmNos.add(admNo);
         });
 
+        mappedCount = mappedAdmNos.size;
         console.log('[PARISHES] Mapping complete:', { mappedCount, skippedCount, totalParishes: parishes.length });
         return parishesMap;
       } catch (error) {

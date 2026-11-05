@@ -2079,8 +2079,57 @@ router.get('/parishes/list', requireAuth, async (req, res) => {
     queryText += ` ORDER BY student_index`;
     
     const result = await query(queryText, queryParams);
-    
-    res.json({ parishes: result.rows });
+    const parishes = result.rows || [];
+
+    // Legacy rows were keyed by positional student_index and have adm_no = NULL.
+    // Backfill adm_no from the class roster (same ordering used to assign the index).
+    const needsAdmNoBackfill = parishes.some((p) => !p.adm_no && p.student_index != null);
+    if (needsAdmNoBackfill) {
+      const rosterParams = [level, parseInt(year)];
+      let rosterSql = 'SELECT adm_no FROM students WHERE level = $1 AND year = $2';
+      if (uniqueStreams.length === 1) {
+        rosterSql += ' AND stream = $3';
+        rosterParams.push(uniqueStreams[0]);
+      } else {
+        rosterSql += ' AND stream IN ($3, $4)';
+        rosterParams.push(uniqueStreams[0], uniqueStreams[1]);
+      }
+      rosterSql += ' ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC';
+
+      const rosterResult = await query(rosterSql, rosterParams);
+      const seenAdmNos = new Set();
+      const roster = [];
+      (rosterResult.rows || []).forEach((row) => {
+        const key = String(row.adm_no ?? '').trim();
+        if (!key || seenAdmNos.has(key)) return;
+        seenAdmNos.add(key);
+        roster.push(row);
+      });
+      parishes.forEach((p) => {
+        if (p.adm_no) return;
+        const idx = Number(p.student_index);
+        if (Number.isInteger(idx) && idx >= 0 && idx < roster.length) {
+          p.adm_no = roster[idx].adm_no;
+        }
+      });
+    }
+
+    // Collapse legacy/new duplicate rows for the same student, keeping the newest.
+    const byAdmNo = new Map();
+    parishes.forEach((p) => {
+      const key = String(p.adm_no ?? '').trim();
+      if (!key) return;
+      const existing = byAdmNo.get(key);
+      if (!existing) {
+        byAdmNo.set(key, p);
+        return;
+      }
+      const existingTime = existing.created_at ? new Date(existing.created_at).getTime() : 0;
+      const rowTime = p.created_at ? new Date(p.created_at).getTime() : 0;
+      if (rowTime >= existingTime) byAdmNo.set(key, p);
+    });
+
+    res.json({ parishes: [...byAdmNo.values()] });
   } catch (error) {
     return sendError(res, error, 500);
   }
