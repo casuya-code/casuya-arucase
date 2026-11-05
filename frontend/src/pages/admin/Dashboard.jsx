@@ -261,9 +261,9 @@ const Dashboard = () => {
                 <div className="dash-table-wrap">
                   <div className="dash-table dash-table--forms" style={{ '--cols': yearColumns.length }}>
                     <div className="dash-row dash-row--head">
-                      <span>Form</span>
-                      {yearColumns.map((y) => <span key={y}>{y}</span>)}
-                      <span>Total</span>
+                      <span className="dash-row-year">Form</span>
+                      {yearColumns.map((y) => <span key={y} className="dash-row-num">{y}</span>)}
+                      <span className="dash-row-num dash-row-num--total">Total</span>
                     </div>
                     {forms.map(({ key, label }) => (
                       <div key={key} className="dash-row">

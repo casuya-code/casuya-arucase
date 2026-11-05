@@ -216,7 +216,22 @@
 
 .dash-table--forms .dash-row {
   display: grid;
-  grid-template-columns: 1.3fr repeat(var(--cols, 1), 1fr) 1.1fr;
+  grid-template-columns: 1.2fr repeat(var(--cols, 1), 1fr) 1fr;
+  align-items: center;
+  gap: 0;
+}
+
+.dash-table--forms .dash-row--head span:first-child,
+.dash-table--forms .dash-row-year {
+  text-align: left;
+  padding-left: 0.5rem;
+}
+
+.dash-table--forms .dash-row--head span:not(:first-child),
+.dash-table--forms .dash-row-num {
+  text-align: right;
+  padding-right: 0.5rem;
+  font-variant-numeric: tabular-nums;
 }
 
 /* Rows */
