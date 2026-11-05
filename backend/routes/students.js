@@ -17,6 +17,7 @@ const { query, withTransaction } = require('../config/database');
 const { saveUserActivity } = require('../utils/activityLogger');
 const { generatePhotoEntryFormPDF, generateAllStreamsPhotoEntryFormPDF, generateMonthlyResultsPDF } = require('../utils/pdfGenerator');
 const { normalizeStream } = require('../utils/streamNormalizer');
+const { isMissingConflictTarget, ensureCommentsUniqueIndex } = require('../utils/ensureUniqueIndexes');
 const {
   buildSubjectTeacherCsv,
   parseSubjectTeacherCsv,
@@ -3763,6 +3764,17 @@ router.post('/comments', async (req, res) => {
            DO UPDATE SET comment_text = EXCLUDED.comment_text, updated_at = NOW()`,
           [comment_type, level, normalizedStream, parseInt(year), term, student_index, comment_text]
         );
+      } else if (isMissingConflictTarget(insertError)) {
+        // Restored databases may be missing the unique index the ON CONFLICT targets.
+        console.warn('Comments unique index missing, creating it and retrying...');
+        await ensureCommentsUniqueIndex();
+        await query(
+          `INSERT INTO comments (comment_type, level, stream, year, term, student_index, comment_text)
+           VALUES ($1, $2, $3, $4, $5, $6, $7)
+           ON CONFLICT (comment_type, level, stream, year, term, student_index)
+           DO UPDATE SET comment_text = EXCLUDED.comment_text, updated_at = NOW()`,
+          [comment_type, level, normalizedStream, parseInt(year), term, student_index, comment_text]
+        );
       } else {
         throw insertError;
       }
@@ -3809,6 +3821,17 @@ router.post('/comments/bulk', async (req, res) => {
       } catch (insertError) {
         if (insertError.code === '23505' && insertError.constraint === 'comments_pkey') {
           await query(`SELECT setval('comments_id_seq', COALESCE((SELECT MAX(id) FROM comments), 0) + 1, false)`);
+          await query(
+            `INSERT INTO comments (comment_type, level, stream, year, term, student_index, comment_text)
+             VALUES ($1, $2, $3, $4, $5, $6, $7)
+             ON CONFLICT (comment_type, level, stream, year, term, student_index)
+             DO UPDATE SET comment_text = EXCLUDED.comment_text, updated_at = NOW()`,
+            [comment_type, level, normalizedStream, yearNum, term, String(student_index), comment_text]
+          );
+          saved++;
+        } else if (isMissingConflictTarget(insertError)) {
+          // Restored databases may be missing the unique index the ON CONFLICT targets.
+          await ensureCommentsUniqueIndex();
           await query(
             `INSERT INTO comments (comment_type, level, stream, year, term, student_index, comment_text)
              VALUES ($1, $2, $3, $4, $5, $6, $7)

@@ -15,6 +15,10 @@ const { Server } = require('socket.io');
 const path = require('path');
 const fs = require('fs');
 const cloudinary = require('./config/cloudinary');
+const {
+  ensureCommentsUniqueIndex,
+  ensureTabiaUniqueIndex,
+} = require('./utils/ensureUniqueIndexes');
 
 function formatErr(err) {
   if (!err) return 'Unknown error';
@@ -448,7 +452,9 @@ setImmediate(() => {
   ensureIndividualDebtAdmNoColumn().catch((e) => console.warn('[schema] ensureIndividualDebtAdmNoColumn fatal:', e.message));
   ensureIndividualDebtTermColumn().catch((e) => console.warn('[schema] ensureIndividualDebtTermColumn fatal:', e.message));
   ensureCommentsAdmNoColumn().catch((e) => console.warn('[schema] ensureCommentsAdmNoColumn fatal:', e.message));
+  ensureCommentsUniqueIndex().catch((e) => console.warn('[schema] ensureCommentsUniqueIndex fatal:', e.message));
   ensureTabiaAdmNoColumn().catch((e) => console.warn('[schema] ensureTabiaAdmNoColumn fatal:', e.message));
+  ensureTabiaUniqueIndex().catch((e) => console.warn('[schema] ensureTabiaUniqueIndex fatal:', e.message));
   ensureStudentParishesAdmNoColumn().catch((e) => console.warn('[schema] ensureStudentParishesAdmNoColumn fatal:', e.message));
   ensureStaffProfilesCloudinaryPublicIdColumn().catch((e) => console.warn('[schema] ensureStaffProfilesCloudinaryPublicIdColumn fatal:', e.message));
   ensureAdministratorsCloudinaryPublicIdColumn().catch((e) => console.warn('[schema] ensureAdministratorsCloudinaryPublicIdColumn fatal:', e.message));
