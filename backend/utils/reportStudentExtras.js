@@ -159,30 +159,76 @@ async function loadReportStudentExtras({
 
   const admNo = student?.adm_no;
   if (admNo) {
+    const runCommentsQuery = async (sql, params) => {
+      try {
+        return await query(sql, params);
+      } catch (e) {
+        if (e.message && e.message.includes('column "adm_no" does not exist')) {
+          // Fallback: try student_index if available
+          if (studentIndex && studentIndex !== '-1' && studentIndex !== '') {
+            return { rows: [] }; // Will be populated by student_index path below
+          }
+        }
+        throw e;
+      }
+    };
+    
     if (isFormIToIV && normalizedStream === 'A') {
-      const cr = await query(
-        `SELECT * FROM comments WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5 AND term = $6`,
-        [admNo, form, 'A', 'NA', yearNum, normalizedTerm]
-      );
-      comments = dedupeCommentRowsByTypePreferA(cr.rows);
+      try {
+        const cr = await query(
+          `SELECT * FROM comments WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5 AND term = $6`,
+          [admNo, form, 'A', 'NA', yearNum, normalizedTerm]
+        );
+        comments = dedupeCommentRowsByTypePreferA(cr.rows);
+      } catch (e) {
+        if (e.message && e.message.includes('column "adm_no" does not exist')) {
+          comments = [];
+        } else {
+          throw e;
+        }
+      }
 
-      const tr = await query(
-        `SELECT * FROM tabia_mwenendo WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5 AND term = $6`,
-        [admNo, form, 'A', 'NA', yearNum, normalizedTerm]
-      );
-      tabia_mwenendo = dedupeTabiaRowsByCriterionPreferA(tr.rows);
+      try {
+        const tr = await query(
+          `SELECT * FROM tabia_mwenendo WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5 AND term = $6`,
+          [admNo, form, 'A', 'NA', yearNum, normalizedTerm]
+        );
+        tabia_mwenendo = dedupeTabiaRowsByCriterionPreferA(tr.rows);
+      } catch (e) {
+        if (e.message && e.message.includes('column "adm_no" does not exist')) {
+          tabia_mwenendo = [];
+        } else {
+          throw e;
+        }
+      }
     } else {
-      const cr = await query(
-        'SELECT * FROM comments WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5',
-        [admNo, form, normalizedStream, yearNum, normalizedTerm]
-      );
-      comments = cr.rows;
+      try {
+        const cr = await query(
+          'SELECT * FROM comments WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5',
+          [admNo, form, normalizedStream, yearNum, normalizedTerm]
+        );
+        comments = cr.rows;
+      } catch (e) {
+        if (e.message && e.message.includes('column "adm_no" does not exist')) {
+          comments = [];
+        } else {
+          throw e;
+        }
+      }
 
-      const tr = await query(
-        'SELECT * FROM tabia_mwenendo WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5',
-        [admNo, form, normalizedStream, yearNum, normalizedTerm]
-      );
-      tabia_mwenendo = tr.rows;
+      try {
+        const tr = await query(
+          'SELECT * FROM tabia_mwenendo WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5',
+          [admNo, form, normalizedStream, yearNum, normalizedTerm]
+        );
+        tabia_mwenendo = tr.rows;
+      } catch (e) {
+        if (e.message && e.message.includes('column "adm_no" does not exist')) {
+          tabia_mwenendo = [];
+        } else {
+          throw e;
+        }
+      }
     }
   } else if (!invalidIndex) {
     if (isFormIToIV && normalizedStream === 'A') {
@@ -216,24 +262,32 @@ async function loadReportStudentExtras({
   try {
     const admNoParish = student?.adm_no;
    if (admNoParish) {
-      const parishResult = (isFormIToIV && normalizedStream === 'A')
-        ? await query(
-          `SELECT parish_name FROM student_parishes WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5
-           ORDER BY CASE WHEN stream = $3 THEN 0 ELSE 1 END LIMIT 1`,
-          [admNoParish, form, 'A', 'NA', yearNum]
-        )
-        : await query(
-          'SELECT parish_name FROM student_parishes WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4',
-          [admNoParish, form, normalizedStream, yearNum]
-        );
-      if (parishResult.rows.length > 0 && parishResult.rows[0]) {
-        student_parish =
-          parishResult.rows[0].parish_name ||
-          student.parish ||
-          student.parish_name ||
-          'Not specified';
-      } else {
-        student_parish = student.parish || student.parish_name || 'Not specified';
+      try {
+        const parishResult = (isFormIToIV && normalizedStream === 'A')
+          ? await query(
+            `SELECT parish_name FROM student_parishes WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5
+             ORDER BY CASE WHEN stream = $3 THEN 0 ELSE 1 END LIMIT 1`,
+            [admNoParish, form, 'A', 'NA', yearNum]
+          )
+          : await query(
+            'SELECT parish_name FROM student_parishes WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4',
+            [admNoParish, form, normalizedStream, yearNum]
+          );
+        if (parishResult.rows.length > 0 && parishResult.rows[0]) {
+          student_parish =
+            parishResult.rows[0].parish_name ||
+            student.parish ||
+            student.parish_name ||
+            'Not specified';
+        } else {
+          student_parish = student.parish || student.parish_name || 'Not specified';
+        }
+      } catch (e) {
+        if (e.message && e.message.includes('column "adm_no" does not exist')) {
+          student_parish = student.parish || student.parish_name || 'Not specified';
+        } else {
+          throw e;
+        }
       }
    } else if (!invalidIndex) {
       const parishResult = (isFormIToIV && normalizedStream === 'A')
