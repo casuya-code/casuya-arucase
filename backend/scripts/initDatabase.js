@@ -229,12 +229,29 @@ async function initDatabase() {
         level VARCHAR(50) NOT NULL,
         stream VARCHAR(50) NOT NULL,
         year INTEGER NOT NULL,
-        student_index INTEGER NOT NULL,
+        student_index INTEGER,
+        adm_no VARCHAR(50),
         parish_name VARCHAR(255) NOT NULL,
-        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(level, stream, year, student_index)
+        created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    await query(`ALTER TABLE student_parishes ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)`);
+    await query(`ALTER TABLE student_parishes ALTER COLUMN student_index DROP NOT NULL`);
+    await query(`
+      DO $$
+      DECLARE target TEXT;
+      BEGIN
+        SELECT conname INTO target
+        FROM pg_constraint
+        WHERE conrelid = 'student_parishes'::regclass
+          AND contype = 'u'
+          AND pg_get_constraintdef(oid) ILIKE '%student_index%';
+        IF target IS NOT NULL THEN
+          EXECUTE format('ALTER TABLE student_parishes DROP CONSTRAINT %I', target);
+        END IF;
+      END $$;
+    `);
+    await query(`CREATE UNIQUE INDEX IF NOT EXISTS uq_student_parishes_adm_no ON student_parishes(level, stream, year, adm_no)`);
     console.log('✅ Student parishes table created');
     await query('CREATE INDEX IF NOT EXISTS idx_student_parishes_lookup ON student_parishes(level, stream, year, student_index)');
     
@@ -247,13 +264,30 @@ async function initDatabase() {
         stream VARCHAR(50) NOT NULL,
         year INTEGER NOT NULL,
         term VARCHAR(20) DEFAULT 'Term I',
-        student_index VARCHAR(10) NOT NULL,
+        student_index VARCHAR(10),
+        adm_no VARCHAR(50),
         comment_text TEXT NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(comment_type, level, stream, year, term, student_index)
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    await query(`ALTER TABLE comments ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)`);
+    await query(`ALTER TABLE comments ALTER COLUMN student_index DROP NOT NULL`);
+    await query(`
+      DO $$
+      DECLARE target TEXT;
+      BEGIN
+        SELECT conname INTO target
+        FROM pg_constraint
+        WHERE conrelid = 'comments'::regclass
+          AND contype = 'u'
+          AND pg_get_constraintdef(oid) ILIKE '%student_index%';
+        IF target IS NOT NULL THEN
+          EXECUTE format('ALTER TABLE comments DROP CONSTRAINT %I', target);
+        END IF;
+      END $$;
+    `);
+    await query(`CREATE UNIQUE INDEX IF NOT EXISTS uq_comments_adm_no ON comments(comment_type, level, stream, year, term, adm_no)`);
     console.log('✅ Comments table created');
     await query('CREATE INDEX IF NOT EXISTS idx_comments_lookup ON comments(comment_type, level, stream, year, student_index)');
     await query(
@@ -400,33 +434,69 @@ async function initDatabase() {
         stream VARCHAR(50) NOT NULL,
         year INTEGER NOT NULL,
         term VARCHAR(20) DEFAULT 'Term I' NOT NULL,
-        student_index VARCHAR(10) NOT NULL,
+        student_index VARCHAR(10),
+        adm_no VARCHAR(50),
         criterion VARCHAR(100) NOT NULL,
         evaluation VARCHAR(50) NOT NULL,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(level, stream, year, term, student_index, criterion)
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    await query(`ALTER TABLE tabia_mwenendo ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)`);
+    await query(`ALTER TABLE tabia_mwenendo ALTER COLUMN student_index DROP NOT NULL`);
+    await query(`
+      DO $$
+      DECLARE target TEXT;
+      BEGIN
+        SELECT conname INTO target
+        FROM pg_constraint
+        WHERE conrelid = 'tabia_mwenendo'::regclass
+          AND contype = 'u'
+          AND pg_get_constraintdef(oid) ILIKE '%student_index%';
+        IF target IS NOT NULL THEN
+          EXECUTE format('ALTER TABLE tabia_mwenendo DROP CONSTRAINT %I', target);
+        END IF;
+      END $$;
+    `);
+    await query(`CREATE UNIQUE INDEX IF NOT EXISTS uq_tabia_mwenendo_adm_no ON tabia_mwenendo(level, stream, year, term, adm_no, criterion)`);
     console.log('✅ Tabia na Mwenendo table created');
     
     // Individual debt table
+    // Debts belong to a student (adm_no), not to their position in the sorted class list.
     await query(`
       CREATE TABLE IF NOT EXISTS individual_debt (
         id SERIAL PRIMARY KEY,
         level VARCHAR(50) NOT NULL,
         stream VARCHAR(50) NOT NULL,
         year INTEGER NOT NULL,
-        student_index VARCHAR(10) NOT NULL,
+        term VARCHAR(20),
+        student_index VARCHAR(10),
+        adm_no VARCHAR(50),
         amount DECIMAL(10,2) NOT NULL,
         description TEXT,
         due_date VARCHAR(50),
         status VARCHAR(50) DEFAULT 'Outstanding',
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        UNIQUE(level, stream, year, student_index)
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
+    await query(`ALTER TABLE individual_debt ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)`);
+    await query(`ALTER TABLE individual_debt ALTER COLUMN student_index DROP NOT NULL`);
+    await query(`
+      DO $$
+      DECLARE target TEXT;
+      BEGIN
+        SELECT conname INTO target
+        FROM pg_constraint
+        WHERE conrelid = 'individual_debt'::regclass
+          AND contype = 'u'
+          AND pg_get_constraintdef(oid) ILIKE '%student_index%';
+        IF target IS NOT NULL THEN
+          EXECUTE format('ALTER TABLE individual_debt DROP CONSTRAINT %I', target);
+        END IF;
+      END $$;
+    `);
+    await query(`CREATE UNIQUE INDEX IF NOT EXISTS uq_individual_debt_adm_no ON individual_debt(level, stream, year, term, adm_no)`);
     console.log('✅ Individual debt table created');
     
     // Fees announcements table

@@ -235,6 +235,70 @@ async function ensureStudentPhotosAdmNoColumn() {
   }
 }
 
+// Debts must be keyed to the student (adm_no), not to their position in the sorted
+// class list — see scripts/linkIndividualDebtToAdmNo.js for the full rationale.
+async function ensureIndividualDebtAdmNoColumn() {
+  try {
+    await query(`ALTER TABLE individual_debt ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)`);
+    await query(`ALTER TABLE individual_debt ALTER COLUMN student_index DROP NOT NULL`);
+    await query(`
+      DO $$
+      DECLARE target TEXT;
+      BEGIN
+        SELECT conname INTO target
+        FROM pg_constraint
+        WHERE conrelid = 'individual_debt'::regclass
+          AND contype = 'u'
+          AND pg_get_constraintdef(oid) ILIKE '%student_index%';
+        IF target IS NOT NULL THEN
+          EXECUTE format('ALTER TABLE individual_debt DROP CONSTRAINT %I', target);
+        END IF;
+      END $$;
+    `);
+    await query(`
+      CREATE UNIQUE INDEX IF NOT EXISTS uq_individual_debt_adm_no
+      ON individual_debt(level, stream, year, adm_no)
+    `);
+  } catch (error) {
+    console.warn('[schema] ensure individual_debt.adm_no failed:', error.message);
+  }
+}
+
+async function ensureIndividualDebtTermColumn() {
+  try {
+    await query(`ALTER TABLE individual_debt ADD COLUMN IF NOT EXISTS term VARCHAR(20)`);
+  } catch (error) {
+    console.warn('[schema] ensure individual_debt.term failed:', error.message);
+  }
+}
+
+async function ensureCommentsAdmNoColumn() {
+  try {
+    await query(`ALTER TABLE comments ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)`);
+    await query(`ALTER TABLE comments ALTER COLUMN student_index DROP NOT NULL`);
+  } catch (error) {
+    console.warn('[schema] ensure comments.adm_no failed:', error.message);
+  }
+}
+
+async function ensureTabiaAdmNoColumn() {
+  try {
+    await query(`ALTER TABLE tabia_mwenendo ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)`);
+    await query(`ALTER TABLE tabia_mwenendo ALTER COLUMN student_index DROP NOT NULL`);
+  } catch (error) {
+    console.warn('[schema] ensure tabia_mwenendo.adm_no failed:', error.message);
+  }
+}
+
+async function ensureStudentParishesAdmNoColumn() {
+  try {
+    await query(`ALTER TABLE student_parishes ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)`);
+    await query(`ALTER TABLE student_parishes ALTER COLUMN student_index DROP NOT NULL`);
+  } catch (error) {
+    console.warn('[schema] ensure student_parishes.adm_no failed:', error.message);
+  }
+}
+
 async function ensureStaffProfilesCloudinaryPublicIdColumn() {
   try {
     await query(`
@@ -381,6 +445,11 @@ setImmediate(() => {
   ensureStudentsComColumn().catch((e) => console.warn('[schema] ensureStudentsComColumn fatal:', e.message));
   ensureStudentPhotosCloudinaryPublicIdColumn().catch((e) => console.warn('[schema] ensureStudentPhotosCloudinaryPublicIdColumn fatal:', e.message));
   ensureStudentPhotosAdmNoColumn().catch((e) => console.warn('[schema] ensureStudentPhotosAdmNoColumn fatal:', e.message));
+  ensureIndividualDebtAdmNoColumn().catch((e) => console.warn('[schema] ensureIndividualDebtAdmNoColumn fatal:', e.message));
+  ensureIndividualDebtTermColumn().catch((e) => console.warn('[schema] ensureIndividualDebtTermColumn fatal:', e.message));
+  ensureCommentsAdmNoColumn().catch((e) => console.warn('[schema] ensureCommentsAdmNoColumn fatal:', e.message));
+  ensureTabiaAdmNoColumn().catch((e) => console.warn('[schema] ensureTabiaAdmNoColumn fatal:', e.message));
+  ensureStudentParishesAdmNoColumn().catch((e) => console.warn('[schema] ensureStudentParishesAdmNoColumn fatal:', e.message));
   ensureStaffProfilesCloudinaryPublicIdColumn().catch((e) => console.warn('[schema] ensureStaffProfilesCloudinaryPublicIdColumn fatal:', e.message));
   ensureAdministratorsCloudinaryPublicIdColumn().catch((e) => console.warn('[schema] ensureAdministratorsCloudinaryPublicIdColumn fatal:', e.message));
   ensureRefreshTokensTable().catch((e) => console.warn('[schema] ensureRefreshTokensTable fatal:', e.message));

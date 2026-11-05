@@ -157,7 +157,34 @@ async function loadReportStudentExtras({
   let comments = [];
   let tabia_mwenendo = [];
 
-  if (!invalidIndex) {
+  const admNo = student?.adm_no;
+  if (admNo) {
+    if (isFormIToIV && normalizedStream === 'A') {
+      const cr = await query(
+        `SELECT * FROM comments WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5 AND term = $6`,
+        [admNo, form, 'A', 'NA', yearNum, normalizedTerm]
+      );
+      comments = dedupeCommentRowsByTypePreferA(cr.rows);
+
+      const tr = await query(
+        `SELECT * FROM tabia_mwenendo WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5 AND term = $6`,
+        [admNo, form, 'A', 'NA', yearNum, normalizedTerm]
+      );
+      tabia_mwenendo = dedupeTabiaRowsByCriterionPreferA(tr.rows);
+    } else {
+      const cr = await query(
+        'SELECT * FROM comments WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5',
+        [admNo, form, normalizedStream, yearNum, normalizedTerm]
+      );
+      comments = cr.rows;
+
+      const tr = await query(
+        'SELECT * FROM tabia_mwenendo WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5',
+        [admNo, form, normalizedStream, yearNum, normalizedTerm]
+      );
+      tabia_mwenendo = tr.rows;
+    }
+  } else if (!invalidIndex) {
     if (isFormIToIV && normalizedStream === 'A') {
       const cr = await query(
         `SELECT * FROM comments WHERE student_index = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5 AND term = $6`,
@@ -187,7 +214,28 @@ async function loadReportStudentExtras({
 
   let student_parish = 'Not specified';
   try {
-    if (!invalidIndex) {
+    const admNoParish = student?.adm_no;
+   if (admNoParish) {
+      const parishResult = (isFormIToIV && normalizedStream === 'A')
+        ? await query(
+          `SELECT parish_name FROM student_parishes WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5
+           ORDER BY CASE WHEN stream = $3 THEN 0 ELSE 1 END LIMIT 1`,
+          [admNoParish, form, 'A', 'NA', yearNum]
+        )
+        : await query(
+          'SELECT parish_name FROM student_parishes WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4',
+          [admNoParish, form, normalizedStream, yearNum]
+        );
+      if (parishResult.rows.length > 0 && parishResult.rows[0]) {
+        student_parish =
+          parishResult.rows[0].parish_name ||
+          student.parish ||
+          student.parish_name ||
+          'Not specified';
+      } else {
+        student_parish = student.parish || student.parish_name || 'Not specified';
+      }
+   } else if (!invalidIndex) {
       const parishResult = (isFormIToIV && normalizedStream === 'A')
         ? await query(
           `SELECT parish_name FROM student_parishes WHERE student_index = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5
@@ -216,7 +264,39 @@ async function loadReportStudentExtras({
 
   let student_fees_debt = '0.0';
   try {
-    if (!invalidIndex) {
+    const admNo = student?.adm_no;
+    if (admNo) {
+      // Debts are keyed to the student (adm_no), not to their position in the sorted
+      // class list — see scripts/linkIndividualDebtToAdmNo.js. FORM I-IV stream A still
+      // checks both 'A' and 'NA' because some deployments stored those debts under either value.
+      const isFormVOrVI = FORM_V_OR_VI.test(form);
+      const debtResult = (isFormIToIV && normalizedStream === 'A')
+        ? (isFormVOrVI
+          ? await query(
+            `SELECT amount, description FROM individual_debt WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5 AND term = $6
+             ORDER BY CASE WHEN stream = $3 THEN 0 ELSE 1 END LIMIT 1`,
+            [admNo, form, 'A', 'NA', yearNum, normalizedTerm]
+          )
+          : await query(
+            `SELECT amount, description FROM individual_debt WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5
+             ORDER BY CASE WHEN stream = $3 THEN 0 ELSE 1 END LIMIT 1`,
+            [admNo, form, 'A', 'NA', yearNum]
+          ))
+        : (isFormVOrVI
+          ? await query(
+            'SELECT amount, description FROM individual_debt WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5',
+            [admNo, form, normalizedStream, yearNum, normalizedTerm]
+          )
+          : await query(
+            'SELECT amount, description FROM individual_debt WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4',
+            [admNo, form, normalizedStream, yearNum]
+          ));
+      const debt = debtResult.rows[0] || null;
+      if (debt) {
+        student_fees_debt = formatStudentFeesDebt(debt.amount, debt.description);
+      }
+    } else if (!invalidIndex) {
+      // Legacy fallback for debts that have not yet been linked to an adm_no.
       const debtResult = (isFormIToIV && normalizedStream === 'A')
         ? await query(
           `SELECT amount, description FROM individual_debt WHERE student_index = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5
@@ -289,22 +369,46 @@ async function loadReportStudentExtras({
  */
 async function getStudentPhotoFilename(
   queryFn = query,
-  { admNo, level, normalizedStream, yearNum, isFormIToIV = false } = {}
+  { admNo, level, normalizedStream, yearNum, normalizedTerm, isFormIToIV = false } = {}
 ) {
   if (!admNo || !level || !yearNum) return null;
 
+  // Only show a photo if the student is actually registered in this year/term.
+  // Photos follow the student (adm_no) across terms/years, not a specific position.
+  let studentExists = false;
+  try {
+    const isFormVOrVI = /^FORM\s+(V|VI|5|6)$/i.test(level);
+    if (isFormVOrVI) {
+      const existsResult = await queryFn(
+        `SELECT 1 FROM students WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = ANY($5::text[]) LIMIT 1`,
+        [admNo, level, normalizedStream, yearNum, normalizedTerm ? [normalizedTerm, normalizedTerm.replace('First Term', 'Term I').replace('Second Term', 'Term II')] : []]
+      );
+      studentExists = existsResult.rows.length > 0;
+    } else {
+      const existsResult = await queryFn(
+        `SELECT 1 FROM students WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5 LIMIT 1`,
+        [admNo, level, normalizedStream === 'A' ? 'A' : normalizedStream, normalizedStream === 'A' ? 'NA' : normalizedStream, yearNum]
+      );
+      studentExists = existsResult.rows.length > 0;
+    }
+  } catch {
+    studentExists = false;
+  }
+  if (!studentExists) return null;
+
+  // Photo belongs to the student (adm_no + level + stream), not to a specific year/term.
   const streams = (isFormIToIV && normalizedStream === 'A')
     ? ['A', 'NA']
     : [normalizedStream];
 
-  const params = [admNo, level, ...streams, yearNum];
+  const params = [admNo, level, ...streams];
   const sql = streams.length === 2
     ? `SELECT photo_filename FROM student_photos
-       WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5
-       ORDER BY id LIMIT 1`
+       WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4)
+       ORDER BY year DESC, id DESC LIMIT 1`
     : `SELECT photo_filename FROM student_photos
-       WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4
-       ORDER BY id LIMIT 1`;
+       WHERE adm_no = $1 AND level = $2 AND stream = $3
+       ORDER BY year DESC, id DESC LIMIT 1`;
 
   const result = await queryFn(sql, params);
   return result?.rows?.[0]?.photo_filename || null;

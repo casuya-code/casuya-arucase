@@ -132,6 +132,7 @@ const DebtsManagement = ({ formLevel }) => {
         level: normalizedLevel,
         stream: normalizedStream,
         year: parseInt(year),
+          term: normalizedTerm,
         ...data,
       });
     },
@@ -148,12 +149,13 @@ const DebtsManagement = ({ formLevel }) => {
 
   // Delete debt mutation
   const deleteMutation = useMutation({
-    mutationFn: async (studentIndex) => {
+    mutationFn: async (admNo) => {
       return studentsAPI.deleteDebt({
         level: normalizedLevel,
         stream: normalizedStream,
         year: year,
-        student_index: studentIndex,
+        adm_no: admNo,
+          term: normalizedTerm,
       });
     },
     onSuccess: () => {
@@ -165,11 +167,11 @@ const DebtsManagement = ({ formLevel }) => {
     },
   });
 
-  const handleEdit = (studentIndex) => {
-    const debt = existingDebt[studentIndex] || {};
-    setEditingIndex(studentIndex);
+  const handleEdit = (admNo) => {
+    const debt = existingDebt[admNo] || {};
+    setEditingIndex(admNo);
     setEditForm({
-      student_index: studentIndex,
+      adm_no: admNo,
       amount: debt.amount || 0,
       description: debt.description || '',
     });
@@ -183,9 +185,9 @@ const DebtsManagement = ({ formLevel }) => {
     saveMutation.mutate(editForm);
   };
 
-  const handleDelete = (studentIndex) => {
+  const handleDelete = (admNo) => {
     if (window.confirm('Are you sure you want to delete this debt record?')) {
-      deleteMutation.mutate(studentIndex);
+      deleteMutation.mutate(admNo);
     }
   };
 
@@ -276,8 +278,8 @@ const DebtsManagement = ({ formLevel }) => {
   const handleDownloadTemplate = () => {
     const headers = ['AdmNumber', 'amount', 'description'];
     const rows = students.map((s) => {
-      const studentIndex = getStudentIndex(s);
-      const debt = existingDebt[studentIndex] || {};
+      const studentAdmNo = s.adm_no;
+      const debt = existingDebt[studentAdmNo] || {};
       return [
         csvEscape(s.adm_no),
         csvEscape(debt.amount ?? 0),
@@ -299,8 +301,8 @@ const DebtsManagement = ({ formLevel }) => {
   const handleDownloadFilledCSV = () => {
     const headers = ['AdmNumber', 'amount', 'description'];
     const rows = students.map((s) => {
-      const studentIndex = getStudentIndex(s);
-      const debt = existingDebt[studentIndex] || {};
+      const studentAdmNo = s.adm_no;
+      const debt = existingDebt[studentAdmNo] || {};
       return [
         csvEscape(s.adm_no),
         csvEscape(debt.amount ?? 0),
@@ -363,13 +365,13 @@ const DebtsManagement = ({ formLevel }) => {
             continue;
           }
 
-          const studentIndex = getStudentIndex(student);
+          const studentAdmNo = student.adm_no;
           const amountRaw = String(cells[amountIdx] ?? '').trim();
           const amount = amountRaw === '' ? 0 : parseFloat(amountRaw);
           const description = descIdx >= 0 ? String(cells[descIdx] ?? '').trim() : '';
 
           payload.push({
-            student_index: studentIndex,
+            adm_no: studentAdmNo,
             amount: Number.isNaN(amount) ? 0 : amount,
             description,
           });
@@ -384,6 +386,7 @@ const DebtsManagement = ({ formLevel }) => {
           level: normalizedLevel,
           stream: normalizedStream,
           year: parseInt(year, 10),
+          term: normalizedTerm,
           debts: payload,
         });
 
@@ -465,9 +468,9 @@ const DebtsManagement = ({ formLevel }) => {
                     </thead>
                     <tbody>
                       {students.map((student, index) => {
-                        const studentIndex = getStudentIndex(student);
-                        const debt = existingDebt[studentIndex];
-                        const isEditing = editingIndex === studentIndex;
+                        const studentAdmNo = student.adm_no;
+                        const debt = existingDebt[studentAdmNo];
+                        const isEditing = editingIndex === studentAdmNo;
                         
                         return (
                           <tr key={student.adm_no}>
@@ -513,7 +516,7 @@ const DebtsManagement = ({ formLevel }) => {
                               {isEditing ? (
                                 <>
                                   <button
-                                    onClick={() => handleSave(studentIndex)}
+                                    onClick={() => handleSave(studentAdmNo)}
                                     className="action-btn save-btn"
                                     disabled={saveMutation.isLoading}
                                   >
@@ -529,14 +532,14 @@ const DebtsManagement = ({ formLevel }) => {
                               ) : (
                                 <>
                                   <button
-                                    onClick={() => handleEdit(studentIndex)}
+                                    onClick={() => handleEdit(student.adm_no)}
                                     className="action-btn edit-btn"
                                   >
                                     <i className="fas fa-edit"></i> Edit
                                   </button>
                                   {debt?.amount > 0 && (
                                     <button
-                                      onClick={() => handleDelete(studentIndex)}
+                                      onClick={() => handleDelete(student.adm_no)}
                                       className="action-btn delete-btn"
                                     >
                                       <i className="fas fa-trash"></i> Delete
@@ -555,9 +558,9 @@ const DebtsManagement = ({ formLevel }) => {
                 {/* Mobile Card View */}
                 <div className="mobile-students-list">
                   {students.map((student, index) => {
-                    const studentIndex = getStudentIndex(student);
-                    const debt = existingDebt[studentIndex];
-                    const isEditing = editingIndex === studentIndex;
+                    const studentAdmNo = student.adm_no;
+                    const debt = existingDebt[studentAdmNo];
+                    const isEditing = editingIndex === studentAdmNo;
                     
                     return (
                       <div key={student.adm_no} className="mobile-student-card">
@@ -618,7 +621,7 @@ const DebtsManagement = ({ formLevel }) => {
                           {isEditing ? (
                             <>
                               <button
-                                onClick={() => handleSave(studentIndex)}
+                                onClick={() => handleSave(studentAdmNo)}
                                 className="action-btn save-btn"
                                 disabled={saveMutation.isLoading}
                               >
@@ -634,14 +637,14 @@ const DebtsManagement = ({ formLevel }) => {
                           ) : (
                             <>
                               <button
-                                onClick={() => handleEdit(studentIndex)}
+                                onClick={() => handleEdit(student.adm_no)}
                                 className="action-btn edit-btn"
                               >
                                 <i className="fas fa-edit"></i> Edit
                               </button>
                               {debt?.amount > 0 && (
                                 <button
-                                  onClick={() => handleDelete(studentIndex)}
+                                  onClick={() => handleDelete(student.adm_no)}
                                   className="action-btn delete-btn"
                                 >
                                   <i className="fas fa-trash"></i> Delete

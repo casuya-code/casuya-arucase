@@ -273,6 +273,7 @@ router.get('/individual/:form/:stream/:year/:term/:admNo', requireModule('indivi
         level: form,
         normalizedStream,
         yearNum: parseInt(year, 10),
+        normalizedTerm,
         isFormIToIV,
       });
     } catch (e) {

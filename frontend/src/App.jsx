@@ -184,6 +184,7 @@ const SubjectTrack = lazy(() => import('./pages/analytics/SubjectTrack'));
 const WhoAndWhenTrack = lazy(() => import('./pages/analytics/WhoAndWhenTrack'));
 const SolutionsTrack = lazy(() => import('./pages/analytics/SolutionsTrack'));
 const AllFormsAverages = lazy(() => import('./pages/analytics/AllFormsAverages'));
+const Promo = lazy(() => import('./pages/analytics/Promo'));
 const Analytics = lazy(() => import('./pages/analytics/Analytics'));
 
 // Reports (lazy)
@@ -2102,6 +2103,7 @@ function App() {
             {/* Analytics Routes */}
             <Route path="/admin/analytics" element={<ProtectedRoute requiredModule="analytics_view"><Analytics /></ProtectedRoute>} />
             <Route path="/admin/analytics/all-forms-averages" element={<ProtectedRoute requiredModule="analytics_form_averages"><AllFormsAverages /></ProtectedRoute>} />
+            <Route path="/admin/analytics/promo" element={<ProtectedRoute requiredModule="analytics_promo"><Promo /></ProtectedRoute>} />
             <Route path="/admin/analytics/:form" element={<ProtectedRoute requiredModule="analytics_view"><AnalyticsTrackSelection /></ProtectedRoute>} />
             <Route path="/admin/analytics/:form/student-track" element={<ProtectedRoute requiredModule="analytics_student_tracking"><StudentTrack /></ProtectedRoute>} />
             <Route path="/admin/analytics/:form/class-track" element={<ProtectedRoute requiredModule="analytics_student_tracking"><ClassTrack /></ProtectedRoute>} />

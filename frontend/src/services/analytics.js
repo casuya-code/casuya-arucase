@@ -58,5 +58,25 @@ export const analyticsAPI = {
     const queryString = new URLSearchParams(params).toString();
     return api.get(`/analytics/solutions/ai?${queryString}`);
   },
+
+  // PROMO — Form One subject performance for Form Two allocation
+  getPromoFormOne: (year) => {
+    const params = { year };
+    const queryString = new URLSearchParams(params).toString();
+    return api.get(`/analytics/promo/form-one?${queryString}`);
+  },
+
+  // PROMO — download the report as a landscape A4 PDF. Passing an array
+  // (even an empty one) sends exactly the selected columns; passing
+  // undefined lets the backend use every month/subject.
+  getPromoFormOnePdf: (year, qualifyThreshold, discussThreshold, months, subjects) => {
+    const params = { year, qualifyThreshold, discussThreshold };
+    if (Array.isArray(months)) params.months = months.join(',');
+    if (Array.isArray(subjects)) params.subjects = subjects.join(',');
+    const queryString = new URLSearchParams(params).toString();
+    return api.get(`/analytics/promo/form-one/pdf?${queryString}`, {
+      responseType: 'blob',
+    });
+  },
 };
 

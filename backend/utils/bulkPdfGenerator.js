@@ -339,6 +339,7 @@ async function getReportDataInternal(form, stream, year, term, admNo, branding) 
       level: form,
       normalizedStream,
       yearNum,
+      normalizedTerm,
       isFormIToIV,
     });
   } catch (e) {

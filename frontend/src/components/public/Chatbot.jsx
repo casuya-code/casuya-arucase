@@ -44,7 +44,15 @@ function getChatbotWelcomeText() {
   if (hour >= 5 && hour < 12) timeGreeting = 'Habari ya asubuhi';
   else if (hour >= 12 && hour < 18) timeGreeting = 'Habari ya mchana';
   else if (hour >= 18 && hour < 22) timeGreeting = 'Habari ya jioni';
-  return `${timeGreeting}! Karibu, Uliza tukusaidie.`;
+  return `${timeGreeting}! Karibu ARUCASE. Niulize kuhusu ada, udahili, matokeo au mawasiliano — au kwa Kiingereza: fees, admissions, results or contacts.`;
+}
+
+/** Rough language check so UI error messages answer in the visitor's language. */
+function isSwahiliText(text) {
+  const t = String(text || '').toLowerCase();
+  return /\b(ada|malipo|udahili|darasa|kidato|shule|seminari|habari|asante|tafadhali|naomba|je|gani|ngapi|wapi|lini|saa|tarehe|leo|matokeo|walimu|mawasiliano|simu|barua|pepe|mwanangu|mtoto|msaada)\b/.test(
+    t
+  );
 }
 const PANEL_W = 352;
 const PANEL_H_EST = 420;
@@ -58,6 +66,12 @@ export default function Chatbot() {
   const messageIdRef = useRef(1);
   const [input, setInput] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Keep the latest messages in a ref so sending does not depend on a stale closure.
+  const messagesRef = useRef(messages);
+  useEffect(() => {
+    messagesRef.current = messages;
+  }, [messages]);
 
   const [anchor, setAnchor] = useState(() => loadChatAnchor());
   const [fabPos, setFabPos] = useState(() => {
@@ -113,21 +127,23 @@ export default function Chatbot() {
       const userId = messageIdRef.current++;
       setMessages((prev) => [...prev, { id: userId, role: 'user', text }]);
       setLoading(true);
+      const history = messagesRef.current
+        .filter((m) => m.id !== 0 && m.text)
+        .slice(-8)
+        .map((m) => ({ role: m.role === 'bot' ? 'assistant' : 'user', content: m.text }));
+      const friendlyFallback = isSwahiliText(text)
+        ? 'Samahani, sikuweza kupata jibu kwa sasa. Tafadhali jaribu tena, au wasiliana na ofisi kupitia ukurasa wa Mawasiliano.'
+        : 'Sorry, I could not get an answer just now. Please try again, or reach the school through the Contact page.';
       try {
-        const res = await publicAPI.chat(text, window.location.pathname);
-        const rawReply =
-          res.data?.reply ?? 'Samahani, sijapata jibu. Jaribu tena au wasiliana na ofisi ya shule.';
-        const reply =
-          purifyChatPlainText(rawReply, { stripMarkdown: true }) ||
-          'Wasiliana na shule kwa msaada zaidi.';
+        const res = await publicAPI.chat(text, window.location.pathname, history);
+        const rawReply = res.data?.reply || friendlyFallback;
+        const reply = purifyChatPlainText(rawReply, { stripMarkdown: true }) || friendlyFallback;
         const botId = messageIdRef.current++;
         setMessages((prev) => [...prev, { id: botId, role: 'bot', text: reply }]);
       } catch (err) {
         const data = err.response?.data;
-        const raw =
-          (data && (data.reply ?? data.error ?? data.message)) ||
-          'Msaidizi haupatikani kwa sasa. Tafadhali wasiliana na shule moja kwa moja.';
-        const fallback = purifyChatPlainText(raw) || 'Msaidizi haupatikani kwa sasa.';
+        const raw = data?.reply || friendlyFallback;
+        const fallback = purifyChatPlainText(raw) || friendlyFallback;
         const botId = messageIdRef.current++;
         setMessages((prev) => [...prev, { id: botId, role: 'bot', text: fallback }]);
       } finally {
@@ -275,7 +291,7 @@ export default function Chatbot() {
                   </span>
                   <span className="chatbot-title-text">
                     <span>ARUCASE</span>
-                    <span className="chatbot-title-sub">Msaidizi wa Mtandaoni</span>
+                    <span className="chatbot-title-sub">Msaidizi wa Wateja</span>
                   </span>
                 </div>
                 <button
@@ -333,10 +349,10 @@ export default function Chatbot() {
                   className="chatbot-input"
                   value={input}
                   onChange={(e) => setInput(e.target.value)}
-                  placeholder="Andika swali…"
+                  placeholder="Andika swali lako… / Type your question…"
                   maxLength={500}
                   disabled={loading}
-                  aria-label="Swali lako"
+                  aria-label="Swali lako / Your question"
                 />
                 <button type="submit" className="chatbot-send" disabled={loading || !input.trim()}>
                   <i className="fas fa-paper-plane" aria-hidden="true" />

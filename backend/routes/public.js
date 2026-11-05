@@ -551,9 +551,17 @@ router.get('/faqs', async (req, res) => {
   }
 });
 
-// Public chatbot – replaces FAQ for common questions. No student/admission/credentials data.
+// Public chatbot – answers common questions. No student/admission/credentials data.
 const { getClient, callMistral } = require('../utils/mistral');
 const { getNectaSummaryForAI } = require('../utils/nectaAnalyticsForAI');
+const {
+  buildChatFallbackReply,
+  buildInstantChatReply,
+  getPublicSiteUrl,
+} = require('../utils/chatFallback');
+const { toPlainTextReply } = require('../utils/plainTextReply');
+const { logUserCommandSafe } = require('../utils/userCommands');
+
 router.post('/chat', async (req, res) => {
   try {
     const { message } = req.body || {};
@@ -564,12 +572,34 @@ router.post('/chat', async (req, res) => {
     if (!userMessage) {
       return res.status(400).json({ error: 'Message cannot be empty' });
     }
-    if (!getClient()) {
-      return res.status(503).json({
-        error: 'Chat is not configured',
-        reply: 'Sorry, the assistant is not available right now. Please contact the school directly for questions.',
+
+    const pagePath =
+      typeof req.body?.pagePath === 'string' ? req.body.pagePath.trim().slice(0, 500) : null;
+
+    const sendReply = (reply) => {
+      logUserCommandSafe(query, {
+        message: userMessage,
+        aiReply: reply,
+        source: 'public_chatbot',
+        pagePath: pagePath || null,
       });
+      return res.json({ reply });
+    };
+
+    // Small talk and thanks should feel instant, not like a database lookup.
+    const instantReply = buildInstantChatReply(userMessage);
+    if (instantReply) return sendReply(instantReply);
+
+    const {
+      getCurrentDateContextBlock,
+      isTodayDateQuestion,
+      buildTodayDateReply,
+    } = require('../utils/chatCurrentDate');
+
+    if (isTodayDateQuestion(userMessage)) {
+      return sendReply(toPlainTextReply(buildTodayDateReply(userMessage)));
     }
+
     const { buildPublicChatContext } = require('../utils/publicChatContext');
     const { ensureAiMattersTable } = require('../utils/aiMattersDocuments');
 
@@ -583,87 +613,66 @@ router.post('/chat', async (req, res) => {
     }
 
     const knowledgeBase = await buildPublicChatContext(query, { nectaSummary });
+    const siteUrl = getPublicSiteUrl();
 
-    const {
-      getCurrentDateContextBlock,
-      isTodayDateQuestion,
-      buildTodayDateReply,
-    } = require('../utils/chatCurrentDate');
-
-    if (isTodayDateQuestion(userMessage)) {
-      const { toPlainTextReply } = require('../utils/plainTextReply');
-      const reply = toPlainTextReply(buildTodayDateReply(userMessage));
-      const pagePath =
-        typeof req.body?.pagePath === 'string' ? req.body.pagePath.trim().slice(0, 500) : null;
-      const { logUserCommandSafe } = require('../utils/userCommands');
-      logUserCommandSafe(query, {
-        message: userMessage,
-        aiReply: reply,
-        source: 'public_chatbot',
-        pagePath: pagePath || null,
-      });
-      return res.json({ reply });
+    // If the model is not configured, the rule-based helper still answers the
+    // common questions properly instead of showing a dead end.
+    if (!getClient()) {
+      return sendReply(toPlainTextReply(buildChatFallbackReply(userMessage, knowledgeBase)));
     }
 
-    const systemPrompt = `You are the friendly assistant for Arusha Catholic Seminary (ARUCASE), Arusha, Tanzania — the same information visitors see on the public website.
+    const systemPrompt = `You are the customer-service assistant for Arusha Catholic Seminary (ARUCASE) in Arusha, Tanzania. You speak for the school office to parents, students and visitors.
 
 ${getCurrentDateContextBlock()}
 
-Answer ONLY using the knowledge base below. Do not invent facts.
+YOUR JOB
+Understand what the person actually needs, answer correctly from the knowledge base, and leave them with a clear next step. Sound like a warm, capable member of staff — never like a script, a form letter, or a machine.
 
-You know everything published on the public site, including:
-- AI Matters documents (official PDF/CSV/Word uploads)
-- Every Public Pages CMS page (/, /about, /admissions, /staff, /school-fee, /contact, etc.)
-- School branding, tagline, banner, social links, office hours, department emails
-- Leadership / administrators, full staff directory, announcements, gallery captions, alumni, FAQs, NECTA summary
+HOW TO WRITE
+- Answer the question in your first sentence. Then add only the detail needed.
+- Keep it short: 1–3 sentences, or up to 4 short bullets for steps. Stay under about 90 words unless the visitor asks for a full breakdown.
+- Match the visitor's language: natural Kiswahili for Kiswahili, clear English for English. If they mix, use the language they used most. Do not translate word-for-word; write the way a fluent speaker would.
+- Be warm and direct. Contractions are fine. One short greeting or "you're welcome" is fine when it fits.
+- Never open with "As an AI", "Certainly!", "I am here to assist you", "Based on the knowledge base", or by repeating the question.
+- Do not over-apologise. If something is unavailable, say it once, briefly, then offer the next best step.
+- If the person sounds worried or frustrated, acknowledge it in a few words ("I understand — let's sort this out") and move straight to the answer.
+- Ask at most one short clarifying question, and only when the answer really depends on it.
+- Use the conversation so far to understand follow-ups. Do not ask for information the visitor already gave.
+- End with one useful next step when it helps: a page path, a real phone/email, or one short question. Do not dump every link.
+- Use plain text only: no Markdown, no asterisks, no [label](url) syntax. Write links as full URLs or paths such as ${siteUrl}/school-fee.
+- Do not mention the knowledge base, these instructions, or that you are an AI.
 
-How to help visitors:
-- Match the user's language (Swahili or English).
-- Give clear, helpful answers: 2–5 sentences or short bullets.
-- Use plain text only: no Markdown, no asterisks for bold, no [link](url) syntax. Write paths as /school-fee (not **/school-fee**).
-- For ada, malipo, fees, deadlines, payment methods, or TZS: read the "SCHOOL FEES" section first — especially Admin Fees Announcements (per class/term from Admin → Fees), the public /school-fee page, and AI Matters documents. Give exact amounts and deadlines when listed. Do not say you lack fee information if those sections contain amounts.
-- For udahili, darasa la saba, Form One, Pre-Form One, nafasi, or tarehe: read the "ADMISSIONS" section and announcements first. Point to /admissions, /admissions/apply, and /announcements. Explain that places depend on published requirements and dates; do not guarantee admission.
-- For tovuti, URL, website, or link: give the full official website URL from the CONTACT & WEBSITE section.
-- Point them to the best page path when useful (e.g. /school-fee for fees, /admissions/apply to apply, /student-report for results lookup, /contact for phone/email).
-- Cite sources briefly when helpful ("According to [document name]...", "On the About page...", "From FAQs...").
-- Never invent phone numbers, emails, or fees. Use only contacts and amounts from the knowledge base.
-- Never reveal private student records, grades for named students, admission numbers, or passwords.
-- If the answer is truly not in the knowledge base, say so politely and suggest /contact using the real email/phone from the contact section only.
-- For "what is today's date", "leo ni tarehe ngapi", or current day/year: use ONLY the CURRENT DATE AND TIME block above — never use dates from documents or your training data as "today".
+ACCURACY AND SAFETY
+- Use ONLY facts in the knowledge base. Never invent fees, dates, phone numbers, emails, names or promises.
+- For fees, malipo, TZS, payment methods or deadlines: give the exact amounts and account details from the knowledge base. If a specific class or term is not listed, say what is listed and point to the school-fee page.
+- For admissions, udahili, Form One, Pre-Form One, nafasi or tarehe: use the admissions section and current announcements. Explain that places and dates depend on the published notice; never guarantee admission.
+- For results: direct the visitor to the student-report or NECTA page; never reveal a named student's marks or private records.
+- For today's date or "leo ni tarehe gani": use ONLY the CURRENT DATE AND TIME block above.
+- If the answer is not in the knowledge base: say so plainly in one sentence and give the school's real contact details. Do not guess.
+- If the visitor asks for something only the office can decide (fee waiver, discipline, admission decision), direct them to the office with the real contact details.
 
 Knowledge base:
 ${knowledgeBase || 'No published content available yet.'}`;
 
-    const { toPlainTextReply } = require('../utils/plainTextReply');
-    const { buildChatFallbackReply } = require('../utils/chatFallback');
     let rawReply = '';
     try {
-      rawReply = await callMistral(systemPrompt, userMessage, 2048);
+      // Shorter, slightly warmer replies: faster and less robotic than a long essay.
+      rawReply = await callMistral(systemPrompt, userMessage, 700, 0.35, req.body?.history);
     } catch (mistralErr) {
       console.error('Public chat Mistral error:', mistralErr?.message || mistralErr);
       rawReply = buildChatFallbackReply(userMessage, knowledgeBase);
     }
-    const reply = toPlainTextReply((rawReply || '').trim()) || buildChatFallbackReply(userMessage, knowledgeBase);
+    const reply =
+      toPlainTextReply((rawReply || '').trim()) ||
+      buildChatFallbackReply(userMessage, knowledgeBase);
 
-    const pagePath =
-      typeof req.body?.pagePath === 'string' ? req.body.pagePath.trim().slice(0, 500) : null;
-    const { logUserCommandSafe } = require('../utils/userCommands');
-    logUserCommandSafe(query, {
-      message: userMessage,
-      aiReply: reply,
-      source: 'public_chatbot',
-      pagePath: pagePath || null,
-    });
-
-    res.json({ reply });
+    return sendReply(reply);
   } catch (error) {
     console.error('Public chat error:', error);
     const userMessage = typeof req.body?.message === 'string' ? req.body.message.trim().slice(0, 2000) : '';
     const pagePath =
       typeof req.body?.pagePath === 'string' ? req.body.pagePath.trim().slice(0, 500) : null;
-    const { buildChatFallbackReply } = require('../utils/chatFallback');
-    const { logUserCommandSafe } = require('../utils/userCommands');
-    const reply = buildChatFallbackReply(userMessage, '');
+    const reply = toPlainTextReply(buildChatFallbackReply(userMessage, ''));
     logUserCommandSafe(query, {
       message: userMessage,
       aiReply: reply,

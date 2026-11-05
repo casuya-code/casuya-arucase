@@ -125,6 +125,7 @@ const AdminSidebar = () => {
     },
     {
       category: 'Student Management',
+      compact: true,
       items: [
         {
           path: '/admin/students/registration',
@@ -137,20 +138,21 @@ const AdminSidebar = () => {
             'student_registration',
           ],
         },
-        { path: '/admin/pre-form-one', label: 'Registration (Pre-Form)', icon: 'fa-child', moduleId: 'student_registration_pre_form' },
+        { path: '/admin/pre-form-one', label: 'Pre-Registration', icon: 'fa-child', moduleId: 'student_registration_pre_form' },
         { path: '/students/list', label: 'Student List', icon: 'fa-list', moduleIds: ['student_registration_form_i_iv', 'student_registration', 'student_list'] },
         { path: '/admin/students/photos', label: 'Photos', icon: 'fa-camera', moduleId: 'student_photo' },
         { path: '/admin/students/parishes', label: 'Parishes', icon: 'fa-place-of-worship', moduleId: 'student_parishes' },
         { path: '/admin/pre-parishes', label: 'Pre-Parishes', icon: 'fa-place-of-worship', moduleId: 'pre_parishes' },
-        { path: '/admin/pre-form-one-interview-subjects', label: 'Interview Subjects', icon: 'fa-book', moduleIds: ['student_registration_pre_form', 'interview_subjects'] },
-        { path: '/admin/pre-form-one-continuing-subjects', label: 'Continuing Subjects', icon: 'fa-book-open', moduleIds: ['student_registration_pre_form', 'continuing_subjects'] },
-        { path: '/admin/pre-form-one-scores', label: 'Pre-Form One Score Entry', icon: 'fa-graduation-cap', moduleId: 'pre_form_one_scores' },
-        { path: '/admin/pre-form-one-promotion', label: 'Pre-Form Promotion', icon: 'fa-graduation-cap', moduleId: 'pre_form_one_promotion' },
-        { path: '/admin/pre-form-one-results', label: 'Pre-Form Results', icon: 'fa-clipboard-check', moduleId: 'pre_form_one_results' }
+        { path: '/admin/pre-form-one-interview-subjects', label: 'Inter-Subjects', icon: 'fa-book', moduleIds: ['student_registration_pre_form', 'interview_subjects'] },
+        { path: '/admin/pre-form-one-continuing-subjects', label: 'Conti-Subjects', icon: 'fa-book-open', moduleIds: ['student_registration_pre_form', 'continuing_subjects'] },
+        { path: '/admin/pre-form-one-scores', label: 'Pre-Score Entry', icon: 'fa-graduation-cap', moduleId: 'pre_form_one_scores' },
+        { path: '/admin/pre-form-one-promotion', label: 'Pre-Promotion', icon: 'fa-graduation-cap', moduleId: 'pre_form_one_promotion' },
+        { path: '/admin/pre-form-one-results', label: 'Pre-Results', icon: 'fa-clipboard-check', moduleId: 'pre_form_one_results' }
       ]
     },
     {
       category: 'Academic Management',
+      compact: true,
       items: [
         { path: '/admin/subjects', label: 'Subjects', icon: 'fa-book', moduleId: 'subject_management' },
         { path: '/admin/score-entry', label: 'Score Entry', icon: 'fa-graduation-cap', moduleId: 'individual_scores' },
@@ -162,27 +164,29 @@ const AdminSidebar = () => {
     },
     {
       category: 'Comments & Assessment',
+      compact: true,
       items: [
         { path: '/admin/sala', label: 'Sala', icon: 'fa-comments', moduleId: 'sala_comments' },
         { path: '/admin/huduma', label: 'Huduma', icon: 'fa-hands-helping', moduleId: 'huduma_comments' },
         { path: '/admin/tabia', label: 'Tabia', icon: 'fa-user-check', moduleId: 'tabia_comments' },
         { path: '/admin/michezo', label: 'Michezo', icon: 'fa-running', moduleId: 'michezo_comments' },
         { path: '/admin/taaluma', label: 'Taaluma', icon: 'fa-book-open', moduleId: 'taaluma_comments' },
-        { path: '/admin/mwalimu-comments', label: 'Mwalimu Comments', icon: 'fa-user-graduate', moduleId: 'mwalimu_taaluma_comments' },
-        { path: '/admin/mkuu-comments', label: 'Mkuu Comments', icon: 'fa-crown', moduleId: 'mkuu_shule_comments' },
+        { path: '/admin/mwalimu-comments', label: 'Mwalimu', icon: 'fa-user-graduate', moduleId: 'mwalimu_taaluma_comments' },
+        { path: '/admin/mkuu-comments', label: 'Mkuu', icon: 'fa-crown', moduleId: 'mkuu_shule_comments' },
         { path: '/admin/tabia-mwenendo', label: 'Tabia & Mwenendo', icon: 'fa-balance-scale', moduleId: 'tabia_mwenendo_comments' },
-        { path: '/admin/pre-sala', label: 'PRE-Sala', icon: 'fa-comments', moduleId: 'pre_sala_comments' },
-        { path: '/admin/pre-taaluma', label: 'PRE-Taaluma', icon: 'fa-book-open', moduleId: 'pre_taaluma_comments' },
-        { path: '/admin/pre-tabia', label: 'PRE-Tabia', icon: 'fa-user-check', moduleId: 'pre_tabia_comments' },
-        { path: '/admin/pre-huduma', label: 'PRE-Huduma', icon: 'fa-hands-helping', moduleId: 'pre_huduma_comments' },
-        { path: '/admin/pre-michezo', label: 'PRE-Michezo', icon: 'fa-running', moduleId: 'pre_michezo_comments' },
-        { path: '/admin/pre-mwalimu-comments', label: 'PRE-Mwalimu wa Taaluma', icon: 'fa-user-graduate', moduleId: 'pre_mwalimu_taaluma_comments' },
-        { path: '/admin/pre-mkuu-comments', label: 'PRE-Mkuu wa Shule', icon: 'fa-crown', moduleId: 'pre_mkuu_shule_comments' },
-        { path: '/admin/pre-tabia-mwenendo', label: 'PRE-Tabia na Mwenendo', icon: 'fa-balance-scale', moduleId: 'pre_tabia_mwenendo_comments' }
+        { path: '/admin/pre-sala', label: 'Pre-Sala', icon: 'fa-comments', moduleId: 'pre_sala_comments' },
+        { path: '/admin/pre-taaluma', label: 'Pre-Taaluma', icon: 'fa-book-open', moduleId: 'pre_taaluma_comments' },
+        { path: '/admin/pre-tabia', label: 'Pre-Tabia', icon: 'fa-user-check', moduleId: 'pre_tabia_comments' },
+        { path: '/admin/pre-huduma', label: 'Pre-Huduma', icon: 'fa-hands-helping', moduleId: 'pre_huduma_comments' },
+        { path: '/admin/pre-michezo', label: 'Pre-Michezo', icon: 'fa-running', moduleId: 'pre_michezo_comments' },
+        { path: '/admin/pre-mwalimu-comments', label: 'Pre-Mwalimu', icon: 'fa-user-graduate', moduleId: 'pre_mwalimu_taaluma_comments' },
+        { path: '/admin/pre-mkuu-comments', label: 'Pre-Mkuu', icon: 'fa-crown', moduleId: 'pre_mkuu_shule_comments' },
+        { path: '/admin/pre-tabia-mwenendo', label: 'Pre-Tabia na Mwenendo', icon: 'fa-balance-scale', moduleId: 'pre_tabia_mwenendo_comments' }
       ]
     },
     {
       category: 'Results & Reports',
+      compact: true,
       items: [
         { path: '/admin/results/monthly', label: 'Results', icon: 'fa-clipboard-list', moduleId: 'monthly_results' },
         { path: '/reports/individual', label: 'Student Report', icon: 'fa-file-alt', moduleId: 'individual_report' },
@@ -191,37 +195,41 @@ const AdminSidebar = () => {
     },
     {
       category: 'Announcements & Communication',
+      compact: true,
       items: [
         { path: '/admin/news', label: 'News', icon: 'fa-newspaper', moduleId: 'news_announcements' },
         { path: '/admin/fees', label: 'Fees', icon: 'fa-money-bill-wave', moduleId: 'fees_announcements' },
         { path: '/admin/debts', label: 'Debts', icon: 'fa-money-bill-wave', moduleId: 'individual_debt' },
-        { path: '/admin/pre-form-one-fees', label: 'Pre-Form One Fees', icon: 'fa-money-bill-wave', moduleId: 'pre_form_one_fees' },
-        { path: '/admin/pre-form-one-debts', label: 'Pre-Form One Debts', icon: 'fa-money-bill-wave', moduleId: 'pre_form_one_debts' }
+        { path: '/admin/pre-form-one-fees', label: 'Pre-Fees', icon: 'fa-money-bill-wave', moduleId: 'pre_form_one_fees' },
+        { path: '/admin/pre-form-one-debts', label: 'Pre-Debts', icon: 'fa-money-bill-wave', moduleId: 'pre_form_one_debts' }
       ]
     },
     {
       category: 'Analytics',
+      compact: true,
       items: [
-        { path: '/admin/analytics', label: 'Analytics View', icon: 'fa-chart-line', moduleId: 'analytics_view' },
+        { path: '/admin/analytics', label: 'View', icon: 'fa-chart-line', moduleId: 'analytics_view' },
         {
           path: `/admin/analytics/${encodeURIComponent(defaultAnalyticsForm)}/student-track`,
-          label: 'Student Tracking',
+          label: 'Track',
           icon: 'fa-user-check',
           moduleId: 'analytics_student_tracking',
           key: 'analytics-student-track',
         },
         {
           path: `/admin/analytics/${encodeURIComponent(defaultAnalyticsForm)}/solutions`,
-          label: 'Solutions',
+          label: 'Solve',
           icon: 'fa-lightbulb',
           moduleId: 'analytics_solutions',
           key: 'analytics-solutions',
         },
-        { path: '/admin/analytics/all-forms-averages', label: 'Form Averages', icon: 'fa-chart-bar', moduleId: 'analytics_form_averages' },
+        { path: '/admin/analytics/all-forms-averages', label: 'Averages', icon: 'fa-chart-bar', moduleId: 'analytics_form_averages' },
+        { path: '/admin/analytics/promo', label: 'Promo', icon: 'fa-bullhorn', moduleId: 'analytics_promo' },
       ]
     },
     {
       category: 'School Branding',
+      compact: true,
       items: [
         { path: '/admin/branding/logo', label: 'Logo', icon: 'fa-image', moduleId: 'school_branding' },
         { path: '/admin/branding/stamp', label: 'Stamp', icon: 'fa-stamp', moduleId: 'school_branding' },
@@ -230,34 +238,37 @@ const AdminSidebar = () => {
     },
     {
       category: 'Administration',
+      compact: true,
       items: [
         { path: '/admin/administrators', label: 'Admin', icon: 'fa-user-shield', moduleId: 'administrators' },
         { path: '/admin/users', label: 'Users', icon: 'fa-users-cog', moduleId: 'user_management' },
         { path: '/admin/promotion', label: 'Promotion', icon: 'fa-graduation-cap', moduleId: 'promotion' },
-        { path: '/admin/database-backups', label: 'Database Backup', icon: 'fa-database', moduleId: 'database_backups' },
+        { path: '/admin/database-backups', label: 'Backup', icon: 'fa-database', moduleId: 'database_backups' },
       ]
     },
     {
       category: 'AI Matters',
+      compact: true,
       items: [
-        { path: '/admin/ai-matters', label: 'AI Matters', icon: 'fa-robot', moduleId: 'ai_matters' },
-        { path: '/admin/user-commands', label: 'User Commands', icon: 'fa-comments', moduleId: 'user_commands' },
+        { path: '/admin/ai-matters', label: 'AI Docs', icon: 'fa-robot', moduleId: 'ai_matters' },
+        { path: '/admin/user-commands', label: 'Helped', icon: 'fa-comments', moduleId: 'user_commands' },
       ]
     },
     {
       category: 'Public Website',
+      compact: true,
       items: [
-        { path: '/admin/public-pages', label: 'Public Pages', icon: 'fa-globe', moduleId: 'public_pages' },
-        { path: '/admin/necta-urls', label: 'NECTA URLs', icon: 'fa-link', moduleId: 'necta_urls' },
-        { path: '/admin/school-branding', label: 'School Branding', icon: 'fa-palette', moduleId: 'school_branding' },
-        { path: '/admin/announcements', label: 'Announcements', icon: 'fa-bullhorn', moduleId: 'announcements' },
+        { path: '/admin/public-pages', label: 'Public', icon: 'fa-globe', moduleId: 'public_pages' },
+        { path: '/admin/necta-urls', label: 'NECTA', icon: 'fa-link', moduleId: 'necta_urls' },
+        { path: '/admin/school-branding', label: 'Branding', icon: 'fa-palette', moduleId: 'school_branding' },
+        { path: '/admin/announcements', label: 'Announce', icon: 'fa-bullhorn', moduleId: 'announcements' },
         { path: '/admin/gallery', label: 'Gallery', icon: 'fa-images', moduleId: 'gallery' },
-        { path: '/admin/admission-applications', label: 'Admissions Apps', icon: 'fa-file-signature', moduleId: 'admission_applications' },
-        { path: '/admin/admission-letters', label: 'Admission Letters', icon: 'fa-file-pdf', moduleId: 'admission_letters' },
-        { path: '/admin/staff-profiles', label: 'Staff Profiles', icon: 'fa-id-badge', moduleId: 'staff_profiles' },
-        { path: '/admin/pass-ids', label: 'Pass ID', icon: 'fa-key', moduleId: 'pass_ids' },
+        { path: '/admin/admission-applications', label: 'Applicants', icon: 'fa-file-signature', moduleId: 'admission_applications' },
+        { path: '/admin/admission-letters', label: 'Letters', icon: 'fa-file-pdf', moduleId: 'admission_letters' },
+        { path: '/admin/staff-profiles', label: 'Profiles', icon: 'fa-id-badge', moduleId: 'staff_profiles' },
+        { path: '/admin/pass-ids', label: 'ID', icon: 'fa-key', moduleId: 'pass_ids' },
         { path: '/admin/faqs', label: 'FAQs', icon: 'fa-question-circle', moduleId: 'faqs' },
-        { path: '/admin/department-contacts', label: 'Site & Contacts', icon: 'fa-address-book', moduleId: 'department_contacts' }
+        { path: '/admin/department-contacts', label: 'Communication', icon: 'fa-address-book', moduleId: 'department_contacts' }
       ]
     }
   ];
@@ -428,7 +439,7 @@ const AdminSidebar = () => {
                       <CategoryGuideLabel name={category.category} />
                     </div>
                   )}
-                  <ul className={`nav-items category-items ${isExpanded ? 'open' : ''}`}>
+                  <ul className={`nav-items category-items ${category.compact ? `nav-items--compact${category.items.length === 4 ? ' nav-items--four' : ''}` : ''} ${isExpanded ? 'open' : ''}`}>
                   {category.items.map((item) => (
                     <li key={item.key || item.path}>
                       <Link 
@@ -469,7 +480,7 @@ const AdminSidebar = () => {
                       <i className={`fas fa-chevron-right category-chevron ${isExpanded ? 'rotated' : ''}`}></i>
                     </button>
                   )}
-                  <ul className={`mobile-nav-items mobile-category-items ${isExpanded ? 'open' : ''}`}>
+                  <ul className={`mobile-nav-items mobile-category-items ${category.compact ? `mobile-nav-items--compact${category.items.length === 4 ? ' mobile-nav-items--four' : ''}` : ''} ${isExpanded ? 'open' : ''}`}>
                     {category.items.map((item) => (
                       <li key={item.key || item.path}>
                         <Link 

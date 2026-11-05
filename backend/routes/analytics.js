@@ -1427,6 +1427,262 @@ Rules:
   }
 });
 
+// ── PROMO: Form One subject performance for Form Two subject allocation ──────
+const PROMO_MONTHS = [
+  'February', 'March', 'April', 'May',
+  'August', 'September', 'October', 'November',
+];
+
+const promoStreamKey = (stream) => {
+  const normalized = normalizeStream(stream);
+  const value = normalized == null ? '' : String(normalized).trim().toUpperCase();
+  return value || 'A';
+};
+
+const promoRemarks = (average, qualifyThreshold = 65, discussThreshold = 54.5) => {
+  if (average === null || average === undefined) return 'NO SCORES';
+  if (average >= qualifyThreshold) return 'QUALIFY';
+  if (average >= discussThreshold) return 'DISCUSS';
+  return 'NOT QUALIFY';
+};
+
+// `undefined` = filter not supplied (use every month/subject), while an
+// empty string means the filter was supplied with nothing selected.
+const parsePromoListParam = (value) => {
+  if (value === undefined) return null;
+  return String(value)
+    .split(',')
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
+// Build the Form One subject performance data used by the PROMO page and PDF.
+// Returns every registered subject per student with monthly scores, totals,
+// averages, grades, subject positions and allocation remarks.
+async function buildPromoFormOne(year, qualifyThreshold = 65, discussThreshold = 54.5, activeMonths = null, activeSubjects = null) {
+  // Normalize filter params: null means "not supplied" (use everything),
+  // an array (even empty) means the caller chose exactly those columns.
+  const monthsToUse = Array.isArray(activeMonths) ? activeMonths : PROMO_MONTHS;
+  const subjectsToUse = Array.isArray(activeSubjects) ? activeSubjects : null;
+  const [studentsResult, subjectsResult, scoresResult] = await Promise.all([
+      query(
+        `SELECT DISTINCT ON (adm_no)
+           adm_no, first_name, middle_name, surname, sex, level, stream, year, term, com
+         FROM students
+         WHERE level = 'FORM I'
+           AND year = $1
+           AND COALESCE(status, '') <> 'ARCHIVED'
+         ORDER BY adm_no, id DESC`,
+        [year]
+      ),
+      query(
+        `SELECT subject_code, subject_name, subject_abbreviation, stream
+         FROM subjects
+         WHERE level = 'FORM I' AND year = $1
+         ORDER BY subject_name, subject_code`,
+        [year]
+      ),
+      query(
+        `SELECT DISTINCT ON (adm_no, month, subject_code)
+           adm_no, month, subject_code, score
+         FROM individual_scores
+         WHERE level = 'FORM I'
+           AND year = $1
+           AND month = ANY($2::text[])
+         ORDER BY adm_no, month, subject_code, updated_at DESC NULLS LAST, id DESC`,
+        [year, monthsToUse]
+      ),
+    ]);
+
+    // Subjects grouped by normalized stream (NA → A).
+    const subjectsByStream = new Map();
+    const subjectsByCode = new Map();
+    for (const subject of subjectsResult.rows) {
+      // Filter by active subjects if provided
+      if (subjectsToUse && !subjectsToUse.includes(subject.subject_code)) continue;
+      const key = promoStreamKey(subject.stream);
+      if (!subjectsByStream.has(key)) subjectsByStream.set(key, []);
+      subjectsByStream.get(key).push(subject);
+      if (!subjectsByCode.has(subject.subject_code)) {
+        subjectsByCode.set(subject.subject_code, subject);
+      }
+    }
+
+    // Score lookup: adm_no|subject_code|month → score (latest row wins above).
+    const scoreMap = new Map();
+    for (const row of scoresResult.rows) {
+      scoreMap.set(
+        `${row.adm_no}|${row.subject_code}|${row.month}`,
+        Number(row.score)
+      );
+    }
+
+    const students = studentsResult.rows.map((student) => {
+      const streamKey = promoStreamKey(student.stream);
+      let studentSubjects = subjectsByStream.get(streamKey) || [];
+
+      // Some legacy classes have students under stream NA/missing while the
+      // subjects are registered under a single stream. Fall back sensibly.
+      if (studentSubjects.length === 0) {
+        studentSubjects = subjectsByStream.size === 1
+          ? [...subjectsByStream.values()][0]
+          : [...subjectsByCode.values()];
+      }
+
+      const subjectRows = studentSubjects.map((subject) => {
+        const scores = {};
+        let total = 0;
+        let monthsCounted = 0;
+
+        for (const month of monthsToUse) {
+          const raw = scoreMap.get(`${student.adm_no}|${subject.subject_code}|${month}`);
+          const value = raw === undefined || raw === null || Number.isNaN(raw) ? null : raw;
+          scores[month] = value;
+          if (value !== null) {
+            total += value;
+            monthsCounted += 1;
+          }
+        }
+
+        const average = monthsCounted > 0 ? total / monthsCounted : null;
+
+        return {
+          subject_code: subject.subject_code,
+          subject_name: subject.subject_name,
+          subject_abbreviation: subject.subject_abbreviation,
+          scores,
+          total: monthsCounted > 0 ? Number(total.toFixed(2)) : null,
+          average: average === null ? null : Number(average.toFixed(2)),
+          months_counted: monthsCounted,
+          grade: average === null ? '-' : calculateGrade(average, 'FORM I'),
+          position: null,
+          remarks: promoRemarks(average, qualifyThreshold, discussThreshold),
+        };
+      });
+
+      return {
+        adm_no: student.adm_no,
+        first_name: student.first_name,
+        middle_name: student.middle_name,
+        surname: student.surname,
+        full_name: [student.first_name, student.middle_name, student.surname]
+          .filter(Boolean)
+          .join(' '),
+        sex: student.sex,
+        level: student.level,
+        stream: streamKey,
+        year: student.year,
+        term: student.term,
+        com: student.com,
+        subjects: subjectRows,
+      };
+    });
+
+    students.sort((a, b) => {
+      const bySurname = String(a.surname || '').localeCompare(String(b.surname || ''));
+      if (bySurname !== 0) return bySurname;
+      return String(a.first_name || '').localeCompare(String(b.first_name || ''));
+    });
+
+    // Position per subject within the same stream (competition ranking, ties share a rank).
+    const rankingBuckets = new Map();
+    for (const student of students) {
+      for (const subject of student.subjects) {
+        if (subject.average === null) continue;
+        const key = `${student.stream}|${subject.subject_code}`;
+        if (!rankingBuckets.has(key)) rankingBuckets.set(key, []);
+        rankingBuckets.get(key).push({ student, subject });
+      }
+    }
+
+    for (const bucket of rankingBuckets.values()) {
+      bucket.sort((a, b) => b.subject.average - a.subject.average);
+      let previousAverage = null;
+      let previousRank = 0;
+      bucket.forEach((entry, index) => {
+        const rank = previousAverage !== null && Math.abs(entry.subject.average - previousAverage) < 1e-9
+          ? previousRank
+          : index + 1;
+        entry.subject.position = rank;
+        previousAverage = entry.subject.average;
+        previousRank = rank;
+      });
+    }
+
+  return {
+    year,
+    level: 'FORM I',
+    months: monthsToUse,
+    total_students: students.length,
+    students,
+  };
+}
+
+const parsePromoYear = (value) => {
+  const year = parseInt(value, 10);
+  return Number.isFinite(year) ? year : null;
+};
+
+// List Form One students for a year with every registered subject, monthly
+// scores, totals, averages, grades, subject positions and allocation remarks.
+router.get('/promo/form-one', requireModule('analytics_promo'), async (req, res) => {
+  try {
+    const year = parsePromoYear(req.query.year);
+    if (year === null) {
+      return res.status(400).json({ message: 'A valid year is required' });
+    }
+
+    const qualifyThreshold = Number(req.query.qualifyThreshold) || 65;
+    const discussThreshold = Number(req.query.discussThreshold) || 54.5;
+    const activeMonths = parsePromoListParam(req.query.months);
+    const activeSubjects = parsePromoListParam(req.query.subjects);
+
+    const data = await buildPromoFormOne(year, qualifyThreshold, discussThreshold, activeMonths, activeSubjects);
+    res.json(data);
+  } catch (error) {
+    console.error('[PROMO] Error:', error);
+    return sendError(res, error, 500);
+  }
+});
+
+// Download the PROMO report as a landscape A4 PDF.
+router.get('/promo/form-one/pdf', requireModule('analytics_promo'), async (req, res) => {
+  try {
+    const year = parsePromoYear(req.query.year);
+    if (year === null) {
+      return res.status(400).json({ message: 'A valid year is required' });
+    }
+
+    const qualifyThreshold = Number(req.query.qualifyThreshold) || 65;
+    const discussThreshold = Number(req.query.discussThreshold) || 54.5;
+    const activeMonths = parsePromoListParam(req.query.months);
+    const activeSubjects = parsePromoListParam(req.query.subjects);
+
+    const data = await buildPromoFormOne(year, qualifyThreshold, discussThreshold, activeMonths, activeSubjects);
+    if (!data.students.length) {
+      return res.status(404).json({ message: `No Form One students found for ${year}` });
+    }
+
+    const { renderPromoFormOnePdf } = require('../utils/promoPdf');
+    const pdfBuffer = await renderPromoFormOnePdf(data, qualifyThreshold, discussThreshold);
+
+    if (!pdfBuffer || !pdfBuffer.length || pdfBuffer.toString('ascii', 0, 4) !== '%PDF') {
+      return res.status(500).json({ message: 'Failed to generate a valid PDF' });
+    }
+
+    res.setHeader('Content-Type', 'application/pdf');
+    res.setHeader('Content-Length', pdfBuffer.length);
+    res.setHeader(
+      'Content-Disposition',
+      `attachment; filename="PROMO_Form_One_${year}.pdf"`
+    );
+    return res.end(pdfBuffer);
+  } catch (error) {
+    console.error('[PROMO-PDF] Error:', error);
+    return sendError(res, error, 500);
+  }
+});
+
 // Get solutions/recommendations based on analytics
 router.get('/solutions', requireModule('analytics_solutions'), async (req, res) => {
   try {

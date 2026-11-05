@@ -183,112 +183,30 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
         const parishesMap = {};
         const parishes = res.data.parishes || [];
         console.log('[PARISHES] Received', parishes.length, 'parishes from API');
-        
-        // When viewing streams A, B, C, D: parishes include both that stream and "NA"
-        // We need to map them to the combined student list
-        // Create a map of student adm_no to their index in the sorted students array
-        const studentIndexMap = new Map();
-        students.forEach((student, index) => {
-          const key = `${student.adm_no}-${student.level}-${student.stream}-${student.year}`;
-          studentIndexMap.set(key, index);
-        });
-        
-        // Map parishes by finding the student's position in the combined sorted list
-        // The student_index in parishes refers to the position in the sorted list for that specific stream
-        // We need to fetch the students for each stream separately, sort them, then map
-        
-        // Group students by stream
-        const studentsByStream = {};
-        students.forEach(student => {
-          if (!studentsByStream[student.stream]) {
-            studentsByStream[student.stream] = [];
-          }
-          studentsByStream[student.stream].push(student);
-        });
-        
-        console.log('[PARISHES] Students by stream:', Object.keys(studentsByStream).map(s => `${s}: ${studentsByStream[s].length}`).join(', '));
-        
-        // Sort each stream's students (same way as database)
-        Object.keys(studentsByStream).forEach(streamKey => {
-          studentsByStream[streamKey] = sortStudentsByName(studentsByStream[streamKey]);
-        });
-        
-        // Map parishes
+
+        // Key parishes directly by adm_no (no more positional student_index mapping)
         let mappedCount = 0;
         let skippedCount = 0;
-        const skippedReasons = { invalidIndex: 0, noStudents: 0, indexOutOfRange: 0, studentNotFound: 0 };
-        
-        parishes.forEach((parish, _idx) => {
-          const parishStream = parish.stream;
-          const parishIndex = parseInt(parish.student_index, 10);
-          
-          if (isNaN(parishIndex) || parishIndex < 0) {
+
+        parishes.forEach((parish) => {
+          const admNo = String(parish.adm_no ?? '').trim();
+          if (!admNo) {
             skippedCount++;
-            skippedReasons.invalidIndex++;
             return;
           }
-          
-          // Get sorted students for this stream
-          let sortedStreamStudents = studentsByStream[parishStream] || [];
-          
-          // Handle stream normalization: NA <-> A are equivalent for FORM I-IV
-          // If parish is from "NA" stream but we have no "NA" students, 
-          // try mapping to the current stream's students (A, B, C, or D)
-          // This handles cases where students were migrated from "NA" to specific streams
-          if (parishStream === 'NA' && sortedStreamStudents.length === 0 && ['A', 'B', 'C', 'D'].includes(stream.toUpperCase())) {
-            sortedStreamStudents = studentsByStream[stream] || [];
-          }
-          
-          // Also handle reverse: if parish is from "A" stream but we have "NA" students
-          // (This can happen if parishes were created with stream "A" but students are stored as "NA")
-          if (parishStream === 'A' && sortedStreamStudents.length === 0 && studentsByStream['NA'] && studentsByStream['NA'].length > 0) {
-            sortedStreamStudents = studentsByStream['NA'] || [];
-          }
-          
-          // If still no students found, skip this parish
-          if (sortedStreamStudents.length === 0) {
-            skippedCount++;
-            skippedReasons.noStudents++;
-            return;
-          }
-          
-          // Get the student at the parish's index in that stream's sorted list
-          if (parishIndex < sortedStreamStudents.length) {
-            const studentAtParishIndex = sortedStreamStudents[parishIndex];
-            
-            // Find this student's position in the combined sorted students list
-            const combinedIndex = students.findIndex(s => 
-              s.adm_no === studentAtParishIndex.adm_no && 
-              s.level === studentAtParishIndex.level && 
-              s.stream === studentAtParishIndex.stream && 
-              s.year === studentAtParishIndex.year
-            );
-            
-            if (combinedIndex >= 0) {
-              parishesMap[combinedIndex] = {
-                ...parish,
-                student_index: combinedIndex
-              };
-              mappedCount++;
-            } else {
-              skippedCount++;
-              skippedReasons.studentNotFound++;
-            }
+          // Confirm this adm_no belongs to the current class roster
+          const belongs = students.some(
+            (s) => String(s.adm_no).trim() === admNo && s.level === normalizedLevel && s.year === apiYear
+          );
+          if (belongs) {
+            parishesMap[admNo] = parish;
+            mappedCount++;
           } else {
             skippedCount++;
-            skippedReasons.indexOutOfRange++;
           }
         });
-        
-        console.log('[PARISHES] Skipped reasons:', JSON.stringify(skippedReasons, null, 2));
-        console.log('[PARISHES] Mapping complete:', { 
-          mappedCount, 
-          skippedCount, 
-          parishesMapSize: Object.keys(parishesMap).length,
-          totalParishes: parishes.length,
-          studentsByStreamKeys: Object.keys(studentsByStream),
-          studentsByStreamCounts: Object.keys(studentsByStream).map(k => `${k}: ${studentsByStream[k].length}`)
-        });
+
+        console.log('[PARISHES] Mapping complete:', { mappedCount, skippedCount, totalParishes: parishes.length });
         return parishesMap;
       } catch (error) {
         console.error('[PARISHES] Error fetching parishes', error);
@@ -316,12 +234,12 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
 
   // Delete parish mutation
   const deleteMutation = useMutation({
-    mutationFn: async ({ studentIndex }) => {
+    mutationFn: async ({ adm_no }) => {
       const params = {
         level: normalizedLevel,
         stream: stream,
         year: apiYear,
-        student_index: parseInt(studentIndex, 10) // Ensure it's a number
+        adm_no
       };
       return studentsAPI.deleteParish(params);
     },
@@ -335,9 +253,9 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
     },
   });
 
-  const openModal = (student, index) => {
-    setSelectedStudent({ ...student, index });
-    const existingParish = parishesData[index];
+  const openModal = (student) => {
+    setSelectedStudent({ ...student });
+    const existingParish = parishesData[student.adm_no];
     setParishName(existingParish?.parish_name || '');
     setShowModal(true);
   };
@@ -359,7 +277,7 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
       level: normalizedLevel,
       stream: stream,
       year: apiYear,
-      student_index: selectedStudent.index,
+      adm_no: selectedStudent.adm_no,
       parish_name: parishName.trim()
     });
   };
@@ -429,8 +347,8 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
 
   const buildParishCsv = (includeFilledParishes) => {
     const headers = ['AdmNumber', 'first_name', 'middle_name', 'surname', 'Parish'];
-    const rows = students.map((s, index) => {
-      const parish = includeFilledParishes ? (getParishName(index) || '') : '';
+    const rows = students.map((s) => {
+      const parish = includeFilledParishes ? (getParishName(s.adm_no) || '') : '';
       return [
         csvEscape(s.adm_no),
         csvEscape(s.first_name),
@@ -524,8 +442,10 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
             continue;
           }
 
+          const student = students.find((s) => String(s.adm_no).trim() === admNo);
           payload.push({
-            student_index: studentIndex,
+            adm_no: admNo,
+            student_index: student ? students.indexOf(student) : null,
             parish_name: parishName,
           });
         }
@@ -569,27 +489,25 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
 
   const handleDelete = (student, index) => {
     if (window.confirm(`Are you sure you want to delete the parish assignment for ${student.first_name} ${student.surname}?`)) {
-      deleteMutation.mutate({ studentIndex: index });
+      deleteMutation.mutate({ adm_no: student.adm_no });
     }
   };
 
-  const getParishName = (studentIndex) => {
+  const getParishName = (admNo) => {
     // Safety check: if parishesData is not loaded yet, return null
     if (!parishesData || typeof parishesData !== 'object') {
       return null;
     }
     
-    // Ensure studentIndex is a number
-    const index = parseInt(studentIndex, 10);
-    if (isNaN(index) || index < 0) {
+    if (!admNo) {
       return null;
     }
     
-    // Get parish record for this student index
-    const parish = parishesData[index];
+    // Get parish record for this adm_no
+    const parish = parishesData[String(admNo).trim()];
     
     if (!parish) {
-      // No parish record exists for this student index
+      // No parish record exists for this adm_no
       return null;
     }
     
@@ -740,7 +658,7 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
                   <tbody>
                     {paginatedStudents.map((student, i) => {
                       const index = (currentPage - 1) * ITEMS_PER_PAGE + i;
-                      const parish = getParishName(index);
+                      const parish = getParishName(student.adm_no);
                       
                       return (
                         <tr key={`${student.adm_no}-${student.level}-${student.stream}-${student.year}`}>
@@ -762,7 +680,7 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
                               <button
                                 type="button"
                                 className="parish-btn small primary"
-                                onClick={() => openModal(student, index)}
+                                onClick={() => openModal(student)}
                                 title="Assign/Edit Parish"
                               >
                                 <i className="fas fa-edit"></i> {parish ? 'Edit' : 'Assign'}

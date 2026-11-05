@@ -971,7 +971,7 @@ const IndividualReportDetail = () => {
                 <td>
                   <strong>{t.sex}</strong>
                 </td>
-                <td>{student.sex}</td>
+                <td>{student.sex === 'Male' ? 'Me' : (student.sex === 'Female' ? 'Ke' : student.sex)}</td>
                 <td>
                   <strong>{t.classLevel}</strong>
                 </td>
@@ -981,19 +981,12 @@ const IndividualReportDetail = () => {
                 <td>
                   <strong>{t.term}</strong>
                 </td>
-                <td>{term.replace('Term ', '')}</td>
+                <td>{(term === 'First Term' || term === 'Term I' || term === 'Term 1') ? 'I' : 'II'}</td>
                 <td>
                   <strong>{t.month}</strong>
                 </td>
                 <td>
-                  {isForm5Or6
-                    ? term === 'Term I'
-                      ? 'DECEMBER'
-                      : 'JUNE'
-                    : term === 'Term I'
-                    ? 'JUNE'
-                    : 'DECEMBER'}
-                </td>
+{isForm5Or6 ? ((term === "Term I" || term === "First Term" || term === "Term 1") ? "DISEMBA" : "JUNI") : ((term === "Term I" || term === "First Term" || term === "Term 1") ? "JUNI" : "DISEMBA")}  </td>
                 <td>
                   <strong>{t.year}</strong>
                 </td>

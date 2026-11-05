@@ -47,7 +47,7 @@ const SWAHILI = {
   parishMissing: 'Not specified',
 
   subject: 'SOMO',
-  assessmentMarks: 'ALAMA ZA UFAULU',
+  assessmentMarks: 'ALAMA',
   total: 'JUMLA',
   grade: 'DARAJA',
   position: 'NAFASI',

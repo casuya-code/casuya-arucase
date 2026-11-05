@@ -355,6 +355,75 @@
   min-width: 0;
 }
 
+/* Compact category: first three items on row one, last two centered on row two. */
+.admin-sidebar:not(.collapsed) .nav-items--compact {
+  display: grid;
+  grid-template-columns: repeat(6, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.admin-sidebar:not(.collapsed) .nav-items--compact > li {
+  min-width: 0;
+  /* Every tile covers two of the six tracks, so all buttons keep the same
+     width no matter how many items the section has. */
+  grid-column: span 2;
+  display: flex;
+}
+
+.admin-sidebar:not(.collapsed) .nav-items--compact > li:nth-child(1),
+.admin-sidebar:not(.collapsed) .nav-items--compact > li:nth-child(2),
+.admin-sidebar:not(.collapsed) .nav-items--compact > li:nth-child(3) {
+  grid-column: span 2;
+}
+
+/* Second row shares the same column tracks as the first row so all five
+   items line up: Averages under View, Promo under Track. */
+.admin-sidebar:not(.collapsed) .nav-items--compact > li:nth-child(4) {
+  grid-column: 1 / span 2;
+}
+
+.admin-sidebar:not(.collapsed) .nav-items--compact > li:nth-child(5) {
+  grid-column: 3 / span 2;
+}
+
+/* Four-item compact lists stay on the same 6-column tracks as every other
+   compact list so all buttons keep an identical width: Admin | Users on row
+   one, Promotion | Backup directly below them. */
+.admin-sidebar:not(.collapsed) .nav-items--four > li:nth-child(3) {
+  grid-column: 1 / span 2;
+}
+
+.admin-sidebar:not(.collapsed) .nav-items--four > li:nth-child(4) {
+  grid-column: 3 / span 2;
+}
+
+.admin-sidebar:not(.collapsed) .nav-items--compact .nav-item {
+  flex-direction: column;
+  justify-content: center;
+  gap: 0.2rem;
+  padding: 0.5rem 0.25rem;
+  border-radius: 0.625rem;
+  text-align: center;
+  min-height: 3.1rem;
+}
+
+.admin-sidebar:not(.collapsed) .nav-items--compact .nav-item-icon {
+  width: auto;
+  font-size: 0.85rem;
+}
+
+.admin-sidebar:not(.collapsed) .nav-items--compact .nav-item-text {
+  flex: 0 1 auto;
+  width: 100%;
+  text-align: center;
+  /* Long labels wrap inside the narrow tile instead of being cut off. */
+  white-space: normal;
+  overflow-wrap: break-word;
+  word-break: break-word;
+  font-size: 0.72rem;
+  line-height: 1.2;
+}
+
 /* Collapsed State */
 .admin-sidebar.collapsed .category-title {
   display: none;
@@ -751,6 +820,70 @@
   .mobile-nav-item .nav-item-text {
     white-space: normal;
     word-wrap: break-word;
+  }
+
+  /* Compact category: first three items on row one, last two centered on row two. */
+  .mobile-nav-items--compact {
+    display: grid;
+    grid-template-columns: repeat(6, minmax(0, 1fr));
+    gap: 0.4rem;
+  }
+
+  .mobile-nav-items--compact > li {
+    min-width: 0;
+    /* Every tile covers two of the six tracks, so all buttons keep the same
+       width no matter how many items the section has. */
+    grid-column: span 2;
+    display: flex;
+  }
+
+  .mobile-nav-items--compact > li:nth-child(1),
+  .mobile-nav-items--compact > li:nth-child(2),
+  .mobile-nav-items--compact > li:nth-child(3) {
+    grid-column: span 2;
+  }
+
+  /* Second row shares the same column tracks as the first row. */
+  .mobile-nav-items--compact > li:nth-child(4) {
+    grid-column: 1 / span 2;
+  }
+
+  .mobile-nav-items--compact > li:nth-child(5) {
+    grid-column: 3 / span 2;
+  }
+
+  /* Four-item compact lists stay on the same 6-column tracks as every other
+     compact list so all buttons keep an identical width. */
+  .mobile-nav-items--four > li:nth-child(3) {
+    grid-column: 1 / span 2;
+  }
+
+  .mobile-nav-items--four > li:nth-child(4) {
+    grid-column: 3 / span 2;
+  }
+
+  .mobile-nav-items--compact .mobile-nav-item {
+    flex-direction: column;
+    justify-content: center;
+    gap: 0.25rem;
+    padding: 0.55rem 0.25rem;
+    border-radius: 0.625rem;
+    min-height: 56px;
+    text-align: center;
+  }
+
+  .mobile-nav-items--compact .mobile-nav-item .nav-item-icon {
+    width: auto;
+  }
+
+  .mobile-nav-items--compact .nav-item-text {
+    width: 100%;
+    text-align: center;
+    /* Long labels wrap inside the narrow tile instead of being cut off. */
+    white-space: normal;
+    overflow-wrap: break-word;
+    word-break: break-word;
+    font-size: 0.72rem;
   }
 
   .admin-sidebar .sidebar-nav {

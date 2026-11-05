@@ -113,6 +113,7 @@ const MODULE_GROUPS = [
       { id: 'analytics_student_tracking', label: 'Student Tracking', icon: 'fa-user-check' },
       { id: 'analytics_solutions', label: 'Solutions Access', icon: 'fa-lightbulb' },
       { id: 'analytics_form_averages', label: 'Form Averages', icon: 'fa-chart-bar' },
+      { id: 'analytics_promo', label: 'PROMO', icon: 'fa-bullhorn' },
     ],
   },
   {

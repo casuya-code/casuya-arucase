@@ -52,7 +52,7 @@ function checkPhotoUploadRateLimit(username) {
   return true;
 }
 
-const { getTermMatchValues } = require('../utils/termNormalizer');
+const { getTermMatchValues, normalizeTerm } = require('../utils/termNormalizer');
 
 // Derive canonical term label from assessment month (matches score-entry template logic).
 function getTermFromMonth(month, level) {
@@ -1301,20 +1301,21 @@ router.put('/:admNo', async (req, res) => {
 // Express matches routes in order, so specific routes must come before parameterized routes
 router.delete('/parishes', async (req, res) => {
   try {
-    let { level, stream, year, student_index } = req.query;
-    
+    let { level, stream, year, student_index, adm_no } = req.query;
+    const admNo = adm_no != null && String(adm_no).trim() !== '' ? String(adm_no).trim() : null;
+
     // Normalize level to uppercase and handle URL encoding (same as GET endpoint)
     if (level) {
       level = decodeURIComponent(String(level).replace(/\+/g, ' ')).trim().toUpperCase();
     }
     
-    if (!level || !level.trim() || !stream || !year || student_index === undefined || student_index === null) {
-      return res.status(400).json({ message: 'level, stream, year, and student_index are required' });
+    if (!level || !level.trim() || !stream || !year || (!student_index && !admNo)) {
+      return res.status(400).json({ message: 'level, stream, year, and student_index or adm_no are required' });
     }
     
     const studentIndexNum = parseInt(student_index);
-    if (isNaN(studentIndexNum)) {
-      return res.status(400).json({ message: 'student_index must be a valid number' });
+    if (studentIndexNum === undefined || isNaN(studentIndexNum)) {
+      // keep undefined when adm_no is used
     }
     
     // Normalize stream: NA -> A
@@ -1324,43 +1325,62 @@ router.delete('/parishes', async (req, res) => {
     const streamsToCheck = normalizedStream === 'A' ? ['A', 'NA'] : [normalizedStream];
     const uniqueStreams = [...new Set(streamsToCheck)];
     
-    // Check if record exists first (check both streams)
+    // Check if record exists first
     let existing;
-    if (uniqueStreams.length === 1) {
-      existing = await query(
-        `SELECT id, parish_name, stream FROM student_parishes 
-         WHERE level = $1 AND stream = $2 AND year = $3 AND student_index = $4`,
-        [level, uniqueStreams[0], parseInt(year), studentIndexNum]
-      );
+    if (admNo) {
+      if (uniqueStreams.length === 1) {
+        existing = await query(
+          `SELECT id, parish_name, stream FROM student_parishes 
+           WHERE level = $1 AND stream = $2 AND year = $3 AND adm_no = $4`,
+          [level, uniqueStreams[0], parseInt(year), admNo]
+        );
+      } else {
+        existing = await query(
+          `SELECT id, parish_name, stream FROM student_parishes 
+           WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND adm_no = $5`,
+          [level, uniqueStreams[0], uniqueStreams[1], parseInt(year), admNo]
+        );
+      }
     } else {
-      existing = await query(
-        `SELECT id, parish_name, stream FROM student_parishes 
-         WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND student_index = $5`,
-        [level, uniqueStreams[0], uniqueStreams[1], parseInt(year), studentIndexNum]
-      );
+      if (uniqueStreams.length === 1) {
+        existing = await query(
+          `SELECT id, parish_name, stream FROM student_parishes 
+           WHERE level = $1 AND stream = $2 AND year = $3 AND student_index = $4`,
+          [level, uniqueStreams[0], parseInt(year), studentIndexNum]
+        );
+      } else {
+        existing = await query(
+          `SELECT id, parish_name, stream FROM student_parishes 
+           WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND student_index = $5`,
+          [level, uniqueStreams[0], uniqueStreams[1], parseInt(year), studentIndexNum]
+        );
+      }
     }
     
     if (existing.rows.length === 0) {
-      // Record doesn't exist - this is fine, just return success
-      // (maybe the parish was already cleared or never assigned)
       return res.json({ message: 'Parish assignment removed successfully' });
     }
     
     // Use the actual stream from the found record for the update
-    const actualStream = existing.rows.length > 0 && existing.rows[0] ? (existing.rows[0].stream || normalizedStream) : normalizedStream;
+    const actualStream = existing.rows[0].stream || normalizedStream;
     
-    // Update parish_name to empty string instead of deleting the record
-    const result = await query(
-      `UPDATE student_parishes 
-       SET parish_name = ''
-       WHERE level = $1 AND stream = $2 AND year = $3 AND student_index = $4
-       RETURNING *`,
-      [level, actualStream, parseInt(year), studentIndexNum]
-    );
-    
-    if (result.rows.length === 0) {
-      // This shouldn't happen, but handle it gracefully
-      return res.json({ message: 'Parish assignment removed successfully' });
+    // Clear parish_name instead of deleting the record
+    if (admNo) {
+      await query(
+        `UPDATE student_parishes 
+         SET parish_name = ''
+         WHERE level = $1 AND stream = $2 AND year = $3 AND adm_no = $4
+         RETURNING *`,
+        [level, actualStream, parseInt(year), admNo]
+      );
+    } else {
+      await query(
+        `UPDATE student_parishes 
+         SET parish_name = ''
+         WHERE level = $1 AND stream = $2 AND year = $3 AND student_index = $4
+         RETURNING *`,
+        [level, actualStream, parseInt(year), studentIndexNum]
+      );
     }
     
     res.json({ message: 'Parish assignment removed successfully' });
@@ -1703,13 +1723,16 @@ router.get('/:admNo/photo', async (req, res) => {
     const { admNo } = req.params;
     const { level, stream, year } = req.query;
 
-    if (!level || !stream || !year) {
-      return res.status(400).json({ message: 'level, stream, and year are required' });
+    if (!level || !stream) {
+      return res.status(400).json({ message: 'level and stream are required' });
     }
 
+    const normalizedStream = normalizeStream(stream);
+    // A photo belongs to the student (adm_no + level + stream), not to a specific year.
+    // If a year is given, still return any-year photo for that student.
     const result = await query(
-      `SELECT * FROM student_photos WHERE level = $1 AND stream = $2 AND year = $3 AND adm_no = $4 ORDER BY id LIMIT 1`,
-      [level, stream, parseInt(year), admNo]
+      `SELECT * FROM student_photos WHERE level = $1 AND stream = $2 AND adm_no = $3 ORDER BY year DESC, id DESC LIMIT 1`,
+      [level, normalizedStream, admNo]
     );
 
     if (result.rows.length === 0) {
@@ -2110,35 +2133,54 @@ async function fixStudentParishesSequence() {
 // Save or update student parish
 router.post('/parishes', async (req, res) => {
   try {
-    let { level, stream, year, student_index, parish_name } = req.body;
+    let { level, stream, year, student_index, adm_no, parish_name } = req.body;
+    const admNo = adm_no != null && String(adm_no).trim() !== '' ? String(adm_no).trim() : null;
     
     // Normalize level to uppercase and handle URL encoding (same as GET endpoint)
     if (level) {
       level = decodeURIComponent(String(level).replace(/\+/g, ' ')).trim().toUpperCase();
     }
     
-    if (!level || !level.trim() || !stream || !year || student_index === undefined || !parish_name) {
-      return res.status(400).json({ message: 'All fields are required' });
+    if (!level || !level.trim() || !stream || !year || (!student_index && !admNo) || !parish_name) {
+      return res.status(400).json({ message: 'level, stream, year, student_index or adm_no, and parish_name are required' });
     }
     
     // Normalize stream: NA -> A (use normalized stream for consistency)
     const normalizedStream = normalizeStream(stream);
+    
+    const studentIndexNum = student_index != null && String(student_index).trim() !== '' ? parseInt(student_index, 10) : null;
     
     // Check if record exists first - check both streams for backward compatibility
     const streamsToCheck = normalizedStream === 'A' ? ['A', 'NA'] : [normalizedStream];
     const uniqueStreams = [...new Set(streamsToCheck)];
     
     let existing;
-    if (uniqueStreams.length === 1) {
-      existing = await query(
-        `SELECT id, stream FROM student_parishes WHERE level = $1 AND stream = $2 AND year = $3 AND student_index = $4`,
-        [level, uniqueStreams[0], parseInt(year), parseInt(student_index)]
-      );
+    if (admNo) {
+      if (uniqueStreams.length === 1) {
+        existing = await query(
+          `SELECT id, stream FROM student_parishes WHERE level = $1 AND stream = $2 AND year = $3 AND adm_no = $4`,
+          [level, uniqueStreams[0], parseInt(year), admNo]
+        );
+      } else {
+        existing = await query(
+          `SELECT id, stream FROM student_parishes WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND adm_no = $5`,
+          [level, uniqueStreams[0], uniqueStreams[1], parseInt(year), admNo]
+        );
+      }
+    } else if (studentIndexNum != null && !Number.isNaN(studentIndexNum)) {
+      if (uniqueStreams.length === 1) {
+        existing = await query(
+          `SELECT id, stream FROM student_parishes WHERE level = $1 AND stream = $2 AND year = $3 AND student_index = $4`,
+          [level, uniqueStreams[0], parseInt(year), studentIndexNum]
+        );
+      } else {
+        existing = await query(
+          `SELECT id, stream FROM student_parishes WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND student_index = $5`,
+          [level, uniqueStreams[0], uniqueStreams[1], parseInt(year), studentIndexNum]
+        );
+      }
     } else {
-      existing = await query(
-        `SELECT id, stream FROM student_parishes WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND student_index = $5`,
-        [level, uniqueStreams[0], uniqueStreams[1], parseInt(year), parseInt(student_index)]
-      );
+      existing = { rows: [] };
     }
     
     let result;
@@ -2147,10 +2189,12 @@ router.post('/parishes', async (req, res) => {
       const actualStream = existing.rows[0].stream || normalizedStream;
       result = await query(
         `UPDATE student_parishes 
-         SET parish_name = $1
-         WHERE level = $2 AND stream = $3 AND year = $4 AND student_index = $5
+         SET adm_no = COALESCE($1, student_parishes.adm_no),
+             student_index = COALESCE($2, student_parishes.student_index),
+             parish_name = $3
+         WHERE level = $4 AND stream = $5 AND year = $6 AND (adm_no IS NOT DISTINCT FROM $7 OR student_index = $8)
          RETURNING *`,
-        [parish_name.trim(), level, actualStream, parseInt(year), parseInt(student_index)]
+        [admNo || null, studentIndexNum || null, parish_name.trim(), level, actualStream, parseInt(year), admNo || null, studentIndexNum || null]
       );
     } else {
       // Fix sequence before inserting to avoid conflicts
@@ -2162,20 +2206,20 @@ router.post('/parishes', async (req, res) => {
       // Insert new record
       try {
         result = await query(
-          `INSERT INTO student_parishes (level, stream, year, student_index, parish_name)
-           VALUES ($1, $2, $3, $4, $5)
+          `INSERT INTO student_parishes (level, stream, year, student_index, adm_no, parish_name)
+           VALUES ($1, $2, $3, $4, $5, $6)
            RETURNING *`,
-          [level, normalizedStream, parseInt(year), parseInt(student_index), parish_name.trim()]
+          [level, normalizedStream, parseInt(year), studentIndexNum || null, admNo || null, parish_name.trim()]
         );
       } catch (insertError) {
         // If insert fails due to sequence, fix and retry once
         if (insertError.code === '23505' && insertError.constraint === 'student_parishes_pkey') {
           await fixStudentParishesSequence();
           result = await query(
-            `INSERT INTO student_parishes (level, stream, year, student_index, parish_name)
-             VALUES ($1, $2, $3, $4, $5)
+            `INSERT INTO student_parishes (level, stream, year, student_index, adm_no, parish_name)
+             VALUES ($1, $2, $3, $4, $5, $6)
              RETURNING *`,
-            [level, normalizedStream, parseInt(year), parseInt(student_index), parish_name.trim()]
+            [level, normalizedStream, parseInt(year), studentIndexNum || null, admNo || null, parish_name.trim()]
           );
         } else {
           throw insertError;
@@ -2193,32 +2237,40 @@ router.post('/parishes', async (req, res) => {
         await fixStudentParishesSequence();
         
         // Retry with update-first approach
-        let { level, stream, year, student_index, parish_name } = req.body;
+        let { level, stream, year, student_index, adm_no, parish_name } = req.body;
+        const admNoRetry = adm_no != null && String(adm_no).trim() !== '' ? String(adm_no).trim() : null;
+        const studentIndexNumRetry = student_index != null && String(student_index).trim() !== '' ? parseInt(student_index, 10) : null;
         if (level) {
           level = decodeURIComponent(String(level).replace(/\+/g, ' ')).trim().toUpperCase();
         }
         const normalizedRetryStream = normalizeStream(stream);
         
         const existing = await query(
-          `SELECT id FROM student_parishes WHERE level = $1 AND stream = $2 AND year = $3 AND student_index = $4`,
-          [level, normalizedRetryStream, parseInt(year), parseInt(student_index)]
+          `SELECT id FROM student_parishes WHERE level = $1 AND stream = $2 AND year = $3 ${
+            admNoRetry ? 'AND adm_no = $4' : 'AND student_index = $4'
+          }`,
+          admNoRetry
+            ? [level, normalizedRetryStream, parseInt(year), admNoRetry]
+            : [level, normalizedRetryStream, parseInt(year), studentIndexNumRetry]
         );
         
         let result;
         if (existing.rows.length > 0) {
           result = await query(
             `UPDATE student_parishes 
-             SET parish_name = $1
-             WHERE level = $2 AND stream = $3 AND year = $4 AND student_index = $5
+             SET adm_no = COALESCE($1, student_parishes.adm_no),
+                 student_index = COALESCE($2, student_parishes.student_index),
+                 parish_name = $3
+             WHERE level = $4 AND stream = $5 AND year = $6 AND (adm_no IS NOT DISTINCT FROM $7 OR student_index = $8)
              RETURNING *`,
-            [parish_name.trim(), level, normalizedRetryStream, parseInt(year), parseInt(student_index)]
+            [admNoRetry || null, studentIndexNumRetry || null, parish_name.trim(), level, normalizedRetryStream, parseInt(year), admNoRetry || null, studentIndexNumRetry || null]
           );
         } else {
           result = await query(
-            `INSERT INTO student_parishes (level, stream, year, student_index, parish_name)
-             VALUES ($1, $2, $3, $4, $5)
+            `INSERT INTO student_parishes (level, stream, year, student_index, adm_no, parish_name)
+             VALUES ($1, $2, $3, $4, $5, $6)
              RETURNING *`,
-            [level, normalizedRetryStream, parseInt(year), parseInt(student_index), parish_name.trim()]
+            [level, normalizedRetryStream, parseInt(year), studentIndexNumRetry || null, admNoRetry || null, parish_name.trim()]
           );
         }
         
@@ -2265,15 +2317,17 @@ router.post('/parishes/bulk', async (req, res) => {
 
     for (const item of parishes) {
       const studentIndexRaw = item?.student_index;
+      const admNoRaw = item?.adm_no;
+      const admNo = admNoRaw != null && String(admNoRaw).trim() !== '' ? String(admNoRaw).trim() : null;
       const parishNameRaw = item?.parish_name;
 
-      const studentIndexNum = parseInt(studentIndexRaw, 10);
+      const studentIndexNum = studentIndexRaw != null && String(studentIndexRaw).trim() !== '' ? parseInt(studentIndexRaw, 10) : null;
       const parishName = String(parishNameRaw ?? '').trim();
 
-      if (studentIndexNum === undefined || Number.isNaN(studentIndexNum) || parishName.length === 0) {
+      if ((!admNo && !studentIndexNum && studentIndexNum !== 0) || parishName.length === 0) {
         errors.push({
           student_index: studentIndexRaw,
-          message: 'student_index and non-empty parish_name are required'
+          message: 'student_index or adm_no, and non-empty parish_name are required'
         });
         continue;
       }
@@ -2283,47 +2337,71 @@ router.post('/parishes/bulk', async (req, res) => {
 
       try {
         let existing;
-        if (uniqueStreams.length === 1) {
-          existing = await query(
-            `SELECT id, stream
-             FROM student_parishes
-             WHERE level = $1 AND stream = $2 AND year = $3 AND student_index = $4
-             LIMIT 1`,
-            [level, uniqueStreams[0], yearNum, studentIndexNum]
-          );
+        if (admNo) {
+          if (uniqueStreams.length === 1) {
+            existing = await query(
+              `SELECT id, stream
+               FROM student_parishes
+               WHERE level = $1 AND stream = $2 AND year = $3 AND adm_no = $4
+               LIMIT 1`,
+              [level, uniqueStreams[0], yearNum, admNo]
+            );
+          } else {
+            existing = await query(
+              `SELECT id, stream
+               FROM student_parishes
+               WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND adm_no = $5
+               LIMIT 1`,
+              [level, uniqueStreams[0], uniqueStreams[1], yearNum, admNo]
+            );
+          }
+        } else if (studentIndexNum != null && !Number.isNaN(studentIndexNum)) {
+          if (uniqueStreams.length === 1) {
+            existing = await query(
+              `SELECT id, stream
+               FROM student_parishes
+               WHERE level = $1 AND stream = $2 AND year = $3 AND student_index = $4
+               LIMIT 1`,
+              [level, uniqueStreams[0], yearNum, studentIndexNum]
+            );
+          } else {
+            existing = await query(
+              `SELECT id, stream
+               FROM student_parishes
+               WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND student_index = $5
+               LIMIT 1`,
+              [level, uniqueStreams[0], uniqueStreams[1], yearNum, studentIndexNum]
+            );
+          }
         } else {
-          existing = await query(
-            `SELECT id, stream
-             FROM student_parishes
-             WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND student_index = $5
-             LIMIT 1`,
-            [level, uniqueStreams[0], uniqueStreams[1], yearNum, studentIndexNum]
-          );
+          existing = { rows: [] };
         }
 
         if (existing.rows.length > 0 && existing.rows[0]) {
           const actualStream = existing.rows[0].stream || normalizedStream;
           await query(
             `UPDATE student_parishes
-             SET parish_name = $1
-             WHERE level = $2 AND stream = $3 AND year = $4 AND student_index = $5`,
-            [parishName, level, actualStream, yearNum, studentIndexNum]
+             SET adm_no = COALESCE($1, student_parishes.adm_no),
+                 student_index = COALESCE($2, student_parishes.student_index),
+                 parish_name = $3
+             WHERE level = $4 AND stream = $5 AND year = $6 AND (adm_no IS NOT DISTINCT FROM $7 OR student_index = $8)`,
+            [admNo || null, studentIndexNum || null, parishName, level, actualStream, yearNum, admNo || null, studentIndexNum || null]
           );
         } else {
           try {
             await query(
-              `INSERT INTO student_parishes (level, stream, year, student_index, parish_name)
-               VALUES ($1, $2, $3, $4, $5)`,
-              [level, normalizedStream, yearNum, studentIndexNum, parishName]
+              `INSERT INTO student_parishes (level, stream, year, student_index, adm_no, parish_name)
+               VALUES ($1, $2, $3, $4, $5, $6)`,
+              [level, normalizedStream, yearNum, studentIndexNum || null, admNo || null, parishName]
             );
           } catch (insertError) {
             // If insert fails due to sequence out-of-sync, fix and retry once.
             if (insertError.code === '23505' && insertError.constraint === 'student_parishes_pkey') {
               await fixStudentParishesSequence();
               await query(
-                `INSERT INTO student_parishes (level, stream, year, student_index, parish_name)
-                 VALUES ($1, $2, $3, $4, $5)`,
-                [level, normalizedStream, yearNum, studentIndexNum, parishName]
+                `INSERT INTO student_parishes (level, stream, year, student_index, adm_no, parish_name)
+                 VALUES ($1, $2, $3, $4, $5, $6)`,
+                [level, normalizedStream, yearNum, studentIndexNum || null, admNo || null, parishName]
               );
             } else {
               throw insertError;
@@ -4563,13 +4641,21 @@ function mapDebtRow(row) {
   };
 }
 
-async function fetchClassDebtMap(normalizedLevel, normalizedStream, yearInt) {
-  const result = await query(
-    `SELECT student_index, amount, description, due_date, status
+async function fetchClassDebtMap(normalizedLevel, normalizedStream, yearInt, termValue = null) {
+  const isFormVOrVI = normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI';
+  let sql = `SELECT student_index, adm_no, amount, description, due_date, status, term
      FROM individual_debt
-     WHERE UPPER(TRIM(level)) = UPPER(TRIM($1)) AND stream IN ($2, $3) AND year = $4`,
-    [normalizedLevel, normalizedStream, 'NA', yearInt]
-  );
+     WHERE UPPER(TRIM(level)) = UPPER(TRIM($1)) AND stream IN ($2, $3) AND year = $4`;
+  const params = [normalizedLevel, normalizedStream, 'NA', yearInt];
+  if (isFormVOrVI && termValue) {
+    sql += ` AND term = $5`;
+    params.push(termValue);
+  } else if (isFormVOrVI) {
+    // no term filter: return all terms (legacy)
+  } else {
+    // O-Level: only debts with no term (legacy) OR all? keep all
+  }
+  const result = await query(sql, params);
 
   const debtMap = {};
   result.rows.forEach((row) => {
@@ -4581,13 +4667,17 @@ async function fetchClassDebtMap(normalizedLevel, normalizedStream, yearInt) {
 // GET /debt — single student (student_index) or full class map (legacy + current clients)
 router.get('/debt', async (req, res) => {
   try {
-    let { level, stream, year, student_index: studentIndex } = req.query;
+    let { level, stream, year, student_index: studentIndex, term } = req.query;
 
     if (!level || !stream || !year) {
       return res.status(400).json({ message: 'level, stream, and year are required' });
     }
 
     const { normalizedLevel, normalizedStream, yearInt } = normalizeDebtQueryParams(level, stream, year);
+    const isFormVOrVI = normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI';
+    const termValue = (isFormVOrVI && term != null && String(term).trim() !== '')
+      ? normalizeTerm(String(term).trim())
+      : null;
 
     if (studentIndex !== undefined && studentIndex !== null && String(studentIndex).trim() !== '') {
       const idx = parseInt(studentIndex, 10);
@@ -4599,8 +4689,11 @@ router.get('/debt', async (req, res) => {
         `SELECT amount, description, due_date, status
          FROM individual_debt
          WHERE UPPER(TRIM(level)) = UPPER(TRIM($1)) AND stream IN ($2, $3) AND year = $4 AND student_index = $5
+           ${termValue ? 'AND term = $6' : ''}
          LIMIT 1`,
-        [normalizedLevel, normalizedStream, 'NA', yearInt, idx]
+        termValue
+          ? [normalizedLevel, normalizedStream, 'NA', yearInt, idx, termValue]
+          : [normalizedLevel, normalizedStream, 'NA', yearInt, idx]
       );
 
       return res.json({
@@ -4608,7 +4701,7 @@ router.get('/debt', async (req, res) => {
       });
     }
 
-    const debtMap = await fetchClassDebtMap(normalizedLevel, normalizedStream, yearInt);
+    const debtMap = await fetchClassDebtMap(normalizedLevel, normalizedStream, yearInt, termValue);
     res.json({ debt: debtMap });
   } catch (error) {
     console.error('[DEBT GET] Error:', error);
@@ -4619,14 +4712,18 @@ router.get('/debt', async (req, res) => {
 // Get individual debt for a class
 router.get('/debt/list', async (req, res) => {
   try {
-    let { level, stream, year } = req.query;
+    let { level, stream, year, term } = req.query;
 
     if (!level || !stream || !year) {
       return res.status(400).json({ message: 'level, stream, and year are required' });
     }
 
     const { normalizedLevel, normalizedStream, yearInt } = normalizeDebtQueryParams(level, stream, year);
-    const debtMap = await fetchClassDebtMap(normalizedLevel, normalizedStream, yearInt);
+    const isFormVOrVI = normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI';
+    const termValue = (isFormVOrVI && term != null && String(term).trim() !== '')
+      ? normalizeTerm(String(term).trim())
+      : null;
+    const debtMap = await fetchClassDebtMap(normalizedLevel, normalizedStream, yearInt, termValue);
     res.json({ debt: debtMap });
   } catch (error) {
     console.error('[DEBT LIST] Error:', error);
@@ -4637,9 +4734,14 @@ router.get('/debt/list', async (req, res) => {
 // Save or update individual debt
 router.post('/debt', async (req, res) => {
   try {
-    let { level, stream, year, student_index, amount, description = '', due_date = '', status = 'Outstanding' } = req.body;
+    let { level, stream, year, student_index, adm_no, term, amount, description = '', due_date = '', status = 'Outstanding' } = req.body;
+    const isFormVOrVIForTerm = String(level).toUpperCase() === 'FORM V' || String(level).toUpperCase() === 'FORM VI';
+    const termValue = (isFormVOrVIForTerm && term != null && String(term).trim() !== '')
+      ? normalizeTerm(String(term).trim())
+      : null;
+    const admNo = adm_no != null && String(adm_no).trim() !== '' ? String(adm_no).trim() : null;
     
-    if (!level || !stream || !year || !student_index || amount === undefined) {
+    if (!level || !stream || !year || amount === undefined || (!student_index && !admNo)) {
       return res.status(400).json({ message: 'level, stream, year, student_index, and amount are required' });
     }
     
@@ -4654,18 +4756,35 @@ router.post('/debt', async (req, res) => {
       return res.status(400).json({ message: 'amount must be a non-negative number' });
     }
     
-    await query(
-      `INSERT INTO individual_debt (level, stream, year, student_index, amount, description, due_date, status)
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
-       ON CONFLICT (level, stream, year, student_index)
-       DO UPDATE SET 
-         amount = EXCLUDED.amount,
-         description = EXCLUDED.description,
-         due_date = EXCLUDED.due_date,
-         status = EXCLUDED.status,
-         updated_at = NOW()`,
-      [level, normalizedStream, parseInt(year), student_index, amountFloat, description, due_date, status]
-    );
+    if (admNo) {
+      await query(
+        `INSERT INTO individual_debt (level, stream, year, term, student_index, adm_no, amount, description, due_date, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)
+         ON CONFLICT (level, stream, year, term, adm_no)
+         DO UPDATE SET
+           student_index = COALESCE(EXCLUDED.student_index, individual_debt.student_index),
+           term = COALESCE(EXCLUDED.term, individual_debt.term),
+           amount = EXCLUDED.amount,
+           description = EXCLUDED.description,
+           due_date = EXCLUDED.due_date,
+           status = EXCLUDED.status,
+           updated_at = NOW()`,
+        [level, normalizedStream, parseInt(year), termValue, student_index || null, admNo, amountFloat, description, due_date, status]
+      );
+    } else {
+      await query(
+        `INSERT INTO individual_debt (level, stream, year, student_index, amount, description, due_date, status)
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+         ON CONFLICT (level, stream, year, student_index)
+         DO UPDATE SET
+           amount = EXCLUDED.amount,
+           description = EXCLUDED.description,
+           due_date = EXCLUDED.due_date,
+           status = EXCLUDED.status,
+           updated_at = NOW()`,
+        [level, normalizedStream, parseInt(year), student_index, amountFloat, description, due_date, status]
+      );
+    }
     
     res.json({ message: 'Debt record saved successfully' });
   } catch (error) {
@@ -4677,7 +4796,11 @@ router.post('/debt', async (req, res) => {
 // Body: { level, stream, year, debts: [{ student_index, amount, description }, ...] }
 router.post('/debt/bulk', async (req, res) => {
   try {
-    let { level, stream, year, debts } = req.body;
+    let { level, stream, year, term, debts } = req.body;
+    const isFormVOrVIForTerm = String(level).toUpperCase() === 'FORM V' || String(level).toUpperCase() === 'FORM VI';
+    const termValue = (isFormVOrVIForTerm && term != null && String(term).trim() !== '')
+      ? normalizeTerm(String(term).trim())
+      : null;
 
     if (level) {
       level = decodeURIComponent(String(level).replace(/\+/g, ' ')).trim().toUpperCase();
@@ -4703,6 +4826,8 @@ router.post('/debt/bulk', async (req, res) => {
 
     for (const item of debts) {
       const studentIndexRaw = item?.student_index;
+      const admNoRaw = item?.adm_no;
+      const admNo = admNoRaw != null && String(admNoRaw).trim() !== '' ? String(admNoRaw).trim() : null;
       const descriptionRaw = item?.description ?? '';
       const amountRaw = item?.amount;
 
@@ -4710,7 +4835,7 @@ router.post('/debt/bulk', async (req, res) => {
       const amountFloat = parseFloat(amountRaw);
       const description = String(descriptionRaw).trim();
 
-      if (Number.isNaN(studentIndexNum) || amountFloat === undefined || amountFloat === null || Number.isNaN(amountFloat)) {
+      if ((!admNo && Number.isNaN(studentIndexNum)) || amountFloat === undefined || amountFloat === null || Number.isNaN(amountFloat)) {
         errors.push({
           student_index: studentIndexRaw,
           message: 'student_index and amount are required'
@@ -4727,41 +4852,99 @@ router.post('/debt/bulk', async (req, res) => {
       }
 
       try {
-        let existing;
-        if (uniqueStreams.length === 1) {
-          existing = await query(
-            `SELECT id, stream
-             FROM individual_debt
-             WHERE level = $1 AND stream = $2 AND year = $3 AND student_index = $4
-             LIMIT 1`,
-            [level, uniqueStreams[0], yearNum, studentIndexNum]
-          );
-        } else {
-          existing = await query(
-            `SELECT id, stream
-             FROM individual_debt
-             WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND student_index = $5
-             LIMIT 1`,
-            [level, uniqueStreams[0], uniqueStreams[1], yearNum, studentIndexNum]
-          );
-        }
+        if (admNo) {
+          let existing;
+          if (uniqueStreams.length === 1) {
+            existing = termValue
+              ? await query(
+                `SELECT id, stream
+                 FROM individual_debt
+                 WHERE level = $1 AND stream = $2 AND year = $3 AND term = $4 AND adm_no = $5
+                 LIMIT 1`,
+                [level, uniqueStreams[0], yearNum, termValue, admNo]
+              )
+              : await query(
+                `SELECT id, stream
+                 FROM individual_debt
+                 WHERE level = $1 AND stream = $2 AND year = $3 AND term IS NULL AND adm_no = $4
+                 LIMIT 1`,
+                [level, uniqueStreams[0], yearNum, admNo]
+              );
+          } else {
+            existing = termValue
+              ? await query(
+                `SELECT id, stream
+                 FROM individual_debt
+                 WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND term = $5 AND adm_no = $6
+                 LIMIT 1`,
+                [level, uniqueStreams[0], uniqueStreams[1], yearNum, termValue, admNo]
+              )
+              : await query(
+                `SELECT id, stream
+                 FROM individual_debt
+                 WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND term IS NULL AND adm_no = $5
+                 LIMIT 1`,
+                [level, uniqueStreams[0], uniqueStreams[1], yearNum, admNo]
+              );
+          }
 
-        if (existing.rows.length > 0) {
-          const actualStream = existing.rows[0].stream || normalizedStream;
-          await query(
-            `UPDATE individual_debt
-             SET amount = $1,
-                 description = $2,
-                 updated_at = NOW()
-             WHERE level = $3 AND stream = $4 AND year = $5 AND student_index = $6`,
-            [amountFloat, description, level, actualStream, yearNum, studentIndexNum]
-          );
+          if (existing.rows.length > 0) {
+            const actualStream = existing.rows[0].stream || normalizedStream;
+            await query(
+              `UPDATE individual_debt
+               SET student_index = COALESCE($1, student_index),
+                   term = COALESCE($2, term),
+                   amount = $3,
+                   description = $4,
+                   updated_at = NOW()
+               WHERE level = $5 AND stream = $6 AND year = $7 AND adm_no = $8
+                 AND (term IS NOT DISTINCT FROM $9)`,
+              [Number.isNaN(studentIndexNum) ? null : studentIndexNum, termValue, amountFloat, description, level, actualStream, yearNum, admNo, termValue]
+            );
+          } else {
+            await query(
+              `INSERT INTO individual_debt (level, stream, year, term, student_index, adm_no, amount, description, due_date, status)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, '', 'Outstanding')`,
+              [level, normalizedStream, yearNum, termValue, Number.isNaN(studentIndexNum) ? null : studentIndexNum, admNo, amountFloat, description]
+            );
+          }
         } else {
-          await query(
-            `INSERT INTO individual_debt (level, stream, year, student_index, amount, description, due_date, status)
-             VALUES ($1, $2, $3, $4, $5, $6, '', 'Outstanding')`,
-            [level, normalizedStream, yearNum, studentIndexNum, amountFloat, description]
-          );
+          let existing;
+          if (uniqueStreams.length === 1) {
+            existing = await query(
+              `SELECT id, stream
+               FROM individual_debt
+               WHERE level = $1 AND stream = $2 AND year = $3 AND student_index = $4
+               LIMIT 1`,
+              [level, uniqueStreams[0], yearNum, studentIndexNum]
+            );
+          } else {
+            existing = await query(
+              `SELECT id, stream
+               FROM individual_debt
+               WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND student_index = $5
+               LIMIT 1`,
+              [level, uniqueStreams[0], uniqueStreams[1], yearNum, studentIndexNum]
+            );
+          }
+
+          if (existing.rows.length > 0) {
+            const actualStream = existing.rows[0].stream || normalizedStream;
+            await query(
+              `UPDATE individual_debt
+               SET amount = $1,
+                   description = $2,
+                   updated_at = NOW()
+               WHERE level = $3 AND stream = $4 AND year = $5 AND student_index = $6`,
+              [amountFloat, description, level, actualStream, yearNum, studentIndexNum]
+            );
+          } else {
+            await query(
+              `INSERT INTO individual_debt (level, stream, year, student_index, amount, description, due_date, status)
+               VALUES ($1, $2, $3, $4, $5, $6, '', 'Outstanding')`,
+              [level, normalizedStream, yearNum, studentIndexNum, amountFloat, description]
+            );
+          }
         }
 
         saved++;
@@ -4788,9 +4971,14 @@ router.post('/debt/bulk', async (req, res) => {
 // Delete individual debt
 router.delete('/debt', async (req, res) => {
   try {
-    let { level, stream, year, student_index } = req.query;
+    let { level, stream, year, student_index, adm_no, term } = req.query;
+    const isFormVOrVIForTerm = String(level).toUpperCase() === 'FORM V' || String(level).toUpperCase() === 'FORM VI';
+    const termValue = (isFormVOrVIForTerm && term != null && String(term).trim() !== '')
+      ? normalizeTerm(String(term).trim())
+      : null;
+    const admNo = adm_no != null && String(adm_no).trim() !== '' ? String(adm_no).trim() : null;
     
-    if (!level || !stream || !year || !student_index) {
+    if (!level || !stream || !year || (!student_index && !admNo)) {
       return res.status(400).json({ message: 'All fields are required' });
     }
     
@@ -4800,12 +4988,29 @@ router.delete('/debt', async (req, res) => {
     // Normalize stream: NA -> A (for FORM I-IV)
     const normalizedStream = normalizeStream(stream);
     
-    const result = await query(
-      `DELETE FROM individual_debt 
-       WHERE UPPER(TRIM(level)) = UPPER(TRIM($1)) AND stream IN ($2, $3) AND year = $4 AND student_index = $5
-       RETURNING *`,
-      [level, normalizedStream, 'NA', parseInt(year), student_index]
-    );
+    let result;
+    if (admNo) {
+      result = termValue
+        ? await query(
+          `DELETE FROM individual_debt
+           WHERE UPPER(TRIM(level)) = UPPER(TRIM($1)) AND stream IN ($2, $3) AND year = $4 AND term = $5 AND adm_no = $6
+           RETURNING *`,
+          [level, normalizedStream, 'NA', parseInt(year), termValue, admNo]
+        )
+        : await query(
+          `DELETE FROM individual_debt
+           WHERE UPPER(TRIM(level)) = UPPER(TRIM($1)) AND stream IN ($2, $3) AND year = $4 AND term IS NULL AND adm_no = $5
+           RETURNING *`,
+          [level, normalizedStream, 'NA', parseInt(year), admNo]
+        );
+    } else {
+      result = await query(
+        `DELETE FROM individual_debt
+         WHERE UPPER(TRIM(level)) = UPPER(TRIM($1)) AND stream IN ($2, $3) AND year = $4 AND student_index = $5
+         RETURNING *`,
+        [level, normalizedStream, 'NA', parseInt(year), student_index]
+      );
+    }
     
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Debt record not found' });
