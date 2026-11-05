@@ -10,11 +10,17 @@ BEGIN
   END IF;
 
   -- Backfill admission_number from adm_no for any legacy rows where it was missed
-  UPDATE public.preform_one_students
-  SET admission_number = adm_no
-  WHERE (admission_number IS NULL OR trim(COALESCE(admission_number, '')) = '')
-    AND adm_no IS NOT NULL
-    AND trim(COALESCE(adm_no, '')) != '';
+  -- (only if the legacy adm_no column still exists)
+  IF EXISTS (
+    SELECT 1 FROM information_schema.columns
+    WHERE table_schema = 'public' AND table_name = 'preform_one_students' AND column_name = 'adm_no'
+  ) THEN
+    UPDATE public.preform_one_students
+    SET admission_number = adm_no
+    WHERE (admission_number IS NULL OR trim(COALESCE(admission_number, '')) = '')
+      AND adm_no IS NOT NULL
+      AND trim(COALESCE(adm_no, '')) != '';
+  END IF;
 
   -- Generate a placeholder admission_number for any remaining NULLs
   UPDATE public.preform_one_students
