@@ -4,7 +4,7 @@ import { PROD_DEFAULT_RAILWAY_API } from '../backendUrl';
 describe('backendUrl', () => {
   describe('PROD_DEFAULT_RAILWAY_API', () => {
     it('is the production Railway API URL', () => {
-      expect(PROD_DEFAULT_RAILWAY_API).toBe('https://arucase-production.up.railway.app/api');
+      expect(PROD_DEFAULT_RAILWAY_API).toBe('https://casuya-arucase-production-bee8.up.railway.app/api');
     });
 
     it('ends with /api', () => {

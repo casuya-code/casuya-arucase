@@ -11,7 +11,7 @@
  * Built-in default API base if neither VITE_API_URL nor VITE_DEFAULT_API_URL is set in prod.
  * Override in Vercel with VITE_API_URL (preferred) or VITE_DEFAULT_API_URL for forks.
  */
-export const PROD_DEFAULT_RAILWAY_API = 'https://arucase-production.up.railway.app/api';
+export const PROD_DEFAULT_RAILWAY_API = 'https://casuya-arucase-production-bee8.up.railway.app/api';
 
 function normalizeApiBase(v) {
   const s = (v || '').trim().replace(/\/$/, '');
