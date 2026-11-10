@@ -306,8 +306,10 @@ body:has(.login-page) {
   box-shadow: 0 0 0 3px rgba(15, 45, 82, 0.12);
 }
 
-/* Icon box */
-.input-icon {
+/* Icon box. Scoped to `.input-with-icon` so Font Awesome's `.fas` rule
+   (`display: inline-block; width: 1.25em`) cannot shrink the username icon
+   box; both fields must show the same 44px blue cell. */
+.input-with-icon .input-icon {
   color: #fff;
   font-size: 0.85rem;
   pointer-events: none;
@@ -326,8 +328,8 @@ body:has(.login-page) {
 
 .input-icon--keyring svg {
   display: block;
-  width: 1rem;
-  height: 1rem;
+  width: 1em;
+  height: 1em;
 }
 
 .login-form .input-with-icon-field,

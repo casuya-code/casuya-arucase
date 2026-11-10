@@ -1,8 +1,13 @@
-/** Two keys on a keyring — staff login password field */
+/** Two keys on a keyring — staff login password field.
+ *
+ * The viewBox is cropped to the drawing's bounding box (centre 12, 9.6) so the
+ * keys render at the same optical size and vertical centre as the Font Awesome
+ * user glyph in the field above.
+ */
 const KeyringIcon = ({ className = '' }) => (
   <svg
     className={className}
-    viewBox="0 0 24 24"
+    viewBox="7.2 2.5 9.6 14.2"
     width="1.125rem"
     height="1.125rem"
     aria-hidden="true"
