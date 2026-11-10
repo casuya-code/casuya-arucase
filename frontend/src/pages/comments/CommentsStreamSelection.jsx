@@ -1,7 +1,7 @@
 /**
  * Comments Stream Selection Page for FORM I-IV (after year) or FORM V-VI (initial)
  */
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
 import { useFormVVIStreams } from '../../hooks/useFormVVIStreams';
 import { formVVIModuleBase } from '../../components/formVVI/formVVIStreamPaths';
@@ -10,6 +10,8 @@ import '../academic/SubjectsStreamSelection.css';
 
 const CommentsStreamSelection = ({ formLevel, moduleName, isFormVOrVI = false }) => {
   const { year } = useParams();
+  const [searchParams] = useSearchParams();
+  const isCombined = searchParams.get('combined') === '1';
 
   const standardStreams = ['A', 'B'];
   const formVVIStreams = useFormVVIStreams(formLevel, { requireAllocation: isFormVOrVI });
@@ -38,6 +40,14 @@ const CommentsStreamSelection = ({ formLevel, moduleName, isFormVOrVI = false })
 
   const streams = isFormVOrVI ? formVVIStreams : standardStreams;
 
+  const combinedMessage =
+    formLevel === 'FORM V'
+      ? 'CLICK HERE TO SEE ALL FORM FIVE STREAMS COMBINED'
+      : 'CLICK HERE TO SEE ALL FORM SIX STREAMS COMBINED';
+
+  const getCombinedYearSelectionPath = () =>
+    `${formVVIModuleBase(moduleName, formLevel)}/stream/all/years?combined=1`;
+
   return (
     <AdminLayout>
       <div className="subjects-stream-selection-page-container">
@@ -47,24 +57,33 @@ const CommentsStreamSelection = ({ formLevel, moduleName, isFormVOrVI = false })
             {formLevel} {year && !isFormVOrVI ? year : ''} - Select Stream
           </div>
           <div className="subjects-stream-selection-card-body">
-            <div className="subjects-stream-selection-grid">
-              {streams.map((stream) => {
-                const streamCode = typeof stream === 'string' ? stream : stream.code;
-                const streamName = typeof stream === 'string' ? `Stream ${stream}` : stream.name;
-                return (
-                  <Link
-                    key={streamCode}
-                    to={getStreamDetailPath(streamCode)}
-                    className="subjects-stream-selection-card-item"
-                  >
-                    <div className="subjects-stream-selection-name">{streamName}</div>
-                    {typeof stream === 'object' && (
-                      <div className="subjects-stream-selection-code">Stream Code: {streamCode}</div>
-                    )}
-                  </Link>
-                );
-              })}
-            </div>
+            {isCombined && isFormVOrVI ? (
+              <Link
+                to={getCombinedYearSelectionPath()}
+                className="subjects-stream-selection-combined-card"
+              >
+                <div className="subjects-stream-selection-combined-text">{combinedMessage}</div>
+              </Link>
+            ) : (
+              <div className="subjects-stream-selection-grid">
+                {streams.map((stream) => {
+                  const streamCode = typeof stream === 'string' ? stream : stream.code;
+                  const streamName = typeof stream === 'string' ? `Stream ${stream}` : stream.name;
+                  return (
+                    <Link
+                      key={streamCode}
+                      to={getStreamDetailPath(streamCode)}
+                      className="subjects-stream-selection-card-item"
+                    >
+                      <div className="subjects-stream-selection-name">{streamName}</div>
+                      {typeof stream === 'object' && (
+                        <div className="subjects-stream-selection-code">Stream Code: {streamCode}</div>
+                      )}
+                    </Link>
+                  );
+                })}
+              </div>
+            )}
             <Link to={getBackPath()} className="subjects-stream-selection-back-btn">
               <i className="fas fa-arrow-left"></i>
               <span>Back</span>

@@ -4,8 +4,7 @@
 import CommentsLanding from './CommentsLanding';
 
 const Sala = () => {
-  return <CommentsLanding moduleName="sala" moduleLabel="Sala Comments" icon="fa-comments" />;
+  return <CommentsLanding moduleName="sala" moduleLabel="Sala Comments" icon="fa-comments" showFormVVICombined />;
 };
 
 export default Sala;
-

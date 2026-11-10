@@ -4,8 +4,7 @@
 import CommentsLanding from './CommentsLanding';
 
 const Taaluma = () => {
-  return <CommentsLanding moduleName="taaluma" moduleLabel="Taaluma Comments" icon="fa-book-open" />;
+  return <CommentsLanding moduleName="taaluma" moduleLabel="Taaluma Comments" icon="fa-book-open" showFormVVICombined />;
 };
 
 export default Taaluma;
-

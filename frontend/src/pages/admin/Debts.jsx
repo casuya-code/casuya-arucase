@@ -4,8 +4,7 @@
 import CommentsLanding from '../comments/CommentsLanding';
 
 const Debts = () => {
-  return <CommentsLanding moduleName="debts" moduleLabel="Individual Debt" icon="fa-money-bill-wave" />;
+  return <CommentsLanding moduleName="debts" moduleLabel="Individual Debt" icon="fa-money-bill-wave" showFormVVICombined />;
 };
 
 export default Debts;
-

@@ -246,21 +246,24 @@ const FeesManagement = ({ formLevel }) => {
     setTimeout(run, 0);
   }, [announcements, saveMutation]);
 
+  const isCombined = String(normalizedStream || '').toUpperCase() === 'ALL';
+  const combinedSuffix = isCombined ? '?combined=1' : '';
+
   const getBackPath = useCallback(() => {
     const isFormVOrVI = normalizedLevel.toUpperCase() === 'FORM V' || normalizedLevel.toUpperCase() === 'FORM VI';
     return isFormVOrVI
-      ? `/admin/fees/${formLevel}/stream/${stream}/years`
+      ? `/admin/fees/${formLevel}/stream/${stream}/years${combinedSuffix}`
       : `/admin/fees/${formLevel}/years`;
-  }, [normalizedLevel, formLevel, stream]);
+  }, [normalizedLevel, formLevel, stream, combinedSuffix]);
 
   const getOtherTermPath = useCallback(() => {
     const otherTerm = normalizedTerm === 'First Term' ? 'Second Term' : 'First Term';
     const isFormVOrVI = normalizedLevel.toUpperCase() === 'FORM V' || normalizedLevel.toUpperCase() === 'FORM VI';
     const encodedTerm = encodeURIComponent(otherTerm);
     return isFormVOrVI
-      ? `/admin/fees/${formLevel}/stream/${stream}/year/${year}/term/${encodedTerm}`
+      ? `/admin/fees/${formLevel}/stream/${stream}/year/${year}/term/${encodedTerm}${combinedSuffix}`
       : `/admin/fees/${formLevel}/year/${year}/stream/${stream}/term/${encodedTerm}`;
-  }, [normalizedTerm, normalizedLevel, formLevel, stream, year]);
+  }, [normalizedTerm, normalizedLevel, formLevel, stream, year, combinedSuffix]);
 
   return (
     <AdminLayout>

@@ -262,9 +262,12 @@ const TabiaMwenendoManagement = ({ formLevel }) => {
     saveEvaluationsMutation.mutate(evaluationsArray);
   };
 
+  const isCombined = String(normalizedStream || '').toUpperCase() === 'ALL';
+  const combinedSuffix = isCombined ? '?combined=1' : '';
+
   const getBackPath = () => {
     if (isFormVOrVI) {
-      return `/admin/tabia-mwenendo/${formLevel}/stream/${stream}/year/${year}/terms`;
+      return `/admin/tabia-mwenendo/${formLevel}/stream/${stream}/year/${year}/terms${combinedSuffix}`;
     } else {
       return `/admin/tabia-mwenendo/${formLevel}/year/${year}/stream/${stream}/terms`;
     }
@@ -273,7 +276,7 @@ const TabiaMwenendoManagement = ({ formLevel }) => {
   const getOtherTermPath = () => {
     const otherTerm = normalizedTerm === 'First Term' ? 'Second Term' : 'First Term';
     if (isFormVOrVI) {
-      return `/admin/tabia-mwenendo/${formLevel}/stream/${stream}/year/${year}/term/${otherTerm}`;
+      return `/admin/tabia-mwenendo/${formLevel}/stream/${stream}/year/${year}/term/${otherTerm}${combinedSuffix}`;
     } else {
       return `/admin/tabia-mwenendo/${formLevel}/year/${year}/stream/${stream}/term/${otherTerm}`;
     }

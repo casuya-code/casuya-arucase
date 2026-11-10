@@ -4,8 +4,7 @@
 import CommentsLanding from './CommentsLanding';
 
 const Michezo = () => {
-  return <CommentsLanding moduleName="michezo" moduleLabel="Michezo Comments" icon="fa-running" />;
+  return <CommentsLanding moduleName="michezo" moduleLabel="Michezo Comments" icon="fa-running" showFormVVICombined />;
 };
 
 export default Michezo;
-

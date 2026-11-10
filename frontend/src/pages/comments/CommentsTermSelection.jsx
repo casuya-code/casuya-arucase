@@ -1,7 +1,7 @@
 /**
  * Comments / Registration Term Selection Page
  */
-import { Link, useParams } from 'react-router-dom';
+import { Link, useParams, useSearchParams } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
 import FormVVITermGrid from '../../components/formVVI/FormVVITermGrid';
 import { normalizeFormLevel, requiresSpecialAcademicYearLogic } from '../../utils/academicYearUtils';
@@ -10,6 +10,9 @@ import '../students/YearSelection.css';
 
 const CommentsTermSelection = ({ formLevel, moduleName, basePath }) => {
   const { year, stream } = useParams();
+  const [searchParams] = useSearchParams();
+  const isCombined = searchParams.get('combined') === '1' || String(stream || '').toUpperCase() === 'ALL';
+  const combinedSuffix = isCombined ? '?combined=1' : '';
 
   const normalizedLevel = formLevel
     ? formLevel.split('-').map((w) => w.charAt(0).toUpperCase() + w.slice(1)).join(' ')
@@ -20,13 +23,13 @@ const CommentsTermSelection = ({ formLevel, moduleName, basePath }) => {
   const getBackPath = () => {
     if (basePath) {
       if (isFormVOrVI) {
-        return `${basePath}/${formLevel}/stream/${stream}/years`;
+        return `${basePath}/${formLevel}/stream/${stream}/years${combinedSuffix}`;
       }
       return `${basePath}/${formLevel}/year/${year}/streams`;
     }
 
     if (isFormVOrVI) {
-      return `/admin/${moduleName}/${formLevel}/stream/${stream}/years`;
+      return `/admin/${moduleName}/${formLevel}/stream/${stream}/years${combinedSuffix}`;
     }
     return `/admin/${moduleName}/${formLevel}/year/${year}/streams`;
   };
@@ -35,20 +38,20 @@ const CommentsTermSelection = ({ formLevel, moduleName, basePath }) => {
     const encodedTerm = encodeURIComponent(term);
     if (basePath) {
       if (formLevel.includes('form-v') || formLevel.includes('form-vi')) {
-        return `${basePath}/${formLevel}/stream/${stream}/year/${year}/term/${encodedTerm}`;
+        return `${basePath}/${formLevel}/stream/${stream}/year/${year}/term/${encodedTerm}${combinedSuffix}`;
       }
       return `${basePath}/${formLevel}/year/${year}/stream/${stream}/term/${encodedTerm}`;
     }
 
     if (formLevel.includes('form-v') || formLevel.includes('form-vi')) {
-      return `/admin/${moduleName}/${formLevel}/stream/${stream}/year/${year}/term/${encodedTerm}`;
+      return `/admin/${moduleName}/${formLevel}/stream/${stream}/year/${year}/term/${encodedTerm}${combinedSuffix}`;
     }
     return `/admin/${moduleName}/${formLevel}/year/${year}/stream/${stream}/term/${encodedTerm}`;
   };
 
   const registrationActionsPath = (term) => {
     const encodedTerm = encodeURIComponent(term);
-    return `${basePath}/${formLevel}/stream/${stream}/year/${year}/term/${encodedTerm}/actions`;
+    return `${basePath}/${formLevel}/stream/${stream}/year/${year}/term/${encodedTerm}/actions${combinedSuffix}`;
   };
 
   return (

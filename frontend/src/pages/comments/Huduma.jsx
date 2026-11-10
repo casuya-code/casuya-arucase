@@ -4,8 +4,7 @@
 import CommentsLanding from './CommentsLanding';
 
 const Huduma = () => {
-  return <CommentsLanding moduleName="huduma" moduleLabel="Huduma Comments" icon="fa-hands-helping" />;
+  return <CommentsLanding moduleName="huduma" moduleLabel="Huduma Comments" icon="fa-hands-helping" showFormVVICombined />;
 };
 
 export default Huduma;
-

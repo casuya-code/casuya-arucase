@@ -327,9 +327,12 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
     }
   }, [commentType, year, stream, term]);
 
+  const isCombined = String(normalizedStream || '').toUpperCase() === 'ALL';
+  const combinedSuffix = isCombined ? '?combined=1' : '';
+
   const getBackPath = () => {
     if (isFormVOrVI) {
-      return `/admin/${moduleName}/${formLevel}/stream/${stream}/year/${year}/terms`;
+      return `/admin/${moduleName}/${formLevel}/stream/${stream}/year/${year}/terms${combinedSuffix}`;
     } else {
       return `/admin/${moduleName}/${formLevel}/year/${year}/streams`;
     }
@@ -338,7 +341,7 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
   const getOtherTermPath = () => {
     const otherTerm = normalizedTerm === 'First Term' ? 'Second Term' : 'First Term';
     if (isFormVOrVI) {
-      return `/admin/${moduleName}/${formLevel}/stream/${stream}/year/${year}/term/${otherTerm}`;
+      return `/admin/${moduleName}/${formLevel}/stream/${stream}/year/${year}/term/${otherTerm}${combinedSuffix}`;
     } else {
       return `/admin/${moduleName}/${formLevel}/year/${year}/stream/${stream}/term/${otherTerm}`;
     }

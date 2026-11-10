@@ -6,7 +6,7 @@ import { Link } from 'react-router-dom';
 import AdminLayout from '../../components/layout/AdminLayout';
 import './CommentsLanding.css';
 
-const CommentsLanding = ({ moduleName, moduleLabel, icon }) => {
+const CommentsLanding = ({ moduleName, moduleLabel, icon, showFormVVICombined = false }) => {
   const forms = [
     { id: 'FORM I', label: 'Form I', path: `/admin/${moduleName}/form-i/years`, icon: 'fa-1', accent: '#3b82f6' },
     { id: 'FORM II', label: 'Form II', path: `/admin/${moduleName}/form-ii/years`, icon: 'fa-2', accent: '#10b981' },
@@ -14,6 +14,12 @@ const CommentsLanding = ({ moduleName, moduleLabel, icon }) => {
     { id: 'FORM IV', label: 'Form IV', path: `/admin/${moduleName}/form-iv/years`, icon: 'fa-4', accent: '#f59e0b' },
     { id: 'FORM V', label: 'Form V', path: `/admin/${moduleName}/form-v/streams`, icon: 'fa-5', accent: '#ef4444' },
     { id: 'FORM VI', label: 'Form VI', path: `/admin/${moduleName}/form-vi/streams`, icon: 'fa-6', accent: '#06b6d4' },
+    ...(showFormVVICombined
+      ? [
+          { id: 'FORM V COMBINED', label: 'Form V Combined', path: `/admin/${moduleName}/form-v/streams?combined=1`, icon: 'fa-layer-group', accent: '#ec4899' },
+          { id: 'FORM VI COMBINED', label: 'Form VI Combined', path: `/admin/${moduleName}/form-vi/streams?combined=1`, icon: 'fa-layer-group', accent: '#14b8a6' },
+        ]
+      : []),
   ];
 
   return (

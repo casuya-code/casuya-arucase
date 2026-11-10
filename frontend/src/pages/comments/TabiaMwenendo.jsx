@@ -4,8 +4,7 @@
 import CommentsLanding from './CommentsLanding';
 
 const TabiaMwenendo = () => {
-  return <CommentsLanding moduleName="tabia-mwenendo" moduleLabel="Tabia & Mwenendo" icon="fa-balance-scale" />;
+  return <CommentsLanding moduleName="tabia-mwenendo" moduleLabel="Tabia & Mwenendo" icon="fa-balance-scale" showFormVVICombined />;
 };
 
 export default TabiaMwenendo;
-

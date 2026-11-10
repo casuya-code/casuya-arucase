@@ -201,9 +201,12 @@ const DebtsManagement = ({ formLevel }) => {
     return new Intl.NumberFormat('en-TZ').format(amount);
   };
 
+  const isCombined = String(normalizedStream || '').toUpperCase() === 'ALL';
+  const combinedSuffix = isCombined ? '?combined=1' : '';
+
   const getBackPath = () => {
     if (normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI') {
-      return `/admin/debts/${formLevel}/stream/${stream}/years`;
+      return `/admin/debts/${formLevel}/stream/${stream}/years${combinedSuffix}`;
     } else {
       return `/admin/debts/${formLevel}/years`;
     }

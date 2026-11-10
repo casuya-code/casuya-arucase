@@ -4,8 +4,7 @@
 import CommentsLanding from './CommentsLanding';
 
 const Tabia = () => {
-  return <CommentsLanding moduleName="tabia" moduleLabel="Tabia Comments" icon="fa-user-check" />;
+  return <CommentsLanding moduleName="tabia" moduleLabel="Tabia Comments" icon="fa-user-check" showFormVVICombined />;
 };
 
 export default Tabia;
-
