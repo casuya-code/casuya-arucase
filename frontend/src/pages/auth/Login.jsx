@@ -250,7 +250,7 @@ const Login = () => {
               </div>
             )}
 
-            <div className="form-group">
+            <div className="login-field-group">
               <label htmlFor="username">Jina la mtumiaji</label>
               <div className="input-with-icon">
                 <i className="fas fa-user input-icon" aria-hidden="true" />
@@ -276,7 +276,7 @@ const Login = () => {
               </div>
             </div>
 
-            <div className="form-group">
+            <div className="login-field-group">
               <label htmlFor="password">Nenosiri</label>
               <div className="input-with-icon">
                 <span className="input-icon input-icon--keyring" aria-hidden="true">

@@ -13,8 +13,10 @@
 
   position: fixed;
   inset: 0;
-  display: grid;
-  place-items: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-start;
   background: var(--login-navy);
   overflow-y: auto;
   z-index: 1;
@@ -80,6 +82,9 @@ body:has(.login-page) {
   z-index: 1;
   width: 100%;
   max-width: min(28rem, 100%);
+  /* Centers the card when there is room, but keeps the top reachable when the
+     card is taller than the viewport (auto margins collapse on overflow). */
+  margin-block: auto;
 }
 
 .login-container {
@@ -268,13 +273,15 @@ body:has(.login-page) {
   gap: clamp(0.75rem, 2.5vw, 1rem);
 }
 
-.form-group {
+/* Field layout — a login-specific class so the global `.form-group` rules in
+   styles/index.css (extra margins, bordered inputs) never leak into this card. */
+.login-field-group {
   display: flex;
   flex-direction: column;
   gap: 0.4rem;
 }
 
-.form-group label {
+.login-field-group label {
   font-weight: 700;
   color: #374151;
   font-size: clamp(0.72rem, 2vw, 0.78rem);
@@ -323,7 +330,7 @@ body:has(.login-page) {
   height: 1rem;
 }
 
-.input-with-icon-field,
+.login-form .input-with-icon-field,
 .input-field-group {
   min-height: clamp(2.5rem, 7vw, 2.75rem);
   height: clamp(2.5rem, 7vw, 2.75rem);
@@ -337,9 +344,12 @@ body:has(.login-page) {
   background: transparent;
 }
 
-.input-with-icon-field {
+/* Scoped selector: also beats the generic `input[type=...]` rules in
+   styles/index.css, which otherwise add their own border/padding on touch. */
+.login-form .input-with-icon-field {
   padding: 0 0.875rem;
   border: none;
+  border-radius: 0;
   background: transparent;
   color: var(--login-text);
   font-size: max(16px, 0.875rem);
@@ -508,8 +518,9 @@ body:has(.login-page) {
 
 /* Touch device optimizations */
 @media (hover: none) and (pointer: coarse) {
-  .input-with-icon-field {
+  .login-form .input-with-icon-field {
     min-height: 44px;
+    padding: 0 0.875rem;
     font-size: max(1rem, 16px);
   }
 
