@@ -1,7 +1,7 @@
 /**
  * Comments & Assessment, tabia mwenendo, parish, debt, and fees announcements
- * for individual / bulk PDF reports. Matches /reports/individual and Comments UI
- * (name-sorted, 0-based student_index).
+ * for individual / bulk PDF reports. Everything is resolved by adm_no so the
+ * data follows the student even when the class roster order changes.
  */
 const { query } = require('../config/database');
 const {
@@ -75,67 +75,8 @@ function formatStudentFeesDebt(amount, description) {
 }
 
 /**
- * SQL + params for name-ordered class list (same as PhotoManagement / Comments UI).
- * @returns {{ sql: string, params: unknown[] }}
- */
-function getStudentIndexListQuery(form, normalizedStream, yearNum, normalizedTerm) {
-  const isFormIToIV = FORM_I_TO_IV.test(form);
-  let sql;
-  let params;
-
-  if (isFormIToIV && normalizedStream === 'A') {
-    sql = `SELECT adm_no, first_name, middle_name, surname
-           FROM students
-           WHERE level = $1 AND stream IN ($2, $3) AND year = $4`;
-    params = [form, 'A', 'NA', yearNum];
-  } else {
-    sql = `SELECT adm_no, first_name, middle_name, surname
-           FROM students
-           WHERE level = $1 AND stream = $2 AND year = $3`;
-    params = [form, normalizedStream, yearNum];
-  }
-
-  if (FORM_V_OR_VI.test(form)) {
-    sql += ` AND term = ANY($${params.length + 1}::text[])`;
-    params.push(getTermMatchValues(normalizedTerm));
-  }
-
-  sql += `
-    ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC
-    LIMIT 500`;
-
-  return { sql, params };
-}
-
-/**
- * Resolve 0-based student_index string for an adm_no (Comments & Assessment key).
- * @param {string} admNo
- * @param {{ adm_no: string }[]} orderedRows
- * @returns {string} index or '-1' if not in list
- */
-function studentIndexForAdmNo(admNo, orderedRows) {
-  const pos = orderedRows.findIndex((s) => String(s.adm_no) === String(admNo));
-  return (pos >= 0 ? pos : -1).toString();
-}
-
-/**
- * Build adm_no → student_index map (0-based) for bulk JSON summaries.
- * @returns {Promise<Record<string, string>>}
- */
-async function buildAdmNoToStudentIndexMap(form, normalizedStream, yearNum, normalizedTerm) {
-  const { sql, params } = getStudentIndexListQuery(form, normalizedStream, yearNum, normalizedTerm);
-  const result = await query(sql, params);
-  const map = {};
-  result.rows.forEach((row, idx) => {
-    map[row.adm_no] = idx.toString();
-  });
-  return map;
-}
-
-/**
  * Load assessment-related fields for one student report.
  * @param {{
- *   studentIndex: string,
  *   student: object,
  *   form: string,
  *   normalizedStream: string,
@@ -144,7 +85,6 @@ async function buildAdmNoToStudentIndexMap(form, normalizedStream, yearNum, norm
  * }} ctx
  */
 async function loadReportStudentExtras({
-  studentIndex,
   student,
   form,
   normalizedStream,
@@ -152,27 +92,12 @@ async function loadReportStudentExtras({
   normalizedTerm,
 }) {
   const isFormIToIV = FORM_I_TO_IV.test(form);
-  const invalidIndex = studentIndex === '-1' || studentIndex === '';
 
   let comments = [];
   let tabia_mwenendo = [];
 
   const admNo = student?.adm_no;
   if (admNo) {
-    const runCommentsQuery = async (sql, params) => {
-      try {
-        return await query(sql, params);
-      } catch (e) {
-        if (e.message && e.message.includes('column "adm_no" does not exist')) {
-          // Fallback: try student_index if available
-          if (studentIndex && studentIndex !== '-1' && studentIndex !== '') {
-            return { rows: [] }; // Will be populated by student_index path below
-          }
-        }
-        throw e;
-      }
-    };
-    
     if (isFormIToIV && normalizedStream === 'A') {
       try {
         const cr = await query(
@@ -230,32 +155,6 @@ async function loadReportStudentExtras({
         }
       }
     }
-  } else if (!invalidIndex) {
-    if (isFormIToIV && normalizedStream === 'A') {
-      const cr = await query(
-        `SELECT * FROM comments WHERE student_index = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5 AND term = $6`,
-        [studentIndex, form, 'A', 'NA', yearNum, normalizedTerm]
-      );
-      comments = dedupeCommentRowsByTypePreferA(cr.rows);
-
-      const tr = await query(
-        `SELECT * FROM tabia_mwenendo WHERE student_index = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5 AND term = $6`,
-        [studentIndex, form, 'A', 'NA', yearNum, normalizedTerm]
-      );
-      tabia_mwenendo = dedupeTabiaRowsByCriterionPreferA(tr.rows);
-    } else {
-      const cr = await query(
-        'SELECT * FROM comments WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5',
-        [studentIndex, form, normalizedStream, yearNum, normalizedTerm]
-      );
-      comments = cr.rows;
-
-      const tr = await query(
-        'SELECT * FROM tabia_mwenendo WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5',
-        [studentIndex, form, normalizedStream, yearNum, normalizedTerm]
-      );
-      tabia_mwenendo = tr.rows;
-    }
   }
 
   let student_parish = 'Not specified';
@@ -289,27 +188,7 @@ async function loadReportStudentExtras({
           throw e;
         }
       }
-   } else if (!invalidIndex) {
-      const parishResult = (isFormIToIV && normalizedStream === 'A')
-        ? await query(
-          `SELECT parish_name FROM student_parishes WHERE student_index = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5
-           ORDER BY CASE WHEN stream = $3 THEN 0 ELSE 1 END LIMIT 1`,
-          [studentIndex, form, 'A', 'NA', yearNum]
-        )
-        : await query(
-          'SELECT parish_name FROM student_parishes WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4',
-          [studentIndex, form, normalizedStream, yearNum]
-        );
-      if (parishResult.rows.length > 0 && parishResult.rows[0]) {
-        student_parish =
-          parishResult.rows[0].parish_name ||
-          student.parish ||
-          student.parish_name ||
-          'Not specified';
-      } else {
-        student_parish = student.parish || student.parish_name || 'Not specified';
-      }
-    } else {
+   } else {
       student_parish = student.parish || student.parish_name || 'Not specified';
     }
   } catch {
@@ -321,7 +200,7 @@ async function loadReportStudentExtras({
     const admNo = student?.adm_no;
     if (admNo) {
       // Debts are keyed to the student (adm_no), not to their position in the sorted
-      // class list — see scripts/linkIndividualDebtToAdmNo.js. FORM I-IV stream A still
+      // class list - see scripts/archive/linkIndividualDebtToAdmNo.js. FORM I-IV stream A still
       // checks both 'A' and 'NA' because some deployments stored those debts under either value.
       const isFormVOrVI = FORM_V_OR_VI.test(form);
       const debtResult = (isFormIToIV && normalizedStream === 'A')
@@ -345,22 +224,6 @@ async function loadReportStudentExtras({
             'SELECT amount, description FROM individual_debt WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4',
             [admNo, form, normalizedStream, yearNum]
           ));
-      const debt = debtResult.rows[0] || null;
-      if (debt) {
-        student_fees_debt = formatStudentFeesDebt(debt.amount, debt.description);
-      }
-    } else if (!invalidIndex) {
-      // Legacy fallback for debts that have not yet been linked to an adm_no.
-      const debtResult = (isFormIToIV && normalizedStream === 'A')
-        ? await query(
-          `SELECT amount, description FROM individual_debt WHERE student_index = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5
-           ORDER BY CASE WHEN stream = $3 THEN 0 ELSE 1 END LIMIT 1`,
-          [studentIndex, form, 'A', 'NA', yearNum]
-        )
-        : await query(
-          'SELECT amount, description FROM individual_debt WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4',
-          [studentIndex, form, normalizedStream, yearNum]
-        );
       const debt = debtResult.rows[0] || null;
       if (debt) {
         student_fees_debt = formatStudentFeesDebt(debt.amount, debt.description);
@@ -415,7 +278,7 @@ async function loadReportStudentExtras({
  * Fetch a student's photo by adm_no.
  *
  * Photos are keyed to the student, not to their position in the sorted class list —
- * see scripts/linkStudentPhotosToAdmNo.js. FORM I-IV stream A still checks both 'A' and
+ * see scripts/archive/linkStudentPhotosToAdmNo.js. FORM I-IV stream A still checks both 'A' and
  * 'NA' because some deployments stored those photos under either value.
  *
  * @param {(sql: string, params?: unknown[]) => Promise<{ rows: Array<{ photo_filename?: string|null }> }>} queryFn
@@ -472,9 +335,6 @@ module.exports = {
   FORM_I_TO_IV,
   getReportStudentLookupQuery,
   formatStudentFeesDebt,
-  getStudentIndexListQuery,
-  studentIndexForAdmNo,
-  buildAdmNoToStudentIndexMap,
   loadReportStudentExtras,
   getStudentPhotoFilename,
 };

@@ -1,6 +1,6 @@
 import { get, set, del } from 'idb-keyval';
 
-const CACHE_KEY = 'arucase-query-cache';
+const CACHE_KEY = 'arucase-query-cache-v2';
 
 let queryClientRef = null;
 

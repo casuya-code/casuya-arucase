@@ -1337,17 +1337,20 @@ function normalizeRequestedPosition(position) {
 // Save individual interview result
 router.post('/interview-result', requireAuth, async (req, res) => {
   try {
-    const { year, student_index, average, position } = req.body;
+    // adm_no is canonical. student_index is the legacy field name some clients still
+    // send — its value has always been the admission number, not a class position.
+    const { year, average, position } = req.body;
+    const admissionNumber = req.body?.adm_no ?? req.body?.student_index;
 
-    if (!year || !student_index) {
-      return sendError(res, clientError('Year and student index are required'), 400);
+    if (!year || !admissionNumber) {
+      return sendError(res, clientError('Year and admission number are required'), 400);
     }
 
     const result = await withTransaction(async (client) => {
       // Get student by admission number
       const studentResult = await client.query(
         'SELECT id FROM preform_one_students WHERE admission_number = $1 AND year = $2',
-        [student_index, year]
+        [admissionNumber, year]
       );
 
       if (studentResult.rowCount === 0) {
@@ -1392,7 +1395,7 @@ router.post('/interview-result', requireAuth, async (req, res) => {
           remarks = EXCLUDED.remarks,
           updated_at = CURRENT_TIMESTAMP
         RETURNING *
-      `, [studentId, student_index, derived.total_marks, derived.average, derived.grade, resolvedPosition, derived.remarks, year]);
+      `, [studentId, admissionNumber, derived.total_marks, derived.average, derived.grade, resolvedPosition, derived.remarks, year]);
 
       return { success: true, data: saved.rows[0] };
     });
@@ -1410,17 +1413,19 @@ router.post('/interview-result', requireAuth, async (req, res) => {
 // Save individual continuing result
 router.post('/continuing-result', requireAuth, async (req, res) => {
   try {
-    const { year, student_index, average, position } = req.body;
+    // Same contract as /interview-result: adm_no is canonical, student_index is legacy.
+    const { year, average, position } = req.body;
+    const admissionNumber = req.body?.adm_no ?? req.body?.student_index;
 
-    if (!year || !student_index) {
-      return sendError(res, clientError('Year and student index are required'), 400);
+    if (!year || !admissionNumber) {
+      return sendError(res, clientError('Year and admission number are required'), 400);
     }
 
     const result = await withTransaction(async (client) => {
       // Get student by admission number
       const studentResult = await client.query(
         'SELECT id FROM preform_one_students WHERE admission_number = $1 AND year = $2',
-        [student_index, year]
+        [admissionNumber, year]
       );
 
       if (studentResult.rowCount === 0) {
@@ -1466,7 +1471,7 @@ router.post('/continuing-result', requireAuth, async (req, res) => {
           remarks = EXCLUDED.remarks,
           updated_at = CURRENT_TIMESTAMP
         RETURNING *
-      `, [studentId, student_index, derived.total_marks, derived.average, derived.grade, resolvedPosition, derived.remarks, year]);
+      `, [studentId, admissionNumber, derived.total_marks, derived.average, derived.grade, resolvedPosition, derived.remarks, year]);
 
       return { success: true, data: saved.rows[0] };
     });
@@ -1977,8 +1982,8 @@ router.get('/:year/class-grades', requireAuth, requirePreFormOneYear, async (req
 //
 // Pre-Form One has no streams or terms and its report is a single end-of-year
 // card, so fees announcements are stored once per year (term 'Second Term')
-// and debts are keyed by the Pre-Form One student id (student_index) instead
-// of the class position used by Forms I–VI. Both reuse the shared
+// and debts are keyed by the student's admission number (adm_no), which is the
+// same stable identity used by Forms I–VI. Both reuse the shared
 // fees_announcements / individual_debt tables with level 'PRE-FORM ONE'.
 // ---------------------------------------------------------------------------
 const PRE_FORM_ONE_FEES_LEVEL = 'PRE-FORM ONE';
@@ -2075,17 +2080,25 @@ router.get('/:year/debts', requireAuth, requirePreFormOneYear, async (req, res) 
       [year]
     );
 
+    // Debts are stored against the student's admission number (adm_no); the UI still
+    // keys them by the Pre-Form One student id, so translate on the way out.
     const debtsResult = await query(
-      `SELECT student_index, amount, description, due_date, status
+      `SELECT adm_no, amount, description, due_date, status
          FROM individual_debt
-        WHERE UPPER(TRIM(level)) = $1 AND UPPER(TRIM(stream)) = $2 AND year = $3`,
+        WHERE UPPER(TRIM(level)) = $1 AND UPPER(TRIM(stream)) = $2 AND year = $3
+          AND adm_no IS NOT NULL`,
       [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year]
+    );
+
+    const studentIdByAdmNo = new Map(
+      studentsResult.rows.map((s) => [String(s.admission_number), String(s.id)])
     );
 
     const debts = {};
     debtsResult.rows.forEach((row) => {
-      if (row.student_index == null) return;
-      debts[String(row.student_index)] = {
+      const studentId = studentIdByAdmNo.get(String(row.adm_no));
+      if (!studentId) return;
+      debts[studentId] = {
         amount: row.amount == null ? 0 : Number(row.amount),
         description: row.description || '',
         due_date: row.due_date || '',
@@ -2112,11 +2125,16 @@ router.post('/:year/debts', requireAuth, requirePreFormOneYear, async (req, res)
     }
 
     const student = await query(
-      'SELECT id FROM preform_one_students WHERE id = $1 AND year = $2',
+      'SELECT id, admission_number FROM preform_one_students WHERE id = $1 AND year = $2',
       [studentId, year]
     );
     if (student.rowCount === 0) {
       return sendError(res, clientError('Student not found for this year', 404), 404);
+    }
+
+    const admNo = String(student.rows[0].admission_number || '').trim();
+    if (!admNo) {
+      return sendError(res, clientError('Student has no admission number', 400), 400);
     }
 
     const amount = parsePreFormOneDebtAmount(req.body?.amount);
@@ -2130,13 +2148,11 @@ router.post('/:year/debts', requireAuth, requirePreFormOneYear, async (req, res)
         ? 'Outstanding'
         : String(req.body.status);
 
-    const studentIndex = String(studentId);
-
     if (amount === 0 && description.trim() === '') {
       await query(
         `DELETE FROM individual_debt
-          WHERE UPPER(TRIM(level)) = $1 AND UPPER(TRIM(stream)) = $2 AND year = $3 AND student_index = $4`,
-        [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, studentIndex]
+          WHERE UPPER(TRIM(level)) = $1 AND UPPER(TRIM(stream)) = $2 AND year = $3 AND adm_no = $4`,
+        [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, admNo]
       );
       return res.json({ success: true, deleted: true });
     }
@@ -2144,13 +2160,13 @@ router.post('/:year/debts', requireAuth, requirePreFormOneYear, async (req, res)
     await withTransaction(async (client) => {
       await client.query(
         `DELETE FROM individual_debt
-          WHERE UPPER(TRIM(level)) = $1 AND UPPER(TRIM(stream)) = $2 AND year = $3 AND student_index = $4`,
-        [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, studentIndex]
+          WHERE UPPER(TRIM(level)) = $1 AND UPPER(TRIM(stream)) = $2 AND year = $3 AND adm_no = $4`,
+        [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, admNo]
       );
       await client.query(
-        `INSERT INTO individual_debt (level, stream, year, student_index, amount, description, due_date, status)
+        `INSERT INTO individual_debt (level, stream, year, adm_no, amount, description, due_date, status)
          VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-        [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, studentIndex, amount, description, dueDate, status]
+        [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, admNo, amount, description, dueDate, status]
       );
     });
 
@@ -2192,25 +2208,29 @@ router.post('/:year/debts/bulk', requireAuth, requirePreFormOneYear, async (req,
     const saved = await withTransaction(async (client) => {
       const ids = [...new Set(payload.map((item) => item.studentId))];
       const rows = await client.query(
-        'SELECT id FROM preform_one_students WHERE year = $1 AND id = ANY($2::int[])',
+        'SELECT id, admission_number FROM preform_one_students WHERE year = $1 AND id = ANY($2::int[])',
         [year, ids]
       );
-      const allowed = new Set(rows.rows.map((row) => String(row.id)));
+      const admNoById = new Map(
+        rows.rows
+          .filter((row) => row.admission_number != null && String(row.admission_number).trim() !== '')
+          .map((row) => [String(row.id), String(row.admission_number).trim()])
+      );
 
       let count = 0;
       for (const item of payload) {
-        if (!allowed.has(String(item.studentId))) continue;
-        const studentIndex = String(item.studentId);
+        const admNo = admNoById.get(String(item.studentId));
+        if (!admNo) continue;
         await client.query(
           `DELETE FROM individual_debt
-            WHERE UPPER(TRIM(level)) = $1 AND UPPER(TRIM(stream)) = $2 AND year = $3 AND student_index = $4`,
-          [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, studentIndex]
+            WHERE UPPER(TRIM(level)) = $1 AND UPPER(TRIM(stream)) = $2 AND year = $3 AND adm_no = $4`,
+          [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, admNo]
         );
         if (item.amount === 0 && item.description.trim() === '') continue;
         await client.query(
-          `INSERT INTO individual_debt (level, stream, year, student_index, amount, description, due_date, status)
+          `INSERT INTO individual_debt (level, stream, year, adm_no, amount, description, due_date, status)
            VALUES ($1, $2, $3, $4, $5, $6, $7, $8)`,
-          [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, studentIndex, item.amount, item.description, item.dueDate, item.status]
+          [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, admNo, item.amount, item.description, item.dueDate, item.status]
         );
         count += 1;
       }
@@ -2235,10 +2255,19 @@ router.delete('/:year/debts/:studentId', requireAuth, requirePreFormOneYear, asy
       return sendError(res, clientError('Invalid student id'), 400);
     }
 
+    const student = await query(
+      'SELECT admission_number FROM preform_one_students WHERE id = $1 AND year = $2',
+      [studentId, year]
+    );
+    const admNo = student.rowCount > 0 ? String(student.rows[0].admission_number || '').trim() : '';
+    if (!admNo) {
+      return sendError(res, clientError('Student not found for this year', 404), 404);
+    }
+
     await query(
       `DELETE FROM individual_debt
-        WHERE UPPER(TRIM(level)) = $1 AND UPPER(TRIM(stream)) = $2 AND year = $3 AND student_index = $4`,
-      [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, String(studentId)]
+        WHERE UPPER(TRIM(level)) = $1 AND UPPER(TRIM(stream)) = $2 AND year = $3 AND adm_no = $4`,
+      [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year, admNo]
     );
 
     res.json({ success: true });

@@ -1,5 +1,5 @@
-const { query, pool } = require('../config/database');
-const { classKey, sortByName, selectRoster } = require('../utils/studentPhotoBackfill');
+const { query, pool } = require('../../config/database');
+const { classKey, sortByName, selectRoster } = require('../../utils/studentPhotoBackfill');
 
 async function ensureSchema() {
   await query(`ALTER TABLE comments ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)`);
@@ -69,12 +69,12 @@ async function backfillTable(table, hasTerm) {
 
 function selectRosterForTerm(students, maxIdx) {
   // reuse selectRoster from backfill util
-  const { selectRoster } = require('../utils/studentPhotoBackfill');
+  const { selectRoster } = require('../../utils/studentPhotoBackfill');
   return selectRoster(students, maxIdx);
 }
 
 function selectRosterSimple(students, maxIdx) {
-  const { sortByName } = require('../utils/studentPhotoBackfill');
+  const { sortByName } = require('../../utils/studentPhotoBackfill');
   const roster = sortByName(students);
   if (roster.length <= maxIdx) return { roster: null };
   return { roster };

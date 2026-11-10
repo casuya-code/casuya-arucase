@@ -208,12 +208,10 @@ async function ensureStudentPhotosCloudinaryPublicIdColumn() {
 }
 
 // Photos must be keyed to the student (adm_no), not to their position in the sorted
-// class list — see scripts/linkStudentPhotosToAdmNo.js for the full rationale.
+// class list — see scripts/archive/linkStudentPhotosToAdmNo.js for the full rationale.
 async function ensureStudentPhotosAdmNoColumn() {
   try {
     await query(`ALTER TABLE student_photos ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)`);
-    // student_index is now vestigial (kept for reference only), so it may be NULL.
-    await query(`ALTER TABLE student_photos ALTER COLUMN student_index DROP NOT NULL`);
     // The old positional key is retired: positions shift when the roster changes, so it
     // cannot stay unique. adm_no takes over as the per-class identity.
     await query(`
@@ -240,11 +238,11 @@ async function ensureStudentPhotosAdmNoColumn() {
 }
 
 // Debts must be keyed to the student (adm_no), not to their position in the sorted
-// class list — see scripts/linkIndividualDebtToAdmNo.js for the full rationale.
+// class list — see scripts/archive/linkIndividualDebtToAdmNo.js for the full rationale.
 async function ensureIndividualDebtAdmNoColumn() {
   try {
     await query(`ALTER TABLE individual_debt ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)`);
-    await query(`ALTER TABLE individual_debt ALTER COLUMN student_index DROP NOT NULL`);
+    await query(`ALTER TABLE individual_debt ADD COLUMN IF NOT EXISTS term VARCHAR(20)`);
     await query(`
       DO $$
       DECLARE target TEXT;
@@ -259,9 +257,25 @@ async function ensureIndividualDebtAdmNoColumn() {
         END IF;
       END $$;
     `);
+    // Drop an older adm_no index that did not include term (or lacked NULLS NOT DISTINCT)
+    // so the ON CONFLICT target below matches exactly.
+    await query(`
+      DO $$
+      DECLARE def TEXT;
+      BEGIN
+        SELECT indexdef INTO def
+        FROM pg_indexes
+        WHERE schemaname = 'public' AND indexname = 'uq_individual_debt_adm_no';
+        IF def IS NOT NULL AND (def NOT ILIKE '%term%' OR def NOT ILIKE '%NULLS NOT DISTINCT%') THEN
+          EXECUTE 'DROP INDEX uq_individual_debt_adm_no';
+        END IF;
+      END $$;
+    `);
+    // O-Level debts have no term (NULL); NULLS NOT DISTINCT keeps the unique key usable
+    // for ON CONFLICT (level, stream, year, term, adm_no) in that case.
     await query(`
       CREATE UNIQUE INDEX IF NOT EXISTS uq_individual_debt_adm_no
-      ON individual_debt(level, stream, year, adm_no)
+      ON individual_debt(level, stream, year, term, adm_no) NULLS NOT DISTINCT
     `);
   } catch (error) {
     console.warn('[schema] ensure individual_debt.adm_no failed:', error.message);
@@ -279,7 +293,6 @@ async function ensureIndividualDebtTermColumn() {
 async function ensureCommentsAdmNoColumn() {
   try {
     await query(`ALTER TABLE comments ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)`);
-    await query(`ALTER TABLE comments ALTER COLUMN student_index DROP NOT NULL`);
   } catch (error) {
     console.warn('[schema] ensure comments.adm_no failed:', error.message);
   }
@@ -288,7 +301,6 @@ async function ensureCommentsAdmNoColumn() {
 async function ensureTabiaAdmNoColumn() {
   try {
     await query(`ALTER TABLE tabia_mwenendo ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)`);
-    await query(`ALTER TABLE tabia_mwenendo ALTER COLUMN student_index DROP NOT NULL`);
   } catch (error) {
     console.warn('[schema] ensure tabia_mwenendo.adm_no failed:', error.message);
   }
@@ -297,9 +309,32 @@ async function ensureTabiaAdmNoColumn() {
 async function ensureStudentParishesAdmNoColumn() {
   try {
     await query(`ALTER TABLE student_parishes ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)`);
-    await query(`ALTER TABLE student_parishes ALTER COLUMN student_index DROP NOT NULL`);
   } catch (error) {
     console.warn('[schema] ensure student_parishes.adm_no failed:', error.message);
+  }
+}
+
+async function ensureMonthlyResultsAdmNoColumn() {
+  try {
+    await query(`ALTER TABLE monthly_results ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)`);
+    await query(`CREATE INDEX IF NOT EXISTS idx_monthly_results_adm_no ON monthly_results(adm_no)`);
+    // The original index was partial (WHERE adm_no IS NOT NULL); ON CONFLICT cannot infer
+    // it without the predicate, so replace it with a full unique index.
+    await query(`
+      DO $$
+      DECLARE def TEXT;
+      BEGIN
+        SELECT indexdef INTO def
+        FROM pg_indexes
+        WHERE schemaname = 'public' AND indexname = 'uq_monthly_results_adm_no';
+        IF def IS NOT NULL AND def ILIKE '%WHERE%' THEN
+          EXECUTE 'DROP INDEX uq_monthly_results_adm_no';
+        END IF;
+      END $$;
+    `);
+    await query(`CREATE UNIQUE INDEX IF NOT EXISTS uq_monthly_results_adm_no ON monthly_results(level, stream, year, month, adm_no)`);
+  } catch (error) {
+    console.warn('[schema] ensure monthly_results.adm_no failed:', error.message);
   }
 }
 
@@ -456,6 +491,7 @@ setImmediate(() => {
   ensureTabiaAdmNoColumn().catch((e) => console.warn('[schema] ensureTabiaAdmNoColumn fatal:', e.message));
   ensureTabiaUniqueIndex().catch((e) => console.warn('[schema] ensureTabiaUniqueIndex fatal:', e.message));
   ensureStudentParishesAdmNoColumn().catch((e) => console.warn('[schema] ensureStudentParishesAdmNoColumn fatal:', e.message));
+  ensureMonthlyResultsAdmNoColumn().catch((e) => console.warn('[schema] ensureMonthlyResultsAdmNoColumn fatal:', e.message));
   ensureStaffProfilesCloudinaryPublicIdColumn().catch((e) => console.warn('[schema] ensureStaffProfilesCloudinaryPublicIdColumn fatal:', e.message));
   ensureAdministratorsCloudinaryPublicIdColumn().catch((e) => console.warn('[schema] ensureAdministratorsCloudinaryPublicIdColumn fatal:', e.message));
   ensureRefreshTokensTable().catch((e) => console.warn('[schema] ensureRefreshTokensTable fatal:', e.message));

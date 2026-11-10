@@ -170,18 +170,24 @@ async function loadContinuingReportContext(query, year) {
     console.warn('Continuing report: could not load fees announcements:', e.message);
   }
 
-  // Per-student debt, keyed by the Pre-Form One student id (student_index).
+  // Per-student debt is stored by admission number (adm_no); the report keys it by
+  // the Pre-Form One student id.
   const debtsByStudent = {};
   try {
     const debtsResult = await query(
-      `SELECT student_index, amount, description
+      `SELECT adm_no, amount, description
          FROM individual_debt
-        WHERE UPPER(TRIM(level)) = $1 AND UPPER(TRIM(stream)) = $2 AND year = $3`,
+        WHERE UPPER(TRIM(level)) = $1 AND UPPER(TRIM(stream)) = $2 AND year = $3
+          AND adm_no IS NOT NULL`,
       [PRE_FORM_ONE_FEES_LEVEL, PRE_FORM_ONE_FEES_STREAM, year]
     );
+    const studentIdByAdmNo = new Map(
+      students.map((s) => [String(s.admission_number), String(s.id)])
+    );
     debtsResult.rows.forEach((row) => {
-      if (row.student_index == null) return;
-      debtsByStudent[String(row.student_index)] = row;
+      const studentId = studentIdByAdmNo.get(String(row.adm_no));
+      if (!studentId) return;
+      debtsByStudent[studentId] = row;
     });
   } catch (e) {
     console.warn('Continuing report: could not load student debts:', e.message);

@@ -20,8 +20,8 @@
  *   node scripts/linkStudentPhotosToAdmNo.js            # apply changes
  *   node scripts/linkStudentPhotosToAdmNo.js --dry-run  # report only, no writes
  */
-const { query, pool } = require('../config/database');
-const { classKey, sortByName, selectRoster } = require('../utils/studentPhotoBackfill');
+const { query, pool } = require('../../config/database');
+const { classKey, sortByName, selectRoster } = require('../../utils/studentPhotoBackfill');
 
 async function ensureSchema(dryRun) {
   if (dryRun) {

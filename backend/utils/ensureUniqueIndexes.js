@@ -18,27 +18,8 @@ async function ensureCommentsUniqueIndex() {
   try {
     await query(`ALTER TABLE comments ADD COLUMN IF NOT EXISTS term VARCHAR(20) DEFAULT 'Term I'`);
     await query(`ALTER TABLE comments ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)`);
-    await query(`ALTER TABLE comments ALTER COLUMN student_index DROP NOT NULL`);
 
-    // Remove duplicates (keep the newest row) before creating unique indexes.
-    await query(`
-      DELETE FROM comments a
-      USING comments b
-      WHERE a.id < b.id
-        AND a.comment_type = b.comment_type
-        AND a.level = b.level
-        AND a.stream = b.stream
-        AND a.year = b.year
-        AND COALESCE(a.term, '') = COALESCE(b.term, '')
-        AND a.student_index IS NOT DISTINCT FROM b.student_index
-    `);
-
-    await query(`
-      CREATE UNIQUE INDEX IF NOT EXISTS uq_comments_student_index
-      ON comments (comment_type, level, stream, year, term, student_index)
-    `);
-
-    // Legacy keying by admission number (used by report/backfill paths).
+    // Remove duplicate adm_no rows (keep the newest) before creating the unique index.
     await query(`
       DELETE FROM comments a
       USING comments b
@@ -68,24 +49,6 @@ async function ensureTabiaUniqueIndex() {
   try {
     await query(`ALTER TABLE tabia_mwenendo ADD COLUMN IF NOT EXISTS term VARCHAR(20) DEFAULT 'Term I'`);
     await query(`ALTER TABLE tabia_mwenendo ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)`);
-    await query(`ALTER TABLE tabia_mwenendo ALTER COLUMN student_index DROP NOT NULL`);
-
-    await query(`
-      DELETE FROM tabia_mwenendo a
-      USING tabia_mwenendo b
-      WHERE a.id < b.id
-        AND a.level = b.level
-        AND a.stream = b.stream
-        AND a.year = b.year
-        AND COALESCE(a.term, '') = COALESCE(b.term, '')
-        AND a.student_index IS NOT DISTINCT FROM b.student_index
-        AND a.criterion = b.criterion
-    `);
-
-    await query(`
-      CREATE UNIQUE INDEX IF NOT EXISTS uq_tabia_mwenendo_student_index
-      ON tabia_mwenendo (level, stream, year, term, student_index, criterion)
-    `);
 
     await query(`
       DELETE FROM tabia_mwenendo a

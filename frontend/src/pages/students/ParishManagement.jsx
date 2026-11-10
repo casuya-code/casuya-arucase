@@ -184,8 +184,7 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
         const parishes = res.data.parishes || [];
         console.log('[PARISHES] Received', parishes.length, 'parishes from API');
 
-        // Key parishes directly by adm_no. Legacy rows may only carry a positional
-        // student_index, so resolve those against the (already name-sorted) roster.
+        // Key parishes directly by adm_no.
         const normalizeLevelValue = (value) =>
           String(value ?? '').trim().replace(/\s+/g, ' ').toUpperCase();
         const toYearNumber = (value) => {
@@ -204,17 +203,7 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
         const mappedAdmNos = new Set();
 
         parishes.forEach((parish) => {
-          let admNo = String(parish.adm_no ?? parish.admission_number ?? '').trim();
-
-          // Legacy fallback: positional index into the name-sorted roster.
-          if (!admNo && parish.student_index != null) {
-            const idx = Number(parish.student_index);
-            if (Number.isInteger(idx) && idx >= 0 && idx < students.length) {
-              admNo = String(
-                students[idx].adm_no ?? students[idx].admission_number ?? ''
-              ).trim();
-            }
-          }
+          const admNo = String(parish.adm_no ?? parish.admission_number ?? '').trim();
 
           if (!admNo) {
             skippedCount++;
@@ -232,8 +221,7 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
             return;
           }
 
-          // Prefer the row that already has adm_no over a legacy positional row.
-          if (!parishesMap[admNo] || (parish.adm_no && !parishesMap[admNo].adm_no)) {
+          if (!parishesMap[admNo]) {
             parishesMap[admNo] = { ...parish, adm_no: admNo };
           }
           mappedAdmNos.add(admNo);
@@ -362,23 +350,6 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
       .replace(/\s/g, '')
       .toLowerCase();
 
-  const findStudentIndexByAdmNo = (admNoStr) => {
-    const target = String(admNoStr ?? '').trim();
-    if (!target) return -1;
-
-    const exact = students.findIndex((s) => String(s.adm_no).trim() === target);
-    if (exact >= 0) return exact;
-
-    const tNum = Number(target);
-    if (!Number.isNaN(tNum)) {
-      return students.findIndex(
-        (s) => Number(s.adm_no) === tNum || String(s.adm_no).trim() === String(tNum)
-      );
-    }
-
-    return -1;
-  };
-
   const buildParishCsv = (includeFilledParishes) => {
     const headers = ['AdmNumber', 'first_name', 'middle_name', 'surname', 'Parish'];
     const rows = students.map((s) => {
@@ -470,16 +441,14 @@ const ParishManagement = ({ formLevel: formLevelProp }) => {
             continue;
           }
 
-          const studentIndex = findStudentIndexByAdmNo(admNo);
-          if (studentIndex < 0) {
+          const student = students.find((s) => String(s.adm_no).trim() === admNo);
+          if (!student) {
             skippedNoStudent++;
             continue;
           }
 
-          const student = students.find((s) => String(s.adm_no).trim() === admNo);
           payload.push({
             adm_no: admNo,
-            student_index: student ? students.indexOf(student) : null,
             parish_name: parishName,
           });
         }

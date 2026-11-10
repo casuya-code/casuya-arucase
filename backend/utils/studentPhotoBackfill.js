@@ -1,6 +1,6 @@
 /**
  * Pure helpers for backfilling student_photos.adm_no
- * (see scripts/linkStudentPhotosToAdmNo.js).
+ * (see scripts/archive/linkStudentPhotosToAdmNo.js).
  *
  * Photos used to be stored against student_index — a position in the alphabetically
  * sorted class list. To recover who each photo belongs to we replay that same ordering.

@@ -14,7 +14,7 @@ async function checkData() {
     
     console.log('\nChecking monthly_results table...');
     const monthlyResult = await query(
-      `SELECT student_index, total_marks, average, grade, position, remarks 
+      `SELECT adm_no, total_marks, average, grade, position, remarks
        FROM monthly_results 
        WHERE level = 'FORM I' AND stream = 'A' AND year = 2025 AND month = 'November'
        LIMIT 5`

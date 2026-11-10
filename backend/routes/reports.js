@@ -10,9 +10,7 @@ const { generateIndividualReportPDF, generateBulkReportPDF } = require('../utils
 const { normalizeStream } = require('../utils/streamNormalizer');
 const {
   loadReportStudentExtras,
-  buildAdmNoToStudentIndexMap,
   getReportStudentLookupQuery,
-  getStudentIndexListQuery,
   getStudentPhotoFilename,
 } = require('../utils/reportStudentExtras');
 const { normalizeTerm, getTermMatchValues } = require('../utils/termNormalizer');
@@ -209,24 +207,7 @@ router.get('/individual/:form/:stream/:year/:term/:admNo', requireModule('indivi
       monthWeights: marksConfig.month_weights || {},
     });
     
-    // Get student index for comments and photos (find position in sorted list by name)
-    // Use database sorting to match /students API exactly (ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC)
     const isFormIToIV = /^FORM\s+(I|II|III|IV)$/i.test(form);
-
-    const {
-      sql: studentIndexStudentsQuery,
-      params: studentIndexStudentsParams,
-    } = getStudentIndexListQuery(form, normalizedStream, yearNum, normalizedTerm);
-    const studentIndexStudentsResult = await query(
-      studentIndexStudentsQuery,
-      studentIndexStudentsParams
-    );
-
-    // Database already sorted, no need for JavaScript sorting
-    const studentIndexPos = studentIndexStudentsResult.rows.findIndex(
-      (s) => String(s.adm_no) === String(admNo)
-    );
-    const studentIndex = (studentIndexPos >= 0 ? studentIndexPos : -1).toString();
 
     const {
       comments: commentsRows,
@@ -235,7 +216,6 @@ router.get('/individual/:form/:stream/:year/:term/:admNo', requireModule('indivi
       student_fees_debt: studentFeesDebt,
       class_fees_announcements: classFeesAnnouncements,
     } = await loadReportStudentExtras({
-      studentIndex,
       student,
       form,
       normalizedStream,
@@ -631,65 +611,50 @@ router.get('/bulk/:form/:year/:term', requireModule('bulk_report'), async (req, 
       allScoresLookup[admNo][subjectCode][month] = score;
     });
     
-    // OPTIMIZATION: Load ALL comments in ONE batch query
-    const allCommentsLookup = {}; // {student_index: {comment_type: value}}
+    // OPTIMIZATION: Load ALL comments in ONE batch query, keyed by adm_no.
+    const allCommentsLookup = {}; // {adm_no: {comment_type: value}}
     const commentTypes = ['sala', 'huduma', 'tabia', 'michezo', 'mwalimu_taaluma', 'mkuu_shule', 'taaluma'];
-    
-    // Name-ordered 0-based student_index per stream (matches Comments & Assessment)
-    const admNoToIndexByStream = {};
-    const streamsForIndex = stream
-      ? [stream]
-      : [...new Set(students.map((s) => normalizeStream(s.stream || 'A')))];
-    await Promise.all(
-      streamsForIndex.map(async (streamKey) => {
-        admNoToIndexByStream[streamKey] = await buildAdmNoToStudentIndexMap(
-          decodedForm,
-          streamKey,
-          parseInt(year, 10),
-          isForm5Or6 ? normalizedTerm : null
-        );
-      })
-    );
     
     let commentsResult;
     try {
       if (stream) {
         if (oLevelStreamAOrNA) {
           commentsResult = await query(
-            `SELECT student_index, comment_type, comment_text FROM comments 
+            `SELECT adm_no, comment_type, comment_text FROM comments
              WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND term = $5 
              AND comment_type = ANY($6::text[])
-             ORDER BY student_index, comment_type`,
+             ORDER BY adm_no, comment_type`,
             [decodedForm, 'A', 'NA', parseInt(year), normalizedTerm, commentTypes]
           );
         } else {
           commentsResult = await query(
-            `SELECT student_index, comment_type, comment_text FROM comments 
+            `SELECT adm_no, comment_type, comment_text FROM comments
              WHERE level = $1 AND stream = $2 AND year = $3 AND term = $4 
              AND comment_type = ANY($5::text[])
-             ORDER BY student_index, comment_type`,
+             ORDER BY adm_no, comment_type`,
             [decodedForm, stream, parseInt(year), normalizedTerm, commentTypes]
           );
         }
       } else {
         commentsResult = await query(
-          `SELECT student_index, comment_type, comment_text FROM comments 
+          `SELECT adm_no, comment_type, comment_text FROM comments
            WHERE level = $1 AND year = $2 AND term = $3 
            AND comment_type = ANY($4::text[])
-           ORDER BY student_index, comment_type`,
+           ORDER BY adm_no, comment_type`,
           [decodedForm, parseInt(year), normalizedTerm, commentTypes]
         );
       }
       
       commentsResult.rows.forEach((row) => {
-        const studentIndex = row.student_index;
+        const admNo = row.adm_no;
+        if (!admNo) return;
         const commentType = row.comment_type;
         const commentText = row.comment_text || '';
         
-        if (!allCommentsLookup[studentIndex]) {
-          allCommentsLookup[studentIndex] = {};
+        if (!allCommentsLookup[admNo]) {
+          allCommentsLookup[admNo] = {};
         }
-        allCommentsLookup[studentIndex][commentType] = commentText;
+        allCommentsLookup[admNo][commentType] = commentText;
       });
     } catch (e) {
       // Comments table not available, continue without comments
@@ -723,8 +688,6 @@ router.get('/bulk/:form/:year/:term', requireModule('bulk_report'), async (req, 
     
     for (let i = 0; i < students.length; i++) {
       const student = students[i];
-      const streamKey = normalizeStream(student.stream || stream || 'A');
-      const studentIndex = admNoToIndexByStream[streamKey]?.[student.adm_no];
       
       // Get student's scores
       const studentScores = allScoresLookup[student.adm_no] || {};
@@ -768,16 +731,11 @@ router.get('/bulk/:form/:year/:term', requireModule('bulk_report'), async (req, 
       const overallGrade = calculateGrade(average, decodedForm);
       
       // Get comments for this student
-      const studentComments =
-        studentIndex !== undefined ? (allCommentsLookup[studentIndex] || {}) : {};
+      const studentComments = allCommentsLookup[student.adm_no] || {};
       
       // Build report data
       studentReports.push({
-        student: {
-          ...student,
-          student_index:
-            studentIndex !== undefined ? studentIndex : undefined,
-        },
+        student,
         subjects_data: subjectsData,
         monthly_results: Object.keys(studentScores).flatMap(subjectCode => 
           Object.keys(studentScores[subjectCode] || {}).map(month => ({

@@ -315,77 +315,34 @@ async function generateIndividualReportPDF(form, stream, year, term, admNo) {
       
       const overallRank = sortedOverall.find((item) => item.adm_no === admNo)?.rank || '-';
       
-      // Get student index for comments/photos.
-      // Must match PhotoManagement sorting exactly (JS localeCompare) and FORM I-IV stream behavior (A + NA).
       const isFormIToIV = ['I', 'II', 'III', 'IV', '1', '2', '3', '4'].includes(formCode.toUpperCase());
-      const sortStudentsByName = (students) => {
-        return [...students].sort((a, b) => {
-          const firstNameA = String(a.first_name || '').toLowerCase().trim();
-          const firstNameB = String(b.first_name || '').toLowerCase().trim();
-          const firstNameCompare = firstNameA.localeCompare(firstNameB, undefined, { sensitivity: 'base' });
-          if (firstNameCompare !== 0) return firstNameCompare;
-
-          const middleNameA = String(a.middle_name || '').toLowerCase().trim();
-          const middleNameB = String(b.middle_name || '').toLowerCase().trim();
-          const middleNameCompare = middleNameA.localeCompare(middleNameB, undefined, { sensitivity: 'base' });
-          if (middleNameCompare !== 0) return middleNameCompare;
-
-          const surnameA = String(a.surname || '').toLowerCase().trim();
-          const surnameB = String(b.surname || '').toLowerCase().trim();
-          return surnameA.localeCompare(surnameB, undefined, { sensitivity: 'base' });
-        });
-      };
-
-      const studentIndexStudentsQuery = (isFormIToIV && normalizedStream === 'A')
-        ? `SELECT adm_no, first_name, middle_name, surname
-           FROM students
-           WHERE level = $1 AND stream IN ($2, $3) AND year = $4
-           ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC
-           LIMIT 500`
-        : `SELECT adm_no, first_name, middle_name, surname
-           FROM students
-           WHERE level = $1 AND stream = $2 AND year = $3
-           ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC
-           LIMIT 500`;
-
-      const studentIndexStudentsParams = (isFormIToIV && normalizedStream === 'A')
-        ? [decodedForm, 'A', 'NA', parseInt(year)]
-        : [decodedForm, normalizedStream, parseInt(year)];
-
-      const studentIndexStudentsResult = await query(studentIndexStudentsQuery, studentIndexStudentsParams);
-
-      const sortedStudentsByName = sortStudentsByName(studentIndexStudentsResult.rows);
-      const studentIndexPos = sortedStudentsByName.findIndex(
-        (s) => String(s.adm_no) === String(admNo)
-      );
-      const studentIndex = (studentIndexPos >= 0 ? studentIndexPos : -1).toString();
       
       // Get comments (FORM I–IV: rows may be stored as stream A or NA — match bulk report / comments list)
       let commentsResult;
       if (isFormIToIV && normalizedStream === 'A') {
-        const cr = await query(
-          `SELECT * FROM comments WHERE student_index = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5 AND term = $6`,
-          [studentIndex, decodedForm, 'A', 'NA', parseInt(year), decodedTerm]
+        let cr = await query(
+          `SELECT * FROM comments WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5 AND term = $6`,
+          [admNo, decodedForm, 'A', 'NA', parseInt(year), decodedTerm]
         );
         commentsResult = { rows: dedupeCommentRowsByTypePreferA(cr.rows) };
       } else {
         commentsResult = await query(
-          'SELECT * FROM comments WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5',
-          [studentIndex, decodedForm, normalizedStream, parseInt(year), decodedTerm]
+          'SELECT * FROM comments WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5',
+          [admNo, decodedForm, normalizedStream, parseInt(year), decodedTerm]
         );
       }
       
       let tabiaResult;
       if (isFormIToIV && normalizedStream === 'A') {
-        const tr = await query(
-          `SELECT * FROM tabia_mwenendo WHERE student_index = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5 AND term = $6`,
-          [studentIndex, decodedForm, 'A', 'NA', parseInt(year), decodedTerm]
+        let tr = await query(
+          `SELECT * FROM tabia_mwenendo WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5 AND term = $6`,
+          [admNo, decodedForm, 'A', 'NA', parseInt(year), decodedTerm]
         );
         tabiaResult = { rows: dedupeTabiaRowsByCriterionPreferA(tr.rows) };
       } else {
         tabiaResult = await query(
-          'SELECT * FROM tabia_mwenendo WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5',
-          [studentIndex, decodedForm, normalizedStream, parseInt(year), decodedTerm]
+          'SELECT * FROM tabia_mwenendo WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5',
+          [admNo, decodedForm, normalizedStream, parseInt(year), decodedTerm]
         );
       }
       
@@ -408,15 +365,21 @@ async function generateIndividualReportPDF(form, stream, year, term, admNo) {
       let studentParish = 'Not specified';
       try {
         const parishResult = (isFormIToIV && normalizedStream === 'A')
-          ? await query(
-              `SELECT parish_name FROM student_parishes WHERE student_index = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5
+          ? await (async () => {
+              let r = await query(
+                `SELECT parish_name FROM student_parishes WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5
                ORDER BY CASE WHEN stream = $3 THEN 0 ELSE 1 END LIMIT 1`,
-              [studentIndex, decodedForm, 'A', 'NA', parseInt(year)]
-            )
-          : await query(
-              'SELECT parish_name FROM student_parishes WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4',
-              [studentIndex, decodedForm, normalizedStream, parseInt(year)]
+                [admNo, decodedForm, 'A', 'NA', parseInt(year)]
+              );
+              return r;
+            })()
+          : await (async () => {
+              let r = await query(
+                'SELECT parish_name FROM student_parishes WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4',
+                [admNo, decodedForm, normalizedStream, parseInt(year)]
             );
+              return r;
+            })();
         if (parishResult.rows.length > 0) {
           studentParish = parishResult.rows[0].parish_name || student.parish || 'Not specified';
         } else {
@@ -430,15 +393,21 @@ async function generateIndividualReportPDF(form, stream, year, term, admNo) {
       let studentFeesDebt = '0.0';
       try {
         const debtResult = (isFormIToIV && normalizedStream === 'A')
-          ? await query(
-              `SELECT amount, description FROM individual_debt WHERE student_index = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5
+          ? await (async () => {
+              let r = await query(
+                `SELECT amount, description FROM individual_debt WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5
                ORDER BY CASE WHEN stream = $3 THEN 0 ELSE 1 END LIMIT 1`,
-              [studentIndex, decodedForm, 'A', 'NA', parseInt(year)]
-            )
-          : await query(
-              'SELECT amount, description FROM individual_debt WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4',
-              [studentIndex, decodedForm, normalizedStream, parseInt(year)]
+                [admNo, decodedForm, 'A', 'NA', parseInt(year)]
             );
+              return r;
+            })()
+          : await (async () => {
+              let r = await query(
+                'SELECT amount, description FROM individual_debt WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4',
+                [admNo, decodedForm, normalizedStream, parseInt(year)]
+              );
+              return r;
+            })();
         if (debtResult.rows.length > 0) {
           const debt = debtResult.rows[0];
           studentFeesDebt = formatStudentFeesDebt(debt.amount, debt.description);
@@ -447,21 +416,28 @@ async function generateIndividualReportPDF(form, stream, year, term, admNo) {
         studentFeesDebt = student.fees_debt || '0.0';
       }
       
-      // Get student photo
+      // Get student photo (resolved by adm_no so it follows the student).
       let studentPhoto = null;
       try {
         // Some deployments may have mixed stream values in student_photos for FORM I-IV.
         const photoStreamsToCheck = (isFormIToIV && normalizedStream === 'A') ? ['A', 'NA'] : [normalizedStream];
 
-        const photoResult = (photoStreamsToCheck.length === 2)
-          ? await query(
-              'SELECT photo_filename FROM student_photos WHERE student_index = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5',
-              [studentIndex, decodedForm, photoStreamsToCheck[0], photoStreamsToCheck[1], parseInt(year)]
-            )
-          : await query(
-              'SELECT photo_filename FROM student_photos WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4',
-              [studentIndex, decodedForm, photoStreamsToCheck[0], parseInt(year)]
+        let photoResult;
+        if (photoStreamsToCheck.length === 2) {
+          photoResult = await query(
+            `SELECT photo_filename FROM student_photos
+             WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4)
+             ORDER BY year DESC, id DESC LIMIT 1`,
+            [admNo, decodedForm, photoStreamsToCheck[0], photoStreamsToCheck[1]]
             );
+        } else {
+          photoResult = await query(
+            `SELECT photo_filename FROM student_photos
+             WHERE adm_no = $1 AND level = $2 AND stream = $3
+             ORDER BY year DESC, id DESC LIMIT 1`,
+            [admNo, decodedForm, photoStreamsToCheck[0]]
+          );
+        }
 
         if (photoResult.rows.length > 0) {
           studentPhoto = photoResult.rows[0].photo_filename;
@@ -1644,16 +1620,18 @@ async function generateMonthlyResultsPDF(level, stream, year, month) {
     let monthlyResultsResult;
     if (isFormIV && (normalizedStream === 'A' || normalizedStream === 'NA')) {
       monthlyResultsResult = await query(
-        `SELECT student_index, total_marks, average, grade, position, remarks 
+        `SELECT adm_no, total_marks, average, grade, position, remarks
          FROM monthly_results 
-         WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND month = $5`,
+         WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND month = $5
+           AND adm_no IS NOT NULL`,
         [normalizedLevel, 'A', 'NA', normalizedYear, normalizedMonth]
       );
     } else {
       monthlyResultsResult = await query(
-        `SELECT student_index, total_marks, average, grade, position, remarks 
+        `SELECT adm_no, total_marks, average, grade, position, remarks
          FROM monthly_results 
-         WHERE level = $1 AND stream = $2 AND year = $3 AND month = $4`,
+         WHERE level = $1 AND stream = $2 AND year = $3 AND month = $4
+           AND adm_no IS NOT NULL`,
         [normalizedLevel, normalizedStream, normalizedYear, normalizedMonth]
       );
     }
@@ -1661,7 +1639,7 @@ async function generateMonthlyResultsPDF(level, stream, year, month) {
     // Build lookup maps
     const monthlyResultsMap = {};
     monthlyResultsResult.rows.forEach(row => {
-      monthlyResultsMap[row.student_index] = row;
+      monthlyResultsMap[row.adm_no] = row;
     });
     
     const scoreLookup = {};
@@ -2019,14 +1997,10 @@ async function generateMonthlyResultsPDF(level, stream, year, month) {
     <tbody>`;
     
     // Sort students: by position if results exist, otherwise alphabetically
-    const studentsWithResults = studentsResult.rows.map((student, idx) => {
-      const studentIndex = idx.toString();
-      return {
+    const studentsWithResults = studentsResult.rows.map((student) => ({
         ...student,
-        studentIndex,
-        result: monthlyResultsMap[studentIndex] || {}
-      };
-    });
+      result: monthlyResultsMap[student.adm_no] || {}
+    }));
     
     studentsWithResults.sort((a, b) => {
       const resultA = a.result;

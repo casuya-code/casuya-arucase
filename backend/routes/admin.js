@@ -2078,12 +2078,6 @@ router.post('/promotion/execute', requireModule('promotion'), async (req, res) =
     
     // OPTIMIZED: Use batch operations instead of sequential loops
     await withTransaction(async (client) => {
-      // Build index mappings in memory (no DB queries needed)
-      const oldIndexMap = {};
-      allStudents.forEach((s, i) => {
-        oldIndexMap[s.adm_no] = i;
-      });
-      
       // Batch insert all students to new class
       for (const student of studentsToPromote) {
         await client.query(
@@ -2095,56 +2089,40 @@ router.post('/promotion/execute', requireModule('promotion'), async (req, res) =
         );
       }
       
-      // Get new class students to build new index mapping
-      const newClassStudents = await client.query(
-        'SELECT adm_no FROM students WHERE level = $1 AND stream = $2 AND year = $3 ORDER BY adm_no',
-        [normalizedToLevel, normalizedToStream, parseInt(to_year)]
-      );
-      const newIndexMap = {};
-      newClassStudents.rows.forEach((s, i) => {
-        newIndexMap[s.adm_no] = i;
-      });
-      
-      // Batch copy photos using INSERT...SELECT with index mapping
+      // Copy photos, parishes, and comments by adm_no so each record follows the student
+      // regardless of their position in the class list.
       for (const student of studentsToPromote) {
-        const oldIndex = oldIndexMap[student.adm_no];
-        const newIndex = newIndexMap[student.adm_no];
-        
-        if (oldIndex !== undefined && newIndex !== undefined) {
-          // Photos are keyed by adm_no, so a promoted student keeps their photo even
-          // though their position in the sorted class list changes.
           await client.query(
-            `INSERT INTO student_photos (level, stream, year, student_index, adm_no, photo_filename, cloudinary_public_id)
-             SELECT $1, $2, $3, $4, sp.adm_no, sp.photo_filename, sp.cloudinary_public_id
+          `INSERT INTO student_photos (level, stream, year, adm_no, photo_filename, cloudinary_public_id)
+           SELECT $1, $2, $3, sp.adm_no, sp.photo_filename, sp.cloudinary_public_id
              FROM student_photos sp
-             WHERE sp.level = $5 AND sp.stream = $6 AND sp.year = $7 AND sp.adm_no = $8
+           WHERE sp.level = $4 AND sp.stream = $5 AND sp.year = $6 AND sp.adm_no = $7
              ON CONFLICT (level, stream, year, adm_no) DO NOTHING`,
-            [normalizedToLevel, normalizedToStream, parseInt(to_year), newIndex,
+          [normalizedToLevel, normalizedToStream, parseInt(to_year),
              normalizedFromLevel, normalizedFromStream, parseInt(from_year), student.adm_no]
           );
           
-          // Batch copy parish
+        // Copy parish
           await client.query(
-            `INSERT INTO student_parishes (level, stream, year, student_index, parish_name)
-             SELECT $1, $2, $3, $4, parish_name
-             FROM student_parishes
-             WHERE level = $5 AND stream = $6 AND year = $7 AND student_index = $8`,
-            [normalizedToLevel, normalizedToStream, parseInt(to_year), newIndex,
-             normalizedFromLevel, normalizedFromStream, parseInt(from_year), oldIndex]
+          `INSERT INTO student_parishes (level, stream, year, adm_no, parish_name)
+           SELECT $1, $2, $3, sp.adm_no, sp.parish_name
+           FROM student_parishes sp
+           WHERE sp.level = $4 AND sp.stream = $5 AND sp.year = $6 AND sp.adm_no = $7`,
+          [normalizedToLevel, normalizedToStream, parseInt(to_year),
+           normalizedFromLevel, normalizedFromStream, parseInt(from_year), student.adm_no]
           );
           
-          // Batch copy comments (Huduma and Michezo)
+        // Copy comments (Huduma and Michezo)
           await client.query(
-            `INSERT INTO comments (comment_type, level, stream, year, term, student_index, comment_text)
-             SELECT comment_type, $1, $2, $3, term, $4, comment_text
-             FROM comments
-             WHERE comment_type IN ('Huduma', 'Michezo') 
-               AND level = $5 AND stream = $6 AND year = $7 AND student_index = $8`,
-            [normalizedToLevel, normalizedToStream, parseInt(to_year), newIndex.toString(),
-             normalizedFromLevel, normalizedFromStream, parseInt(from_year), oldIndex.toString()]
+          `INSERT INTO comments (comment_type, level, stream, year, term, adm_no, comment_text)
+           SELECT c.comment_type, $1, $2, $3, c.term, c.adm_no, c.comment_text
+           FROM comments c
+           WHERE c.comment_type IN ('Huduma', 'Michezo')
+             AND c.level = $4 AND c.stream = $5 AND c.year = $6 AND c.adm_no = $7`,
+          [normalizedToLevel, normalizedToStream, parseInt(to_year),
+           normalizedFromLevel, normalizedFromStream, parseInt(from_year), student.adm_no]
           );
         }
-      }
       
       // Batch copy subjects (class-level, not per-student)
       await client.query(

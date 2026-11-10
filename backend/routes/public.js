@@ -1119,21 +1119,12 @@ router.get('/student/:admNo/months', async (req, res) => {
       [admNo]
     );
     
-    // Calculate student_index: position in sorted list of students (1-based)
-    const allStudentsResult = await query(
-      'SELECT adm_no FROM students WHERE level = $1 AND stream = $2 AND year = $3 ORDER BY adm_no',
-      [student.level, student.stream, parseInt(year)]
-    );
-    
-    const sortedAdmNos = allStudentsResult.rows.map(s => s.adm_no).sort();
-    const studentIndex = (sortedAdmNos.indexOf(admNo) + 1).toString();
-    
-    // Get distinct months from monthly_results for this student (using student_index)
+    // Get distinct months from monthly_results for this student (keyed by adm_no)
     const monthsFromResults = await query(
       `SELECT DISTINCT mr.month, mr.year
        FROM monthly_results mr
-       WHERE mr.student_index = $1 AND mr.level = $2 AND mr.stream = $3 AND mr.year = $4`,
-      [studentIndex, student.level, student.stream, parseInt(year)]
+       WHERE mr.adm_no = $1 AND mr.level = $2 AND mr.stream = $3 AND mr.year = $4`,
+      [admNo, student.level, student.stream, parseInt(year)]
     );
     
     // Also get months from individual_scores (in case monthly_results doesn't have all months)
@@ -1181,9 +1172,9 @@ router.get('/student/:admNo/months', async (req, res) => {
            ELSE 4
          END as term_order
        FROM comments
-       WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4
+       WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4
        ORDER BY term_order`,
-      [studentIndex, student.level, student.stream, parseInt(year)]
+      [admNo, student.level, student.stream, parseInt(year)]
     );
     
     // Get distinct terms where tabia_mwenendo exists
@@ -1196,9 +1187,9 @@ router.get('/student/:admNo/months', async (req, res) => {
            ELSE 4
          END as term_order
        FROM tabia_mwenendo
-       WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4
+       WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4
        ORDER BY term_order`,
-      [studentIndex, student.level, student.stream, parseInt(year)]
+      [admNo, student.level, student.stream, parseInt(year)]
     );
     
     // Combine all terms
@@ -1230,37 +1221,33 @@ router.get('/student/:admNo/photo', async (req, res) => {
       return res.status(400).json({ message: 'level, stream, and year are required' });
     }
     
-    // Get all students for the class, sorted by name: first_name, then middle_name, then surname (A-Z)
-    // This matches how student_index is calculated in the admin panel
-    const studentsResult = await query(
-      `SELECT adm_no FROM students 
-       WHERE level = $1 AND stream = $2 AND year = $3 
-       ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC`,
-      [level, stream, parseInt(year)]
-    );
-    
-    // Find the student_index (0-based position in sorted list)
-    const studentIndex = studentsResult.rows.findIndex(s => s.adm_no === admNo);
-    
-    if (studentIndex === -1) {
-      return res.status(404).json({ message: 'Student not found in this class' });
+    const normalizedStream = normalizeStream(stream);
+    const streamsToCheck = normalizedStream === 'A' ? ['A', 'NA'] : [normalizedStream];
+
+    // Photos are resolved by adm_no so the photo follows the student even
+    // when the class roster changes.
+    let photoResult;
+    if (streamsToCheck.length === 2) {
+      photoResult = await query(
+        `SELECT photo_filename FROM student_photos
+         WHERE level = $1 AND stream IN ($2, $3) AND adm_no = $4
+         ORDER BY year DESC, id DESC LIMIT 1`,
+        [level, streamsToCheck[0], streamsToCheck[1], admNo]
+      );
+    } else {
+      photoResult = await query(
+        `SELECT photo_filename FROM student_photos
+         WHERE level = $1 AND stream = $2 AND adm_no = $3
+         ORDER BY year DESC, id DESC LIMIT 1`,
+        [level, streamsToCheck[0], admNo]
+      );
     }
-    
-    // Get photo using student_index
-    const photoResult = await query(
-      `SELECT photo_filename FROM student_photos 
-       WHERE level = $1 AND stream = $2 AND year = $3 AND student_index = $4`,
-      [level, stream, parseInt(year), studentIndex]
-    );
-    
-    if (photoResult.rows.length === 0) {
+
+
+    if (photoResult.rows.length === 0 || !photoResult.rows[0].photo_filename) {
       return res.json({ photo: null });
     }
-    
-    if (!photoResult.rows[0].photo_filename) {
-      return res.json({ photo: null });
-    }
-    
+
     res.json({ photo: { photo_filename: photoResult.rows[0].photo_filename } });
   } catch (error) {
     console.error('Get student photo error:', error);
@@ -1475,7 +1462,7 @@ router.get('/student/:admNo/results/:month', async (req, res) => {
       return res.status(400).json({ message: 'year is required' });
     }
     
-    // Get student info (including student_index)
+    // Get student info
     const studentResult = await query(
       'SELECT * FROM students WHERE adm_no = $1 AND year = $2 LIMIT 1',
       [admNo, parseInt(year)]
@@ -1486,15 +1473,6 @@ router.get('/student/:admNo/results/:month', async (req, res) => {
     }
     
     const student = studentResult.rows[0];
-    
-    // Calculate student_index: position in sorted list of students (1-based)
-    const allStudentsResult = await query(
-      'SELECT adm_no FROM students WHERE level = $1 AND stream = $2 AND year = $3 ORDER BY adm_no',
-      [student.level, student.stream, parseInt(year)]
-    );
-    
-    const sortedAdmNos = allStudentsResult.rows.map(s => s.adm_no).sort();
-    const studentIndex = (sortedAdmNos.indexOf(admNo) + 1).toString();
     
     // Determine term from month if not provided
     // Map months to terms: Jrb1, Robo -> Term I; Jrb2, Nusu -> Term II; Muh -> Term II
@@ -1561,9 +1539,9 @@ router.get('/student/:admNo/results/:month', async (req, res) => {
     const summaryResult = await query(
       `SELECT total_marks, average, grade, position, remarks
        FROM monthly_results
-       WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4 AND month = $5
+       WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4 AND month = $5
        LIMIT 1`,
-      [studentIndex, student.level, student.stream, student.year, month]
+      [admNo, student.level, student.stream, student.year, month]
     );
     
     // Get all comment types for this student and term
@@ -1571,9 +1549,9 @@ router.get('/student/:admNo/results/:month', async (req, res) => {
     const commentsResult = await query(
       `SELECT comment_type, comment_text
        FROM comments
-       WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5
+       WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5
        AND comment_type = ANY($6::text[])`,
-      [studentIndex, student.level, student.stream, student.year, determinedTerm, commentTypes]
+      [admNo, student.level, student.stream, student.year, determinedTerm, commentTypes]
     );
 
     const comments = {};
@@ -1586,9 +1564,9 @@ router.get('/student/:admNo/results/:month', async (req, res) => {
     const tabiaMwenendoResult = await query(
       `SELECT criterion, evaluation
        FROM tabia_mwenendo
-       WHERE student_index = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5
+       WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5
        ORDER BY criterion`,
-      [studentIndex, student.level, student.stream, student.year, determinedTerm]
+      [admNo, student.level, student.stream, student.year, determinedTerm]
     );
     
     // Format TABIA NA MWENENDO data as object: { "901": "A", "902": "B", ... }

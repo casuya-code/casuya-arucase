@@ -157,7 +157,7 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
   // Helper function 
 
   // Fetch students for this class 
-  // For FORM I-IV with stream 'A', fetch from BOTH streams to match report generation student_index calculation
+  // For FORM I-IV with stream 'A', fetch students from BOTH streams to match report generation
   const { data: studentsData = [], isLoading: studentsLoading } = useQuery({
     queryKey: ['students', normalizedLevel, normalizedStream, year, ...(isFormVOrVI ? [normalizedTerm] : [])],
     queryFn: async () => {
@@ -188,7 +188,14 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
         year: year,
         term: normalizedTerm,
       });
-      return res.data.comments || {};
+      // The API keys comments by adm_no; this screen indexes them by roster position.
+      const byAdmNo = res.data.comments || {};
+      const byIndex = {};
+      students.forEach((student, index) => {
+        const key = String(student.adm_no);
+        if (byAdmNo[key] !== undefined) byIndex[index.toString()] = byAdmNo[key];
+      });
+      return byIndex;
     },
     enabled: students.length > 0,
   });
@@ -228,13 +235,14 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
   // Save comment mutation
   const saveCommentMutation = useMutation({
     mutationFn: async ({ studentIndex, commentText }) => {
+      const student = students[parseInt(studentIndex)] || null;
       return api.post('/students/comments', {
         comment_type: commentType,
         level: normalizedLevel,
         stream: normalizedStream,
         year: parseInt(year),
         term: normalizedTerm,
-        student_index: studentIndex,
+        adm_no: student?.adm_no || null,
         comment_text: commentText,
       });
     },
@@ -506,8 +514,7 @@ const CommentsManagement = ({ formLevel, moduleName, commentType, moduleLabel, i
             skipped++;
             continue;
           }
-          const studentIndex = getStudentIndex(student);
-          commentsPayload.push({ student_index: String(studentIndex), comment_text: commentText });
+          commentsPayload.push({ adm_no: String(student.adm_no), comment_text: commentText });
         }
         if (commentsPayload.length === 0) {
           if (skipped > 0) {

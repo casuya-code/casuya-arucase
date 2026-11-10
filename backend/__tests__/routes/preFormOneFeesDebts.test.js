@@ -2,7 +2,8 @@
  * Pre-Form One fees announcements + individual debt routes.
  *
  * These reuse the shared fees_announcements / individual_debt tables with
- * level 'PRE-FORM ONE' and key debts by the Pre-Form One student id.
+ * level 'PRE-FORM ONE'. Debts are stored by admission number (adm_no); the API
+ * still exposes them keyed by the Pre-Form One student id for the UI.
  */
 jest.mock('../../config/database', () => ({
   query: jest.fn(),
@@ -32,7 +33,7 @@ function clientMock(rowsForStudentList = []) {
   return {
     query: jest.fn(async (sql) => {
       const normalized = sqlOf([sql]);
-      if (normalized.startsWith('SELECT id FROM preform_one_students')) {
+      if (normalized.startsWith('SELECT id, admission_number FROM preform_one_students')) {
         return { rows: rowsForStudentList, rowCount: rowsForStudentList.length };
       }
       return { rows: [], rowCount: 0 };
@@ -107,7 +108,7 @@ describe('Pre-Form One fees + debt routes', () => {
         }
         if (s.includes('FROM individual_debt')) {
           return {
-            rows: [{ student_index: '5', amount: '1000', description: 'Ada', due_date: '', status: 'Outstanding' }],
+            rows: [{ adm_no: 'PF-1', amount: '1000', description: 'Ada', due_date: '', status: 'Outstanding' }],
           };
         }
         return { rows: [] };
@@ -137,7 +138,9 @@ describe('Pre-Form One fees + debt routes', () => {
 
     it('rejects a negative amount', async () => {
       query.mockImplementation(async (sql) => {
-        if (sqlOf([sql]).includes('FROM preform_one_students')) return { rows: [{ id: 5 }], rowCount: 1 };
+        if (sqlOf([sql]).includes('FROM preform_one_students')) {
+          return { rows: [{ id: 5, admission_number: 'PF-1' }], rowCount: 1 };
+        }
         return { rows: [], rowCount: 0 };
       });
       const res = await post({ student_id: 5, amount: -1 }).expect(400);
@@ -149,9 +152,11 @@ describe('Pre-Form One fees + debt routes', () => {
       await post({ student_id: 999, amount: 100 }).expect(404);
     });
 
-    it('inserts the debt keyed by the student id', async () => {
+    it('inserts the debt keyed by the admission number', async () => {
       query.mockImplementation(async (sql) => {
-        if (sqlOf([sql]).includes('FROM preform_one_students')) return { rows: [{ id: 5 }], rowCount: 1 };
+        if (sqlOf([sql]).includes('FROM preform_one_students')) {
+          return { rows: [{ id: 5, admission_number: 'PF-1' }], rowCount: 1 };
+        }
         return { rows: [], rowCount: 0 };
       });
       const client = clientMock();
@@ -160,12 +165,14 @@ describe('Pre-Form One fees + debt routes', () => {
       await post({ student_id: 5, amount: 1500, description: 'Ada' }).expect(200);
 
       const insert = client.query.mock.calls.find((c) => sqlOf(c).startsWith('INSERT INTO individual_debt'));
-      expect(insert[1]).toEqual(['PRE-FORM ONE', 'NA', 2026, '5', 1500, 'Ada', '', 'Outstanding']);
+      expect(insert[1]).toEqual(['PRE-FORM ONE', 'NA', 2026, 'PF-1', 1500, 'Ada', '', 'Outstanding']);
     });
 
     it('clears a zero-amount debt with no description without inserting', async () => {
       query.mockImplementation(async (sql) => {
-        if (sqlOf([sql]).includes('FROM preform_one_students')) return { rows: [{ id: 5 }], rowCount: 1 };
+        if (sqlOf([sql]).includes('FROM preform_one_students')) {
+          return { rows: [{ id: 5, admission_number: 'PF-1' }], rowCount: 1 };
+        }
         return { rows: [], rowCount: 0 };
       });
 
@@ -174,13 +181,13 @@ describe('Pre-Form One fees + debt routes', () => {
       expect(withTransaction).not.toHaveBeenCalled();
       const del = query.mock.calls.find((c) => sqlOf(c).startsWith('DELETE FROM individual_debt'));
       expect(del).toBeDefined();
-      expect(del[1]).toEqual(['PRE-FORM ONE', 'NA', 2026, '5']);
+      expect(del[1]).toEqual(['PRE-FORM ONE', 'NA', 2026, 'PF-1']);
     });
   });
 
   describe('POST /:year/debts/bulk', () => {
     it('reports saved and failed counts, skipping unknown students', async () => {
-      const client = clientMock([{ id: 1 }]);
+      const client = clientMock([{ id: 1, admission_number: 'PF-1' }]);
       withTransaction.mockImplementation(async (fn) => fn(client));
 
       const res = await request(app)
@@ -190,6 +197,9 @@ describe('Pre-Form One fees + debt routes', () => {
         .expect(200);
 
       expect(res.body).toMatchObject({ success: true, saved: 1, failed: 1 });
+
+      const insert = client.query.mock.calls.find((c) => sqlOf(c).startsWith('INSERT INTO individual_debt'));
+      expect(insert[1]).toEqual(['PRE-FORM ONE', 'NA', 2026, 'PF-1', 100, 'Ada', '', 'Outstanding']);
     });
 
     it('rejects an empty payload', async () => {
@@ -202,8 +212,13 @@ describe('Pre-Form One fees + debt routes', () => {
   });
 
   describe('DELETE /:year/debts/:studentId', () => {
-    it('deletes the debt for the student', async () => {
-      query.mockResolvedValue({ rows: [], rowCount: 0 });
+    it('deletes the debt for the student by admission number', async () => {
+      query.mockImplementation(async (sql) => {
+        if (sqlOf([sql]).startsWith('SELECT admission_number FROM preform_one_students')) {
+          return { rows: [{ admission_number: 'PF-1' }], rowCount: 1 };
+        }
+        return { rows: [], rowCount: 0 };
+      });
 
       await request(app)
         .delete('/api/pre-form-one/2026/debts/5')
@@ -211,7 +226,19 @@ describe('Pre-Form One fees + debt routes', () => {
         .expect(200);
 
       const del = query.mock.calls.find((c) => sqlOf(c).startsWith('DELETE FROM individual_debt'));
-      expect(del[1]).toEqual(['PRE-FORM ONE', 'NA', 2026, '5']);
+      expect(del[1]).toEqual(['PRE-FORM ONE', 'NA', 2026, 'PF-1']);
+    });
+
+    it('returns 404 when the student is not in the year', async () => {
+      query.mockResolvedValue({ rows: [], rowCount: 0 });
+
+      await request(app)
+        .delete('/api/pre-form-one/2026/debts/999')
+        .set('Cookie', `accessToken=${ADMIN_TOKEN}`)
+        .expect(404);
+
+      const del = query.mock.calls.find((c) => sqlOf(c).startsWith('DELETE FROM individual_debt'));
+      expect(del).toBeUndefined();
     });
   });
 });

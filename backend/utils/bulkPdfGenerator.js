@@ -25,8 +25,6 @@ const {
 } = require('./calculations');
 const {
   getReportStudentLookupQuery,
-  getStudentIndexListQuery,
-  studentIndexForAdmNo,
   loadReportStudentExtras,
   getStudentPhotoFilename,
 } = require('./reportStudentExtras');
@@ -305,16 +303,6 @@ async function getReportDataInternal(form, stream, year, term, admNo, branding) 
     division = getOLevelDivision(divisionPoint);
   }
 
-  // Student index: name order, 0-based (matches Comments & Assessment + individual report)
-  const { sql: studentIndexSql, params: studentIndexParams } = getStudentIndexListQuery(
-    form,
-    normalizedStream,
-    yearNum,
-    normalizedTerm
-  );
-  const studentIndexStudentsResult = await query(studentIndexSql, studentIndexParams);
-  const studentIndex = studentIndexForAdmNo(admNo, studentIndexStudentsResult.rows);
-
   const {
     comments,
     tabia_mwenendo,
@@ -322,7 +310,6 @@ async function getReportDataInternal(form, stream, year, term, admNo, branding) 
     student_fees_debt,
     class_fees_announcements,
   } = await loadReportStudentExtras({
-    studentIndex,
     student,
     form,
     normalizedStream,

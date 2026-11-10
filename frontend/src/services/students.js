@@ -202,7 +202,7 @@ export const studentsAPI = {
     return api.get(`/students/debt/list?${queryString}`);
   },
 
-  // Get one student's debt (legacy clients used GET /students/debt?student_index=…)
+  // Get one student's debt by adm_no
   getStudentDebt: (params) => {
     const queryString = new URLSearchParams(params).toString();
     return api.get(`/students/debt?${queryString}`);
@@ -271,6 +271,7 @@ export const studentsAPI = {
     }
     return api.get(`/students/photo-entry-form/pdf?${params.toString()}`, {
       responseType: 'blob',
+      timeout: 120000,
     });
   },
 
@@ -290,6 +291,7 @@ export const studentsAPI = {
     }
     return api.get(`/students/photo-entry-form/all-streams/pdf?${params.toString()}`, {
       responseType: 'blob',
+      timeout: 180000,
     });
   },
 

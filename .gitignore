@@ -116,3 +116,6 @@ coverage/
 .nyc_output/
 .turbo/
 *.lcov
+
+# Generated data exports (may contain student data)
+backend/reports/

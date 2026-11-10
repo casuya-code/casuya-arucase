@@ -62,7 +62,7 @@ function makeQuery() {
       return { rows: [{ announcement_index: '1', announcement_text: 'Lipa ada ya Novemba' }] };
     }
     if (s.includes('FROM individual_debt')) {
-      return { rows: [{ student_index: '7', amount: 5000, description: 'Ada ya Novemba' }] };
+      return { rows: [{ adm_no: 'PF-001', amount: 5000, description: 'Ada ya Novemba' }] };
     }
     return { rows: [] }; // branding tables
   });

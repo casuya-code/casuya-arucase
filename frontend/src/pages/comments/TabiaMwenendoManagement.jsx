@@ -118,7 +118,14 @@ const TabiaMwenendoManagement = ({ formLevel }) => {
         year: year,
         term: normalizedTerm,
       });
-      return res.data.evaluations || {};
+      // The API keys evaluations by adm_no; this screen indexes them by roster position.
+      const byAdmNo = res.data.evaluations || {};
+      const byIndex = {};
+      students.forEach((student, index) => {
+        const key = String(student.adm_no);
+        if (byAdmNo[key] !== undefined) byIndex[index.toString()] = byAdmNo[key];
+      });
+      return byIndex;
     },
     enabled: students.length > 0,
   });
@@ -176,8 +183,9 @@ const TabiaMwenendoManagement = ({ formLevel }) => {
     }
 
     // Convert to array format
+    const admNo = students[parseInt(studentIndex)]?.adm_no || null;
     const evaluationsArray = Object.entries(studentEvals).map(([criterion, evaluation]) => ({
-      student_index: studentIndex,
+      adm_no: admNo,
       criterion: criterion,
       evaluation: evaluation,
     }));
@@ -239,7 +247,7 @@ const TabiaMwenendoManagement = ({ formLevel }) => {
     Object.entries(evaluations).forEach(([studentIndex, studentEvals]) => {
       Object.entries(studentEvals).forEach(([criterion, evaluation]) => {
         evaluationsArray.push({
-          student_index: studentIndex,
+          adm_no: students[parseInt(studentIndex)]?.adm_no || null,
           criterion: criterion,
           evaluation: evaluation,
         });
@@ -420,11 +428,10 @@ const TabiaMwenendoManagement = ({ formLevel }) => {
             if (skippedAdmNos.length < maxSkippedSample) skippedAdmNos.push(admNoRaw || admNo);
             continue;
           }
-          const studentIndex = getStudentIndex(student);
           Object.entries(criterionIndices).forEach(([code, colIdx]) => {
             const val = String(cells[colIdx] ?? '').trim().toUpperCase();
             if (VALID_GRADES.includes(val)) {
-              evaluationsArray.push({ student_index: studentIndex, criterion: code, evaluation: val });
+              evaluationsArray.push({ adm_no: student.adm_no, criterion: code, evaluation: val });
             }
           });
         }

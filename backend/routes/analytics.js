@@ -428,11 +428,10 @@ router.get('/class/performance', requireModule('analytics_view'), async (req, re
     
     const subjectResult = await query(subjectSql, monthlyParams);
     
-    // For grade distribution: Calculate average of monthly results for each registered student, then convert to grade
+    // For grade distribution: average monthly results per registered student (keyed by adm_no),
+    // then convert that average to a grade.
     // monthly_results.stream is normalized (A for both A and NA in FORM I-IV)
-    const gradeStreamCondition = isFormIV && (stream === 'A' || stream === 'NA')
-      ? 'AND monthly_results.stream = $2'  // Use normalized stream 'A'
-      : 'AND monthly_results.stream = $2';
+    const gradeStreamCondition = 'AND monthly_results.stream = $2';
     const gradeStreamParams = isFormIV && (stream === 'A' || stream === 'NA')
       ? [form, 'A']  // Use normalized stream
       : [form, stream];
@@ -449,45 +448,21 @@ router.get('/class/performance', requireModule('analytics_view'), async (req, re
       }
     }
     
-    // Get all monthly_results averages for registered students
-    // Calculate student_index for registered students (0-based, matching how monthly_results stores it)
-    let studentIndexSql = `SELECT 
-        adm_no,
-        ROW_NUMBER() OVER (ORDER BY adm_no) - 1 as student_index
-      FROM students
-      WHERE level = $1 ${streamCondition}`;
-    const studentIndexParams = [...streamParams];
-    
-    if (year) {
-      const yearNum = parseInt(year);
-      if (!isNaN(yearNum) && yearNum > 0) {
-        studentIndexSql += ` AND year = $${yearParamIndex}`;
-        studentIndexParams.push(yearNum);
-      }
-    }
-    
-    const studentIndexResult = await query(studentIndexSql, studentIndexParams);
-    const registeredStudentIndexesSet = new Set(
-      studentIndexResult.rows.map(row => row.student_index)
-    );
-    
     let gradeResult = { rows: [] };
     
-    if (registeredStudentIndexesSet.size > 0) {
-      // Get average of monthly results for each registered student
-      // Build parameters array
+    if (registeredAdmNos.length > 0) {
       const studentAveragesParams = [...gradeStreamParams];
-      const studentIndexArrayParamIndex = studentAveragesParams.length + 1;
-      studentAveragesParams.push(Array.from(registeredStudentIndexesSet));
+      const admNoArrayParamIndex = studentAveragesParams.length + 1;
+      studentAveragesParams.push(registeredAdmNos);
       
       const studentAveragesSql = `SELECT 
-          monthly_results.student_index,
+          monthly_results.adm_no,
           AVG(monthly_results.average) as avg_average
         FROM monthly_results
         WHERE monthly_results.level = $1 ${gradeStreamCondition} ${gradeYearFilter}
           AND monthly_results.average IS NOT NULL
-          AND CAST(monthly_results.student_index AS INTEGER) = ANY($${studentIndexArrayParamIndex}::int[])
-        GROUP BY monthly_results.student_index`;
+          AND monthly_results.adm_no = ANY($${admNoArrayParamIndex}::text[])
+        GROUP BY monthly_results.adm_no`;
       
       const studentAveragesResult = await query(studentAveragesSql, studentAveragesParams);
       

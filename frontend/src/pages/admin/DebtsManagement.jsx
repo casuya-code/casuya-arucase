@@ -95,7 +95,7 @@ const DebtsManagement = ({ formLevel }) => {
         year: year,
         term: term || 'First Term',
       });
-      return res.data;
+      return res.data.debt || {};
     },
     enabled: students.length > 0,
     retry: (failureCount, error) => {
@@ -207,15 +207,6 @@ const DebtsManagement = ({ formLevel }) => {
     } else {
       return `/admin/debts/${formLevel}/years`;
     }
-  };
-
-  // Calculate student index (position in sorted list)
-  // Students are sorted by name: first_name, then middle_name, then surname (A-Z)
-  const getStudentIndex = (student) => {
-    const sortedStudents = sortStudentsByName(students);
-    return sortedStudents.findIndex(
-      (s) => String(s.adm_no) === String(student.adm_no)
-    ).toString();
   };
 
   const csvEscape = (val) => {

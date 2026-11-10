@@ -191,7 +191,15 @@ const MonthlyResultsManagement = ({ formLevel }) => {
           year: year,
           month: month,
         });
-        return res.data.results || {};
+        // The API keys results by adm_no; this screen indexes them by roster position.
+        const byAdmNo = res.data.results || {};
+        const byIndex = {};
+        [...students]
+          .sort((a, b) => String(a.adm_no).localeCompare(String(b.adm_no)))
+          .forEach((student, index) => {
+            if (byAdmNo[student.adm_no]) byIndex[index.toString()] = byAdmNo[student.adm_no];
+          });
+        return byIndex;
       } catch (error) {
         console.error('Error fetching monthly results:', error);
         // Don't show toast for 404 errors (no results yet) or 401 errors (auth handled elsewhere)
@@ -271,7 +279,13 @@ const MonthlyResultsManagement = ({ formLevel }) => {
       }
     },
     onSuccess: (response) => {
-      const calculatedResults = response.data.results || {};
+      // Calculate returns adm_no-keyed rows; map them back onto roster positions.
+      const byAdmNo = response.data.results || {};
+      const calculatedResults = {};
+      Object.entries(byAdmNo).forEach(([admNo, value]) => {
+        const index = studentIndexMap[admNo];
+        if (index !== undefined) calculatedResults[index] = value;
+      });
       setResults(calculatedResults);
       toast.success(response.data.message || 'Results calculated and saved successfully!');
       // Invalidate and refetch to ensure we have the latest data
@@ -336,24 +350,28 @@ const MonthlyResultsManagement = ({ formLevel }) => {
   };
 
   const handleSave = (studentIndex) => {
+    const sorted = [...students].sort((a, b) => a.adm_no.localeCompare(b.adm_no));
+    const admNo = sorted[parseInt(studentIndex)]?.adm_no || null;
     saveResultMutation.mutate({
       level: normalizedLevel,
       stream: normalizedStream,
       year: parseInt(year),
       month: month,
-      student_index: studentIndex,
+      adm_no: admNo,
       ...editForm,
     });
   };
 
   const handleDelete = (studentIndex) => {
     if (window.confirm('Are you sure you want to delete this result?')) {
+      const sorted = [...students].sort((a, b) => a.adm_no.localeCompare(b.adm_no));
+      const admNo = sorted[parseInt(studentIndex)]?.adm_no || null;
       deleteResultMutation.mutate({
         level: normalizedLevel,
         stream: normalizedStream,
         year: parseInt(year),
         month: month,
-        student_index: studentIndex,
+        adm_no: admNo,
       });
       
       // Remove from local state
