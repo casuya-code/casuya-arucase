@@ -14,10 +14,13 @@ async function run() {
   for (const g of groups.rows) {
     const { level, stream, year, term } = g;
     const studentsRes = await query(
-      'SELECT adm_no, level, stream, year, term, status FROM students WHERE level = $1 AND year = $2',
+      `SELECT adm_no, level, stream, year, term, status, first_name, middle_name, surname
+         FROM students
+        WHERE level = $1 AND year = $2
+        ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC`,
       [level, parseInt(year, 10)]
     );
-    const roster = buildRoster(studentsRes.rows, level, stream, year, term);
+    const roster = buildRoster(studentsRes.rows, level, stream, year, term, { presorted: true });
 
     const rowsRes = await query(
       `SELECT id, student_index FROM ${TABLE} WHERE level = $1 AND stream = $2 AND year = $3 AND term IS NOT DISTINCT FROM $4 AND adm_no IS NULL`,

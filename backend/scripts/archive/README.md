@@ -6,6 +6,17 @@ of these scripts will fail if re-run against the current database.
 
 **Do not run them against a live or restored database.**
 
+> **Ordering bug (fixed).** The name-sorted linkers originally queried students
+> without the name columns, so `sortByName` saw empty keys and kept database
+> order — silently misattributing rows. They now fetch
+> `first_name, middle_name, surname` ordered by
+> `first_name ASC, middle_name ASC NULLS LAST, surname ASC` and pass
+> `{ presorted: true }`, matching the app's SQL roster exactly.
+> `linkParishesSafe.js` additionally passes `{ dedupeByAdmNo: true }` because the
+> parish endpoint drops repeated admission numbers (FORM V/VI students have one
+> student row per term). `sortByName` now throws instead of falling back to
+> database order. Verify any replay with `node scripts/verifyStudentLinkOrdering.js`.
+
 | Script | What it did |
 | --- | --- |
 | `linkCommentsToAdmNo.js` | Filled `comments.adm_no` from the name-sorted roster position. |

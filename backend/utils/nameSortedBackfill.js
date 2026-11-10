@@ -15,8 +15,19 @@ function isFormVOrVI(level) {
 /**
  * Build the name-sorted roster the app used when it assigned student_index
  * for comments/tabia/parishes/debt.
+ *
+ * IMPORTANT: the app's roster comes from SQL ordered by
+ *   first_name ASC, middle_name ASC NULLS LAST, surname ASC
+ * (`routes/students.js` and the parish endpoint). A JavaScript sort is not a
+ * faithful substitute: NULL middle names and collation differences can change
+ * the order. Callers that already fetched rows with that ORDER BY must pass
+ * `{ presorted: true }` so the SQL order is preserved exactly. Filtering below
+ * never reorders, so a presorted input stays in SQL order.
+ *
+ * Do not filter by status: the app's roster endpoint does not, so a student
+ * whose status changed after the data was entered still occupies their slot.
  */
-function buildRoster(allStudents, level, stream, year, term) {
+function buildRoster(allStudents, level, stream, year, term, options = {}) {
   const vOrVi = isFormVOrVI(level);
   const streamKey = String(stream || '').trim().toUpperCase();
   const combinedANa = streamKey === 'A' || streamKey === 'NA';
@@ -36,10 +47,23 @@ function buildRoster(allStudents, level, stream, year, term) {
   const normTerm = normalizeTerm(term);
   if (vOrVi && normTerm) {
     filtered = filtered.filter((s) => normalizeTerm(s.term) === normTerm);
-    filtered = filtered.filter((s) => String(s.status || '').toUpperCase() !== 'PROMOTED');
   }
 
-  return sortByName(filtered);
+  // The parish endpoint builds its roster with SELECT adm_no ... ORDER BY name
+  // and then drops repeated adm_no values (FORM V/VI students have one row per
+  // term but parishes are stored per class, not per term). Callers that mirror
+  // that endpoint must request the same de-duplication.
+  if (options.dedupeByAdmNo) {
+    const seen = new Set();
+    filtered = filtered.filter((s) => {
+      const key = String(s.adm_no ?? '').trim();
+      if (!key || seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
+  }
+
+  return options.presorted ? filtered : sortByName(filtered);
 }
 
 function admNoForIndex(roster, studentIndex) {

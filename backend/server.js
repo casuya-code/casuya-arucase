@@ -318,6 +318,9 @@ async function ensureStudentParishesAdmNoColumn() {
 async function ensureMonthlyResultsAdmNoColumn() {
   try {
     await query(`ALTER TABLE monthly_results ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)`);
+    // The app no longer writes student_index; keep the legacy column nullable so
+    // adm_no-keyed inserts/updates succeed until the column is dropped.
+    try { await query(`ALTER TABLE monthly_results ALTER COLUMN student_index DROP NOT NULL`); } catch (_) { /* column may be absent */ }
     await query(`CREATE INDEX IF NOT EXISTS idx_monthly_results_adm_no ON monthly_results(adm_no)`);
     // The original index was partial (WHERE adm_no IS NOT NULL); ON CONFLICT cannot infer
     // it without the predicate, so replace it with a full unique index.

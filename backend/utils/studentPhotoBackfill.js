@@ -18,6 +18,17 @@ function nameSortKey(student) {
 
 /** Replicates the app's name ordering (PhotoManagement / report index). */
 function sortByName(students) {
+  // A silent fallback to database order is how the positional linkers
+  // misattributed data: they queried students without name columns, so every
+  // key was empty and Array#sort kept the incoming order. Fail loudly instead.
+  if (
+    students.length > 1
+    && students.every((s) => !s.first_name && !s.middle_name && !s.surname)
+  ) {
+    throw new Error(
+      'sortByName: no name columns in the supplied rows; select first_name, middle_name, surname (or use buildRoster with { presorted: true })'
+    );
+  }
   return [...students].sort((a, b) => {
     const ka = nameSortKey(a);
     const kb = nameSortKey(b);

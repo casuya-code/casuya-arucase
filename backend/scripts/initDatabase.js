@@ -379,6 +379,7 @@ async function initDatabase() {
     `);
     console.log('✅ Monthly results table created');
     await query('ALTER TABLE monthly_results ADD COLUMN IF NOT EXISTS adm_no VARCHAR(50)');
+    try { await query('ALTER TABLE monthly_results ALTER COLUMN student_index DROP NOT NULL'); } catch (_) { /* column may be absent */ }
     await query('CREATE INDEX IF NOT EXISTS idx_monthly_results_adm_no ON monthly_results(adm_no)');
     await query('CREATE UNIQUE INDEX IF NOT EXISTS uq_monthly_results_adm_no ON monthly_results(level, stream, year, month, adm_no)');
     

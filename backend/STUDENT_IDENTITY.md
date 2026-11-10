@@ -43,6 +43,9 @@ student reference.
   create each per-student table with `adm_no NOT NULL`.
 - `__tests__/utils/monthlyResultsBackfill.test.js` — keeps the adm_no ordering
   lexicographic, matching Postgres `ORDER BY adm_no`.
+- `node scripts/verifyStudentLinkOrdering.js` — live database: replays each
+  table's roster order and fails if any linked `adm_no` is misattributed or any
+  in-range row was left NULL.
 
 ## Ordering rule
 
@@ -51,6 +54,16 @@ Whenever a roster position must be replayed (historical migration only), sort
 sort numerically: `'11754' < '1711'` in Postgres, but not as numbers. Mixing the
 two orders misallocated 1,559 `monthly_results` rows during the first backfill;
 `scripts/fixMonthlyResultsAdmNoOrdering.js` corrected them in place.
+
+Tables that were keyed by a **name-sorted** position (`comments`,
+`tabia_mwenendo`, `student_parishes`, `individual_debt`) must replay the app's
+SQL order — `first_name ASC, middle_name ASC NULLS LAST, surname ASC` — not a
+JavaScript sort. Fetch the names in that order and pass `{ presorted: true }` to
+`utils/nameSortedBackfill.buildRoster`. `student_parishes` also de-duplicates by
+`adm_no` (the parish endpoint drops FORM V/VI's per-term duplicate rows). The
+original linkers omitted the name columns, so `sortByName` fell back to database
+order and misattributed 482 of 603 parish links; `scripts/verifyStudentLinkOrdering.js`
+now catches that class of error.
 
 ## Known historical residue
 
