@@ -33,8 +33,15 @@ function createTableBlock(source, table) {
 describe('initDatabase student identity schema', () => {
   const source = fs.readFileSync(INIT_DB, 'utf8');
 
-  it('never creates a student_index column', () => {
-    expect(source).not.toMatch(/student_index/i);
+  it('never creates or adds a student_index column', () => {
+    for (const table of ADM_NO_TABLES) {
+      const block = createTableBlock(source, table);
+      expect(block).not.toBeNull();
+      expect(block).not.toMatch(/\bstudent_index\b/i);
+    }
+    // Allow compatibility fixes on a legacy column (e.g. DROP NOT NULL), but never add/declare it.
+    expect(source).not.toMatch(/ADD\s+COLUMN\b[^;]*\bstudent_index\b/i);
+    expect(source).not.toMatch(/\bstudent_index\s+(?:INTEGER|INT|BIGINT|SMALLINT|SERIAL|VARCHAR|TEXT)\b/i);
   });
 
   it.each(ADM_NO_TABLES)('creates %s with adm_no', (table) => {
