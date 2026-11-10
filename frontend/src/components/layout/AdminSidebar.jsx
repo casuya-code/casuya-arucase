@@ -90,6 +90,7 @@ const AdminSidebar = () => {
     if (!user) return false;
     if (item.path === '/admin') return true;
     if (isSuperAdmin) return true;
+    if (item.superAdminOnly) return false;
 
     if (isAdminLike) {
       if (adminAllowedModules === null) return true;
@@ -244,6 +245,7 @@ const AdminSidebar = () => {
         { path: '/admin/users', label: 'Users', icon: 'fa-users-cog', moduleId: 'user_management' },
         { path: '/admin/promotion', label: 'Promotion', icon: 'fa-graduation-cap', moduleId: 'promotion' },
         { path: '/admin/database-backups', label: 'Backup', icon: 'fa-database', moduleId: 'database_backups' },
+        { path: '/admin/maintenance', label: 'Maintenance', icon: 'fa-tools', superAdminOnly: true },
       ]
     },
     {

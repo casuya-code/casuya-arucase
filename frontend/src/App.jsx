@@ -53,6 +53,7 @@ const AdmissionApplications = lazy(() => import('./pages/admin/AdmissionApplicat
 const AdmissionLetters = lazy(() => import('./pages/admin/AdmissionLetters'));
 const StaffProfiles = lazy(() => import('./pages/admin/StaffProfiles'));
 const DatabaseBackups = lazy(() => import('./pages/admin/DatabaseBackups'));
+const AdminMaintenance = lazy(() => import('./pages/admin/Maintenance'));
 
 // Student Management (lazy)
 const StudentRegistration = lazy(() => import('./pages/students/StudentRegistration'));
@@ -201,6 +202,7 @@ const BulkReportGenerate = lazy(() => import('./pages/reports/BulkReportGenerate
 
 // Shared (not lazy)
 import ProtectedRoute from './components/common/ProtectedRoute';
+import MaintenanceGate from './components/common/MaintenanceGate';
 import PageSEO from './components/common/PageSEO';
 import SchoolFavicon from './components/common/SchoolFavicon';
 import SoundInitializer from './components/common/SoundInitializer';
@@ -225,6 +227,7 @@ function App() {
           <PwaInstallBanner />
           <PublicChatbotLayer />
           <RouteTransitionProvider>
+          <MaintenanceGate>
           <Suspense fallback={<Loading minimal message="Loading page…" />}>
           <DeferredRoutes>
             {/* Public Routes */}
@@ -374,6 +377,14 @@ function App() {
               element={
                 <ProtectedRoute requiredModule="database_backups">
                   <DatabaseBackups />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/maintenance"
+              element={
+                <ProtectedRoute requiredSuperAdmin>
+                  <AdminMaintenance />
                 </ProtectedRoute>
               }
             />
@@ -2295,6 +2306,7 @@ function App() {
             <Route path="*" element={<Navigate to="/" replace />} />
           </DeferredRoutes>
           </Suspense>
+          </MaintenanceGate>
           </RouteTransitionProvider>
           <ToastContainer
             position="top-right"

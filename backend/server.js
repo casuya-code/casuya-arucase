@@ -103,6 +103,7 @@ const io = new Server(server, {
 // Ensures new columns exist without requiring a manual initDatabase run.
 const { query } = require('./config/database');
 const { createBackup, pruneBackups } = require('./scripts/backupDatabase');
+const { ensureMaintenanceTable } = require('./utils/maintenance');
 
 const BACKUP_RUN_DAYS = [1, 8, 15, 22];
 const BACKUP_RUN_HOUR_TZ = 2;
@@ -496,6 +497,7 @@ setImmediate(() => {
   ensureAdministratorsCloudinaryPublicIdColumn().catch((e) => console.warn('[schema] ensureAdministratorsCloudinaryPublicIdColumn fatal:', e.message));
   ensureRefreshTokensTable().catch((e) => console.warn('[schema] ensureRefreshTokensTable fatal:', e.message));
   ensureScoreChangeAuditTable().catch((e) => console.warn('[schema] ensureScoreChangeAuditTable fatal:', e.message));
+  ensureMaintenanceTable().catch((e) => console.warn('[schema] ensureMaintenanceTable fatal:', e.message));
   validateCloudinaryCredentials().catch((e) => console.warn('[cloudinary] Validation failed:', formatErr(e)));
   
   // Migration: Update all DIV scores to A/DIV
@@ -713,6 +715,11 @@ app.get('/api/health/database', async (req, res) => {
 // Request logging middleware (should be before routes)
 const requestLogger = require('./middleware/requestLogger');
 app.use('/api/', requestLogger);
+
+// Maintenance mode: status/settings endpoint first, then the guard that blocks
+// non-superadmin API traffic while the notice is active.
+app.use('/api/maintenance', require('./routes/maintenance'));
+app.use('/api/', require('./middleware/maintenance').maintenanceGuard);
 
 // Admin Routes
 const adminRoutes = require('./routes/admin');

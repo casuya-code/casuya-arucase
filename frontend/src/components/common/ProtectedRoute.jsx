@@ -11,6 +11,7 @@ const ProtectedRoute = ({
   requiredModule = null,
   requiredAnyOfModules = null,
   requiredAdmin = false,
+  requiredSuperAdmin = false,
 }) => {
   const auth = useAuth();
   const { isAuthenticated, hasRole, hasPermission, hasModule, isAdminLike, loading, verifyToken } = auth;
@@ -72,6 +73,10 @@ const ProtectedRoute = ({
     return <Navigate to="/admin" replace />;
   }
 
+  if (requiredSuperAdmin && String(auth.user?.role || '').toLowerCase() !== 'superadmin') {
+    return <Navigate to="/admin" replace />;
+  }
+
   return children;
 };
 
@@ -82,6 +87,7 @@ ProtectedRoute.propTypes = {
   requiredModule: PropTypes.string,
   requiredAnyOfModules: PropTypes.arrayOf(PropTypes.string),
   requiredAdmin: PropTypes.bool,
+  requiredSuperAdmin: PropTypes.bool,
 };
 
 export default ProtectedRoute;

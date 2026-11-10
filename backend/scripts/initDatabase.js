@@ -539,6 +539,24 @@ async function initDatabase() {
       )
     `);
     console.log('✅ Website settings table created');
+
+    // Maintenance mode settings (single row). See utils/maintenance.js.
+    await query(`
+      CREATE TABLE IF NOT EXISTS maintenance_settings (
+        id INTEGER PRIMARY KEY DEFAULT 1,
+        enabled BOOLEAN NOT NULL DEFAULT FALSE,
+        message TEXT NOT NULL DEFAULT 'The website is currently under maintenance. Please check back soon.',
+        mode VARCHAR(20) NOT NULL DEFAULT 'everyone',
+        starts_at TIMESTAMPTZ,
+        ends_at TIMESTAMPTZ,
+        updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+        updated_by VARCHAR(255),
+        CONSTRAINT maintenance_settings_single_row CHECK (id = 1),
+        CONSTRAINT maintenance_settings_mode_check CHECK (mode IN ('everyone', 'logged_in'))
+      )
+    `);
+    await query('INSERT INTO maintenance_settings (id) VALUES (1) ON CONFLICT (id) DO NOTHING');
+    console.log('✅ Maintenance settings table created');
     
     // Gallery photos table
     await query(`
