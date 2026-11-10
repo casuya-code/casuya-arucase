@@ -401,9 +401,22 @@ body:has(.login-page) {
 
 .login-actions {
   display: flex;
-  flex-direction: column;
+  flex-direction: row;
+  align-items: stretch;
   gap: 0.625rem;
   margin-top: 0.5rem;
+}
+
+/* Sign in + public site sit side by side; the primary button takes the spare
+   width and the secondary keeps its natural width. */
+.login-actions .login-submit {
+  flex: 1 1 auto;
+  width: auto;
+}
+
+.login-actions .login-back-btn {
+  flex: 0 0 auto;
+  width: auto;
 }
 
 .login-submit {
