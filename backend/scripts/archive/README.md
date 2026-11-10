@@ -10,7 +10,8 @@ of these scripts will fail if re-run against the current database.
 | --- | --- |
 | `linkCommentsToAdmNo.js` | Filled `comments.adm_no` from the name-sorted roster position. |
 | `linkTabiaToAdmNo.js` | Filled `tabia_mwenendo.adm_no` from the name-sorted roster position. |
-| `linkStudentParishesToAdmNo.js` | Filled `student_parishes.adm_no` from the name-sorted roster position. |
+| `linkStudentParishesToAdmNo.js` | Filled `student_parishes.adm_no` from the name-sorted roster position. Aborts on classes with duplicate positional rows; superseded by `linkParishesSafe.js`. |
+| `linkParishesSafe.js` | Collision-safe `student_parishes.adm_no` backfill: fills NULL rows only, skips duplicate copies and orphans, never deletes. This is the script that was used for the live run. |
 | `linkIndividualDebtToAdmNo.js` | Filled `individual_debt.adm_no` from the name-sorted roster position. |
 | `linkMonthlyResultsToAdmNo.js` | Filled `monthly_results.adm_no` from the adm_no-sorted roster. |
 | `linkStudentPhotosToAdmNo.js` | Filled `student_photos.adm_no` from the name-sorted roster position. |
