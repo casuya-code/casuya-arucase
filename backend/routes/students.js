@@ -3685,12 +3685,18 @@ router.get('/comments/list', async (req, res) => {
     if (normalizedStream === 'ALL') {
       listSql = `SELECT adm_no, comment_text FROM comments
        WHERE comment_type = $1 AND level = $2 AND year = $3 AND term = $4
-         AND adm_no IS NOT NULL`;
+         AND adm_no IS NOT NULL
+       ORDER BY adm_no,
+         CASE WHEN stream IN ('ALL', 'NA') THEN 0 ELSE 1 END,
+         updated_at ASC NULLS FIRST`;
       listParams = [comment_type, level, parseInt(year), term];
     } else {
       listSql = `SELECT adm_no, comment_text FROM comments
        WHERE comment_type = $1 AND level = $2 AND stream IN ($3, $4, $5) AND year = $6 AND term = $7
-         AND adm_no IS NOT NULL`;
+         AND adm_no IS NOT NULL
+       ORDER BY adm_no,
+         CASE WHEN stream IN ('ALL', 'NA') THEN 0 ELSE 1 END,
+         updated_at ASC NULLS FIRST`;
       listParams = [comment_type, level, normalizedStream, 'NA', 'ALL', parseInt(year), term];
     }
     const result = await query(listSql, listParams);
@@ -3877,22 +3883,13 @@ router.delete('/comments', async (req, res) => {
       return res.status(400).json({ message: 'comment_type, level, stream, year, term, and adm_no are required' });
     }
     
-    // Normalize stream: NA -> A (all NA stream values have been normalized to A)
-    const normalizedStream = normalizeStream(stream);
-
-    let deleteSql;
-    let deleteParams;
-    if (normalizedStream === 'ALL') {
-      deleteSql = `DELETE FROM comments
+    // A comment belongs to the student, not to a stream. Delete every copy for
+    // this student (including legacy 'ALL'/'NA' rows) so it does not reappear
+    // from another view after deletion.
+    const deleteSql = `DELETE FROM comments
        WHERE comment_type = $1 AND level = $2 AND year = $3 AND term = $4 AND adm_no = $5
        RETURNING *`;
-      deleteParams = [comment_type, level, parseInt(year), term, admNo];
-    } else {
-      deleteSql = `DELETE FROM comments
-       WHERE comment_type = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5 AND adm_no = $6
-       RETURNING *`;
-      deleteParams = [comment_type, level, normalizedStream, parseInt(year), term, admNo];
-    }
+    const deleteParams = [comment_type, level, parseInt(year), term, admNo];
     const result = await query(deleteSql, deleteParams);
     
     if (result.rows.length === 0) {
@@ -3928,12 +3925,18 @@ router.get('/tabia-mwenendo/list', async (req, res) => {
     if (normalizedStream === 'ALL') {
       tmSql = `SELECT adm_no, criterion, evaluation FROM tabia_mwenendo
        WHERE level = $1 AND year = $2 AND term = $3
-         AND adm_no IS NOT NULL`;
+         AND adm_no IS NOT NULL
+       ORDER BY adm_no, criterion,
+         CASE WHEN stream IN ('ALL', 'NA') THEN 0 ELSE 1 END,
+         updated_at ASC NULLS FIRST`;
       tmParams = [level, parseInt(year), term];
     } else {
       tmSql = `SELECT adm_no, criterion, evaluation FROM tabia_mwenendo
        WHERE level = $1 AND stream IN ($2, $3, $4) AND year = $5 AND term = $6
-         AND adm_no IS NOT NULL`;
+         AND adm_no IS NOT NULL
+       ORDER BY adm_no, criterion,
+         CASE WHEN stream IN ('ALL', 'NA') THEN 0 ELSE 1 END,
+         updated_at ASC NULLS FIRST`;
       tmParams = [level, normalizedStream, 'NA', 'ALL', parseInt(year), term];
     }
     const result = await query(tmSql, tmParams);
