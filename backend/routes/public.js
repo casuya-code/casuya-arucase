@@ -154,7 +154,7 @@ router.get('/homepage', async (req, res) => {
     
     // Get gallery photos (limit 12)
     const gallery_photos = await safeRows(
-      'SELECT * FROM gallery_photos ORDER BY created_at DESC LIMIT 12'
+      'SELECT * FROM gallery_photos ORDER BY date DESC NULLS LAST, created_at DESC LIMIT 12'
     );
     
     // Get active FAQs (limit 5)
@@ -514,7 +514,7 @@ router.get('/gallery', async (req, res) => {
   try {
     const limit = parseInt(req.query.limit) || 20;
     const result = await query(
-      'SELECT * FROM gallery_photos ORDER BY created_at DESC LIMIT $1',
+      'SELECT * FROM gallery_photos ORDER BY date DESC NULLS LAST, created_at DESC LIMIT $1',
       [limit]
     );
     res.setHeader('Cache-Control', 'public, max-age=60');
