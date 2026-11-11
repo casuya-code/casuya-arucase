@@ -3677,14 +3677,23 @@ router.get('/comments/list', async (req, res) => {
     
     // Normalize stream: NA -> A (all NA stream values have been normalized to A)
     const normalizedStream = normalizeStream(stream);
-    
-    // Query for both normalized stream and original NA (for backward compatibility)
-    const result = await query(
-      `SELECT adm_no, comment_text FROM comments
-       WHERE comment_type = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5 AND term = $6
-         AND adm_no IS NOT NULL`,
-      [comment_type, level, normalizedStream, 'NA', parseInt(year), term]
-    );
+
+    // Combined mode (stream=ALL) aggregates comments saved under any stream,
+    // so a comment entered in a per-stream view also shows here and vice versa.
+    let listSql;
+    let listParams;
+    if (normalizedStream === 'ALL') {
+      listSql = `SELECT adm_no, comment_text FROM comments
+       WHERE comment_type = $1 AND level = $2 AND year = $3 AND term = $4
+         AND adm_no IS NOT NULL`;
+      listParams = [comment_type, level, parseInt(year), term];
+    } else {
+      listSql = `SELECT adm_no, comment_text FROM comments
+       WHERE comment_type = $1 AND level = $2 AND stream IN ($3, $4, $5) AND year = $6 AND term = $7
+         AND adm_no IS NOT NULL`;
+      listParams = [comment_type, level, normalizedStream, 'NA', 'ALL', parseInt(year), term];
+    }
+    const result = await query(listSql, listParams);
     
     const commentMap = {};
     result.rows.forEach(row => {
@@ -3714,13 +3723,31 @@ router.post('/comments', async (req, res) => {
     
     // Normalize stream: NA -> A (all NA stream values have been normalized to A)
     const normalizedStream = normalizeStream(stream);
-    
+
+    // Combined mode (stream=ALL): resolve the student's actual stream so the
+    // comment is stored under their stream, keeping it visible in both the
+    // combined view and the per-stream view.
+    let saveStream = normalizedStream;
+    if (normalizedStream === 'ALL') {
+      try {
+        const studentResult = await query(
+          'SELECT stream FROM students WHERE adm_no = $1 AND level = $2 AND year = $3 LIMIT 1',
+          [admNo, level, parseInt(year)]
+        );
+        if (studentResult.rows.length > 0 && studentResult.rows[0].stream) {
+          saveStream = studentResult.rows[0].stream;
+        }
+      } catch (studentError) {
+        // Fall back to ALL if lookup fails
+      }
+    }
+
     const insertComment = () => query(
       `INSERT INTO comments (comment_type, level, stream, year, term, adm_no, comment_text)
          VALUES ($1, $2, $3, $4, $5, $6, $7)
        ON CONFLICT (comment_type, level, stream, year, term, adm_no)
          DO UPDATE SET comment_text = EXCLUDED.comment_text, updated_at = NOW()`,
-      [comment_type, level, normalizedStream, parseInt(year), term, admNo, comment_text]
+      [comment_type, level, saveStream, parseInt(year), term, admNo, comment_text]
       );
 
     try {
@@ -3761,6 +3788,26 @@ router.post('/comments/bulk', async (req, res) => {
     let saved = 0;
     const errors = [];
 
+    // Combined mode (stream=ALL): resolve each student's actual stream so
+    // comments are stored under their stream and stay visible in both views.
+    const streamByAdm = {};
+    if (normalizedStream === 'ALL') {
+      const admNos = commentsList
+        .map((i) => (i?.adm_no != null ? String(i.adm_no).trim() : ''))
+        .filter(Boolean);
+      if (admNos.length > 0) {
+        try {
+          const sr = await query(
+            'SELECT adm_no, stream FROM students WHERE adm_no = ANY($1::text[]) AND level = $2 AND year = $3',
+            [admNos, level, yearNum]
+          );
+          sr.rows.forEach((r) => { streamByAdm[r.adm_no] = r.stream; });
+        } catch (e) {
+          // Fall back to ALL
+        }
+      }
+    }
+
     for (const item of commentsList) {
       const admNo = item?.adm_no != null && String(item.adm_no).trim() !== ''
         ? String(item.adm_no).trim()
@@ -3778,7 +3825,7 @@ router.post('/comments/bulk', async (req, res) => {
            VALUES ($1, $2, $3, $4, $5, $6, $7)
            ON CONFLICT (comment_type, level, stream, year, term, adm_no)
            DO UPDATE SET comment_text = EXCLUDED.comment_text, updated_at = NOW()`,
-          [comment_type, level, normalizedStream, yearNum, term, admNo, commentText]
+          [comment_type, level, (normalizedStream === 'ALL' ? (streamByAdm[admNo] || 'ALL') : normalizedStream), yearNum, term, admNo, commentText]
         );
         saved++;
       } catch (insertError) {
@@ -3789,7 +3836,7 @@ router.post('/comments/bulk', async (req, res) => {
              VALUES ($1, $2, $3, $4, $5, $6, $7)
              ON CONFLICT (comment_type, level, stream, year, term, adm_no)
              DO UPDATE SET comment_text = EXCLUDED.comment_text, updated_at = NOW()`,
-            [comment_type, level, normalizedStream, yearNum, term, admNo, commentText]
+            [comment_type, level, (normalizedStream === 'ALL' ? (streamByAdm[admNo] || 'ALL') : normalizedStream), yearNum, term, admNo, commentText]
           );
           saved++;
         } else if (isMissingConflictTarget(insertError)) {
@@ -3799,7 +3846,7 @@ router.post('/comments/bulk', async (req, res) => {
              VALUES ($1, $2, $3, $4, $5, $6, $7)
              ON CONFLICT (comment_type, level, stream, year, term, adm_no)
              DO UPDATE SET comment_text = EXCLUDED.comment_text, updated_at = NOW()`,
-            [comment_type, level, normalizedStream, yearNum, term, admNo, commentText]
+            [comment_type, level, (normalizedStream === 'ALL' ? (streamByAdm[admNo] || 'ALL') : normalizedStream), yearNum, term, admNo, commentText]
           );
           saved++;
         } else {
@@ -3832,13 +3879,21 @@ router.delete('/comments', async (req, res) => {
     
     // Normalize stream: NA -> A (all NA stream values have been normalized to A)
     const normalizedStream = normalizeStream(stream);
-    
-    const result = await query(
-      `DELETE FROM comments 
+
+    let deleteSql;
+    let deleteParams;
+    if (normalizedStream === 'ALL') {
+      deleteSql = `DELETE FROM comments
+       WHERE comment_type = $1 AND level = $2 AND year = $3 AND term = $4 AND adm_no = $5
+       RETURNING *`;
+      deleteParams = [comment_type, level, parseInt(year), term, admNo];
+    } else {
+      deleteSql = `DELETE FROM comments
        WHERE comment_type = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5 AND adm_no = $6
-       RETURNING *`,
-      [comment_type, level, normalizedStream, parseInt(year), term, admNo]
-    );
+       RETURNING *`;
+      deleteParams = [comment_type, level, normalizedStream, parseInt(year), term, admNo];
+    }
+    const result = await query(deleteSql, deleteParams);
     
     if (result.rows.length === 0) {
       return res.status(404).json({ message: 'Comment not found' });
@@ -3866,14 +3921,22 @@ router.get('/tabia-mwenendo/list', async (req, res) => {
     
     // Normalize stream: NA -> A (all NA stream values have been normalized to A)
     const normalizedStream = normalizeStream(stream);
-    
-    // Query for both normalized stream and original NA (for backward compatibility)
-    const result = await query(
-      `SELECT adm_no, criterion, evaluation FROM tabia_mwenendo
-       WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND term = $5
-         AND adm_no IS NOT NULL`,
-      [level, normalizedStream, 'NA', parseInt(year), term]
-    );
+
+    // Combined mode (stream=ALL) aggregates evaluations saved under any stream.
+    let tmSql;
+    let tmParams;
+    if (normalizedStream === 'ALL') {
+      tmSql = `SELECT adm_no, criterion, evaluation FROM tabia_mwenendo
+       WHERE level = $1 AND year = $2 AND term = $3
+         AND adm_no IS NOT NULL`;
+      tmParams = [level, parseInt(year), term];
+    } else {
+      tmSql = `SELECT adm_no, criterion, evaluation FROM tabia_mwenendo
+       WHERE level = $1 AND stream IN ($2, $3, $4) AND year = $5 AND term = $6
+         AND adm_no IS NOT NULL`;
+      tmParams = [level, normalizedStream, 'NA', 'ALL', parseInt(year), term];
+    }
+    const result = await query(tmSql, tmParams);
     
     // Convert to nested dictionary: {adm_no: {criterion: evaluation}}
     const evaluationMap = {};
@@ -3910,8 +3973,8 @@ router.post('/tabia-mwenendo', async (req, res) => {
     const normalizedTerm = term != null ? String(term).trim() : term;
     const termMatchValues = getTermMatchValues(normalizedTerm);
     const levelMatchValues = getLevelMatchValues(level);
-    
-    // Validate evaluations array
+
+    // Validate evaluations array:
     const validGrades = ['A', 'B', 'C', 'D', 'F'];
     const validCriteria = ['901', '902', '903', '904', '905', '906', '907', '908', '909', '910', '911'];
     
@@ -3944,6 +4007,24 @@ router.post('/tabia-mwenendo', async (req, res) => {
       console.warn('[tabia-mwenendo] duplicate keys in deduped (should be 0):', duplicateKeys.slice(0, 20));
     }
 
+    // Combined mode (stream=ALL): resolve each student's actual stream so
+    // evaluations are stored under their stream and stay visible in both views.
+    const streamByAdm = {};
+    if (normalizedStream === 'ALL') {
+      const admNos = deduped.map((e) => String(e.adm_no).trim()).filter(Boolean);
+      if (admNos.length > 0) {
+        try {
+          const sr = await query(
+            'SELECT adm_no, stream FROM students WHERE adm_no = ANY($1::text[]) AND level = $2 AND year = $3',
+            [admNos, level, parseInt(year)]
+          );
+          sr.rows.forEach((r) => { streamByAdm[r.adm_no] = r.stream; });
+        } catch (e) {
+          // Fall back to ALL
+        }
+      }
+    }
+
     await withTransaction(async (client) => {
       const yearInt = parseInt(year);
 
@@ -3959,7 +4040,7 @@ router.post('/tabia-mwenendo', async (req, res) => {
         const norm = (s) => (s != null ? String(s).trim().toUpperCase() : '');
         const normLevel = (s) => (s != null ? String(s).trim().replace(/\s+/g, ' ').toUpperCase() : '');
         const idsToDelete = (selectResult?.rows || [])
-          .filter((r) => levelSet.has(normLevel(r.level)) && (norm(r.stream) === 'A' || norm(r.stream) === 'NA'))
+          .filter((r) => levelSet.has(normLevel(r.level)) && (normalizedStream === 'ALL' || norm(r.stream) === 'A' || norm(r.stream) === 'NA'))
           .map((r) => r.id)
           .filter((id) => id != null);
 
@@ -3974,7 +4055,8 @@ router.post('/tabia-mwenendo', async (req, res) => {
           deduped.forEach((evaluation, i) => {
             const base = i * 7;
             placeholders.push(`(${base + 1}, ${base + 2}, ${base + 3}, ${base + 4}, ${base + 5}, ${base + 6}, ${base + 7})`);
-            params.push(level, normalizedStream, yearInt, normalizedTerm, String(evaluation.adm_no).trim(), evaluation.criterion, evaluation.evaluation);
+            const rowStream = (normalizedStream === 'ALL') ? (streamByAdm[String(evaluation.adm_no).trim()] || 'ALL') : normalizedStream;
+             params.push(level, rowStream, yearInt, normalizedTerm, String(evaluation.adm_no).trim(), evaluation.criterion, evaluation.evaluation);
           });
           await client.query(
             `INSERT INTO tabia_mwenendo (${cols}) VALUES ${placeholders.join(', ')}`,
@@ -3988,7 +4070,7 @@ router.post('/tabia-mwenendo', async (req, res) => {
              VALUES ($1, $2, $3, $4, $5, $6, $7)
              ON CONFLICT (level, stream, year, term, adm_no, criterion)
              DO UPDATE SET evaluation = EXCLUDED.evaluation, updated_at = NOW()`,
-            [level, normalizedStream, yearInt, normalizedTerm, String(evaluation.adm_no).trim(), evaluation.criterion, evaluation.evaluation]
+            [level, (normalizedStream === 'ALL' ? (streamByAdm[String(evaluation.adm_no).trim()] || 'ALL') : normalizedStream), yearInt, normalizedTerm, String(evaluation.adm_no).trim(), evaluation.criterion, evaluation.evaluation]
           );
         }
       }

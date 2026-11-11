@@ -1172,7 +1172,7 @@ router.get('/student/:admNo/months', async (req, res) => {
            ELSE 4
          END as term_order
        FROM comments
-       WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4
+       WHERE adm_no = $1 AND level = $2 AND stream IN ($3, 'ALL', 'NA') AND year = $4
        ORDER BY term_order`,
       [admNo, student.level, student.stream, parseInt(year)]
     );
@@ -1187,7 +1187,7 @@ router.get('/student/:admNo/months', async (req, res) => {
            ELSE 4
          END as term_order
        FROM tabia_mwenendo
-       WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4
+       WHERE adm_no = $1 AND level = $2 AND stream IN ($3, 'ALL', 'NA') AND year = $4
        ORDER BY term_order`,
       [admNo, student.level, student.stream, parseInt(year)]
     );
@@ -1549,7 +1549,7 @@ router.get('/student/:admNo/results/:month', async (req, res) => {
     const commentsResult = await query(
       `SELECT comment_type, comment_text
        FROM comments
-       WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5
+       WHERE adm_no = $1 AND level = $2 AND stream IN ($3, 'ALL', 'NA') AND year = $4 AND term = $5
        AND comment_type = ANY($6::text[])`,
       [admNo, student.level, student.stream, student.year, determinedTerm, commentTypes]
     );
@@ -1564,7 +1564,7 @@ router.get('/student/:admNo/results/:month', async (req, res) => {
     const tabiaMwenendoResult = await query(
       `SELECT criterion, evaluation
        FROM tabia_mwenendo
-       WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5
+       WHERE adm_no = $1 AND level = $2 AND stream IN ($3, 'ALL', 'NA') AND year = $4 AND term = $5
        ORDER BY criterion`,
       [admNo, student.level, student.stream, student.year, determinedTerm]
     );

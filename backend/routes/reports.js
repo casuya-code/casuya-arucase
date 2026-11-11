@@ -454,7 +454,7 @@ router.get('/bulk/:form/:year/:term', requireModule('bulk_report'), async (req, 
     const normalizedTerm = normalizeTerm(decodedTerm);
 
     // Normalize stream: NA -> A
-    if (stream) {
+    if (stream && stream !== 'ALL') {
       stream = normalizeStream(stream);
     } else {
       // For Form I-IV, default to 'A' (normalized from 'NA')
@@ -498,7 +498,7 @@ router.get('/bulk/:form/:year/:term', requireModule('bulk_report'), async (req, 
       queryText += ` AND (status IS DISTINCT FROM 'PROMOTED')`;
     }
 
-    if (stream) {
+    if (stream && stream !== 'ALL') {
       if (oLevelStreamAOrNA) {
         queryText += ` AND stream IN ($${paramIndex}, $${paramIndex + 1})`;
         params.push('A', 'NA');
@@ -526,7 +526,7 @@ router.get('/bulk/:form/:year/:term', requireModule('bulk_report'), async (req, 
     
     // Get subjects
     let subjectsResult;
-    if (stream) {
+    if (stream && stream !== 'ALL') {
       if (oLevelStreamAOrNA) {
         subjectsResult = await query(
           'SELECT * FROM subjects WHERE level = $1 AND stream IN ($2, $3) AND year = $4 ORDER BY subject_code',
@@ -566,7 +566,7 @@ router.get('/bulk/:form/:year/:term', requireModule('bulk_report'), async (req, 
     // Match /reports/individual: filter by assessment months only, not individual_scores.term.
     // Months already encode the term; score rows may have stale term labels from older saves.
     let scoresResult;
-    if (stream) {
+    if (stream && stream !== 'ALL') {
       if (oLevelStreamAOrNA) {
         scoresResult = await query(
           `SELECT adm_no, subject_code, month, score FROM individual_scores 
@@ -617,7 +617,7 @@ router.get('/bulk/:form/:year/:term', requireModule('bulk_report'), async (req, 
     
     let commentsResult;
     try {
-      if (stream) {
+      if (stream && stream !== 'ALL') {
         if (oLevelStreamAOrNA) {
           commentsResult = await query(
             `SELECT adm_no, comment_type, comment_text FROM comments
@@ -784,7 +784,7 @@ router.get('/bulk/:form/:year/:term/pdf', requireModule('bulk_report'), async (r
     const normalizedTerm = normalizeTerm(decodedTerm);
 
     // Normalize stream: NA -> A
-    if (stream) {
+    if (stream && stream !== 'ALL') {
       stream = normalizeStream(stream);
     } else {
       const formCodePdf = decodedForm.replace(/^FORM\s+/i, '').trim();
@@ -811,7 +811,7 @@ router.get('/bulk/:form/:year/:term/pdf', requireModule('bulk_report'), async (r
       queryText += ` AND (status IS DISTINCT FROM 'PROMOTED')`;
     }
 
-    if (stream) {
+    if (stream && stream !== 'ALL') {
       if (oLevelStreamAOrNAPdf) {
         queryText += ` AND stream IN ($${paramIndex}, $${paramIndex + 1})`;
         params.push('A', 'NA');
