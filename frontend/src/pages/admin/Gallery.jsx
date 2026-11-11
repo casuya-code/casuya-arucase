@@ -128,7 +128,9 @@ const Gallery = () => {
 
   const categories = ['general', 'events', 'sports', 'academics', 'campus', 'students', 'staff'];
 
-  const getPhotoUrl = (path) => {
+  const getPhotoUrl = (photo) => {
+    // R2 uploads carry ready-made variants; prefer the small thumb.
+    const path = photo?.thumb_url || photo?.gallery_url || photo?.path;
     if (!path) return null;
     if (path.startsWith('http://') || path.startsWith('https://')) {
       return path;
@@ -180,7 +182,7 @@ const Gallery = () => {
                       <div key={photo.id} className="gallery-item">
                         <div className="gallery-image-wrap">
                           <img
-                            src={getPhotoUrl(photo.path)}
+                            src={getPhotoUrl(photo)}
                             alt={photo.caption || 'Gallery photo'}
                             className="gallery-thumbnail"
                             loading="lazy"

@@ -8,7 +8,7 @@ import PublicLayout from '../../components/layout/PublicLayout';
 import { publicAPI } from '../../services/public';
 import SkeletonLoader from '../../components/common/SkeletonLoader';
 import { getImageLoadingStrategy, getNetworkInfo } from '../../utils/networkUtils';
-import { resolveStaticUrl } from '../../utils/backendUrl';
+import { galleryGridUrl, galleryFullUrl } from '../../utils/galleryImage';
 import './GalleryPage.css';
 
 const Gallery = () => {
@@ -47,8 +47,6 @@ const Gallery = () => {
   
   // Get network-aware image loading strategy
   const imageStrategy = getImageLoadingStrategy();
-
-  const getImageUrl = useCallback((path) => resolveStaticUrl(path), []);
 
   // Get unique categories from photos
   const categories = useMemo(() => ['all', ...new Set(photos.map(photo => photo.category || 'general'))], [photos]);
@@ -202,7 +200,7 @@ const Gallery = () => {
               >
                 <div className="gallery-item-image-wrapper">
                   <LazyLoadImage
-                    src={getImageUrl(photo.path)}
+                    src={galleryGridUrl(photo)}
                     alt={photo.caption || 'Picha ya galeria'}
                     effect={imageStrategy.useBlur ? "blur" : undefined}
                     className="gallery-image"
@@ -283,7 +281,7 @@ const Gallery = () => {
             )}
             <div className="lightbox-content" onClick={(e) => e.stopPropagation()}>
               <img 
-                src={getImageUrl(selectedPhoto.path)} 
+                src={galleryFullUrl(selectedPhoto)} 
                 alt={selectedPhoto.caption || 'Picha ya galeria'}
                 onError={(e) => {
                   e.target.style.display = 'none';

@@ -20,9 +20,11 @@ export async function prefetchHomepageData(queryClient) {
 
   const data = queryClient.getQueryData(['homepage']);
   const firstPhoto = data?.gallery_photos?.[0];
-  if (!firstPhoto?.path) return;
+  if (!firstPhoto) return;
 
-  const { src, srcSet } = heroImageSources(resolveStaticUrl(firstPhoto.path));
+  const { src, srcSet } = firstPhoto.hero_url
+    ? { src: firstPhoto.hero_url, srcSet: '' }
+    : heroImageSources(resolveStaticUrl(firstPhoto.path));
   if (!src) return;
 
   const existing = document.querySelector(`link[rel="preload"][as="image"][href="${CSS.escape(src)}"]`);

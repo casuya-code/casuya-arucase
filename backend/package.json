@@ -37,6 +37,7 @@
   "author": "",
   "license": "ISC",
   "dependencies": {
+    "@aws-sdk/client-s3": "^3.1166.0",
     "@mistralai/mistralai": "^2.2.5",
     "@sentry/node": "^10.63.0",
     "axios": "^1.16.0",

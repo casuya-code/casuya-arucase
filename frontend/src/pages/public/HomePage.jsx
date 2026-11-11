@@ -10,7 +10,7 @@ import SkeletonLoader from '../../components/common/SkeletonLoader';
 import PublicLayout from '../../components/layout/PublicLayout';
 import { publicAPI } from '../../services/public';
 import { getAdmissionFormDownloadUrl, getAdmissionPreformDownloadUrl, resolveStaticUrl } from '../../utils/backendUrl';
-import { heroImageSources, galleryThumbUrl } from '../../utils/cloudinaryImage';
+import { galleryHeroSource, galleryThumbUrlFor, galleryFullUrl } from '../../utils/galleryImage';
 import './HomePage.css';
 import { PublicCmsHtml, usePublicPage } from '../../components/public/PublicCmsPage';
 import { hasPublishedPage, settingValue } from '../../utils/publicPageContent';
@@ -60,9 +60,8 @@ const HomePage = () => {
   }, []);
 
   const getImageUrl = useCallback((path) => resolveStaticUrl(path), []);
-  const getHeroSources = useCallback((path) => heroImageSources(getImageUrl(path)), [getImageUrl]);
-  const getHeroUrl = useCallback((path) => getHeroSources(path).src || '', [getHeroSources]);
-  const getThumbUrl = useCallback((path) => galleryThumbUrl(getImageUrl(path)), [getImageUrl]);
+  const getHeroSources = useCallback((photo) => galleryHeroSource(photo), []);
+  const getThumbUrl = useCallback((photo) => galleryThumbUrlFor(photo), []);
 
   const { data, isLoading } = useQuery({
     queryKey: ['homepage'],
@@ -138,7 +137,7 @@ const HomePage = () => {
   const validGalleryPhotos = useMemo(() => {
     return (
       gallery_photos?.filter((photo) => {
-        const { src } = getHeroSources(photo.path);
+        const { src } = getHeroSources(photo);
         return src && !failedImages.has(src);
       }) || []
     );
@@ -209,7 +208,7 @@ const HomePage = () => {
               <>
                 <div className="carousel-wrapper" aria-hidden="true">
                   {carouselPhotos.map((photo, index) => {
-                    const { src: imageUrl, srcSet } = getHeroSources(photo.path);
+                    const { src: imageUrl, srcSet } = getHeroSources(photo);
                     const isActive = index === carouselIndex;
                     const shouldLoad =
                       index === 0 ||
@@ -551,7 +550,7 @@ const HomePage = () => {
               ) : (
                 <div className="home-gallery-grid">
                   {galleryPreviewPhotos.map((photo) => {
-                    const imageUrl = getThumbUrl(photo.path);
+                    const imageUrl = getThumbUrl(photo);
                     return (
                       <button
                         key={photo.id}
@@ -845,7 +844,7 @@ const HomePage = () => {
                 <i className="fas fa-times" aria-hidden />
               </button>
               <img
-                src={getHeroUrl(selectedGalleryPhoto.path)}
+                src={galleryFullUrl(selectedGalleryPhoto)}
                 alt=""
               />
               <p className="home-gallery-lightbox-caption">

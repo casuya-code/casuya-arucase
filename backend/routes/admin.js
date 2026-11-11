@@ -26,6 +26,8 @@ const { getClient, callMistral } = require('../utils/mistral');
 const { getNectaSummaryForAI } = require('../utils/nectaAnalyticsForAI');
 const { sendError } = require('../utils/safeError');
 const cloudinary = require('../config/cloudinary');
+const { isR2Configured, isR2Url, uploadObject, deletePrefix } = require('../config/r2');
+const { processGalleryImage } = require('../utils/galleryImageProcessor');
 const {
   syncPhotoFromStaffProfileToUser,
   clearUserPhotoForUsername,
@@ -971,6 +973,51 @@ const galleryPhotoUpload = {
     );
   }
 };
+
+/**
+ * Gallery uploads are held in memory first so we can choose the destination
+ * at request time: Cloudflare R2 when configured (with sharp-generated
+ * hero/gallery/thumb crops), otherwise Cloudinary as before.
+ */
+const galleryPhotoUploadMemory = {
+  array: (field, maxCount) => (req, res, next) => {
+    const imageFilter = (req, file, cb) => {
+      const ok = /jpeg|jpg|png|gif|webp/.test(path.extname(file.originalname).toLowerCase())
+               && /jpeg|jpg|png|gif|webp/.test(file.mimetype);
+      ok ? cb(null, true) : cb(new Error('Only image files are allowed'));
+    };
+    multer({
+      storage: multer.memoryStorage(),
+      limits: { fileSize: 16 * 1024 * 1024 },
+      fileFilter: imageFilter,
+    }).array(field, maxCount)(req, res, (err) => {
+      if (err) {
+        console.error('[gallery] upload error:', err.message);
+        return res.status(400).json({ message: err.message || 'Upload failed' });
+      }
+      next();
+    });
+  },
+};
+
+/** Upload a buffer to Cloudinary (fallback for GIFs or when R2 is not configured). */
+function uploadGalleryBufferToCloudinary(buffer) {
+  return new Promise((resolve, reject) => {
+    const options = {
+      folder: 'arucase-gallery',
+      resource_type: 'image',
+      public_id: `gallery-${Date.now()}-${Math.round(Math.random() * 1e9)}`,
+      transformation: [{ quality: 'auto', fetch_format: 'auto' }],
+    };
+    const stream = cloudinary.uploader.upload_stream(options, (err, result) => {
+      if (err) return reject(err);
+      if (!result) return reject(new Error('Cloudinary returned no result'));
+      resolve(result);
+    });
+    stream.on('error', reject);
+    stream.end(buffer);
+  });
+}
 
 // Staff profile upload: accept common field-name variants to avoid Multer "Unexpected field"
 const staffProfileUpload = (req, res, next) => {
@@ -2551,45 +2598,98 @@ router.get('/gallery', requireModule('gallery'), async (req, res) => {
   }
 });
 
-// Upload gallery photos with multer error handling
-// runCloudinaryUpload (inside galleryPhotoUpload.array) handles errors and timeout.
-router.post('/gallery/upload', requireModule('gallery'), requireRole('admin', 'superadmin'), galleryPhotoUpload.array('photos', 20), async (req, res) => {
+// Upload gallery photos.
+// Files are buffered in memory, then either processed into fixed display
+// variants and stored in Cloudflare R2 (when configured) or uploaded to
+// Cloudinary as a fallback. GIFs always use Cloudinary so they stay animated.
+router.post('/gallery/upload', requireModule('gallery'), requireRole('admin', 'superadmin'), galleryPhotoUploadMemory.array('photos', 20), async (req, res) => {
   try {
     if (!req.files || req.files.length === 0) {
       return res.status(400).json({ message: 'No files uploaded' });
     }
-    
+
     const { category = 'general', caption = '', date } = req.body;
-    
+    const r2Enabled = isR2Configured();
+
     const uploadedPhotos = [];
     const errors = [];
-    
-    for (let i = 0; i < req.files.length; i++) {
-      try {
-        const file = req.files[i];
 
-        if (!file || !file.path) {
-          errors.push({ file: file?.originalname || `File ${i}`, error: 'File path is missing' });
+    for (let i = 0; i < req.files.length; i++) {
+      const file = req.files[i];
+      try {
+        if (!file || !file.buffer) {
+          errors.push({ file: file?.originalname || `File ${i}`, error: 'Uploaded file is empty' });
           continue;
         }
 
-        // CloudinaryStorage already uploaded the file; req.file.path is the secure URL
-        const photoUrl = file.path;
-        const cloudinaryPublicId = file.filename;
-        console.log(`✅ Gallery photo uploaded to Cloudinary: ${cloudinaryPublicId}`);
+        const photoId = `photo_${Date.now()}_${uuidv4().slice(0, 8)}`;
+        const isGif = /gif/i.test(file.mimetype || '');
 
-        const photoId = `photo_${Date.now()}_${i}`;
+        if (r2Enabled && !isGif) {
+          const { hero, gallery, thumb, original } = await processGalleryImage(file.buffer);
+          const base = `gallery/${photoId}`;
+          try {
+            const [heroUrl, galleryUrl, thumbUrl, originalUrl] = await Promise.all([
+              uploadObject(`${base}/hero-1920x1080.jpg`, hero, 'image/jpeg'),
+              uploadObject(`${base}/gallery-1200x800.jpg`, gallery, 'image/jpeg'),
+              uploadObject(`${base}/thumb-480x320.jpg`, thumb, 'image/jpeg'),
+              uploadObject(`${base}/original.jpg`, original, 'image/jpeg'),
+            ]);
 
-        await query(
-          `INSERT INTO gallery_photos (id, path, category, caption, date, uploaded_by)
-           VALUES ($1, $2, $3, $4, $5, $6)`,
-          [photoId, photoUrl, category, caption || null, date || new Date().toISOString().split('T')[0], req.user?.username || 'admin']
-        );
+            await query(
+              `INSERT INTO gallery_photos
+                 (id, path, category, caption, date, uploaded_by, hero_url, gallery_url, thumb_url, original_url)
+               VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10)`,
+              [
+                photoId,
+                galleryUrl,
+                category,
+                caption || null,
+                date || new Date().toISOString().split('T')[0],
+                req.user?.username || 'admin',
+                heroUrl,
+                galleryUrl,
+                thumbUrl,
+                originalUrl,
+              ]
+            );
 
-        uploadedPhotos.push({ id: photoId, path: photoUrl, source: 'cloudinary' });
+            console.log(`✅ Gallery photo stored in Cloudflare R2: ${base}`);
+            uploadedPhotos.push({
+              id: photoId,
+              path: galleryUrl,
+              hero_url: heroUrl,
+              gallery_url: galleryUrl,
+              thumb_url: thumbUrl,
+              original_url: originalUrl,
+              source: 'r2',
+            });
+          } catch (uploadError) {
+            // Don't leave orphaned objects behind if any variant or the DB insert fails.
+            try { await deletePrefix(base); } catch { /* best effort */ }
+            throw uploadError;
+          }
+        } else {
+          const result = await uploadGalleryBufferToCloudinary(file.buffer);
+          await query(
+            `INSERT INTO gallery_photos (id, path, category, caption, date, uploaded_by)
+             VALUES ($1, $2, $3, $4, $5, $6)`,
+            [
+              photoId,
+              result.secure_url,
+              category,
+              caption || null,
+              date || new Date().toISOString().split('T')[0],
+              req.user?.username || 'admin',
+            ]
+          );
+
+          console.log(`✅ Gallery photo uploaded to Cloudinary: ${result.public_id}`);
+          uploadedPhotos.push({ id: photoId, path: result.secure_url, source: 'cloudinary' });
+        }
       } catch (fileError) {
-        console.error(`Error processing file ${i} (${req.files[i]?.originalname}):`, fileError);
-        errors.push({ file: req.files[i]?.originalname || `File ${i}`, error: fileError.message });
+        console.error(`Error processing file ${i} (${file?.originalname}):`, fileError);
+        errors.push({ file: file?.originalname || `File ${i}`, error: fileError.message });
       }
     }
     
@@ -2620,14 +2720,28 @@ router.post('/gallery/upload', requireModule('gallery'), requireRole('admin', 's
 router.delete('/gallery/delete-all', requireModule('gallery'), requireRole('admin'), async (req, res) => {
   try {
     // Step 1: Get all gallery photos from database
-    const result = await query('SELECT id, path FROM gallery_photos');
+    const result = await query('SELECT id, path, hero_url, gallery_url, original_url FROM gallery_photos');
     const photos = result.rows;
-    
-    // Step 2: Delete from Cloudinary or local storage
+
+    // Step 2: Delete files. R2 objects all live under gallery/, so a single
+    // prefix sweep removes every R2-hosted variant; Cloudinary/local rows are
+    // handled individually below.
     let deletedFiles = 0;
     let failedFiles = [];
-    
+
+    if (isR2Configured()) {
+      try {
+        deletedFiles += await deletePrefix('gallery/');
+      } catch (err) {
+        failedFiles.push({ storage: 'r2', error: err.message });
+        console.error(`   ✗ Failed to delete R2 gallery objects: ${err.message}`);
+      }
+    }
+
     for (const photo of photos) {
+      const r2Hosted = isR2Url(photo.path) || isR2Url(photo.gallery_url) || isR2Url(photo.original_url);
+      if (r2Hosted) continue; // already removed by the prefix sweep
+
       if (photo.path.includes('cloudinary.com')) {
         // Delete from Cloudinary
         try {
@@ -2635,7 +2749,7 @@ router.delete('/gallery/delete-all', requireModule('gallery'), requireRole('admi
           const filename = urlParts[urlParts.length - 1].split('.')[0];
           const folder = urlParts[urlParts.length - 2];
           const publicId = `${folder}/${filename}`;
-          
+
           await cloudinary.uploader.destroy(publicId);
           deletedFiles++;
         } catch (err) {
@@ -2680,22 +2794,36 @@ router.delete('/gallery/delete-all', requireModule('gallery'), requireRole('admi
 router.delete('/gallery/:id', requireModule('gallery'), async (req, res) => {
   try {
     const { id } = req.params;
-    const photoResult = await query('SELECT path FROM gallery_photos WHERE id = $1', [id]);
+    const photoResult = await query(
+      'SELECT id, path, hero_url, gallery_url, original_url FROM gallery_photos WHERE id = $1',
+      [id]
+    );
     if (photoResult.rows.length === 0) {
       return res.status(404).json({ message: 'Photo not found' });
     }
-    
-    const photoPath = photoResult.rows[0].path;
-    
-    // Delete from Cloudinary if it's a Cloudinary URL
-    if (photoPath.includes('cloudinary.com')) {
+
+    const photo = photoResult.rows[0];
+    const photoPath = photo.path;
+    const r2Hosted =
+      isR2Configured() &&
+      (isR2Url(photoPath) || isR2Url(photo.gallery_url) || isR2Url(photo.hero_url));
+
+    if (r2Hosted) {
+      try {
+        await deletePrefix(`gallery/${photo.id}/`);
+      } catch (r2Error) {
+        console.error('Error deleting from Cloudflare R2:', r2Error);
+        // Continue with database deletion even if R2 deletion fails
+      }
+    } else if (photoPath.includes('cloudinary.com')) {
+      // Delete from Cloudinary if it's a Cloudinary URL
       try {
         // Extract public_id from Cloudinary URL
         const urlParts = photoPath.split('/');
         const filename = urlParts[urlParts.length - 1].split('.')[0];
         const folder = urlParts[urlParts.length - 2];
         const publicId = `${folder}/${filename}`;
-        
+
         await cloudinary.uploader.destroy(publicId);
       } catch (cloudinaryError) {
         console.error('Error deleting from Cloudinary:', cloudinaryError);
