@@ -15,18 +15,25 @@
  */
 const sharp = require('sharp');
 
-const JPEG_OPTIONS = { mozjpeg: true, chromaSubsampling: '4:2:0' };
-
-const VARIANTS = {
-  hero: { width: 1920, height: 1080, quality: 82 },
-  gallery: { width: 1200, height: 800, quality: 82 },
-  thumb: { width: 480, height: 320, quality: 80 },
+const JPEG_OPTIONS = {
+  mozjpeg: true,
+  chromaSubsampling: '4:4:4',
+  trellisQuantisation: true,
+  overshootDeringing: true,
+  optimizeScans: true,
 };
 
-async function renderCrop(buffer, { width, height, quality }) {
+const VARIANTS = {
+  hero: { width: 1920, height: 1080, quality: 92, sharpen: 1.0 },
+  gallery: { width: 1200, height: 800, quality: 92, sharpen: 1.0 },
+  thumb: { width: 480, height: 320, quality: 90, sharpen: 0.6 },
+};
+
+async function renderCrop(buffer, { width, height, quality, sharpen }) {
   return sharp(buffer, { failOn: 'none' })
     .rotate() // honour EXIF orientation before cropping
     .resize(width, height, { fit: 'cover', position: sharp.strategy.attention })
+    .sharpen({ sigma: sharpen, m1: 1.0, m2: 0.5, x1: 2, y2: 10, y3: 20 })
     .jpeg({ ...JPEG_OPTIONS, quality })
     .toBuffer();
 }
@@ -35,7 +42,8 @@ async function renderOriginal(buffer) {
   return sharp(buffer, { failOn: 'none' })
     .rotate()
     .resize({ width: 2560, height: 2560, fit: 'inside', withoutEnlargement: true })
-    .jpeg({ ...JPEG_OPTIONS, quality: 88 })
+    .sharpen({ sigma: 0.5, m1: 0.8, m2: 0.4, x1: 2, y2: 10, y3: 20 })
+    .jpeg({ ...JPEG_OPTIONS, quality: 95 })
     .toBuffer();
 }
 
