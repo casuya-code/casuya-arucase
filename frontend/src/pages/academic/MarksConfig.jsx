@@ -15,6 +15,11 @@ const formAccents = {
   'FORM VI': '#06b6d4',
 };
 
+const togetherAccents = {
+  'FORM V TOGETHER': '#0891b2',
+  'FORM VI TOGETHER': '#7c3aed',
+};
+
 const MarksConfig = () => {
   const forms = [
     { id: 'FORM I', label: 'FORM I', path: '/admin/marks-config/form-i/years', icon: 'fa-1' },
@@ -23,6 +28,21 @@ const MarksConfig = () => {
     { id: 'FORM IV', label: 'FORM IV', path: '/admin/marks-config/form-iv/years', icon: 'fa-4' },
     { id: 'FORM V', label: 'FORM V', path: '/admin/marks-config/form-v/streams', icon: 'fa-5' },
     { id: 'FORM VI', label: 'FORM VI', path: '/admin/marks-config/form-vi/streams', icon: 'fa-6' },
+  ];
+
+  const togetherForms = [
+    {
+      id: 'FORM V TOGETHER',
+      label: 'FORM V TOGETHER',
+      path: '/admin/marks-config/form-v/together/years',
+      icon: 'fa-layer-group',
+    },
+    {
+      id: 'FORM VI TOGETHER',
+      label: 'FORM VI TOGETHER',
+      path: '/admin/marks-config/form-vi/together/years',
+      icon: 'fa-layer-group',
+    },
   ];
 
   return (
@@ -53,6 +73,26 @@ const MarksConfig = () => {
                 <span className="marks-config-form-desc">
                   {form.id === 'FORM V' || form.id === 'FORM VI' ? 'Select stream' : 'Select year'}
                 </span>
+              </Link>
+            ))}
+          </div>
+
+          <h3 className="marks-config-section-subtitle">All Streams Together (Form V & VI)</h3>
+          <div className="marks-config-grid">
+            {togetherForms.map((form) => (
+              <Link
+                key={form.id}
+                to={form.path}
+                className="marks-config-form-card together-card"
+                style={{ '--accent': togetherAccents[form.id] || '#0891b2' }}
+                data-form={form.id}
+                aria-label={`${form.id} Marks Config`}
+              >
+                <span className="marks-config-form-icon">
+                  <i className={`fas ${form.icon}`} />
+                </span>
+                <span className="marks-config-form-label">{form.label}</span>
+                <span className="marks-config-form-desc">Select year for all streams together</span>
               </Link>
             ))}
           </div>

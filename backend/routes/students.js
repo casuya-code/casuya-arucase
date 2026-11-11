@@ -1016,26 +1016,111 @@ router.get('/class-grades', async (req, res) => {
       }
     } catch (e) { /* use defaults */ }
 
-    const studentsResult = await query(
-      `SELECT adm_no FROM students WHERE level = $1 AND stream IN ($2, $3) AND year = $4 ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC`,
-      [level, normalizedStream, 'NA', parseInt(year)]
-    );
-    const subjectsResult = await query(
-      'SELECT subject_code, subject_abbreviation, subject_name FROM subjects WHERE level = $1 AND stream IN ($2, $3) AND year = $4',
-      [level, normalizedStream, 'NA', parseInt(year)]
-    );
-    const scoresResult = await query(
-      'SELECT adm_no, subject_code, month, score FROM individual_scores WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND month = ANY($5::text[])',
-      [level, normalizedStream, 'NA', parseInt(year), months]
-    );
+    // Combined ("together") mode for Form V/VI: stream=ALL means every stream of the level/year.
+    const isCombined = normalizedStream === 'ALL';
 
+    let studentsResult;
+    let subjectsResult;
+    let scoresResult;
+
+    if (isCombined) {
+      // The roster must match GET /students for stream=ALL (no stream filter) so that every
+      // student listed on the Comments pages gets a grade instead of a dash.
+      const studentsParams = [level, parseInt(year)];
+      let studentsSql = 'SELECT adm_no, stream FROM students WHERE level = $1 AND year = $2';
+      if (isFormVOrVI) {
+        // Form V/VI roster is term based (same as GET /students when a term is supplied)
+        studentsSql += ' AND term = ANY($3::text[])';
+        studentsParams.push(getTermMatchValues(normalizeTerm(term)));
+      }
+      studentsSql += ' ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC';
+      studentsResult = await query(studentsSql, studentsParams);
+
+      // Union of the subjects registered for every stream of this level/year
+      subjectsResult = await query(
+        'SELECT subject_code, subject_abbreviation, subject_name, stream FROM subjects WHERE level = $1 AND year = $2',
+        [level, parseInt(year)]
+      );
+
+      scoresResult = await query(
+        'SELECT adm_no, subject_code, month, score, stream FROM individual_scores WHERE level = $1 AND year = $2 AND month = ANY($3::text[])',
+        [level, parseInt(year), months]
+      );
+    } else {
+      studentsResult = await query(
+        `SELECT adm_no FROM students WHERE level = $1 AND stream IN ($2, $3) AND year = $4 ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC`,
+        [level, normalizedStream, 'NA', parseInt(year)]
+      );
+      subjectsResult = await query(
+        'SELECT subject_code, subject_abbreviation, subject_name FROM subjects WHERE level = $1 AND stream IN ($2, $3) AND year = $4',
+        [level, normalizedStream, 'NA', parseInt(year)]
+      );
+      scoresResult = await query(
+        'SELECT adm_no, subject_code, month, score FROM individual_scores WHERE level = $1 AND stream IN ($2, $3) AND year = $4 AND month = ANY($5::text[])',
+        [level, normalizedStream, 'NA', parseInt(year), months]
+      );
+    }
+
+    // { adm_no: { subject_code: { month: { score, stream } } } }
     const scoresByAdm = {};
     scoresResult.rows.forEach((r) => {
       if (!scoresByAdm[r.adm_no]) scoresByAdm[r.adm_no] = {};
       const code = r.subject_code;
       if (!scoresByAdm[r.adm_no][code]) scoresByAdm[r.adm_no][code] = {};
-      scoresByAdm[r.adm_no][code][r.month] = parseFloat(r.score) || 0;
+      scoresByAdm[r.adm_no][code][r.month] = {
+        score: parseFloat(r.score) || 0,
+        stream: r.stream || null,
+      };
     });
+
+    // Streams are compared case-insensitively; 'NA' is the legacy label for stream 'A'
+    const normalizeStreamKey = (value) => {
+      const key = String(value == null ? '' : value).trim().toUpperCase();
+      return key === 'NA' ? 'A' : key;
+    };
+
+    // Combined mode: group the registered subjects by stream so each student is graded
+    // on the subjects of their own combination (same as the individual/bulk report).
+    const subjectsByStream = new Map();
+    if (isCombined) {
+      subjectsResult.rows.forEach((subject) => {
+        const key = String(subject.stream || '').trim().toUpperCase();
+        if (!subjectsByStream.has(key)) subjectsByStream.set(key, []);
+        subjectsByStream.get(key).push(subject);
+      });
+    }
+    const sharedSubjects = isCombined ? (subjectsByStream.get('NA') || []) : [];
+
+    const getSubjectsForStudent = (row, studentScores) => {
+      if (!isCombined) return subjectsResult.rows;
+
+      const studentStream = String(row.stream || '').trim().toUpperCase();
+      const list = [...(subjectsByStream.get(studentStream) || [])];
+
+      // Subjects registered without a stream (legacy 'NA' rows) apply to every stream
+      sharedSubjects.forEach((subject) => {
+        if (!list.some((s) => s.subject_code === subject.subject_code)) list.push(subject);
+      });
+
+      // Fallback: the stream has no registered subjects -> grade on the subjects the student has scores for
+      if (list.length === 0) {
+        subjectsResult.rows.forEach((subject) => {
+          const codes = [subject.subject_code, subject.subject_abbreviation].filter(Boolean);
+          const hasScores = codes.some(
+            (code) => studentScores[code] && Object.keys(studentScores[code]).length > 0
+          );
+          if (hasScores) list.push(subject);
+        });
+      }
+
+      // One entry per subject code
+      const seenCodes = new Set();
+      return list.filter((subject) => {
+        if (!subject.subject_code || seenCodes.has(subject.subject_code)) return false;
+        seenCodes.add(subject.subject_code);
+        return true;
+      });
+    };
 
     const form = level;
     const grades = {};
@@ -1044,14 +1129,25 @@ router.get('/class-grades', async (req, res) => {
       const admNo = row.adm_no;
       const studentScores = scoresByAdm[admNo] || {};
       const subjectsData = {};
-      subjectsResult.rows.forEach((subject) => {
+      getSubjectsForStudent(row, studentScores).forEach((subject) => {
         const codes = [subject.subject_code, subject.subject_abbreviation].filter(Boolean);
         const monthScores = {};
         months.forEach((m) => {
           let s = null;
           for (const code of codes) {
-            if (studentScores[code] && studentScores[code][m] !== undefined) {
-              s = studentScores[code][m];
+            const entry = studentScores[code] && studentScores[code][m];
+            if (entry && entry.score !== undefined) {
+              // Combined mode: ignore scores saved under another stream.
+              // Legacy 'NA' score rows are shared, so they still count for every stream.
+              if (
+                isCombined &&
+                entry.stream &&
+                String(entry.stream).trim().toUpperCase() !== 'NA' &&
+                normalizeStreamKey(entry.stream) !== normalizeStreamKey(row.stream)
+              ) {
+                continue;
+              }
+              s = entry.score;
               break;
             }
           }

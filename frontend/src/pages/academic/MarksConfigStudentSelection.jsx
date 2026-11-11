@@ -8,8 +8,9 @@ import AdminLayout from '../../components/layout/AdminLayout';
 import { studentsAPI } from '../../services/students';
 import './MarksConfigStudentSelection.css';
 
-const MarksConfigStudentSelection = ({ formLevel }) => {
-  const { year, stream, term } = useParams();
+const MarksConfigStudentSelection = ({ formLevel: formLevelProp }) => {
+  const { year, stream, term, formLevel: formLevelParam } = useParams();
+  const formLevel = formLevelProp || formLevelParam;
 
   // Normalize form level - convert to uppercase for database query
   const normalizedLevel = formLevel
@@ -19,18 +20,21 @@ const MarksConfigStudentSelection = ({ formLevel }) => {
   // Normalize stream: use 'A' as default for Form I-IV (previously 'NA')
   // For Form V/VI, use the actual stream value (e.g., "HKL", "PCM", etc.)
   const isFormVOrVI = normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI';
+  // Together mode (all streams combined) has no stream in the URL - fetch with 'ALL'
+  const isTogetherMode = isFormVOrVI && !stream;
   const normalizedStream = stream || (isFormVOrVI ? '' : 'A');
+  const fetchStream = isTogetherMode ? 'ALL' : normalizedStream;
 
   // Calculate if query should be enabled (must be explicit boolean)
   const isQueryEnabled = Boolean(
     normalizedLevel &&
     year &&
-    (!isFormVOrVI || (normalizedStream && normalizedStream.trim() !== ''))
+    (!isFormVOrVI || isTogetherMode || (normalizedStream && normalizedStream.trim() !== ''))
   );
 
   // Fetch students
   const { data: studentsData = [], isLoading, error: studentsError } = useQuery({
-    queryKey: ['students', normalizedLevel, normalizedStream, year],
+    queryKey: ['students', normalizedLevel, fetchStream, year, isTogetherMode ? term : ''],
     queryFn: async () => {
       // Ensure we have valid parameters
       if (!normalizedLevel || !year) {
@@ -38,8 +42,8 @@ const MarksConfigStudentSelection = ({ formLevel }) => {
         return [];
       }
 
-      // For Form V/VI, stream is required
-      if (isFormVOrVI && !normalizedStream) {
+      // For Form V/VI, stream is required (except together mode)
+      if (isFormVOrVI && !isTogetherMode && !normalizedStream) {
         console.warn('Form V/VI requires stream:', { normalizedLevel, normalizedStream });
         return [];
       }
@@ -47,13 +51,13 @@ const MarksConfigStudentSelection = ({ formLevel }) => {
       try {
         console.log('Fetching students with params:', {
           level: normalizedLevel,
-          stream: normalizedStream,
+          stream: fetchStream,
           year: year
         });
 
         const res = await studentsAPI.getStudents({
           level: normalizedLevel,
-          stream: normalizedStream,
+          stream: fetchStream,
           year: year,
           // For Form I-IV, don't filter by term - show all students for the year
           // For Form V/VI, filter by term
@@ -90,6 +94,9 @@ const MarksConfigStudentSelection = ({ formLevel }) => {
 
   const getBackPath = () => {
     if (normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI') {
+      if (isTogetherMode) {
+        return `/admin/marks-config/${formLevel}/together/year/${year}/terms`;
+      }
       return `/admin/marks-config/${formLevel}/stream/${stream}/year/${year}/terms`;
     } else {
       return `/admin/marks-config/${formLevel}/year/${year}/stream/${stream}/terms`;
@@ -99,8 +106,11 @@ const MarksConfigStudentSelection = ({ formLevel }) => {
   const getStudentMarksPath = (admNo) => {
     // Ensure term is properly encoded for URL (handles spaces like "Term I")
     const encodedTerm = term ? encodeURIComponent(term) : term;
-    
+
     if (normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI') {
+      if (isTogetherMode) {
+        return `/admin/marks-config/${formLevel}/together/year/${year}/term/${encodedTerm}/student/${admNo}`;
+      }
       return `/admin/marks-config/${formLevel}/stream/${stream}/year/${year}/term/${encodedTerm}/student/${admNo}`;
     } else {
       return `/admin/marks-config/${formLevel}/year/${year}/stream/${stream}/term/${encodedTerm}/student/${admNo}`;
@@ -115,7 +125,13 @@ const MarksConfigStudentSelection = ({ formLevel }) => {
             <div>
               <h1 className="marks-config-student-selection-top-title">Registered Students</h1>
               <p className="marks-config-student-selection-top-sub">
-                {normalizedLevel} {normalizedStream && normalizedStream !== 'A' ? `Stream ${normalizedStream}` : ''} &middot; {term} &middot; {year}
+                {normalizedLevel}{' '}
+                {isTogetherMode
+                  ? 'All Streams'
+                  : normalizedStream && normalizedStream !== 'A'
+                    ? `Stream ${normalizedStream}`
+                    : ''}{' '}
+                &middot; {term} &middot; {year}
               </p>
             </div>
             <div className="marks-config-student-selection-actions">
@@ -142,7 +158,7 @@ const MarksConfigStudentSelection = ({ formLevel }) => {
               <h3>No Students Found</h3>
               <p>No students have been registered for this class yet.</p>
               <Link
-                to={`/admin/students/registration?level=${encodeURIComponent(normalizedLevel)}&stream=${encodeURIComponent(normalizedStream)}&year=${year}`}
+                to={`/admin/students/registration?level=${encodeURIComponent(normalizedLevel)}&stream=${encodeURIComponent(isTogetherMode ? '' : normalizedStream)}&year=${year}`}
                 className="marks-config-student-selection-btn"
                 style={{ marginTop: '1rem' }}
               >
@@ -163,7 +179,10 @@ const MarksConfigStudentSelection = ({ formLevel }) => {
                   <div className="student-info">
                     <h4>{student.first_name} {student.middle_name} {student.surname}</h4>
                     <p className="student-adm">{student.adm_no}</p>
-                    <p className="student-sex">{student.sex}</p>
+                    <p className="student-sex">
+                      {student.sex}
+                      {isTogetherMode && student.stream ? ` · ${student.stream}` : ''}
+                    </p>
                   </div>
                   <div className="student-arrow">
                     <i className="fas fa-chevron-right"></i>

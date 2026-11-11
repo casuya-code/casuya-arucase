@@ -107,6 +107,7 @@ const MarksConfig = lazy(() => import('./pages/academic/MarksConfig'));
 const MarksConfigYearSelection = lazy(() => import('./pages/academic/MarksConfigYearSelection'));
 const MarksConfigStreamSelection = lazy(() => import('./pages/academic/MarksConfigStreamSelection'));
 const MarksConfigFormVVIYearSelection = lazy(() => import('./pages/academic/MarksConfigFormVVIYearSelection'));
+const MarksConfigFormVVIYearSelectionTogether = lazy(() => import('./pages/academic/MarksConfigFormVVIYearSelectionTogether'));
 const MarksConfigTermSelection = lazy(() => import('./pages/academic/MarksConfigTermSelection'));
 const MarksConfigStudentSelection = lazy(() => import('./pages/academic/MarksConfigStudentSelection'));
 const ComprehensiveStudentMarks = lazy(() => import('./pages/academic/ComprehensiveStudentMarks'));
@@ -1757,6 +1758,39 @@ function App() {
               element={
                 <ProtectedRoute requiredModule="marks_config">
                   <ComprehensiveStudentMarks formLevel="form-vi" />
+                </ProtectedRoute>
+              }
+            />
+            {/* FORM V-VI Together Mode Marks Config Routes (all streams combined) */}
+            <Route
+              path="/admin/marks-config/:formLevel/together/years"
+              element={
+                <ProtectedRoute requiredModule="marks_config">
+                  <MarksConfigFormVVIYearSelectionTogether />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/marks-config/:formLevel/together/year/:year/terms"
+              element={
+                <ProtectedRoute requiredModule="marks_config">
+                  <MarksConfigTermSelection />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/marks-config/:formLevel/together/year/:year/term/:term"
+              element={
+                <ProtectedRoute requiredModule="marks_config">
+                  <MarksConfigStudentSelection />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/marks-config/:formLevel/together/year/:year/term/:term/student/:admNo"
+              element={
+                <ProtectedRoute requiredModule="marks_config">
+                  <ComprehensiveStudentMarks />
                 </ProtectedRoute>
               }
             />

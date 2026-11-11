@@ -8,8 +8,9 @@ import { normalizeFormLevel, requiresSpecialAcademicYearLogic } from '../../util
 import './MarksConfigTermSelection.css';
 import '../students/YearSelection.css';
 
-const MarksConfigTermSelection = ({ formLevel }) => {
-  const { year, stream } = useParams();
+const MarksConfigTermSelection = ({ formLevel: formLevelProp }) => {
+  const { year, stream, formLevel: formLevelParam } = useParams();
+  const formLevel = formLevelProp || formLevelParam;
 
   const normalizedLevel = normalizeFormLevel(
     formLevel
@@ -17,9 +18,14 @@ const MarksConfigTermSelection = ({ formLevel }) => {
       : ''
   );
   const isFormVOrVI = requiresSpecialAcademicYearLogic(normalizedLevel);
+  // Together mode (all streams combined) has no stream in the URL
+  const isTogetherMode = isFormVOrVI && !stream;
 
   const getBackPath = () => {
     if (isFormVOrVI) {
+      if (isTogetherMode) {
+        return `/admin/marks-config/${formLevel}/together/years`;
+      }
       return `/admin/marks-config/${formLevel}/stream/${stream}/years`;
     }
     return `/admin/marks-config/${formLevel}/year/${year}/streams`;
@@ -29,6 +35,9 @@ const MarksConfigTermSelection = ({ formLevel }) => {
 
   const getTermDetailPath = (term) => {
     if (isFormVOrVI) {
+      if (isTogetherMode) {
+        return `/admin/marks-config/${formLevel}/together/year/${year}/term/${marksTermSlug(term)}`;
+      }
       return `/admin/marks-config/${formLevel}/stream/${stream}/year/${year}/term/${marksTermSlug(term)}`;
     }
     return `/admin/marks-config/${formLevel}/year/${year}/stream/${stream}/term/${term}`;
@@ -51,7 +60,7 @@ const MarksConfigTermSelection = ({ formLevel }) => {
             {isFormVOrVI ? (
               <FormVVITermGrid
                 displayYear={year}
-                stream={stream}
+                stream={isTogetherMode ? 'All Streams' : stream}
                 formLevel={normalizedLevel}
                 backPath={null}
                 getTermLink={getTermDetailPath}

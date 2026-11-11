@@ -193,10 +193,10 @@ const getALevelDivision = (divisionPoint) => {
   return '0';
 };
 
-const ComprehensiveStudentMarks = ({ formLevel }) => {
-  const { year, stream, term, admNo } = useParams();
+const ComprehensiveStudentMarks = ({ formLevel: formLevelProp }) => {
+  const { year, stream, term, admNo, formLevel: formLevelParam } = useParams();
   const queryClient = useQueryClient();
-  
+
   const [weights, setWeights] = useState({});
   const [total, setTotal] = useState(0);
   const [weightedTotals, setWeightedTotals] = useState({});
@@ -207,29 +207,37 @@ const ComprehensiveStudentMarks = ({ formLevel }) => {
   const [subjectRankings, setSubjectRankings] = useState({});
   const prevDepsRef = useRef({ subjects: '', weights: '', scoresData: '' });
 
+  // URL slug for links (prop on regular routes; param on together routes)
+  const formLevelSlug = formLevelProp || formLevelParam;
+
   // Normalize form level to uppercase (e.g., "form-i" -> "FORM I")
-  const normalizedLevel = formLevel
-    ? formLevel.split('-').map(w => w.toUpperCase()).join(' ')
+  const normalizedLevel = formLevelSlug
+    ? formLevelSlug.split('-').map(w => w.toUpperCase()).join(' ')
     : '';
-  
+
   // Normalize stream: use 'A' as default for Form I-IV (previously 'NA')
   // For Form V/VI, use the actual stream value (e.g., "HKL", "PCM", etc.)
   const isFormVOrVI = normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI';
   const normalizedStream = stream || (isFormVOrVI ? '' : 'A');
+  // Together mode (all streams combined) has no stream in the URL.
+  // The student is looked up across all streams, then graded on their own stream's subjects.
+  const isTogetherMode = isFormVOrVI && !stream;
+  const studentFetchStream = isTogetherMode ? 'ALL' : normalizedStream;
 
   // Debug logging
   useEffect(() => {
     console.log('ComprehensiveStudentMarks params:', {
-      formLevel,
+      formLevel: formLevelSlug,
       normalizedLevel,
       normalizedStream,
+      isTogetherMode,
       year,
       stream,
       term,
       admNo,
       isFormVOrVI
     });
-  }, [formLevel, normalizedLevel, normalizedStream, year, stream, term, admNo, isFormVOrVI]);
+  }, [formLevelSlug, normalizedLevel, normalizedStream, isTogetherMode, year, stream, term, admNo, isFormVOrVI]);
 
   // Get months for term - memoize to prevent infinite loops
   // Form V/VI: Academic year July-June. Term I (Jul-Dec): Aug-Nov, Term II (Jan-Jun): Feb-May
@@ -273,12 +281,13 @@ const ComprehensiveStudentMarks = ({ formLevel }) => {
   }, []);
 
   // Fetch student data
+  // Together mode: fetch from all streams, then resolve the student's own stream
   const { data: studentData, isLoading: studentLoading } = useQuery({
-    queryKey: ['student', normalizedLevel, normalizedStream, year, admNo],
+    queryKey: ['student', normalizedLevel, studentFetchStream, year, admNo],
     queryFn: async () => {
       const res = await studentsAPI.getStudents({
         level: normalizedLevel,
-        stream: normalizedStream,
+        stream: studentFetchStream,
         year: year,
       });
       const students = res.data.students || [];
@@ -286,14 +295,21 @@ const ComprehensiveStudentMarks = ({ formLevel }) => {
     },
   });
 
+  // In together mode the student's actual stream (e.g. PCM) drives all per-stream queries:
+  // subjects, scores and rankings come from the student's own stream, matching the
+  // combined-mode semantics (each student is graded on their own stream's subjects).
+  const studentStream = isTogetherMode
+    ? (studentData?.stream || '')
+    : normalizedStream;
+
   // Fetch subjects - must be declared before calculateWeightedTotals
   const { data: subjects = [], isLoading: subjectsLoading, error: subjectsError } = useQuery({
-    queryKey: ['subjects', normalizedLevel, normalizedStream, year],
+    queryKey: ['subjects', normalizedLevel, studentStream, year],
     queryFn: async () => {
       try {
         const res = await studentsAPI.getSubjects({
           level: normalizedLevel,
-          stream: normalizedStream,
+          stream: studentStream,
           year: year,
         });
         return res.data.subjects || [];
@@ -302,23 +318,23 @@ const ComprehensiveStudentMarks = ({ formLevel }) => {
         throw error;
       }
     },
-    enabled: !!normalizedLevel && !!normalizedStream && !!year,
+    enabled: !!normalizedLevel && !!studentStream && !!year,
   });
 
   // Fetch scores for this student - use getScores API for the specific student
   // Must be declared before calculateWeightedTotals
   const { data: scoresData = {}, isLoading: scoresLoading } = useQuery({
-    queryKey: ['scores', normalizedLevel, normalizedStream, year, admNo, months.join(','), subjects.length],
+    queryKey: ['scores', normalizedLevel, studentStream, year, admNo, months.join(','), subjects.length],
     queryFn: async () => {
       // Fetch all scores for this student with level, stream, and year filters
       const res = await studentsAPI.getScores(admNo, {
         level: normalizedLevel,
-        stream: normalizedStream,
+        stream: studentStream,
         year: year,
       });
-      
+
       // Get fresh subjects data from query cache
-      const subjectsData = queryClient.getQueryData(['subjects', normalizedLevel, normalizedStream, year]) || subjects;
+      const subjectsData = queryClient.getQueryData(['subjects', normalizedLevel, studentStream, year]) || subjects;
       
       // Create mapping: numeric code -> abbreviation, and abbreviation -> abbreviation
       // This maps scores stored with numeric codes to their display abbreviations
@@ -363,38 +379,40 @@ const ComprehensiveStudentMarks = ({ formLevel }) => {
   });
 
   // Fetch all students in class for ranking and total count
+  // Together mode: classmates from the student's own stream (rankings are per-stream)
   const { data: allStudents = [], isLoading: _allStudentsLoading } = useQuery({
-    queryKey: ['all-students', normalizedLevel, normalizedStream, year],
+    queryKey: ['all-students', normalizedLevel, studentStream, year],
     queryFn: async () => {
       const res = await studentsAPI.getStudents({
         level: normalizedLevel,
-        stream: normalizedStream,
+        stream: studentStream,
         year: year,
       });
       return res.data.students || [];
     },
+    enabled: !!studentStream,
   });
 
   // Fetch all scores for ranking calculation
   const { data: allScoresData = {}, isLoading: allScoresLoading } = useQuery({
-    queryKey: ['all-scores', normalizedLevel, normalizedStream, year, months.join(','), allStudents.length],
+    queryKey: ['all-scores', normalizedLevel, studentStream, year, months.join(','), allStudents.length],
     queryFn: async () => {
       if (allStudents.length === 0) return {};
-      
+
       // Fetch scores for all students
-      const scoresPromises = allStudents.map(student => 
+      const scoresPromises = allStudents.map(student =>
         studentsAPI.getScores(student.adm_no, {
           level: normalizedLevel,
-          stream: normalizedStream,
+          stream: studentStream,
           year: year,
         }).catch(() => ({ data: { scores: [] } }))
       );
       const scoresResults = await Promise.all(scoresPromises);
-      
+
       // Get subjects for mapping
       const subjectsRes = await studentsAPI.getSubjects({
         level: normalizedLevel,
-        stream: normalizedStream,
+        stream: studentStream,
         year: year,
       });
       const subjectsList = subjectsRes.data.subjects || [];
@@ -653,7 +671,7 @@ const ComprehensiveStudentMarks = ({ formLevel }) => {
     let divPoint = null;
     let div = null;
     if (isForm5Or6) {
-      divPoint = calculateALevelDivisionPoint(subjectsDataForDivision, normalizedStream);
+      divPoint = calculateALevelDivisionPoint(subjectsDataForDivision, studentStream);
       div = getALevelDivision(divPoint);
     } else {
       divPoint = calculateOLevelDivisionPoint(subjectsDataForDivision);
@@ -661,7 +679,7 @@ const ComprehensiveStudentMarks = ({ formLevel }) => {
     }
     setDivisionPoint(divPoint);
     setDivision(div);
-  }, [subjects, weightedTotals, normalizedLevel, normalizedStream]);
+  }, [subjects, weightedTotals, normalizedLevel, studentStream]);
 
   const handleWeightChange = (month, value) => {
     const numValue = parseFloat(value) || 0;
@@ -700,11 +718,14 @@ const ComprehensiveStudentMarks = ({ formLevel }) => {
     // Return to student selection page
     // Ensure term is properly encoded for URL (handles spaces like "Term I")
     const encodedTerm = term ? encodeURIComponent(term) : term;
-    
+
     if (normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI') {
-      return `/admin/marks-config/${formLevel}/stream/${stream}/year/${year}/term/${encodedTerm}`;
+      if (isTogetherMode) {
+        return `/admin/marks-config/${formLevelSlug}/together/year/${year}/term/${encodedTerm}`;
+      }
+      return `/admin/marks-config/${formLevelSlug}/stream/${stream}/year/${year}/term/${encodedTerm}`;
     } else {
-      return `/admin/marks-config/${formLevel}/year/${year}/stream/${stream}/term/${encodedTerm}`;
+      return `/admin/marks-config/${formLevelSlug}/year/${year}/stream/${stream}/term/${encodedTerm}`;
     }
   };
 
@@ -728,7 +749,7 @@ const ComprehensiveStudentMarks = ({ formLevel }) => {
           <h3>Student not found</h3>
           <p>Could not find student with admission number: {admNo}</p>
           <p style={{ fontSize: '12px', marginTop: '8px', color: '#666' }}>
-            Search criteria: Level={normalizedLevel}, Stream={normalizedStream}, Year={year}
+            Search criteria: Level={normalizedLevel}, Stream={isTogetherMode ? 'All Streams' : normalizedStream}, Year={year}
           </p>
           <Link to={getBackPath()} className="excel-btn secondary" style={{ marginTop: '16px' }}>
             <i className="fas fa-arrow-left"></i> Back to Students
@@ -746,7 +767,7 @@ const ComprehensiveStudentMarks = ({ formLevel }) => {
           <h3>Error Loading Subjects</h3>
           <p>{subjectsError.message || 'Failed to load subjects. Please try again.'}</p>
           <p style={{ fontSize: '12px', marginTop: '8px', color: '#666' }}>
-            Level={normalizedLevel}, Stream={normalizedStream}, Year={year}
+            Level={normalizedLevel}, Stream={studentStream || (isTogetherMode ? 'All Streams' : normalizedStream)}, Year={year}
           </p>
           <Link to={getBackPath()} className="excel-btn secondary" style={{ marginTop: '16px' }}>
             <i className="fas fa-arrow-left"></i> Back to Students
@@ -762,7 +783,7 @@ const ComprehensiveStudentMarks = ({ formLevel }) => {
         <div className="error-state">
           <i className="fas fa-exclamation-triangle"></i>
           <h3>No Subjects Found</h3>
-          <p>No subjects have been registered for {normalizedLevel} {normalizedStream && normalizedStream !== 'A' ? `Stream ${normalizedStream}` : ''} {year}.</p>
+          <p>No subjects have been registered for {normalizedLevel} {studentStream ? `Stream ${studentStream}` : ''} {year}.</p>
           <p style={{ fontSize: '12px', marginTop: '8px', color: '#666' }}>
             Please register subjects before entering marks.
           </p>
@@ -794,7 +815,7 @@ const ComprehensiveStudentMarks = ({ formLevel }) => {
               <div className="student-details">
                 <h3>{studentName}</h3>
                 <p>Admission Number: {admNo}</p>
-                <p>Class: {normalizedLevel} {normalizedStream && normalizedStream !== 'A' ? `Stream ${normalizedStream}` : ''} {year}</p>
+                <p>Class: {normalizedLevel} {studentStream && studentStream !== 'A' ? `Stream ${studentStream}` : ''} {year}</p>
                 <p>Term: {term}</p>
               </div>
             </div>
@@ -991,7 +1012,7 @@ const ComprehensiveStudentMarks = ({ formLevel }) => {
             <div className="config-form-section">
               <form onSubmit={handleSaveConfig} id="config-form">
                 <input type="hidden" name="form_code" value={normalizedLevel} />
-                <input type="hidden" name="stream" value={normalizedStream} />
+                <input type="hidden" name="stream" value={studentStream} />
                 <input type="hidden" name="year" value={year} />
                 <input type="hidden" name="term" value={term} />
                 <input type="hidden" name="adm_no" value={admNo} />
