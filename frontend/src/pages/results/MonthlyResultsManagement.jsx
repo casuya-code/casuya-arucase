@@ -992,7 +992,7 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                             })}
                             {activeGradingSystem ? (
                               <>
-                                <td className="result-col">{result.average !== null && result.average !== undefined ? Math.round(result.average) : '-'}</td>
+                                <td className="result-col grd-col">{displayGrade || '-'}</td>
                                 <td className="result-col">{divisionValue || '-'}</td>
                                 <td className="result-col">{divisionPoints !== null && divisionPoints !== undefined ? divisionPoints : '-'}</td>
                                 <td className="result-col">{result.position || '-'}</td>

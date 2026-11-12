@@ -2140,7 +2140,7 @@ async function generateMonthlyResultsPDF(level, stream, year, month, gradingSyst
       }
       
       const resultCells = activeGradingSystem
-        ? `<td>${escapeHtml(String(average))}</td><td>${escapeHtml(String(divisionValue || '-'))}</td><td>${escapeHtml(String(divisionPoints !== null && divisionPoints !== undefined ? divisionPoints : '-'))}</td><td>${escapeHtml(String(monthlyResult.position || '-'))}</td>`
+        ? `<td>${escapeHtml(grade || '-')}</td><td>${escapeHtml(String(divisionValue || '-'))}</td><td>${escapeHtml(String(divisionPoints !== null && divisionPoints !== undefined ? divisionPoints : '-'))}</td><td>${escapeHtml(String(monthlyResult.position || '-'))}</td>`
         : `<td>${escapeHtml(String(totalMarks))}</td><td>${escapeHtml(String(average))}</td><td>${escapeHtml(grade || '-')}</td><td>${escapeHtml(String(monthlyResult.position || '-'))}</td>`;
 
       html += `
