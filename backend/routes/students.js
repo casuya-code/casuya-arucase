@@ -4528,13 +4528,13 @@ router.delete('/monthly-results', async (req, res) => {
 // Generate Monthly Results PDF
 router.get('/monthly-results/pdf', async (req, res) => {
   try {
-    let { level, stream, year, month } = req.query;
+    let { level, stream, year, month, grading_system } = req.query;
     
     if (!level || !stream || !year || !month) {
       return res.status(400).json({ message: 'level, stream, year, and month are required' });
     }
     
-    const pdfBuffer = await generateMonthlyResultsPDF(level, stream, year, month);
+    const pdfBuffer = await generateMonthlyResultsPDF(level, stream, year, month, grading_system);
     
     // Validate PDF buffer
     if (!pdfBuffer) {

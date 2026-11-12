@@ -24,6 +24,12 @@ const {
   calculateOverallAverage
 } = require('../utils/calculations');
 const { formatReportScore, formatReportWeightPercent } = require('./reportScoreFormat');
+const {
+  gradeForScore,
+  normalizeGradingSystem,
+  getGradingSystemLabel,
+  remarksForGrade,
+} = require('./gradingSystems');
 
 // Helper function to check if file exists
 async function fileExists(filePath) {
@@ -1497,7 +1503,7 @@ async function generateAllStreamsPhotoEntryFormPDF(level, year, month = null, te
  * Generate Monthly Results PDF using Puppeteer
  * Generates PDF directly from database data (no frontend scraping)
  */
-async function generateMonthlyResultsPDF(level, stream, year, month) {
+async function generateMonthlyResultsPDF(level, stream, year, month, gradingSystem = null) {
   const { launchBrowser } = require('./puppeteerLaunch');
   const { calculateGrade, getSwahiliRemarks } = require('./calculations');
   const bwipjs = require('bwip-js');
@@ -1509,8 +1515,16 @@ async function generateMonthlyResultsPDF(level, stream, year, month) {
     const normalizedStream = normalizeStream(stream);
     const normalizedMonth = decodeURIComponent(String(month).replace(/\+/g, ' ')).trim();
     const normalizedYear = parseInt(year);
+    const activeGradingSystem = normalizeGradingSystem(gradingSystem);
+    const gradingSystemLabel = getGradingSystemLabel(activeGradingSystem);
     
-    console.log('Generating PDF for:', { level: normalizedLevel, stream: normalizedStream, year: normalizedYear, month: normalizedMonth });
+    console.log('Generating PDF for:', {
+      level: normalizedLevel,
+      stream: normalizedStream,
+      year: normalizedYear,
+      month: normalizedMonth,
+      gradingSystem: activeGradingSystem || 'scores',
+    });
     
     // Fetch all data from database
     // Check if this is FORM I-IV (which may have students with stream 'A' or 'NA')
@@ -1945,7 +1959,7 @@ async function generateMonthlyResultsPDF(level, stream, year, month) {
     </div>
   </div>
   <div class="test-info-bar">
-    ${normalizedLevel} ${testType} ${normalizedMonth.toUpperCase()} ${normalizedYear}
+    ${normalizedLevel} ${testType} ${normalizedMonth.toUpperCase()} ${normalizedYear}${activeGradingSystem ? ` — ${gradingSystemLabel.toUpperCase()} GRADING` : ''}
   </div>
   <table class="compact-results-table">
     <thead>
@@ -2043,8 +2057,16 @@ async function generateMonthlyResultsPDF(level, stream, year, month) {
     studentsWithResults.forEach((student, index) => {
       const monthlyResult = student.result;
       const studentScores = scoreLookup[student.adm_no] || {};
-      const grade = monthlyResult.grade || '';
-      const avgValue = monthlyResult.average ? parseFloat(monthlyResult.average) : null;
+      const avgValue = monthlyResult.average !== null && monthlyResult.average !== undefined
+        ? parseFloat(monthlyResult.average)
+        : null;
+      const displayGrade = activeGradingSystem
+        ? (gradeForScore(avgValue, { system: activeGradingSystem, isALevel }) || monthlyResult.grade || '')
+        : (monthlyResult.grade || '');
+      const displayRemarks = activeGradingSystem
+        ? (remarksForGrade(displayGrade, { isALevel }) || monthlyResult.remarks || '-')
+        : (monthlyResult.remarks || '-');
+      const grade = displayGrade;
 
       const formatComDisplay = (value) => {
         const raw = String(value || '').trim();
@@ -2085,11 +2107,14 @@ async function generateMonthlyResultsPDF(level, stream, year, month) {
         <td class="text-left">${escapeHtml(student.middle_name || '-')}</td>
         <td class="text-left">${escapeHtml(student.surname || '')}</td>`;
       
-      // Add subject scores (try both abbreviation and code)
+      // Add subject scores (try both abbreviation and code). Under GRADWISE every
+      // subject mark is printed as a grade for the selected system.
       subjectsResult.rows.forEach(subject => {
         const subjectKey = subject.subject_abbreviation || subject.subject_code;
-        const score = studentScores[subjectKey] || studentScores[subject.subject_code];
-        const scoreDisplay = formatScore(score);
+        const score = studentScores[subjectKey] ?? studentScores[subject.subject_code];
+        const scoreDisplay = activeGradingSystem
+          ? (gradeForScore(score, { system: activeGradingSystem, isALevel }) || '-')
+          : formatScore(score);
         html += `<td>${escapeHtml(scoreDisplay)}</td>`;
       });
       
@@ -2107,7 +2132,7 @@ async function generateMonthlyResultsPDF(level, stream, year, month) {
         ${shouldShowCom
           ? `<td>${escapeHtml(formatComDisplay(isALevel ? (student.com || student.stream) : student.com))}</td>`
           : ''}
-        <td class="text-left">${escapeHtml(monthlyResult.remarks || '-')}</td>
+        <td class="text-left">${escapeHtml(displayRemarks)}</td>
       </tr>`;
     });
     

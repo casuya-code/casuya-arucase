@@ -11,6 +11,13 @@ import { studentsAPI } from '../../services/students';
 import { adminAPI } from '../../services/admin';
 import { useAuth } from '../../context/AuthContext';
 import { resolveStaticUrl } from '../../utils/backendUrl';
+import {
+  GRADING_SYSTEM_OPTIONS,
+  getGradingSystemLabel,
+  gradeForScore,
+  normalizeGradingSystem,
+  remarksForGrade,
+} from '../../utils/gradingSystems';
 import './MonthlyResultsManagement.css';
 import { CSV_BULK_LABELS } from '../../constants/csvBulkActions';
 
@@ -22,6 +29,8 @@ const MonthlyResultsManagement = ({ formLevel }) => {
   const [editingIndex, setEditingIndex] = useState(null);
   const [editForm, setEditForm] = useState({});
   const [subjectScores, setSubjectScores] = useState({}); // {adm_no: {subject_code: score}}
+  const [gradingSystem, setGradingSystem] = useState('');
+  const [showGradwisePanel, setShowGradwisePanel] = useState(false);
 
   // Normalize form level to uppercase (e.g., "form-i" -> "FORM I")
   const normalizedLevel = formLevel
@@ -32,6 +41,9 @@ const MonthlyResultsManagement = ({ formLevel }) => {
 
   // Check if this is Form V or VI
   const isFormVOrVI = normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI';
+  const isALevel = isFormVOrVI;
+  const activeGradingSystem = normalizeGradingSystem(gradingSystem);
+  const gradingSystemLabel = getGradingSystemLabel(activeGradingSystem);
 
   // Form V/VI: academic year July–June (same as ScoreEntryEnter + backend students routes).
   // Term I (≈ Jul–Dec): assessment months Aug–Nov; Term II (≈ Jan–Jun): Feb–May.
@@ -480,8 +492,23 @@ const MonthlyResultsManagement = ({ formLevel }) => {
 
   const testType = getTestType(month, normalizedLevel);
   const className = `${normalizedLevel} ${normalizedStream} ${year}`;
-  const isALevel = normalizedLevel.includes('FORM V') || normalizedLevel.includes('FORM VI');
   const showComColumn = normalizedLevel !== 'FORM I';
+
+  // GRADWISE display helpers. When no grading system is selected the table
+  // keeps showing the original numeric marks and stored grades.
+  const resolveDisplayGrade = (result) => {
+    if (!result) return '';
+    if (!activeGradingSystem) return result.grade || '';
+    return gradeForScore(result.average, { system: activeGradingSystem, isALevel })
+      || result.grade
+      || '';
+  };
+
+  const resolveDisplayRemarks = (result, displayGrade) => {
+    if (!result) return '-';
+    if (!activeGradingSystem) return result.remarks || '-';
+    return remarksForGrade(displayGrade, { isALevel }) || result.remarks || '-';
+  };
 
   // O-Level COM when students.com is missing (bulk upload / promotion did not set it)
   const resolveComDisplay = (student, studentScores) => {
@@ -546,7 +573,8 @@ const MonthlyResultsManagement = ({ formLevel }) => {
         level: normalizedLevel,
         stream: normalizedStream,
         year: year,
-        month: month
+        month: month,
+        ...(activeGradingSystem ? { grading_system: activeGradingSystem } : {}),
       }).catch((error) => {
         console.error('PDF download promise error:', error);
         throw error;
@@ -594,7 +622,8 @@ const MonthlyResultsManagement = ({ formLevel }) => {
       // Create download link and trigger download
       const link = document.createElement('a');
       link.href = url;
-      const filename = `Monthly_Results_${normalizedLevel}_${normalizedStream}_${year}_${month}.pdf`.replace(/\s+/g, '_');
+      const gradingSuffix = activeGradingSystem ? `_${gradingSystemLabel}_Grading` : '';
+      const filename = `Monthly_Results_${normalizedLevel}_${normalizedStream}_${year}_${month}${gradingSuffix}.pdf`.replace(/\s+/g, '_');
       link.download = filename;
       document.body.appendChild(link);
       link.click();
@@ -784,6 +813,36 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                 <button type="button" onClick={handleDownloadCSV} className="monthly-btn monthly-btn-csv">
                   <i className="fas fa-file-csv"></i> {CSV_BULK_LABELS.filled}
                 </button>
+                <button
+                  type="button"
+                  onClick={() => setShowGradwisePanel((open) => !open)}
+                  className={`monthly-btn monthly-btn-gradwise${activeGradingSystem ? ' is-active' : ''}`}
+                  aria-expanded={showGradwisePanel}
+                  aria-controls="gradwise-panel"
+                >
+                  <i className="fas fa-graduation-cap"></i> GRADWISE
+                </button>
+                {showGradwisePanel && (
+                  <div className="gradwise-panel" id="gradwise-panel">
+                    <label htmlFor="gradwise-system">Convert marks to grades</label>
+                    <select
+                      id="gradwise-system"
+                      value={gradingSystem}
+                      onChange={(event) => setGradingSystem(event.target.value)}
+                    >
+                      {GRADING_SYSTEM_OPTIONS.map((option) => (
+                        <option key={option.value || 'scores'} value={option.value}>
+                          {option.label}
+                        </option>
+                      ))}
+                    </select>
+                    <p className="gradwise-hint">
+                      {activeGradingSystem
+                        ? `${gradingSystemLabel} ${isALevel ? 'A-Level' : 'O-Level'} scale applied — every subject mark is shown as a grade.`
+                        : 'Choose Seminary or Government to show every subject mark as a grade.'}
+                    </p>
+                  </div>
+                )}
               </div>
 
               {/* Report Header */}
@@ -829,7 +888,10 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                   {(() => {
                     let formattedTestType = testType.replace('MID-TERM', 'MIDTERM').replace(' TEST', '').trim();
                     formattedTestType = formattedTestType + ' RESULTS';
-                    return `${normalizedLevel} ${formattedTestType} ${month ? month.toUpperCase() : ''} ${year}`;
+                    const gradingSuffix = activeGradingSystem
+                      ? ` — ${gradingSystemLabel.toUpperCase()} GRADING`
+                      : '';
+                    return `${normalizedLevel} ${formattedTestType} ${month ? month.toUpperCase() : ''} ${year}${gradingSuffix}`;
                   })()}
                 </div>
               </div>
@@ -866,8 +928,12 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                         const studentIndex = getStudentIndex(student);
                         const result = results[studentIndex] || {};
                         const studentScores = subjectScores[student.adm_no] || {};
-                        const gradeClass = result.grade || 'none';
-                        const avgValue = result.average ? parseFloat(result.average) : null;
+                        const displayGrade = resolveDisplayGrade(result);
+                        const displayRemarks = resolveDisplayRemarks(result, displayGrade);
+                        const gradeClass = displayGrade || 'none';
+                        const avgValue = result.average !== null && result.average !== undefined
+                          ? parseFloat(result.average)
+                          : null;
                         const gradeRowClass = gradeClass === 'C' && avgValue !== null && avgValue < 55 && !isALevel
                           ? `grade-row-${gradeClass}-low`
                           : `grade-row-${gradeClass}${isALevel ? ' a-level' : ''}`;
@@ -880,10 +946,20 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                             <td className="sticky-col col-sname">{student.surname}</td>
                             {subjects.map((subject) => {
                               const subjectKey = subject.subject_abbreviation || subject.subject_code;
-                              const score = studentScores[subjectKey] || studentScores[subject.subject_code];
+                              const score = studentScores[subjectKey] ?? studentScores[subject.subject_code];
+                              const hasScore = score !== undefined && score !== null && score !== '';
+                              const subjectDisplay = activeGradingSystem
+                                ? (hasScore
+                                  ? gradeForScore(score, { system: activeGradingSystem, isALevel }) || '-'
+                                  : '-')
+                                : formatSubjectScore(score);
                               return (
-                                <td key={subject.subject_code} className="subject-col">
-                                  {formatSubjectScore(score)}
+                                <td
+                                  key={subject.subject_code}
+                                  className="subject-col"
+                                  title={activeGradingSystem && hasScore ? formatSubjectScore(score) : undefined}
+                                >
+                                  {subjectDisplay}
                                 </td>
                               );
                             })}
@@ -895,14 +971,14 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                                 ? Math.round(result.average) 
                                 : '-'}
                             </td>
-                            <td className="result-col grd-col">{result.grade || '-'}</td>
+                            <td className="result-col grd-col">{displayGrade || '-'}</td>
                             <td className="result-col">{result.position || '-'}</td>
                             {showComColumn && (
                               <td className="comb-col">
                                 {resolveComDisplay(student, studentScores)}
                               </td>
                             )}
-                            <td className="remarks-col">{result.remarks || '-'}</td>
+                            <td className="remarks-col">{displayRemarks}</td>
                           </tr>
                         );
                       })}

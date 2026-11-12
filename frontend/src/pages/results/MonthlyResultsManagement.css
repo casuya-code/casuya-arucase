@@ -223,6 +223,69 @@
   border-color: #d1d1c8;
 }
 
+.monthly-btn-gradwise {
+  background: #8b5cf6;
+  color: #fff;
+}
+
+.monthly-btn-gradwise:hover {
+  background: #7c3aed;
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3);
+}
+
+.monthly-btn-gradwise.is-active {
+  background: #f59e0b;
+}
+
+.monthly-btn-gradwise.is-active:hover {
+  background: #d97706;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+.gradwise-panel {
+  flex: 1 1 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  padding: 0.75rem 0.9rem;
+  background: #faf5ff;
+  border: 1px solid #ddd6fe;
+  border-radius: 10px;
+  box-shadow: 0 4px 14px rgba(15, 23, 42, 0.08);
+}
+
+.gradwise-panel label {
+  font-size: 0.75rem;
+  font-weight: 700;
+  color: #4c1d95;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.gradwise-panel select {
+  width: 100%;
+  max-width: 320px;
+  padding: 0.45rem 0.6rem;
+  border: 1px solid #c4b5fd;
+  border-radius: 8px;
+  background: #fff;
+  color: #1a1a1a;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+
+.gradwise-panel select:focus {
+  outline: 2px solid #8b5cf6;
+  outline-offset: 1px;
+}
+
+.gradwise-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  color: #6b6b60;
+}
+
 /* --- Report Header --- */
 .monthly-report-header {
   background: #e0f2fe;
