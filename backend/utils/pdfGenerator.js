@@ -2001,7 +2001,7 @@ async function generateMonthlyResultsPDF(level, stream, year, month, gradingSyst
     const shouldShowCom = normalizedLevel !== 'FORM I';
 
     html += `
-        
+        ${activeGradingSystem ? '<th>AVR</th><th>DIV</th><th>POIN</th><th>POS</th>' : '<th>TOT</th><th>AVR</th><th>GRD</th><th>POS</th>'}
         ${shouldShowCom ? '<th>COM</th>' : ''}
         <th class="text-left">REMARKS</th>
       </tr>
