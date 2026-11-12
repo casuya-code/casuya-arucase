@@ -81,16 +81,79 @@ function singleInsertParts(hasAdmNo) {
   };
 }
 
-function buildBulkInsertParts(hasAdmNo, count) {
-  const cols = hasAdmNo
-    ? '(admission_number, adm_no, serial_number, first_name, middle_name, surname, sex, parish, year)'
-    : '(admission_number, serial_number, first_name, middle_name, surname, sex, parish, year)';
-  const stride = hasAdmNo ? 9 : 8;
-  const placeholders = Array.from({ length: count }, (_, i) => {
-    const nums = Array.from({ length: stride }, (_, j) => `$${i * stride + j + 1}`);
-    return `(${nums.join(', ')})`;
-  }).join(', ');
-  return { cols, placeholders };
+// ---------------------------------------------------------------------------
+// CSV bulk-registration helpers.
+//
+// CSV uploads are idempotent: a student who is already registered is matched by
+// admission_number (when the CSV carries one) or by S/N (serial_number) and is
+// UPDATED in place. The existing admission_number is never regenerated, so
+// re-uploading a corrected CSV can never create a duplicate student.
+// ---------------------------------------------------------------------------
+
+function csvText(value) {
+  if (value === undefined || value === null) return '';
+  return String(value).trim();
+}
+
+function serialKey(value) {
+  return csvText(value).toUpperCase();
+}
+
+function normalizeSex(value) {
+  const v = csvText(value).toLowerCase();
+  if (v === 'male' || v === 'm') return 'Male';
+  if (v === 'female' || v === 'f') return 'Female';
+  return '';
+}
+
+function generateAdmissionNumber(serialNumber, usedNumbers) {
+  const prefix = '789ABC';
+  const serial = csvText(serialNumber).replace(/\s+/g, '') || 'SN';
+  let candidate;
+  let attempts = 0;
+  do {
+    candidate = `${prefix}${serial}-${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 6)}`;
+    attempts += 1;
+  } while (usedNumbers.has(candidate) && attempts < 50);
+  usedNumbers.add(candidate);
+  return candidate;
+}
+
+function buildSerialYearIndex(rows) {
+  const index = new Map();
+  for (const row of rows) {
+    const key = `${serialKey(row.serial_number)}::${row.year}`;
+    if (!index.has(key)) index.set(key, []);
+    index.get(key).push(row);
+  }
+  return index;
+}
+
+function pickExisting(rows) {
+  if (!rows || rows.length === 0) return null;
+  return [...rows].sort((a, b) => Number(a.id) - Number(b.id))[0];
+}
+
+function findExistingStudent(row, indexes) {
+  // 1. An explicit admission number is the strongest identifier.
+  if (row.admission_number) {
+    const byAdmission = indexes.byAdmission.get(row.admission_number);
+    if (byAdmission) return { student: byAdmission, ambiguous: false };
+  }
+
+  // 2. Same S/N in the same year.
+  const sameYear = indexes.bySerialYear.get(`${serialKey(row.serial_number)}::${row.year}`);
+  const sameYearStudent = pickExisting(sameYear);
+  if (sameYearStudent) return { student: sameYearStudent, ambiguous: false };
+
+  // 3. Same S/N in another year (year changed in the uploaded CSV). Only use
+  //    this when the S/N unambiguously identifies one student, otherwise we
+  //    could overwrite a different intake's record.
+  const allYears = indexes.bySerial.get(serialKey(row.serial_number)) || [];
+  if (allYears.length === 1) return { student: allYears[0], ambiguous: false };
+  if (allYears.length > 1) return { student: null, ambiguous: true };
+
+  return { student: null, ambiguous: false };
 }
 
 const { saveUserActivity } = require('../utils/activityLogger');
@@ -221,7 +284,12 @@ router.post('/', requireAuth, async (req, res) => {
   }
 });
 
-// Create multiple Pre-Form One students (bulk registration)
+// Create or update multiple Pre-Form One students (bulk CSV registration)
+//
+// Re-uploading a CSV never creates a second admission number for a student who
+// already exists. Existing students are matched by admission_number or S/N and
+// their details are corrected in place (name, sex, parish, year). Only genuinely
+// new students get a new admission number.
 router.post('/bulk', requireAuth, async (req, res) => {
 
   try {
@@ -231,31 +299,197 @@ router.post('/bulk', requireAuth, async (req, res) => {
         if (!students || !Array.isArray(students) || students.length === 0) {
           return { success: false, message: 'Invalid students data' };
         }
-        const studentYear = req.body.year || new Date().getFullYear();
+
+        const fallbackYear = Number.parseInt(req.body.year, 10) || new Date().getFullYear();
         const hasAdm = await admNoExists(client);
-        const stride = hasAdm ? 9 : 8;
-        const values = students.map((student) => {
-          const row = [
-            student.admission_number,
-          ];
-          if (hasAdm) row.push(student.admission_number); // adm_no = admission_number
-          row.push(
-            student.serial_number,
-            student.first_name,
-            student.middle_name || '',
-            student.surname,
-            student.sex,
-            student.parish || '',
-            student.year || studentYear,
-          );
-          return row;
+
+        // Normalise every CSV row first. Fields that were not present in the
+        // CSV stay `undefined` so an update does not blank existing data.
+        const rows = students.map((student, index) => {
+          const rawYear = student?.year;
+          const parsedYear = Number.parseInt(rawYear, 10);
+          const hasExplicitYear = rawYear !== undefined && rawYear !== null && csvText(rawYear) !== '' && Number.isFinite(parsedYear);
+          return {
+            index,
+            admission_number: csvText(student?.admission_number),
+            serial_number: csvText(student?.serial_number),
+            first_name: csvText(student?.first_name),
+            middle_name: student?.middle_name === undefined ? undefined : csvText(student.middle_name),
+            surname: csvText(student?.surname),
+            sex: normalizeSex(student?.sex),
+            parish: student?.parish === undefined ? undefined : csvText(student.parish),
+            year: hasExplicitYear ? parsedYear : fallbackYear,
+            hasExplicitYear,
+          };
         });
-        const { cols, placeholders } = buildBulkInsertParts(hasAdm, students.length);
 
-        const bulkInsertQuery = `INSERT INTO preform_one_students ${cols} VALUES ${placeholders} RETURNING *`;
+        // Load every potentially matching student in one query: same year, an
+        // explicit admission number, or the same S/N (any year).
+        const years = [...new Set(rows.map((r) => r.year).filter((y) => Number.isFinite(y)))];
+        const admissionNumbers = [...new Set(rows.map((r) => r.admission_number).filter(Boolean))];
+        const serials = [...new Set(rows.map((r) => r.serial_number).filter(Boolean).map((s) => s.toUpperCase()))];
 
-        const result = await client.query(bulkInsertQuery, values.flat());
-        return { success: true, students: result.rows, count: students.length };
+        const conditions = [];
+        const params = [];
+        if (years.length > 0) {
+          params.push(years);
+          conditions.push(`year = ANY($${params.length}::int[])`);
+        }
+        if (admissionNumbers.length > 0) {
+          params.push(admissionNumbers);
+          conditions.push(`admission_number = ANY($${params.length}::text[])`);
+        }
+        if (serials.length > 0) {
+          params.push(serials);
+          conditions.push(`UPPER(TRIM(serial_number)) = ANY($${params.length}::text[])`);
+        }
+
+        const existingRows = conditions.length > 0
+          ? (await client.query(
+            `SELECT * FROM preform_one_students WHERE ${conditions.join(' OR ')}`,
+            params
+          )).rows
+          : [];
+
+        const indexes = {
+          byAdmission: new Map(),
+          bySerial: new Map(),
+          bySerialYear: buildSerialYearIndex(existingRows),
+        };
+        for (const student of existingRows) {
+          if (student.admission_number && !indexes.byAdmission.has(student.admission_number)) {
+            indexes.byAdmission.set(student.admission_number, student);
+          }
+          const key = serialKey(student.serial_number);
+          if (!indexes.bySerial.has(key)) indexes.bySerial.set(key, []);
+          indexes.bySerial.get(key).push(student);
+        }
+
+        const usedNumbers = new Set(existingRows.map((s) => s.admission_number).filter(Boolean));
+        const savedById = new Map();
+        const insertedIds = new Set();
+        const updatedIds = new Set();
+        const errors = [];
+        const changes = [];
+
+        const rememberStudent = (studentRow) => {
+          savedById.set(studentRow.id, studentRow);
+          indexes.byAdmission.set(studentRow.admission_number, studentRow);
+
+          const serial = serialKey(studentRow.serial_number);
+          const yearKey = `${serial}::${studentRow.year}`;
+          if (!indexes.bySerial.has(serial)) indexes.bySerial.set(serial, []);
+          const serialList = indexes.bySerial.get(serial);
+          const existingIdx = serialList.findIndex((s) => s.id === studentRow.id);
+          if (existingIdx === -1) serialList.push(studentRow);
+          else serialList[existingIdx] = studentRow;
+
+          if (!indexes.bySerialYear.has(yearKey)) indexes.bySerialYear.set(yearKey, []);
+          const yearList = indexes.bySerialYear.get(yearKey);
+          const yearIdx = yearList.findIndex((s) => s.id === studentRow.id);
+          if (yearIdx === -1) yearList.push(studentRow);
+          else yearList[yearIdx] = studentRow;
+        };
+
+        for (const row of rows) {
+          const csvRowNumber = row.index + 2; // +1 header, +1 for 1-based rows
+
+          if (!row.serial_number) {
+            errors.push({ row: csvRowNumber, message: 'S/N is required' });
+            continue;
+          }
+          if (!row.first_name || !row.surname) {
+            errors.push({ row: csvRowNumber, serial_number: row.serial_number, message: 'First name and surname are required' });
+            continue;
+          }
+          if (!row.sex) {
+            errors.push({ row: csvRowNumber, serial_number: row.serial_number, message: 'Sex must be Male or Female' });
+            continue;
+          }
+
+          const { student: existing, ambiguous } = findExistingStudent(row, indexes);
+
+          if (!existing && ambiguous) {
+            errors.push({
+              row: csvRowNumber,
+              serial_number: row.serial_number,
+              message: 'S/N matches more than one year. Add the Year column or the AdmissionNumber to choose the right student.',
+            });
+            continue;
+          }
+
+          if (existing) {
+            // Build an UPDATE only for the fields the CSV actually supplied.
+            const setParts = [];
+            const updateParams = [];
+            const push = (column, value) => {
+              updateParams.push(value);
+              setParts.push(`${column} = $${updateParams.length}`);
+            };
+
+            if (row.serial_number && row.serial_number !== existing.serial_number) push('serial_number', row.serial_number);
+            if (row.first_name && row.first_name !== existing.first_name) push('first_name', row.first_name);
+            if (row.middle_name !== undefined && row.middle_name !== (existing.middle_name || '')) push('middle_name', row.middle_name);
+            if (row.surname && row.surname !== existing.surname) push('surname', row.surname);
+            if (row.sex && row.sex !== existing.sex) push('sex', row.sex);
+            if (row.parish !== undefined && row.parish !== (existing.parish || '')) push('parish', row.parish);
+            // Year only moves when the CSV explicitly supplied a Year column.
+            if (row.hasExplicitYear && row.year !== existing.year) push('year', row.year);
+
+            let saved = existing;
+            if (setParts.length > 0) {
+              updateParams.push(existing.id);
+              const updateResult = await client.query(
+                `UPDATE preform_one_students SET ${setParts.join(', ')}, updated_at = CURRENT_TIMESTAMP WHERE id = $${updateParams.length} RETURNING *`,
+                updateParams
+              );
+              saved = updateResult.rows[0];
+
+              const fieldChanges = {};
+              if (row.first_name && row.first_name !== existing.first_name) fieldChanges.first_name = { from: existing.first_name, to: row.first_name };
+              if (row.middle_name !== undefined && row.middle_name !== (existing.middle_name || '')) fieldChanges.middle_name = { from: existing.middle_name || '', to: row.middle_name };
+              if (row.surname && row.surname !== existing.surname) fieldChanges.surname = { from: existing.surname, to: row.surname };
+              if (row.sex && row.sex !== existing.sex) fieldChanges.sex = { from: existing.sex, to: row.sex };
+              if (row.parish !== undefined && row.parish !== (existing.parish || '')) fieldChanges.parish = { from: existing.parish || '', to: row.parish };
+              if (row.hasExplicitYear && row.year !== existing.year) fieldChanges.year = { from: existing.year, to: row.year };
+              if (Object.keys(fieldChanges).length > 0) {
+                changes.push({
+                  admission_number: saved.admission_number,
+                  serial_number: saved.serial_number,
+                  changes: fieldChanges,
+                });
+              }
+            }
+
+            updatedIds.add(saved.id);
+            rememberStudent(saved);
+          } else {
+            // New student: reuse an admission number supplied in the CSV,
+            // otherwise generate one exactly once and keep it forever.
+            const admissionNumber = row.admission_number || generateAdmissionNumber(row.serial_number, usedNumbers);
+            const insertParts = singleInsertParts(hasAdm);
+            const insertValues = hasAdm
+              ? [admissionNumber, admissionNumber, row.serial_number, row.first_name, row.middle_name || '', row.surname, row.sex, row.parish || '', row.year]
+              : [admissionNumber, row.serial_number, row.first_name, row.middle_name || '', row.surname, row.sex, row.parish || '', row.year];
+            const insertResult = await client.query(
+              `INSERT INTO preform_one_students ${insertParts.cols} VALUES ${insertParts.placeholders} RETURNING *`,
+              insertValues
+            );
+            const saved = insertResult.rows[0];
+            insertedIds.add(saved.id);
+            rememberStudent(saved);
+          }
+        }
+
+        return {
+          success: true,
+          students: [...savedById.values()],
+          count: savedById.size,
+          createdCount: insertedIds.size,
+          updatedCount: [...updatedIds].filter((id) => !insertedIds.has(id)).length,
+          changes,
+          errors,
+        };
       } catch (error) {
         console.error('Error creating bulk Pre-Form One students:', error);
         throw error;

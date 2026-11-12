@@ -299,6 +299,11 @@
   outline-offset: 2px;
 }.preform-one-registration-route .bulk-upload-actions.csv-bulk-actions{
   align-items: stretch;
+}.preform-one-registration-route .bulk-upload-note{
+  margin: 0.85rem 0 0;
+  color: #64748b;
+  font-size: clamp(0.75rem, 1.8vw, 0.875rem);
+  line-height: 1.5;
 }.preform-one-registration-route .registered-students{
   background: #ffffff;
   border: 1px solid #e2e8f0;

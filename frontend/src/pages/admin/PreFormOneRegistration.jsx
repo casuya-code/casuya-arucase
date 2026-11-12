@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import { useParams } from 'react-router-dom';
 import { toast } from 'react-toastify';
 import { preFormOneService } from '../../services/preFormOneService';
@@ -8,6 +8,59 @@ import { CSV_BULK_LABELS, CSV_BULK_TITLES } from '../../constants/csvBulkActions
 import './PreFormOneRegistration.css';
 import './preform-one-modern.css';
 import PreFormOnePagination from '../../components/common/PreFormOnePagination';
+
+// ---------------------------------------------------------------------------
+// CSV helpers for the Pre-Form One bulk import.
+// Uploads are idempotent: a row whose S/N (or AdmissionNumber) already exists
+// updates that student and keeps their existing admission number.
+// ---------------------------------------------------------------------------
+
+// Split one CSV line, honouring double-quoted fields that contain commas.
+function parseCsvLine(line) {
+  const values = [];
+  let current = '';
+  let inQuotes = false;
+
+  for (let i = 0; i < line.length; i += 1) {
+    const char = line[i];
+    if (inQuotes) {
+      if (char === '"') {
+        if (line[i + 1] === '"') {
+          current += '"';
+          i += 1;
+        } else {
+          inQuotes = false;
+        }
+      } else {
+        current += char;
+      }
+    } else if (char === '"') {
+      inQuotes = true;
+    } else if (char === ',') {
+      values.push(current);
+      current = '';
+    } else {
+      current += char;
+    }
+  }
+
+  values.push(current);
+  return values.map((value) => value.trim());
+}
+
+// Map any reasonable CSV header spelling to a preform_one_students field.
+function normalizeCsvHeader(header) {
+  const key = String(header || '').toLowerCase().replace(/[^a-z0-9/]/g, '');
+  if (['admissionnumber', 'admissionno', 'admission', 'admno', 'admnumber', 'studentindex', 'studentindexnumber'].includes(key)) return 'admission_number';
+  if (['sn', 's/n', 'serialnumber', 'serialno', 'serial', 'sno', 'number'].includes(key)) return 'serial_number';
+  if (['firstname', 'firstnames', 'first'].includes(key)) return 'first_name';
+  if (['middlename', 'middle', 'middlenames'].includes(key)) return 'middle_name';
+  if (['surname', 'lastname', 'last', 'lastnames'].includes(key)) return 'surname';
+  if (['sex', 'gender'].includes(key)) return 'sex';
+  if (['parish', 'parishname', 'church'].includes(key)) return 'parish';
+  if (['year', 'intake', 'academicyear'].includes(key)) return 'year';
+  return '';
+}
 
 const PreFormOneRegistration = () => {
   const { year } = useParams();
@@ -30,26 +83,26 @@ const PreFormOneRegistration = () => {
   const selectAllRef = React.useRef(null);
 
   // Load students from database on component mount
-  useEffect(() => {
-    const loadStudents = async () => {
-      try {
-        setLoading(true);
-        const response = await preFormOneService.getStudents(year);
-        
-        // Ensure we always set an array
-        const studentsData = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
-        
-        setStudents(studentsData);
-      } catch (error) {
-        // Handle error gracefully - set empty array
-        setStudents([]);
-      } finally {
-        setLoading(false);
-      }
-    };
+  const loadStudents = useCallback(async () => {
+    try {
+      setLoading(true);
+      const response = await preFormOneService.getStudents(year);
 
-    loadStudents();
+      // Ensure we always set an array
+      const studentsData = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
+
+      setStudents(studentsData);
+    } catch (error) {
+      // Handle error gracefully - set empty array
+      setStudents([]);
+    } finally {
+      setLoading(false);
+    }
   }, [year]);
+
+  useEffect(() => {
+    loadStudents();
+  }, [loadStudents]);
 
   // Reset to page 1 when students list changes (e.g. after add/delete/CSV upload)
   useEffect(() => {
@@ -338,7 +391,7 @@ const PreFormOneRegistration = () => {
     event.target.value = '';
   };
 
-  // Process CSV data
+  // Process CSV data: existing students are updated (never duplicated)
   const processCsvData = async (csvText) => {
     if (!csvText.trim()) {
       toast.error('Please enter CSV data');
@@ -347,52 +400,86 @@ const PreFormOneRegistration = () => {
 
     try {
       setLoading(true);
-      const lines = csvText.split('\n').filter(line => line.trim());
-      const headers = lines[0].split(',').map(h => h.trim());
+      const lines = csvText
+        .replace(/^\uFEFF/, '')
+        .split(/\r?\n/)
+        .filter((line) => line.trim());
+
+      if (lines.length < 2) {
+        toast.error('No student rows found in the CSV');
+        return;
+      }
+
+      const headers = parseCsvLine(lines[0]);
+      const fieldByColumn = headers.map(normalizeCsvHeader);
       const dataLines = lines.slice(1);
 
-      const studentsToCreate = dataLines.map((line, index) => {
-        const values = line.split(',').map(v => v.trim());
-        const student = {
-          admission_number: generateAdmissionNumber(values[0] || `SN${students.length + index + 1}`),
-          serial_number: values[0] || `SN${students.length + index + 1}`,
-          first_name: values[1] || '',
-          middle_name: values[2] || '',
-          surname: values[3] || '',
-          sex: values[4] || '',
-          parish: '', // Initialize parish as empty
-          year: parseInt(year)
-        };
+      const studentsToCreate = dataLines
+        .map((line) => {
+          const values = parseCsvLine(line);
+          const student = {};
 
-        // Map headers to values dynamically
-        headers.forEach((header, i) => {
-          const field = header.toLowerCase().replace(/\s+/g, '');
-          if (field === 'serialnumber' || field === 's/n') student.serial_number = values[i] || '';
-          else if (field === 'firstname') student.first_name = values[i] || '';
-          else if (field === 'middlename') student.middle_name = values[i] || '';
-          else if (field === 'surname') student.surname = values[i] || '';
-          else if (field === 'sex') student.sex = values[i] || '';
-        });
-        
-                return student;
-      }).filter(student => student.serial_number && student.first_name && student.surname && student.sex);
-      
+          fieldByColumn.forEach((field, i) => {
+            if (!field) return;
+            student[field] = values[i] ?? '';
+          });
+
+          // Only send fields the CSV actually provided. Sending empty strings
+          // for missing columns would erase the student's existing data.
+          Object.keys(student).forEach((key) => {
+            if (student[key] === '') delete student[key];
+          });
+
+          return student;
+        })
+        .filter((student) => student.serial_number && student.first_name && student.surname && student.sex);
+
       if (studentsToCreate.length === 0) {
-        toast.error('No valid student data found in CSV');
+        toast.error('No valid student data found in CSV. Required columns: S/N, FirstName, Surname and Sex.');
         return;
       }
 
       const result = await preFormOneService.createBulkStudents(studentsToCreate, year);
-      
-      // Update local state with the new students
-      setStudents(prev => {
-        const newStudents = [...prev, ...(result.students || [])];
-        return newStudents;
-      });
-      
-      toast.success(`${result.students?.length || 0} students registered successfully from CSV!`);
+
+      if (result && result.success === false) {
+        toast.error(result.message || 'CSV import failed. Please check the file and try again.');
+        return;
+      }
+
+      // Reload from the database so updated students replace the old rows in
+      // the table instead of being appended as duplicates.
+      await loadStudents();
+
+      const created = result.createdCount ?? 0;
+      const updated = result.updatedCount ?? 0;
+      const skipped = result.errors?.length ?? 0;
+      const summary = [
+        created > 0 ? `${created} new student${created === 1 ? '' : 's'}` : null,
+        updated > 0 ? `${updated} existing student${updated === 1 ? '' : 's'} updated` : null,
+        skipped > 0 ? `${skipped} row${skipped === 1 ? '' : 's'} skipped` : null,
+      ].filter(Boolean).join(', ');
+
+      if (summary) {
+        if (skipped > 0 && created + updated === 0) {
+          toast.warning(`CSV import complete: ${summary}.`);
+        } else {
+          toast.success(`CSV import complete: ${summary}.`);
+        }
+      }
+
+      if (result.changes?.length > 0) {
+        toast.info(`${result.changes.length} student record${result.changes.length === 1 ? '' : 's'} corrected (names/details updated, admission number kept).`);
+      }
+
+      if (skipped > 0) {
+        const firstErrors = (result.errors || []).slice(0, 3)
+          .map((error) => `${error.serial_number || `row ${error.row}`}: ${error.message}`)
+          .join(' | ');
+        toast.warning(`Skipped row${skipped === 1 ? '' : 's'}: ${firstErrors}`);
+      }
     } catch (error) {
-      toast.error('Error processing CSV data. Please check file format and try again.');
+      const message = error.response?.data?.message || error.message || 'Error processing CSV data. Please check file format and try again.';
+      toast.error(message);
     } finally {
       setLoading(false);
     }
@@ -412,11 +499,13 @@ const PreFormOneRegistration = () => {
 
   // Download CSV template
   const downloadCsvTemplate = () => {
-    const templateHeaders = ['S/N', 'FirstName', 'MiddleName', 'Surname', 'Sex'];
+    // AdmissionNumber may be left blank for new students. Existing students can
+    // be matched by S/N too; their admission number is always kept.
+    const templateHeaders = ['AdmissionNumber', 'S/N', 'FirstName', 'MiddleName', 'Surname', 'Sex', 'Parish', 'Year'];
     const templateData = [
       templateHeaders.join(','),
-      'SN001,John,Doe,Smith,Male',
-      'SN002,Jane,Marie,Johnson,Female'
+      `,SN001,John,Doe,Smith,Male,St. Peter,${year}`,
+      `,SN002,Jane,Marie,Johnson,Female,St. Paul,${year}`
     ].join('\n');
 
     const blob = new Blob([templateData], { type: 'text/csv;charset=utf-8;' });
@@ -839,6 +928,9 @@ const PreFormOneRegistration = () => {
                 </label>
               </div>
             </div>
+            <p className="bulk-upload-note">
+              Re-uploading the same S/N updates that student&apos;s names, sex, parish and year — the existing admission number is kept and no duplicate is created.
+            </p>
           </div>
         </div>
       </div>
