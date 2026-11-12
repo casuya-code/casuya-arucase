@@ -399,7 +399,14 @@
 .monthly-bottom-actions {
   display: flex;
   gap: 0.75rem;
-  flex-wrap: wrap;
+  flex-wrap: nowrap;
+  align-items: stretch;
+}
+
+.monthly-bottom-actions .monthly-btn {
+  flex: 1 1 0;
+  min-width: 0;
+  justify-content: center;
 }
 
 /* ===========================================
@@ -768,11 +775,16 @@
   }
 
   .monthly-bottom-actions {
-    flex-direction: column;
+    flex-direction: row;
+    gap: 0.5rem;
   }
 
   .monthly-bottom-actions .monthly-btn {
-    width: 100%;
+    flex: 1 1 0;
+    min-width: 0;
+    font-size: 0.75rem;
+    padding: 0.45rem 0.6rem;
+    white-space: nowrap;
   }
 }
 
