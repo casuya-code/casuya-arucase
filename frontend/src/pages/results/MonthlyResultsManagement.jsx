@@ -17,6 +17,7 @@ import {
   gradeForScore,
   normalizeGradingSystem,
   remarksForGrade,
+  calculateDivisionAndPoints,
 } from '../../utils/gradingSystems';
 import './MonthlyResultsManagement.css';
 import { CSV_BULK_LABELS } from '../../constants/csvBulkActions';
@@ -510,6 +511,18 @@ const MonthlyResultsManagement = ({ formLevel }) => {
     return remarksForGrade(displayGrade, { isALevel }) || result.remarks || '-';
   };
 
+  const computeDivisionAndPointsFor = (studentScores) => {
+    const subjectsData = {};
+    (subjects || []).forEach((subject) => {
+      const subjectKey = subject.subject_abbreviation || subject.subject_code;
+      const score = studentScores[subjectKey] ?? studentScores[subject.subject_code];
+      const hasScore = score !== undefined && score !== null && score !== '';
+      if (!hasScore) return;
+      const grade = gradeForScore(score, { system: activeGradingSystem, isALevel }) || '-';
+      subjectsData[subjectKey] = { grade, name: subject.subject_name || subjectKey };
+    });
+    return calculateDivisionAndPoints({ isALevel, subjectsData, stream: normalizedStream });
+  };
   // O-Level COM when students.com is missing (bulk upload / promotion did not set it)
   const resolveComDisplay = (student, studentScores) => {
     if (isALevel) {
@@ -915,10 +928,21 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                             </div>
                           </th>
                         ))}
-                        <th className="result-col">TOT</th>
-                        <th className="result-col">AVR</th>
-                        <th className="result-col">GRD</th>
-                        <th className="result-col">POS</th>
+                        {activeGradingSystem ? (
+                          <>
+                            <th className="result-col">AVR</th>
+                            <th className="result-col">DIV</th>
+                            <th className="result-col">POIN</th>
+                            <th className="result-col">POS</th>
+                          </>
+                        ) : (
+                          <>
+                            <th className="result-col">TOT</th>
+                            <th className="result-col">AVR</th>
+                            <th className="result-col">GRD</th>
+                            <th className="result-col">POS</th>
+                          </>
+                        )}
                         {showComColumn && <th className="comb-col">COM</th>}
                         <th className="remarks-col">REMARKS</th>
                       </tr>
@@ -934,6 +958,9 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                         const avgValue = result.average !== null && result.average !== undefined
                           ? parseFloat(result.average)
                           : null;
+                        const { points: divisionPoints, division: divisionValue } = activeGradingSystem
+                          ? computeDivisionAndPointsFor(studentScores)
+                          : { points: null, division: null };
                         const gradeRowClass = gradeClass === 'C' && avgValue !== null && avgValue < 55 && !isALevel
                           ? `grade-row-${gradeClass}-low`
                           : `grade-row-${gradeClass}${isALevel ? ' a-level' : ''}`;
@@ -963,16 +990,21 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                                 </td>
                               );
                             })}
-                            <td className="result-col tot-col">
-                              {formatSubjectScore(result.total_marks)}
-                            </td>
-                            <td className="result-col">
-                              {result.average !== null && result.average !== undefined 
-                                ? Math.round(result.average) 
-                                : '-'}
-                            </td>
-                            <td className="result-col grd-col">{displayGrade || '-'}</td>
-                            <td className="result-col">{result.position || '-'}</td>
+                            {activeGradingSystem ? (
+                              <>
+                                <td className="result-col">{result.average !== null && result.average !== undefined ? Math.round(result.average) : '-'}</td>
+                                <td className="result-col">{divisionValue || '-'}</td>
+                                <td className="result-col">{divisionPoints !== null && divisionPoints !== undefined ? divisionPoints : '-'}</td>
+                                <td className="result-col">{result.position || '-'}</td>
+                              </>
+                            ) : (
+                              <>
+                                <td className="result-col tot-col">{formatSubjectScore(result.total_marks)}</td>
+                                <td className="result-col">{result.average !== null && result.average !== undefined ? Math.round(result.average) : '-'}</td>
+                                <td className="result-col grd-col">{displayGrade || '-'}</td>
+                                <td className="result-col">{result.position || '-'}</td>
+                              </>
+                            )}
                             {showComColumn && (
                               <td className="comb-col">
                                 {resolveComDisplay(student, studentScores)}

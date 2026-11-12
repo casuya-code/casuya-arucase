@@ -101,3 +101,183 @@ export function remarksForGrade(grade, { isALevel = false } = {}) {
   if (normalized === 'E') return isALevel ? 'Dhaifu sana' : 'Feli';
   return 'Feli';
 }
+// ---- Division / points helpers (mirrors utils/calculations.js) ----
+
+const O_LEVEL_GRADE_VALUE_MAP = { A: 1, B: 2, C: 3, D: 4, F: 5 };
+const A_LEVEL_GRADE_VALUE_MAP = { A: 1, B: 2, C: 3, D: 4, E: 5, S: 6, F: 7 };
+
+const A_LEVEL_COMBINATIONS = {
+  'PCM': ['PHY', 'CHE', 'ADV'],
+  'PCB': ['PHY', 'CHE', 'BIO'],
+  'PGM': ['PHY', 'GEO', 'ADV'],
+  'CBG': ['CHE', 'BIO', 'GEO'],
+  'EGM': ['ECO', 'GEO', 'ADV'],
+  'HGE': ['HIS', 'GEO', 'ECO'],
+  'HGL': ['HIS', 'GEO', 'ENG'],
+  'HGK': ['HIS', 'GEO', 'KIS'],
+  'HKL': ['HIS', 'KIS', 'ENG'],
+};
+
+export function calculateOLevelDivisionPoint(subjectsData) {
+  const gradeValues = [];
+  for (const subjectCode in (subjectsData || {})) {
+    const subjectData = subjectsData[subjectCode] || {};
+    const grade = subjectData.grade || 'F';
+    const gradeValue = O_LEVEL_GRADE_VALUE_MAP[grade] || 5;
+    gradeValues.push(gradeValue);
+  }
+  gradeValues.sort((a, b) => a - b);
+  const sevenHighest = gradeValues.slice(0, 7);
+  return sevenHighest.reduce((sum, val) => sum + val, 0);
+}
+
+function detectCombinationFromSubjects(subjectsData) {
+  const subjectCodes = Object.keys(subjectsData || {}).map((c) => String(c).toUpperCase());
+  const subjectNames = Object.values(subjectsData || {}).map((s) => String((s && s.name) || '').toUpperCase());
+
+  if (
+    (subjectCodes.some((c) => c.includes('PHY')) || subjectNames.some((n) => n.includes('PHYSICS'))) &&
+    (subjectCodes.some((c) => c.includes('CHE')) || subjectNames.some((n) => n.includes('CHEMISTRY'))) &&
+    (subjectCodes.some((c) => c.includes('ADV') || c.includes('MATH')) || subjectNames.some((n) => n.includes('ADVANCED') || n.includes('MATH'))) &&
+    !(subjectCodes.some((c) => c.includes('BASIC')) || subjectNames.some((n) => n.includes('BASIC')))
+  ) return 'PCM';
+
+  if (
+    (subjectCodes.some((c) => c.includes('PHY')) || subjectNames.some((n) => n.includes('PHYSICS'))) &&
+    (subjectCodes.some((c) => c.includes('CHE')) || subjectNames.some((n) => n.includes('CHEMISTRY'))) &&
+    (subjectCodes.some((c) => c.includes('BIO')) || subjectNames.some((n) => n.includes('BIOLOGY')))
+  ) return 'PCB';
+
+  if (
+    (subjectCodes.some((c) => c.includes('PHY')) || subjectNames.some((n) => n.includes('PHYSICS'))) &&
+    (subjectCodes.some((c) => c.includes('GEO')) || subjectNames.some((n) => n.includes('GEOGRAPHY'))) &&
+    (subjectCodes.some((c) => c.includes('ADV') || c.includes('MATH') || c.includes('MAT')) || subjectNames.some((n) => n.includes('ADVANCED') || n.includes('MATH')))
+  ) return 'PGM';
+
+  if (
+    (subjectCodes.some((c) => c.includes('CHE')) || subjectNames.some((n) => n.includes('CHEMISTRY'))) &&
+    (subjectCodes.some((c) => c.includes('BIO')) || subjectNames.some((n) => n.includes('BIOLOGY'))) &&
+    (subjectCodes.some((c) => c.includes('GEO')) || subjectNames.some((n) => n.includes('GEOGRAPHY')))
+  ) return 'CBG';
+
+  if (
+    (subjectCodes.some((c) => c.includes('ECO')) || subjectNames.some((n) => n.includes('ECONOMICS'))) &&
+    (subjectCodes.some((c) => c.includes('GEO')) || subjectNames.some((n) => n.includes('GEOGRAPHY'))) &&
+    (subjectCodes.some((c) => c.includes('ADV') || c.includes('MATH') || c.includes('MAT')) || subjectNames.some((n) => n.includes('ADVANCED') || n.includes('MATH')))
+  ) return 'EGM';
+
+  if (
+    (subjectCodes.some((c) => c.includes('HIS')) || subjectNames.some((n) => n.includes('HISTORY'))) &&
+    (subjectCodes.some((c) => c.includes('GEO')) || subjectNames.some((n) => n.includes('GEOGRAPHY'))) &&
+    (subjectCodes.some((c) => c.includes('ECO')) || subjectNames.some((n) => n.includes('ECONOMICS')))
+  ) return 'HGE';
+
+  if (
+    (subjectCodes.some((c) => c.includes('HIS')) || subjectNames.some((n) => n.includes('HISTORY'))) &&
+    (subjectCodes.some((c) => c.includes('GEO')) || subjectNames.some((n) => n.includes('GEOGRAPHY'))) &&
+    (subjectCodes.some((c) => c.includes('ENG')) || subjectNames.some((n) => n.includes('ENGLISH') || n.includes('LITERATURE')))
+  ) return 'HGL';
+
+  if (
+    (subjectCodes.some((c) => c.includes('HIS')) || subjectNames.some((n) => n.includes('HISTORY'))) &&
+    (subjectCodes.some((c) => c.includes('GEO')) || subjectNames.some((n) => n.includes('GEOGRAPHY'))) &&
+    (subjectCodes.some((c) => c.includes('KIS')) || subjectNames.some((n) => n.includes('KISWAHILI') || n.includes('SWAHILI')))
+  ) return 'HGK';
+
+  if (
+    (subjectCodes.some((c) => c.includes('HIS')) || subjectNames.some((n) => n.includes('HISTORY'))) &&
+    (subjectCodes.some((c) => c.includes('KIS')) || subjectNames.some((n) => n.includes('KISWAHILI') || n.includes('SWAHILI'))) &&
+    (subjectCodes.some((c) => c.includes('ENG')) || subjectNames.some((n) => n.includes('ENGLISH') || n.includes('LITERATURE')))
+  ) return 'HKL';
+
+  return null;
+}
+
+function matchesSubject(subjectCode, subjectName, comboCode) {
+  const codeUpper = String(subjectCode || '').toUpperCase();
+  const nameUpper = String(subjectName || '').toUpperCase();
+  const patterns = {
+    'PHY': ['PHY', 'PHYSICS', 'A/PHY', 'A_PHY'],
+    'CHE': ['CHE', 'CHEMISTRY', 'A/CHE', 'A_CHE'],
+    'BIO': ['BIO', 'BIOLOGY', 'A/BIO', 'A_BIO'],
+    'ADV': ['ADV', 'ADVANCED', 'A/MATH', 'A/MAT', 'A_MATH', 'ADVANCED MATH', 'MATHEMATICS'],
+    'ECO': ['ECO', 'ECONOMICS', 'A/ECO', 'A_ECO'],
+    'GEO': ['GEO', 'GEOGRAPHY', 'A/GEO', 'A_GEO'],
+    'HIS': ['HIS', 'HISTORY', 'A/HIS', 'A_HIS'],
+    'KIS': ['KIS', 'KISWAHILI', 'A/KIS', 'A_KIS', 'SWA', 'SWAHILI'],
+    'ENG': ['ENG', 'ENGLISH', 'A/ENG', 'A_ENG', 'LIT', 'LITERATURE', 'A/LIT', 'A_LIT'],
+  };
+  const patternsForCode = patterns[comboCode] || [];
+  for (const pattern of patternsForCode) {
+    if (codeUpper.includes(pattern) || nameUpper.includes(pattern)) {
+      if (comboCode === 'PHY' && (codeUpper.includes('GEO') || nameUpper.includes('GEOGRAPHY'))) continue;
+      if (comboCode === 'ADV') {
+        if (codeUpper.includes('BASIC') || nameUpper.includes('BASIC')) continue;
+        if (pattern === 'ADVANCED' || pattern === 'ADV') {
+          const isMathSubject = nameUpper.includes('MATH') || nameUpper.includes('MATHEMATICS') ||
+            codeUpper.includes('/MAT') || codeUpper.includes('_MAT');
+          if (!isMathSubject) continue;
+        }
+      }
+      if (comboCode === 'HIS' && (codeUpper.includes('TANZANIA') || nameUpper.includes('TANZANIA'))) continue;
+      return true;
+    }
+  }
+  return false;
+}
+
+export function calculateALevelDivisionPoint(subjectsData, stream) {
+  let detectedStream = stream ? String(stream).trim().toUpperCase() : null;
+  if (!detectedStream || !A_LEVEL_COMBINATIONS[detectedStream]) {
+    detectedStream = detectCombinationFromSubjects(subjectsData);
+  }
+  if (!detectedStream || !A_LEVEL_COMBINATIONS[detectedStream]) return null;
+  const combinationSubjects = A_LEVEL_COMBINATIONS[detectedStream];
+  const comboBestGrades = {};
+  for (const subjectCode in (subjectsData || {})) {
+    const subjectData = subjectsData[subjectCode] || {};
+    const grade = subjectData.grade || 'F';
+    const gradeValue = A_LEVEL_GRADE_VALUE_MAP[grade] || 7;
+    const subjectName = String(subjectData.name || '').toUpperCase();
+    for (const comboCode of combinationSubjects) {
+      if (matchesSubject(subjectCode, subjectName, comboCode)) {
+        if (!comboBestGrades[comboCode] || gradeValue < comboBestGrades[comboCode]) {
+          comboBestGrades[comboCode] = gradeValue;
+        }
+        break;
+      }
+    }
+  }
+  const gradeValues = Object.values(comboBestGrades);
+  if (gradeValues.length !== 3) return null;
+  gradeValues.sort((a, b) => a - b);
+  return gradeValues.reduce((sum, val) => sum + val, 0);
+}
+
+export function getOLevelDivision(divisionPoint) {
+  if (divisionPoint >= 7 && divisionPoint <= 17) return 'I';
+  if (divisionPoint >= 18 && divisionPoint <= 20) return 'II';
+  if (divisionPoint >= 21 && divisionPoint <= 25) return 'III';
+  if (divisionPoint >= 26 && divisionPoint <= 33) return 'IV';
+  return '0';
+}
+
+export function getALevelDivision(divisionPoint) {
+  if (divisionPoint === null || divisionPoint === undefined) return null;
+  if (divisionPoint >= 3 && divisionPoint <= 9) return 'I';
+  if (divisionPoint >= 10 && divisionPoint <= 12) return 'II';
+  if (divisionPoint >= 13 && divisionPoint <= 17) return 'III';
+  if (divisionPoint >= 18 && divisionPoint <= 19) return 'IV';
+  return '0';
+}
+
+export function calculateDivisionAndPoints(options) {
+  const isALevel = !!(options && options.isALevel);
+  const subjectsData = (options && options.subjectsData) || {};
+  const stream = options && options.stream;
+  const points = isALevel
+    ? calculateALevelDivisionPoint(subjectsData, stream)
+    : calculateOLevelDivisionPoint(subjectsData);
+  const division = isALevel ? getALevelDivision(points) : getOLevelDivision(points);
+  return { points: points, division: division };
+}

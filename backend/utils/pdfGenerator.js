@@ -29,6 +29,7 @@ const {
   normalizeGradingSystem,
   getGradingSystemLabel,
   remarksForGrade,
+  calculateDivisionAndPoints,
 } = require('./gradingSystems');
 
 // Helper function to check if file exists
@@ -2000,10 +2001,7 @@ async function generateMonthlyResultsPDF(level, stream, year, month, gradingSyst
     const shouldShowCom = normalizedLevel !== 'FORM I';
 
     html += `
-        <th>TOT</th>
-        <th>AVR</th>
-        <th>GRD</th>
-        <th>POS</th>
+        
         ${shouldShowCom ? '<th>COM</th>' : ''}
         <th class="text-left">REMARKS</th>
       </tr>
@@ -2123,12 +2121,30 @@ async function generateMonthlyResultsPDF(level, stream, year, month, gradingSyst
       const average = monthlyResult.average !== null && monthlyResult.average !== undefined 
         ? Math.round(monthlyResult.average)
         : '-';
+
+      let divisionPoints = null;
+      let divisionValue = null;
+      if (activeGradingSystem) {
+        const subjectsData = {};
+        subjectsResult.rows.forEach((subject) => {
+          const subjectKey = subject.subject_abbreviation || subject.subject_code;
+          const score = studentScores[subjectKey] ?? studentScores[subject.subject_code];
+          const hasScore = score !== undefined && score !== null && score !== '';
+          if (!hasScore) return;
+          const g = gradeForScore(score, { system: activeGradingSystem, isALevel }) || '-';
+          subjectsData[subjectKey] = { grade: g, name: subject.subject_name || subjectKey };
+        });
+        const computed = calculateDivisionAndPoints({ isALevel: isALevel, subjectsData: subjectsData, stream: normalizedStream });
+        divisionPoints = computed.points;
+        divisionValue = computed.division;
+      }
       
+      const resultCells = activeGradingSystem
+        ? `<td>${escapeHtml(String(average))}</td><td>${escapeHtml(String(divisionValue || '-'))}</td><td>${escapeHtml(String(divisionPoints !== null && divisionPoints !== undefined ? divisionPoints : '-'))}</td><td>${escapeHtml(String(monthlyResult.position || '-'))}</td>`
+        : `<td>${escapeHtml(String(totalMarks))}</td><td>${escapeHtml(String(average))}</td><td>${escapeHtml(grade || '-')}</td><td>${escapeHtml(String(monthlyResult.position || '-'))}</td>`;
+
       html += `
-        <td>${escapeHtml(String(totalMarks))}</td>
-        <td>${escapeHtml(String(average))}</td>
-        <td>${escapeHtml(grade || '-')}</td>
-        <td>${escapeHtml(String(monthlyResult.position || '-'))}</td>
+        ${resultCells}
         ${shouldShowCom
           ? `<td>${escapeHtml(formatComDisplay(isALevel ? (student.com || student.stream) : student.com))}</td>`
           : ''}
