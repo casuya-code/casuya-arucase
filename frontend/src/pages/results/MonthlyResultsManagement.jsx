@@ -1079,19 +1079,19 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                 </div>
               </div>
 
-              <div className="results-summary" style={{ marginTop: '16px' }}>
-                <h3 style={{ fontSize: '14px', margin: '8px 0' }}>Summary of Results</h3>
-                <table className="compact-results-table" style={{ width: '100%', marginBottom: '12px' }}>
+              <div className="results-summary">
+                <h3 className="results-summary-title">Summary of Results</h3>
+                <table className="summary-table">
                   <thead>
                     <tr>
-                      <th className="result-col" style={{ textAlign: 'left' }}>Item</th>
-                      <th className="result-col">Number</th>
-                      <th className="result-col">Percent</th>
+                      <th className="summary-th-left">Item</th>
+                      <th>Number</th>
+                      <th>Percent</th>
                     </tr>
                   </thead>
                   <tbody>
                     <tr>
-                      <td style={{ textAlign: 'left' }}>Registered</td>
+                      <td className="summary-td-left">Registered</td>
                       <td>{registeredCount}</td>
                       <td>100.0%</td>
                     </tr>
@@ -1100,7 +1100,7 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                       const pct = registeredCount > 0 ? ((c / registeredCount) * 100).toFixed(1) : '0.0';
                       return (
                         <tr key={d}>
-                          <td style={{ textAlign: 'left' }}>Division {d}</td>
+                          <td className="summary-td-left">Division {d}</td>
                           <td>{c}</td>
                           <td>{pct}%</td>
                         </tr>
@@ -1109,17 +1109,17 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                   </tbody>
                 </table>
 
-                <h3 style={{ fontSize: '14px', margin: '8px 0' }}>Subject Performance</h3>
-                <table className="compact-results-table" style={{ width: '100%' }}>
+                <h3 className="results-summary-title">Subject Performance</h3>
+                <table className="summary-table summary-table-wide">
                   <thead>
                     <tr>
-                      <th className="result-col">Code</th>
-                      <th className="result-col" style={{ textAlign: 'left' }}>Subject</th>
-                      <th className="result-col" style={{ textAlign: 'left' }}>Teacher</th>
+                      <th>Code</th>
+                      <th className="summary-th-left">Subject</th>
+                      <th className="summary-th-left">Teacher</th>
                       {gradeCols.map((g) => (
-                        <th key={g} className="result-col">{g}</th>
+                        <th key={g}>{g}</th>
                       ))}
-                      <th className="result-col">Total</th>
+                      <th>Total</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1133,8 +1133,8 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                       return (
                         <tr key={code}>
                           <td>{abbrev}</td>
-                          <td style={{ textAlign: 'left' }}>{subject.subject_name || abbrev}</td>
-                          <td style={{ textAlign: 'left' }}>{teacherName}</td>
+                          <td className="summary-td-left">{subject.subject_name || abbrev}</td>
+                          <td className="summary-td-left">{teacherName}</td>
                           {gradeCols.map((g) => (
                             <td key={g}>{counts[g] || 0}</td>
                           ))}
