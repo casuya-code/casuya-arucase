@@ -901,7 +901,10 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                     <select
                       id="gradwise-system"
                       value={gradingSystem}
-                      onChange={(event) => setGradingSystem(event.target.value)}
+                      onChange={(event) => {
+                        setGradingSystem(event.target.value);
+                        setShowGradwisePanel(false);
+                      }}
                     >
                       {GRADING_SYSTEM_OPTIONS.map((option) => (
                         <option key={option.value || 'scores'} value={option.value}>
