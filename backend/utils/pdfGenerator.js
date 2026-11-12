@@ -1614,6 +1614,35 @@ async function generateMonthlyResultsPDF(level, stream, year, month, gradingSyst
       if (key && !subjectsByNormalizedCode.has(key)) subjectsByNormalizedCode.set(key, s);
     });
     subjectsResult = { rows: Array.from(subjectsByNormalizedCode.values()) };
+
+    // Fetch subject teachers for the summary section
+    const subjectTeacherMap = {};
+    try {
+      const isFormVOrVIForTeachers = normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI';
+      let teacherResult;
+      if (!isFormVOrVIForTeachers) {
+        teacherResult = await query(
+          'SELECT subject_code, teacher_name FROM subject_teachers WHERE level = $1 AND stream IN ($2, $3) AND year = $4',
+          [normalizedLevel, 'A', 'NA', normalizedYear]
+        );
+      } else {
+        teacherResult = await query(
+          'SELECT subject_code, teacher_name FROM subject_teachers WHERE level = $1 AND stream = $2 AND year = $3',
+          [normalizedLevel, normalizedStream, normalizedYear]
+        );
+      }
+      (teacherResult.rows || []).forEach((r) => {
+        subjectTeacherMap[r.subject_code] = r.teacher_name;
+      });
+    } catch (teacherErr) {
+      console.error('Failed to fetch subject teachers:', teacherErr.message);
+    }
+    const getTeacherName = (subject) => {
+      const code = subject.subject_code;
+      const abbrev = subject.subject_abbreviation;
+      return subjectTeacherMap[code] || (abbrev ? subjectTeacherMap[abbrev] : '') || '';
+    };
+
     
     // Get scores
     const scoresResult = normalizedStream === 'ALL'
@@ -2152,9 +2181,101 @@ async function generateMonthlyResultsPDF(level, stream, year, month, gradingSyst
       </tr>`;
     });
     
+    // ---- Summary of results ----
+    const summaryScale = activeGradingSystem || 'seminary';
+    const registeredCount = studentsWithResults.length;
+    const divisionCounts = { I: 0, II: 0, III: 0, IV: 0, '0': 0, none: 0 };
+    const gradeCols = isALevel ? ['A','B','C','D','E','S','F'] : ['A','B','C','D','F'];
+    const subjectGradeCounts = {};
+    subjectsResult.rows.forEach((subject) => {
+      const code = subject.subject_code || subject.subject_abbreviation;
+      const init = { total: 0 };
+      gradeCols.forEach((g) => { init[g] = 0; });
+      subjectGradeCounts[code] = init;
+    });
+    studentsWithResults.forEach((student) => {
+      const studentScores = scoreLookup[student.adm_no] || {};
+      const subjectsData = {};
+      subjectsResult.rows.forEach((subject) => {
+        const subjectKey = subject.subject_abbreviation || subject.subject_code;
+        const score = studentScores[subjectKey] ?? studentScores[subject.subject_code];
+        const hasScore = score !== undefined && score !== null && score !== '';
+        if (!hasScore) return;
+        const g = gradeForScore(score, { system: summaryScale, isALevel }) || '-';
+        const code = subject.subject_code || subject.subject_abbreviation;
+        if (subjectGradeCounts[code]) {
+          if (subjectGradeCounts[code][g] !== undefined) subjectGradeCounts[code][g]++;
+          subjectGradeCounts[code].total++;
+        }
+        subjectsData[subjectKey] = { grade: g, name: subject.subject_name || subjectKey };
+      });
+      const computed = calculateDivisionAndPoints({ isALevel: isALevel, subjectsData: subjectsData, stream: normalizedStream });
+      const div = computed.division;
+      if (div === 'I') divisionCounts.I++;
+      else if (div === 'II') divisionCounts.II++;
+      else if (div === 'III') divisionCounts.III++;
+      else if (div === 'IV') divisionCounts.IV++;
+      else if (div === '0') divisionCounts['0']++;
+      else divisionCounts.none++;
+    });
+    const divisionRowsHtml = ['I','II','III','IV','0'].map((d) => {
+      const c = divisionCounts[d];
+      const pct = registeredCount > 0 ? ((c / registeredCount) * 100).toFixed(1) : '0.0';
+      return '<tr><td style="text-align:left;border:1px solid #999;padding:4px;">Division ' + d + '</td><td style="border:1px solid #999;padding:4px;">' + c + '</td><td style="border:1px solid #999;padding:4px;">' + pct + '%</td></tr>';
+    }).join('');
+    const gradeHeaderHtml = gradeCols.map((g) => '<th style="border:1px solid #999;padding:3px;">' + g + '</th>').join('');
+    const subjectSummaryRowsHtml = subjectsResult.rows.map((subject) => {
+      const code = subject.subject_code || subject.subject_abbreviation;
+      const abbrev = subject.subject_abbreviation || subject.subject_code;
+      const counts = subjectGradeCounts[code] || { total: 0 };
+      const teacher = getTeacherName(subject) || '-';
+      const cells = gradeCols.map((g) => '<td style="border:1px solid #999;padding:3px;">' + (counts[g] || 0) + '</td>').join('');
+      return '<tr>' +
+        '<td style="border:1px solid #999;padding:3px;">' + escapeHtml(abbrev) + '</td>' +
+        '<td style="text-align:left;border:1px solid #999;padding:3px;">' + escapeHtml(subject.subject_name || abbrev) + '</td>' +
+        '<td style="text-align:left;border:1px solid #999;padding:3px;">' + escapeHtml(teacher) + '</td>' +
+        cells +
+        '<td style="border:1px solid #999;padding:3px;">' + (counts.total || 0) + '</td>' +
+      '</tr>';
+    }).join('');
+    const summaryHtml = `
+    <div class="summary-section" style="margin-top:18px;">
+      <h3 style="font-size:12px;margin:8px 0;">Summary of Results</h3>
+      <table class="summary-table" style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:12px;">
+        <thead>
+          <tr>
+            <th style="text-align:left;border:1px solid #999;padding:4px;">Item</th>
+            <th style="border:1px solid #999;padding:4px;">Number</th>
+            <th style="border:1px solid #999;padding:4px;">Percent</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr><td style="text-align:left;border:1px solid #999;padding:4px;">Registered</td><td style="border:1px solid #999;padding:4px;">${registeredCount}</td><td style="border:1px solid #999;padding:4px;">100.0%</td></tr>
+          ${divisionRowsHtml}
+        </tbody>
+      </table>
+      <h3 style="font-size:12px;margin:8px 0;">Subject Performance</h3>
+      <table class="summary-table" style="width:100%;border-collapse:collapse;font-size:9px;">
+        <thead>
+          <tr>
+            <th style="border:1px solid #999;padding:3px;">Code</th>
+            <th style="text-align:left;border:1px solid #999;padding:3px;">Subject</th>
+            <th style="text-align:left;border:1px solid #999;padding:3px;">Teacher</th>
+            ${gradeHeaderHtml}
+            <th style="border:1px solid #999;padding:3px;">Total</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${subjectSummaryRowsHtml}
+        </tbody>
+      </table>
+    </div>
+    `;
+
     html += `
     </tbody>
   </table>
+  ${summaryHtml}
   ${barcodeBottomHtml || ''}
 </body>
 </html>`;

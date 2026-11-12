@@ -130,6 +130,26 @@ const MonthlyResultsManagement = ({ formLevel }) => {
     retry: false,
   });
 
+  // Fetch subject teachers for summary
+  const { data: teachersData = {} } = useQuery({
+    queryKey: ['subject-teachers', normalizedLevel, normalizedStream, year],
+    queryFn: async () => {
+      try {
+        const res = await studentsAPI.getTeachers({
+          level: normalizedLevel,
+          stream: normalizedStream,
+          year: year,
+        });
+        return res.data.teachers || {};
+      } catch (error) {
+        console.error('Error fetching teachers:', error);
+        return {};
+      }
+    },
+    enabled: isAuthenticated && !!normalizedLevel && !!normalizedStream && !!year,
+    retry: false,
+  });
+
   // Fetch school logo
   const { data: schoolLogoData } = useQuery({
     queryKey: ['school-logo'],
@@ -489,6 +509,46 @@ const MonthlyResultsManagement = ({ formLevel }) => {
       return (a.middle_name || '').localeCompare(b.middle_name || '');
     }
     return a.surname.localeCompare(b.surname);
+  });
+
+  // ---- Summary of results ----
+  const summaryScale = activeGradingSystem || 'seminary';
+  const registeredCount = sortedStudents.length;
+  const divisionCounts = { I: 0, II: 0, III: 0, IV: 0, '0': 0, none: 0 };
+  const gradeCols = isALevel ? ['A', 'B', 'C', 'D', 'E', 'S', 'F'] : ['A', 'B', 'C', 'D', 'F'];
+  const subjectGradeCounts = {};
+  (subjects || []).forEach((s) => {
+    const code = s.subject_code || s.subject_abbreviation;
+    const init = { total: 0 };
+    gradeCols.forEach((g) => { init[g] = 0; });
+    subjectGradeCounts[code] = init;
+  });
+  sortedStudents.forEach((student) => {
+    const studentIndex = getStudentIndex(student);
+    const result = results[studentIndex] || {};
+    const studentScores = subjectScores[student.adm_no] || {};
+    const subjectsData = {};
+    (subjects || []).forEach((subject) => {
+      const subjectKey = subject.subject_abbreviation || subject.subject_code;
+      const score = studentScores[subjectKey] ?? studentScores[subject.subject_code];
+      const hasScore = score !== undefined && score !== null && score !== '';
+      if (!hasScore) return;
+      const g = gradeForScore(score, { system: summaryScale, isALevel }) || '-';
+      const code = subject.subject_code || subject.subject_abbreviation;
+      if (subjectGradeCounts[code]) {
+        if (subjectGradeCounts[code][g] !== undefined) subjectGradeCounts[code][g]++;
+        subjectGradeCounts[code].total++;
+      }
+      subjectsData[subjectKey] = { grade: g, name: subject.subject_name || subjectKey };
+    });
+    const computed = calculateDivisionAndPoints({ isALevel, subjectsData, stream: normalizedStream });
+    const div = computed.division;
+    if (div === 'I') divisionCounts.I++;
+    else if (div === 'II') divisionCounts.II++;
+    else if (div === 'III') divisionCounts.III++;
+    else if (div === 'IV') divisionCounts.IV++;
+    else if (div === '0') divisionCounts['0']++;
+    else divisionCounts.none++;
   });
 
   const testType = getTestType(month, normalizedLevel);
@@ -1017,6 +1077,73 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                     </tbody>
                   </table>
                 </div>
+              </div>
+
+              <div className="results-summary" style={{ marginTop: '16px' }}>
+                <h3 style={{ fontSize: '14px', margin: '8px 0' }}>Summary of Results</h3>
+                <table className="compact-results-table" style={{ width: '100%', marginBottom: '12px' }}>
+                  <thead>
+                    <tr>
+                      <th className="result-col" style={{ textAlign: 'left' }}>Item</th>
+                      <th className="result-col">Number</th>
+                      <th className="result-col">Percent</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    <tr>
+                      <td style={{ textAlign: 'left' }}>Registered</td>
+                      <td>{registeredCount}</td>
+                      <td>100.0%</td>
+                    </tr>
+                    {['I', 'II', 'III', 'IV', '0'].map((d) => {
+                      const c = divisionCounts[d];
+                      const pct = registeredCount > 0 ? ((c / registeredCount) * 100).toFixed(1) : '0.0';
+                      return (
+                        <tr key={d}>
+                          <td style={{ textAlign: 'left' }}>Division {d}</td>
+                          <td>{c}</td>
+                          <td>{pct}%</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+
+                <h3 style={{ fontSize: '14px', margin: '8px 0' }}>Subject Performance</h3>
+                <table className="compact-results-table" style={{ width: '100%' }}>
+                  <thead>
+                    <tr>
+                      <th className="result-col">Code</th>
+                      <th className="result-col" style={{ textAlign: 'left' }}>Subject</th>
+                      <th className="result-col" style={{ textAlign: 'left' }}>Teacher</th>
+                      {gradeCols.map((g) => (
+                        <th key={g} className="result-col">{g}</th>
+                      ))}
+                      <th className="result-col">Total</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {(subjects || []).map((subject) => {
+                      const code = subject.subject_code || subject.subject_abbreviation;
+                      const abbrev = subject.subject_abbreviation || subject.subject_code;
+                      const counts = subjectGradeCounts[code] || { total: 0 };
+                      const teacherInfo =
+                        teachersData[code] || (subject.subject_abbreviation ? teachersData[subject.subject_abbreviation] : null);
+                      const teacherName = teacherInfo?.teacher_name || '-';
+                      return (
+                        <tr key={code}>
+                          <td>{abbrev}</td>
+                          <td style={{ textAlign: 'left' }}>{subject.subject_name || abbrev}</td>
+                          <td style={{ textAlign: 'left' }}>{teacherName}</td>
+                          {gradeCols.map((g) => (
+                            <td key={g}>{counts[g] || 0}</td>
+                          ))}
+                          <td>{counts.total || 0}</td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
               </div>
 
               <div className="print-spacer-bottom"></div>
