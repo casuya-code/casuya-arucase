@@ -709,6 +709,20 @@
     padding: clamp(0.625rem, 2vw, 1rem) clamp(0.5rem, 1.5vw, 0.75rem);
   }
 
+  .monthly-mgmt-btns {
+    flex-direction: row;
+    flex-wrap: nowrap;
+    gap: 0.4rem;
+  }
+
+  .monthly-btn {
+    flex: 1 1 0;
+    min-width: 0;
+    font-size: 0.72rem;
+    padding: 0.4rem 0.5rem;
+    white-space: nowrap;
+  }
+
   .monthly-mgmt-stats {
     grid-template-columns: repeat(2, 1fr);
     gap: 0.6rem;
@@ -1044,6 +1058,13 @@
 .results-summary {
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
+}
+
+.summary-table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  margin-bottom: 14px;
+  border-radius: 6px;
 }
 
 @media (max-width: 768px) {

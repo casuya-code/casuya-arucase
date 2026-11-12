@@ -1081,6 +1081,7 @@ const MonthlyResultsManagement = ({ formLevel }) => {
 
               <div className="results-summary">
                 <h3 className="results-summary-title">Summary of Results</h3>
+                <div className="summary-table-wrap">
                 <table className="summary-table">
                   <thead>
                     <tr>
@@ -1108,8 +1109,10 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                     })}
                   </tbody>
                 </table>
+                </div>
 
                 <h3 className="results-summary-title">Subject Performance</h3>
+                <div className="summary-table-wrap">
                 <table className="summary-table summary-table-wide">
                   <thead>
                     <tr>
@@ -1144,6 +1147,7 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                     })}
                   </tbody>
                 </table>
+                </div>
               </div>
 
               <div className="print-spacer-bottom"></div>
