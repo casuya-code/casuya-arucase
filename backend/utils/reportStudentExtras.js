@@ -129,10 +129,18 @@ async function loadReportStudentExtras({
     } else {
       try {
         const cr = await query(
-          'SELECT * FROM comments WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = $5',
+          `SELECT * FROM comments WHERE adm_no = $1 AND level = $2 AND stream IN ($3, 'ALL', 'A', 'NA') AND year = $4 AND term = $5`,
           [admNo, form, normalizedStream, yearNum, normalizedTerm]
         );
-        comments = cr.rows;
+        // Prefer comments stored under the student's actual stream over combined 'ALL' rows.
+        const byType = new Map();
+        for (const row of cr.rows) {
+          const prev = byType.get(row.comment_type);
+          if (!prev || (prev.stream === 'ALL' && row.stream !== 'ALL')) {
+            byType.set(row.comment_type, row);
+          }
+        }
+        comments = Array.from(byType.values());
       } catch (e) {
         if (e.message && e.message.includes('column "adm_no" does not exist')) {
           comments = [];

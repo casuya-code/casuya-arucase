@@ -83,14 +83,19 @@ function getImageUrl(staticOrigin, imagePath) {
 
 function getCommentValue(comments, key) {
   if (!comments) return '';
+  const nk = String(key || '').trim().toLowerCase();
   if (Array.isArray(comments)) {
     const comment =
-      comments.find((c) => c.comment_type === key) ||
-      comments.find((c) => c.comment_type === `${key}_comments`);
+      comments.find((c) => String(c.comment_type || '').trim().toLowerCase() === nk) ||
+      comments.find((c) => String(c.comment_type || '').trim().toLowerCase() === `${nk}_comments`);
     return comment?.comment_text || '';
   }
   if (typeof comments === 'object') {
-    return comments[key] || comments[`${key}_comments`] || '';
+    for (const k of Object.keys(comments)) {
+      const nkk = String(k || '').trim().toLowerCase();
+      if (nkk === nk || nkk === `${nk}_comments`) return comments[k] || '';
+    }
+    return '';
   }
   return '';
 }

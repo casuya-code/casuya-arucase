@@ -225,10 +225,12 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000', 
     return tabia?.evaluation || tabia?.grade || 'C';
   };
 
+  const normalizeCommentType = (v) => String(v || '').trim().toLowerCase();
   const getCommentValue = (key) => {
-    const comment = comments?.find((c) => c.comment_type === key);
+    const nk = normalizeCommentType(key);
+    const comment = comments?.find((c) => normalizeCommentType(c.comment_type) === nk);
     if (comment) return comment.comment_text || '';
-    const commentWithSuffix = comments?.find((c) => c.comment_type === `${key}_comments`);
+    const commentWithSuffix = comments?.find((c) => normalizeCommentType(c.comment_type) === `${nk}_comments`);
     return commentWithSuffix?.comment_text || '';
   };
 

@@ -130,6 +130,18 @@ export default defineConfig({
           });
         },
       },
+      // Socket.IO (polling + websocket) — keeps the browser on the dev origin.
+      '/socket.io': {
+        target: apiProxyTarget,
+        changeOrigin: true,
+        secure: false,
+        ws: true,
+        configure: (proxy, _options) => {
+          proxy.on('error', (err, _req, _res) => {
+            console.log('proxy error', err);
+          });
+        },
+      },
     },
   },
   build: {

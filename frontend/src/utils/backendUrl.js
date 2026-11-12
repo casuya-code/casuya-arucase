@@ -106,16 +106,17 @@ export function getAdmissionPreformPreviewUrl() {
 
 /** Socket.IO server URL (no path). */
 export function getWebSocketUrl() {
+  // In dev the browser talks to the Vite server, which proxies /socket.io to the
+  // backend (see vite.config.js). Using the page origin keeps this working even
+  // when the backend runs on a non-default port.
+  if (import.meta.env.DEV) {
+    if (typeof window !== 'undefined' && window.location?.origin) {
+      return window.location.origin;
+    }
+    return 'http://127.0.0.1:5001';
+  }
   const explicit = import.meta.env.VITE_WS_URL?.trim();
   if (explicit) return explicit;
-  if (import.meta.env.DEV) {
-    const api = import.meta.env.VITE_API_URL;
-    if (api) {
-      const origin = normalizeApiBase(api).replace(/\/api\/?$/, '');
-      return origin.startsWith('https') ? `wss://${origin.slice(8)}` : `ws://${origin.slice(7)}`;
-    }
-    return 'ws://127.0.0.1:5000';
-  }
   let origin = getBackendHttpOrigin();
   if (!origin && import.meta.env.PROD) {
     origin = getProdApiFallback().replace(/\/api\/?$/, '');

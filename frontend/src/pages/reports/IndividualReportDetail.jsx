@@ -717,10 +717,18 @@ const IndividualReportDetail = () => {
     });
   }
   
+  const normalizeCommentKey = (v) => String(v || '').trim().toLowerCase();
   const getCommentValue = (key) => {
     // Copy implementation uses _comments suffix
-    const commentKey = key.includes('_comments') ? key : `${key}_comments`;
-    return studentComments[commentKey] || studentComments[key] || '';
+    const nk = normalizeCommentKey(key);
+    const commentKey = nk.includes('_comments') ? nk : `${nk}_comments`;
+    // Look up case-insensitively in studentComments
+    for (const k of Object.keys(studentComments)) {
+      if (normalizeCommentKey(k) === commentKey || normalizeCommentKey(k) === nk) {
+        return studentComments[k] || '';
+      }
+    }
+    return '';
   };
 
   // Format authority date
@@ -750,7 +758,7 @@ const IndividualReportDetail = () => {
 
   // Get student huduma (service assignment) - match copy implementation
   // Copy uses student_comments.get('huduma_comments', '')
-  const studentHuduma = studentComments['huduma_comments'] || studentComments['huduma'] || '';
+  const studentHuduma = getCommentValue('huduma') || '';
 
   // Process class fees announcements
   const classFeesAnnouncements = class_fees_announcements || {};

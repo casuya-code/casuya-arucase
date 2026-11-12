@@ -36,6 +36,22 @@ function getAuthTokenForInternalCalls(req) {
   return fromHeader || req.cookies?.accessToken || req.cookies?.token || null;
 }
 
+/**
+ * Origin the backend should call itself on for server-side PDF rendering.
+ *
+ * Prefer the host this request actually reached us on: the PORT env/API_URL can
+ * be overridden at runtime (or differ behind a proxy), which previously made PDF
+ * requests fail with ECONNREFUSED against a stale localhost port.
+ */
+function getInternalApiUrl(req) {
+  const forwardedProto = (req.headers['x-forwarded-proto'] || '').split(',')[0].trim();
+  const forwardedHost = (req.headers['x-forwarded-host'] || '').split(',')[0].trim();
+  const protocol = forwardedProto || req.protocol || 'http';
+  const host = forwardedHost || req.get('host');
+  if (host) return `${protocol}://${host}`;
+  return process.env.API_URL || `http://localhost:${process.env.PORT || 5000}`;
+}
+
 // All report routes require authentication
 router.use(requireAuth);
 
@@ -376,8 +392,8 @@ router.get('/individual/:form/:stream/:year/:term/:admNo/pdf', requireModule('in
     const authToken = getAuthTokenForInternalCalls(req);
     const lang = normalizeReportLanguage(req.query.lang);
 
-    // Get API URL (use request protocol and host, or env variable)
-    const apiUrl = process.env.API_URL || `http://localhost:${process.env.PORT || 5000}`;
+    // Get API URL from the request itself (works on any local port / behind proxies)
+    const apiUrl = getInternalApiUrl(req);
     
     const pdfBuffer = await generateIndividualReportPDFWithPuppeteer(
       decodedForm, 
@@ -628,8 +644,8 @@ router.get('/bulk/:form/:year/:term', requireModule('bulk_report'), async (req, 
           );
         } else {
           commentsResult = await query(
-            `SELECT adm_no, comment_type, comment_text FROM comments
-             WHERE level = $1 AND stream = $2 AND year = $3 AND term = $4 
+            `SELECT adm_no, comment_type, comment_text, stream FROM comments
+             WHERE level = $1 AND stream IN ($2, 'ALL', 'A', 'NA') AND year = $3 AND term = $4 
              AND comment_type = ANY($5::text[])
              ORDER BY adm_no, comment_type`,
             [decodedForm, stream, parseInt(year), normalizedTerm, commentTypes]
@@ -654,7 +670,9 @@ router.get('/bulk/:form/:year/:term', requireModule('bulk_report'), async (req, 
         if (!allCommentsLookup[admNo]) {
           allCommentsLookup[admNo] = {};
         }
-        allCommentsLookup[admNo][commentType] = commentText;
+        if (allCommentsLookup[admNo][commentType] === undefined || (row.stream && row.stream !== 'ALL')) {
+          allCommentsLookup[admNo][commentType] = commentText;
+        }
       });
     } catch (e) {
       // Comments table not available, continue without comments
@@ -834,8 +852,8 @@ router.get('/bulk/:form/:year/:term/pdf', requireModule('bulk_report'), async (r
     
     const authToken = getAuthTokenForInternalCalls(req);
     
-    // Get API URL
-    const apiUrl = process.env.API_URL || `http://localhost:${process.env.PORT || 5000}`;
+    // Get API URL from the request itself (works on any local port / behind proxies)
+    const apiUrl = getInternalApiUrl(req);
     
     // Import batch generator (now uses Python-style approach: one HTML, one PDF)
     const { generateBulkReportPDFWithBatches } = require('../utils/bulkPdfGenerator');

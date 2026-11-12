@@ -547,12 +547,13 @@ async function generateIndividualReportPDF(form, stream, year, term, admNo) {
       
       // Helper functions - check both formats for backward compatibility
       const getCommentValue = (key) => {
+        const nk = String(key || '').trim().toLowerCase();
         // First try the correct format (without _comments suffix)
-        const comment = commentsResult.rows.find((c) => c.comment_type === key);
+        const comment = commentsResult.rows.find((c) => String(c.comment_type || '').trim().toLowerCase() === nk);
         if (comment) return comment.comment_text || '';
         
         // Fallback: try with _comments suffix for backward compatibility
-        const commentWithSuffix = commentsResult.rows.find((c) => c.comment_type === `${key}_comments`);
+        const commentWithSuffix = commentsResult.rows.find((c) => String(c.comment_type || '').trim().toLowerCase() === `${nk}_comments`);
         return commentWithSuffix?.comment_text || '';
       };
       
