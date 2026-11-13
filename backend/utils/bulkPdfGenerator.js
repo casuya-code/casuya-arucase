@@ -223,7 +223,10 @@ async function getReportDataInternal(form, stream, year, term, admNo, branding) 
     }
   };
   try {
-    const marksConfigResult = await query('SELECT month, weight FROM marks_config');
+    let marksConfigResult = await query('SELECT month, weight FROM marks_config WHERE level = $1', [form]);
+    if (marksConfigResult.rows.length === 0) {
+      marksConfigResult = await query("SELECT month, weight FROM marks_config WHERE level = 'ALL'");
+    }
     if (marksConfigResult.rows.length > 0) {
       const monthWeights = {};
       marksConfigResult.rows.forEach((row) => {

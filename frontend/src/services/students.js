@@ -223,10 +223,10 @@ export const studentsAPI = {
   // ========== MARKS CONFIG OPERATIONS ==========
 
   // Get marks configuration
-  getMarksConfig: () => api.get('/students/marks-config'),
+  getMarksConfig: (level) => api.get('/students/marks-config', { params: level ? { level } : {} }),
 
   // Save marks configuration
-  saveMarksConfig: (data) => api.post('/students/marks-config', data),
+  saveMarksConfig: (data, level) => api.post('/students/marks-config', { ...data, level }),
 
   // ========== CSV OPERATIONS ==========
 

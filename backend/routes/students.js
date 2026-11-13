@@ -24,7 +24,7 @@ const {
   validateSubjectTeacherRows,
 } = require('../utils/subjectTeacherCsv');
 const { sendError } = require('../utils/safeError');
-const { cacheRoutes } = require('../middleware/cache');
+const { cacheRoutes, clearCache } = require('../middleware/cache');
 const sharp = require('sharp');
 const cloudinary = require('../config/cloudinary');
 const NodeCache = require('node-cache');
@@ -920,18 +920,32 @@ router.post('/scores/bulk-upload', csvUpload.single('file'), async (req, res) =>
 // ========== MARKS CONFIG OPERATIONS ==========
 // NOTE: These routes MUST come BEFORE router.get('/:admNo') to avoid route conflicts
 
+function normalizeMarksConfigLevel(raw) {
+  if (raw === undefined || raw === null || String(raw).trim() === '') return 'ALL';
+  let s = String(raw).trim().toUpperCase().replace(/-/g, ' ');
+  if (s === 'ALL' || s === 'GLOBAL') return 'ALL';
+  if (!s.startsWith('FORM')) s = 'FORM ' + s;
+  s = s.replace(/\s+/g, ' ').trim();
+  const allowed = ['ALL', 'FORM I', 'FORM II', 'FORM III', 'FORM IV', 'FORM V', 'FORM VI'];
+  return allowed.includes(s) ? s : 'ALL';
+}
+
 // Get marks config
 router.get('/marks-config', requireModule('marks_config'), cacheRoutes.marksConfig, async (req, res) => {
   try {
-    const result = await query('SELECT * FROM marks_config ORDER BY month');
-    
+    const level = normalizeMarksConfigLevel(req.query.level);
+    let result = await query('SELECT month, weight FROM marks_config WHERE level = $1 ORDER BY month', [level]);
+    if (result.rows.length === 0 && level !== 'ALL') {
+      result = await query("SELECT month, weight FROM marks_config WHERE level = 'ALL' ORDER BY month");
+    }
+
     // Convert to object mapping month to weight
     const monthWeights = {};
     result.rows.forEach(row => {
       monthWeights[row.month] = parseFloat(row.weight);
     });
-    
-    res.json({ month_weights: monthWeights });
+
+    res.json({ month_weights: monthWeights, level });
   } catch (error) {
     return sendError(res, error, 500);
   }
@@ -940,12 +954,18 @@ router.get('/marks-config', requireModule('marks_config'), cacheRoutes.marksConf
 // Save marks config
 router.post('/marks-config', requireModule('marks_config'), async (req, res) => {
   try {
-    const { month_weights } = req.body;
+    const { month_weights, level } = req.body;
     
     if (!month_weights || typeof month_weights !== 'object') {
       return res.status(400).json({ message: 'month_weights object is required' });
     }
     
+    const normalizedLevel = normalizeMarksConfigLevel(level);
+    const allowedLevels = ['ALL', 'FORM I', 'FORM II', 'FORM III', 'FORM IV', 'FORM V', 'FORM VI'];
+    if (!allowedLevels.includes(normalizedLevel)) {
+      return res.status(400).json({ message: 'Invalid level for marks configuration' });
+    }
+
     // Validate total is 100%
     const total = Object.values(month_weights).reduce((sum, weight) => sum + parseFloat(weight || 0), 0);
     if (Math.abs(total - 100) > 0.01) {
@@ -955,15 +975,17 @@ router.post('/marks-config', requireModule('marks_config'), async (req, res) => 
     // Save each month weight
     for (const [month, weight] of Object.entries(month_weights)) {
       await query(
-        `INSERT INTO marks_config (month, weight)
-         VALUES ($1, $2)
-         ON CONFLICT (month)
+        `INSERT INTO marks_config (level, month, weight)
+         VALUES ($1, $2, $3)
+         ON CONFLICT (level, month)
          DO UPDATE SET weight = EXCLUDED.weight, updated_at = NOW()`,
-        [month, parseFloat(weight)]
+        [normalizedLevel, month, parseFloat(weight)]
       );
     }
-    
-    res.json({ message: 'Marks configuration saved successfully' });
+
+    try { clearCache('marks-config'); } catch (e) { /* ignore */ }
+
+    res.json({ message: 'Marks configuration saved successfully', level: normalizedLevel });
   } catch (error) {
     return sendError(res, error, 500);
   }
@@ -1006,7 +1028,10 @@ router.get('/class-grades', async (req, res) => {
       },
     };
     try {
-      const mc = await query('SELECT month, weight FROM marks_config');
+      let mc = await query('SELECT month, weight FROM marks_config WHERE level = $1', [normalizeMarksConfigLevel(level)]);
+      if (mc.rows.length === 0) {
+        mc = await query("SELECT month, weight FROM marks_config WHERE level = 'ALL'");
+      }
       if (mc.rows.length > 0) {
         const monthWeights = {};
         mc.rows.forEach((row) => {

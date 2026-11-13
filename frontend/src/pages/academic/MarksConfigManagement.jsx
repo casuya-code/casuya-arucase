@@ -70,9 +70,9 @@ const MarksConfigManagement = ({ formLevel }) => {
 
   // Fetch current marks config
   const { data: marksConfig, isLoading } = useQuery({
-    queryKey: ['marks-config', term],
+    queryKey: ['marks-config', normalizedLevel, term],
     queryFn: async () => {
-      const res = await studentsAPI.getMarksConfig();
+      const res = await studentsAPI.getMarksConfig(normalizedLevel);
       return res.data.month_weights || {};
     },
   });
@@ -138,10 +138,10 @@ const MarksConfigManagement = ({ formLevel }) => {
   // Save marks config mutation
   const saveMutation = useMutation({
     mutationFn: async (data) => {
-      return studentsAPI.saveMarksConfig({ month_weights: data });
+      return studentsAPI.saveMarksConfig({ month_weights: data }, normalizedLevel);
     },
     onSuccess: () => {
-      queryClient.invalidateQueries(['marks-config']);
+      queryClient.invalidateQueries(['marks-config', normalizedLevel]);
       toast.success('Marks configuration saved successfully!');
     },
     onError: (error) => {

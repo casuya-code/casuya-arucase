@@ -1325,21 +1325,16 @@ router.get('/student/:admNo/report-scores', async (req, res) => {
     };
 
     try {
-      const marksConfigResult = await query('SELECT * FROM marks_config WHERE id = 1');
+      let marksConfigResult = await query('SELECT month, weight FROM marks_config WHERE level = $1', [form]);
+      if (marksConfigResult.rows.length === 0) {
+        marksConfigResult = await query("SELECT month, weight FROM marks_config WHERE level = 'ALL'");
+      }
       if (marksConfigResult.rows.length > 0) {
-        const config = marksConfigResult.rows[0];
-        marksConfig = {
-          month_weights: {
-            February: parseFloat(config.february_weight || 40.0),
-            March: parseFloat(config.march_weight || 0.0),
-            April: parseFloat(config.april_weight || 40.0),
-            May: parseFloat(config.may_weight || 20.0),
-            August: parseFloat(config.august_weight || 40.0),
-            September: parseFloat(config.september_weight || 0.0),
-            October: parseFloat(config.october_weight || 40.0),
-            November: parseFloat(config.november_weight || 20.0)
-          }
-        };
+        const monthWeights = {};
+        marksConfigResult.rows.forEach((row) => {
+          monthWeights[row.month] = parseFloat(row.weight);
+        });
+        marksConfig = { month_weights: monthWeights };
       }
     } catch (e) {
       // Marks config table not found, use defaults

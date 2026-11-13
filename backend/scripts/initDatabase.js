@@ -959,9 +959,11 @@ async function initDatabase() {
     await query(`
       CREATE TABLE IF NOT EXISTS marks_config (
         id SERIAL PRIMARY KEY,
-        month VARCHAR(20) UNIQUE NOT NULL,
+        level VARCHAR(20) NOT NULL DEFAULT 'ALL',
+        month VARCHAR(20) NOT NULL,
         weight DECIMAL(5,2) NOT NULL,
-        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        UNIQUE (level, month)
       )
     `);
     console.log('✅ Marks config table created');

@@ -235,7 +235,10 @@ async function generateIndividualReportPDF(form, stream, year, term, admNo) {
         }
       };
       try {
-        const marksConfigResult = await query('SELECT month, weight FROM marks_config');
+        let marksConfigResult = await query('SELECT month, weight FROM marks_config WHERE level = $1', [decodedForm]);
+        if (marksConfigResult.rows.length === 0) {
+          marksConfigResult = await query("SELECT month, weight FROM marks_config WHERE level = 'ALL'");
+        }
         if (marksConfigResult.rows.length > 0) {
           const monthWeights = {};
           marksConfigResult.rows.forEach(row => {
