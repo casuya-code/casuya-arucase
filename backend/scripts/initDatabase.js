@@ -254,7 +254,7 @@ async function initDatabase() {
         level VARCHAR(50) NOT NULL,
         stream VARCHAR(50) NOT NULL,
         year INTEGER NOT NULL,
-        subject_code VARCHAR(20) NOT NULL,
+        subject_code VARCHAR(200) NOT NULL,
         subject_name VARCHAR(255) NOT NULL,
         subject_abbreviation VARCHAR(50),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -262,6 +262,7 @@ async function initDatabase() {
       )
     `);
     console.log('✅ Subjects table created');
+    await query('ALTER TABLE subjects ALTER COLUMN subject_code TYPE VARCHAR(200)');
     await query('CREATE INDEX IF NOT EXISTS idx_subjects_class ON subjects(level, stream, year)');
     
     // Subject teachers table
@@ -271,7 +272,7 @@ async function initDatabase() {
         level VARCHAR(50) NOT NULL,
         stream VARCHAR(50) NOT NULL,
         year INTEGER NOT NULL,
-        subject_code VARCHAR(20) NOT NULL,
+        subject_code VARCHAR(200) NOT NULL,
         teacher_name VARCHAR(255) NOT NULL,
         teacher_signature VARCHAR(255),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
@@ -280,6 +281,8 @@ async function initDatabase() {
       )
     `);
     console.log('✅ Subject teachers table created');
+    // Pre-Form One continuing subjects use full subject names as codes (can exceed 20 chars)
+    await query('ALTER TABLE subject_teachers ALTER COLUMN subject_code TYPE VARCHAR(200)');
     await query('CREATE INDEX IF NOT EXISTS idx_subject_teachers_class ON subject_teachers(level, stream, year)');
     
     // Individual scores table
@@ -1129,13 +1132,14 @@ async function initDatabase() {
       CREATE TABLE IF NOT EXISTS preformone_continuing_subjects (
         id SERIAL PRIMARY KEY,
         subject_name VARCHAR(255) NOT NULL UNIQUE,
-        subject_code VARCHAR(50) NOT NULL UNIQUE,
+        subject_code VARCHAR(200) NOT NULL UNIQUE,
         is_active BOOLEAN DEFAULT TRUE,
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
         updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
       )
     `);
     console.log('✅ Pre-Form One Continuing Subjects table created');
+    await query('ALTER TABLE preformone_continuing_subjects ALTER COLUMN subject_code TYPE VARCHAR(200)');
 
     // Pre-Form One Students table (aligned with database/create_preformone_table_fixed.sql + optional term)
     await query(`
