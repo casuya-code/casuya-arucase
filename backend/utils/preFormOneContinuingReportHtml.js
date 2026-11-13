@@ -216,7 +216,7 @@ async function generatePreFormOneContinuingReportHtml(data = {}, options = {}) {
         <td><strong>${escapeHtml(grade)}</strong></td>
         <td>${escapeHtml(String(position))}</td>
         <td>${escapeHtml(comment)}</td>
-        <td class="teacher-signature"></td>
+        <td class="teacher-signature">${escapeHtml(subject.teacher_signature || '')}</td>
       </tr>`;
     })
     .join('');

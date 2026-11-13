@@ -193,6 +193,24 @@ async function loadContinuingReportContext(query, year) {
     console.warn('Continuing report: could not load student debts:', e.message);
   }
 
+  // Teacher signatures for the academic table ("Sahihi ya Mwalimu").
+  // They are allocated on the Pre-Teachers page, which stores them in
+  // subject_teachers under level 'PRE-FORM ONE' / stream 'A' for the year.
+  const teacherSignatures = {};
+  try {
+    const teachersResult = await query(
+      `SELECT subject_code, teacher_name, teacher_signature
+         FROM subject_teachers
+        WHERE level = $1 AND stream = $2 AND year = $3`,
+      [FORM_LABEL, 'A', year]
+    );
+    teachersResult.rows.forEach((row) => {
+      teacherSignatures[row.subject_code] = row.teacher_signature || row.teacher_name || '';
+    });
+  } catch (e) {
+    console.warn('Continuing report: could not load subject teacher signatures:', e.message);
+  }
+
   const branding = await loadSchoolBranding(query);
 
   return {
@@ -203,6 +221,7 @@ async function loadContinuingReportContext(query, year) {
     scoresByStudent,
     rankings,
     resultsByStudent,
+    teacherSignatures,
     commentsByStudent,
     tabiaByStudent,
     classFeesAnnouncements,
@@ -238,6 +257,7 @@ function toReportData(context, student) {
         grade,
         comment: getOLevelRemarks(numeric),
         position: context.rankings[subject.subject_code]?.[sid] || null,
+        teacher_signature: context.teacherSignatures?.[subject.subject_code] || '',
       };
     })
     .filter(Boolean);

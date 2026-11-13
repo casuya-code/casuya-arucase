@@ -20,7 +20,7 @@ const baseData = {
     photo_path: null,
   },
   subjects: [
-    { subject_code: 'MATH', subject_name: 'Mathematics', score: 88, grade: 'A', comment: 'Bora Sana', position: 1 },
+    { subject_code: 'MATH', subject_name: 'Mathematics', score: 88, grade: 'A', comment: 'Bora Sana', position: 1, teacher_signature: 'Mr. Kato' },
     { subject_code: 'ENG', subject_name: 'English', score: 45, grade: 'D', comment: 'Dhaifu', position: 4 },
   ],
   summary: {
@@ -60,6 +60,11 @@ describe('generatePreFormOneContinuingReportHtml', () => {
     expect(html).toContain('Bora Sana');
     expect(html).toContain('Dhaifu');
     expect(html).toContain('KIA');
+  });
+
+  it('prints the allocated subject teacher signature in the Sahihi ya Mwalimu column', async () => {
+    const html = await generatePreFormOneContinuingReportHtml(baseData);
+    expect(html).toContain('<td class="teacher-signature">Mr. Kato</td>');
   });
 
   it('always prints Term II and the generation-based month', async () => {

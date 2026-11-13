@@ -64,6 +64,11 @@ function makeQuery() {
     if (s.includes('FROM individual_debt')) {
       return { rows: [{ adm_no: 'PF-001', amount: 5000, description: 'Ada ya Novemba' }] };
     }
+    if (s.includes('FROM subject_teachers')) {
+      return {
+        rows: [{ subject_code: 'MATH', teacher_name: 'Mr. Kato', teacher_signature: 'Mr. Kato' }],
+      };
+    }
     return { rows: [] }; // branding tables
   });
 }
@@ -100,6 +105,35 @@ describe('preFormOneContinuingReportData', () => {
     });
     expect(reportData.summary.position).toBe(1);
     expect(reportData.summary.total_students).toBe(1);
+  });
+
+  it('attaches the subject teacher signature allocated on the Pre-Teachers page', async () => {
+    const query = makeQuery();
+    const { reportData } = await buildPreFormOneContinuingReportData(query, {
+      year: 2026,
+      studentId: 7,
+    });
+
+    expect(reportData.subjects[0].teacher_signature).toBe('Mr. Kato');
+  });
+
+  it('falls back to the teacher name when no signature is stored', async () => {
+    const base = makeQuery();
+    const query = jest.fn(async (sql) => {
+      if (String(sql).includes('FROM subject_teachers')) {
+        return {
+          rows: [{ subject_code: 'MATH', teacher_name: 'Mr. Kato', teacher_signature: null }],
+        };
+      }
+      return base(sql);
+    });
+
+    const { reportData } = await buildPreFormOneContinuingReportData(query, {
+      year: 2026,
+      studentId: 7,
+    });
+
+    expect(reportData.subjects[0].teacher_signature).toBe('Mr. Kato');
   });
 
   it('builds bulk report data ordered by result position', async () => {
