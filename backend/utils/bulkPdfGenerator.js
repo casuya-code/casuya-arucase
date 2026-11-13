@@ -223,15 +223,20 @@ async function getReportDataInternal(form, stream, year, term, admNo, branding) 
     }
   };
   try {
-    let marksConfigResult = await query('SELECT month, weight FROM marks_config WHERE level = $1', [form]);
-    if (marksConfigResult.rows.length === 0) {
-      marksConfigResult = await query("SELECT month, weight FROM marks_config WHERE level = 'ALL'");
-    }
-    if (marksConfigResult.rows.length > 0) {
-      const monthWeights = {};
-      marksConfigResult.rows.forEach((row) => {
+    const allConfigResult = await query("SELECT month, weight FROM marks_config WHERE level = 'ALL'");
+    const monthWeights = {};
+    if (allConfigResult.rows.length > 0) {
+      allConfigResult.rows.forEach((row) => {
         monthWeights[row.month] = parseFloat(row.weight);
       });
+    }
+    const formConfigResult = await query('SELECT month, weight FROM marks_config WHERE level = $1', [form]);
+    if (formConfigResult.rows.length > 0) {
+      formConfigResult.rows.forEach((row) => {
+        monthWeights[row.month] = parseFloat(row.weight);
+      });
+    }
+    if (Object.keys(monthWeights).length > 0) {
       marksConfig = { month_weights: monthWeights };
     }
   } catch (e) {

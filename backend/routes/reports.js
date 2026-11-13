@@ -164,15 +164,22 @@ router.get('/individual/:form/:stream/:year/:term/:admNo', requireModule('indivi
     };
     
     try {
-      let marksConfigResult = await query('SELECT month, weight FROM marks_config WHERE level = $1', [decodedForm]);
-      if (marksConfigResult.rows.length === 0) {
-        marksConfigResult = await query("SELECT month, weight FROM marks_config WHERE level = 'ALL'");
-      }
-      if (marksConfigResult.rows.length > 0) {
-        const monthWeights = {};
-        marksConfigResult.rows.forEach(row => {
+      // Load 'ALL' config as base, then override with per-form config
+      const allConfigResult = await query("SELECT month, weight FROM marks_config WHERE level = 'ALL'");
+      const monthWeights = {};
+      if (allConfigResult.rows.length > 0) {
+        allConfigResult.rows.forEach(row => {
           monthWeights[row.month] = parseFloat(row.weight);
         });
+      }
+      // Override with per-form config (per-form takes precedence)
+      const formConfigResult = await query('SELECT month, weight FROM marks_config WHERE level = $1', [form]);
+      if (formConfigResult.rows.length > 0) {
+        formConfigResult.rows.forEach(row => {
+          monthWeights[row.month] = parseFloat(row.weight);
+        });
+      }
+      if (Object.keys(monthWeights).length > 0) {
         marksConfig = { month_weights: monthWeights };
       }
     } catch (e) {
@@ -691,15 +698,20 @@ router.get('/bulk/:form/:year/:term', requireModule('bulk_report'), async (req, 
     };
     
     try {
-      let marksConfigResult = await query('SELECT month, weight FROM marks_config WHERE level = $1', [decodedForm]);
-      if (marksConfigResult.rows.length === 0) {
-        marksConfigResult = await query("SELECT month, weight FROM marks_config WHERE level = 'ALL'");
-      }
-      if (marksConfigResult.rows.length > 0) {
-        const monthWeights = {};
-        marksConfigResult.rows.forEach(row => {
+      const allConfigResult = await query("SELECT month, weight FROM marks_config WHERE level = 'ALL'");
+      const monthWeights = {};
+      if (allConfigResult.rows.length > 0) {
+        allConfigResult.rows.forEach(row => {
           monthWeights[row.month] = parseFloat(row.weight);
         });
+      }
+      const formConfigResult = await query('SELECT month, weight FROM marks_config WHERE level = $1', [decodedForm]);
+      if (formConfigResult.rows.length > 0) {
+        formConfigResult.rows.forEach(row => {
+          monthWeights[row.month] = parseFloat(row.weight);
+        });
+      }
+      if (Object.keys(monthWeights).length > 0) {
         marksConfig = { month_weights: monthWeights };
       }
     } catch (e) {

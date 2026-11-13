@@ -1122,22 +1122,7 @@ async function initDatabase() {
     );
     console.log('✅ Pre-Form One Interview Subjects triggers created');
 
-    // Insert default interview subjects
-    await query(
-      'INSERT INTO preformone_interview_subjects' +
-      ' (subject_name, subject_code, description, max_marks, interview_duration_minutes)' +
-      ' VALUES' +
-      " ('Mathematics', 'MATH', 'Mathematics assessment including arithmetic, algebra, and geometry', 100, 45)," +
-      " ('English Language', 'ENG', 'English language assessment including reading, writing, and comprehension', 100, 40)," +
-      " ('Kiswahili', 'KIS', 'Kiswahili language assessment including reading, writing, and comprehension', 100, 40)," +
-      " ('Science', 'SCI', 'General science assessment including biology, chemistry, and physics basics', 100, 50)," +
-      " ('Social Studies', 'SOC', 'Social studies assessment including geography, history, and civics', 100, 35)," +
-      " ('Religious Education', 'RE', 'Religious education assessment covering moral values and religious studies', 100, 30)," +
-      " ('Civics and Moral Education', 'CIV', 'Civics and moral education assessment', 100, 30)," +
-      " ('General Knowledge', 'GK', 'General knowledge and current affairs assessment', 100, 25)" +
-      ' ON CONFLICT (subject_name) DO NOTHING'
-    );
-    console.log('✅ Default Pre-Form One Interview Subjects inserted');
+    // Interview subjects are managed via the UI (Inter-Subjects page); no defaults are seeded here.
 
     // Pre-Form One Continuing Subjects table
     await query(`

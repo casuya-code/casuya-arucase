@@ -2157,6 +2157,8 @@ async function generateMonthlyResultsPDF(level, stream, year, month, gradingSyst
 
       let divisionPoints = null;
       let divisionValue = null;
+      // Show '-' instead of '0' when there are too few subjects for a division
+      let displayDivisionValue = null;
       if (activeGradingSystem) {
         const subjectsData = {};
         subjectsResult.rows.forEach((subject) => {
@@ -2170,10 +2172,13 @@ async function generateMonthlyResultsPDF(level, stream, year, month, gradingSyst
         const computed = calculateDivisionAndPoints({ isALevel: isALevel, subjectsData: subjectsData, stream: normalizedStream });
         divisionPoints = computed.points;
         divisionValue = computed.division;
+        const scoredCount = Object.keys(subjectsData).length;
+        const insufficientSubjects = isALevel ? scoredCount < 3 : scoredCount < 7;
+        const displayDivisionValue = insufficientSubjects ? '-' : (divisionValue || '-');
       }
       
       const resultCells = activeGradingSystem
-        ? `<td>${escapeHtml(grade || '-')}</td><td>${escapeHtml(String(divisionValue || '-'))}</td><td>${escapeHtml(String(divisionPoints !== null && divisionPoints !== undefined ? divisionPoints : '-'))}</td><td>${escapeHtml(String(monthlyResult.position || '-'))}</td>`
+        ? `<td>${escapeHtml(grade || '-')}</td><td>${escapeHtml(String(displayDivisionValue))}</td><td>${escapeHtml(String(divisionPoints !== null && divisionPoints !== undefined ? divisionPoints : '-'))}</td><td>${escapeHtml(String(monthlyResult.position || '-'))}</td>`
         : `<td>${escapeHtml(String(totalMarks))}</td><td>${escapeHtml(String(average))}</td><td>${escapeHtml(grade || '-')}</td><td>${escapeHtml(String(monthlyResult.position || '-'))}</td>`;
 
       html += `
@@ -2214,7 +2219,9 @@ async function generateMonthlyResultsPDF(level, stream, year, month, gradingSyst
         subjectsData[subjectKey] = { grade: g, name: subject.subject_name || subjectKey };
       });
       const computed = calculateDivisionAndPoints({ isALevel: isALevel, subjectsData: subjectsData, stream: normalizedStream });
-      const div = computed.division;
+      const scoredCount = Object.keys(subjectsData).length;
+      const insufficientSubjects = isALevel ? scoredCount < 3 : scoredCount < 7;
+      const div = insufficientSubjects ? '0' : computed.division;
       if (div === 'I') divisionCounts.I++;
       else if (div === 'II') divisionCounts.II++;
       else if (div === 'III') divisionCounts.III++;

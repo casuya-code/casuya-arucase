@@ -148,7 +148,8 @@ const AdminSidebar = () => {
         { path: '/admin/pre-form-one-continuing-subjects', label: 'Conti-Subjects', icon: 'fa-book-open', moduleIds: ['student_registration_pre_form', 'continuing_subjects'] },
         { path: '/admin/pre-form-one-scores', label: 'Pre-Score Entry', icon: 'fa-graduation-cap', moduleId: 'pre_form_one_scores' },
         { path: '/admin/pre-form-one-promotion', label: 'Pre-Promotion', icon: 'fa-graduation-cap', moduleId: 'pre_form_one_promotion' },
-        { path: '/admin/pre-form-one-results', label: 'Pre-Results', icon: 'fa-clipboard-check', moduleId: 'pre_form_one_results' }
+        { path: '/admin/pre-form-one-results', label: 'Pre-Results', icon: 'fa-clipboard-check', moduleId: 'pre_form_one_results' },
+        { path: '/admin/pre-form-one-teachers', label: 'Pre-Teachers', icon: 'fa-chalkboard-teacher', moduleIds: ['student_registration_pre_form', 'continuing_subjects'] }
       ]
     },
     {

@@ -166,6 +166,8 @@ const PreFormOneInterviewSubjects = lazy(() => import('./pages/admin/PreFormOneI
 const PreFormOneInterviewSubjectsYear = lazy(() => import('./pages/admin/PreFormOneInterviewSubjectsYear'));
 const PreFormOneContinuingSubjects = lazy(() => import('./pages/admin/PreFormOneContinuingSubjects'));
 const PreFormOneContinuingSubjectsYear = lazy(() => import('./pages/admin/PreFormOneContinuingSubjectsYear'));
+const PreFormOneTeachers = lazy(() => import('./pages/admin/PreFormOneTeachers'));
+const PreFormOneTeachersYear = lazy(() => import('./pages/admin/PreFormOneTeachersYear'));
 const PreFormOneScoreEntry = lazy(() => import('./pages/admin/PreFormOneScoreEntry'));
 const PreFormOneInterviewResults = lazy(() => import('./pages/admin/PreFormOneInterviewResults'));
 const PreFormOneContinuingResults = lazy(() => import('./pages/admin/PreFormOneContinuingResults'));
@@ -2247,11 +2249,13 @@ function App() {
             <Route path="/admin/pre-form-one-results" element={<ProtectedRoute requiredModule="pre_form_one_results"><PreFormOneResultsYear /></ProtectedRoute>} />
             <Route path="/admin/pre-form-one-interview-subjects" element={<ProtectedRoute requiredAnyOfModules={['student_registration_pre_form', 'interview_subjects']}><PreFormOneInterviewSubjectsYear /></ProtectedRoute>} />
             <Route path="/admin/pre-form-one-continuing-subjects" element={<ProtectedRoute requiredAnyOfModules={['student_registration_pre_form', 'continuing_subjects']}><PreFormOneContinuingSubjectsYear /></ProtectedRoute>} />
+            <Route path="/admin/pre-form-one-teachers" element={<ProtectedRoute requiredAnyOfModules={['student_registration_pre_form', 'continuing_subjects']}><PreFormOneTeachersYear /></ProtectedRoute>} />
             <Route path="/admin/pre-form-one/:year" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneYear /></ProtectedRoute>} />
             <Route path="/admin/pre-form-one/:year/registration" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneRegistration /></ProtectedRoute>} />
             <Route path="/admin/pre-form-one/:year/parishes" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneParishes /></ProtectedRoute>} />
             <Route path="/admin/pre-form-one/:year/interview-subjects" element={<ProtectedRoute requiredAnyOfModules={['student_registration_pre_form', 'interview_subjects']}><PreFormOneInterviewSubjects /></ProtectedRoute>} />
             <Route path="/admin/pre-form-one/:year/continuing-subjects" element={<ProtectedRoute requiredAnyOfModules={['student_registration_pre_form', 'continuing_subjects']}><PreFormOneContinuingSubjects /></ProtectedRoute>} />
+            <Route path="/admin/pre-form-one/:year/teachers" element={<ProtectedRoute requiredAnyOfModules={['student_registration_pre_form', 'continuing_subjects']}><PreFormOneTeachers /></ProtectedRoute>} />
             <Route path="/admin/pre-form-one/:year/score-entry" element={<ProtectedRoute requiredModule="pre_form_one_scores"><PreFormOneScoreEntry /></ProtectedRoute>} />
             <Route path="/admin/pre-form-one/:year/score-entry/:subjectId" element={<ProtectedRoute requiredModule="pre_form_one_scores"><PreFormOneScoreEntry /></ProtectedRoute>} />
             <Route path="/admin/pre-form-one/:year/interview-results" element={<ProtectedRoute requiredModule="student_registration_pre_form"><PreFormOneInterviewResults /></ProtectedRoute>} />

@@ -542,7 +542,9 @@ const MonthlyResultsManagement = ({ formLevel }) => {
       subjectsData[subjectKey] = { grade: g, name: subject.subject_name || subjectKey };
     });
     const computed = calculateDivisionAndPoints({ isALevel, subjectsData, stream: normalizedStream });
-    const div = computed.division;
+    const scoredCount = Object.keys(subjectsData).length;
+    const insufficientSubjects = isALevel ? scoredCount < 3 : scoredCount < 7;
+    const div = insufficientSubjects ? '0' : computed.division;
     if (div === 'I') divisionCounts.I++;
     else if (div === 'II') divisionCounts.II++;
     else if (div === 'III') divisionCounts.III++;
@@ -581,7 +583,8 @@ const MonthlyResultsManagement = ({ formLevel }) => {
       const grade = gradeForScore(score, { system: activeGradingSystem, isALevel }) || '-';
       subjectsData[subjectKey] = { grade, name: subject.subject_name || subjectKey };
     });
-    return calculateDivisionAndPoints({ isALevel, subjectsData, stream: normalizedStream });
+    const computed = calculateDivisionAndPoints({ isALevel, subjectsData, stream: normalizedStream });
+    return { ...computed, scoredCount: Object.keys(subjectsData).length };
   };
   // O-Level COM when students.com is missing (bulk upload / promotion did not set it)
   const resolveComDisplay = (student, studentScores) => {
@@ -1021,9 +1024,11 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                         const avgValue = result.average !== null && result.average !== undefined
                           ? parseFloat(result.average)
                           : null;
-                        const { points: divisionPoints, division: divisionValue } = activeGradingSystem
+                        const { points: divisionPoints, division: divisionValue, scoredCount } = activeGradingSystem
                           ? computeDivisionAndPointsFor(studentScores)
-                          : { points: null, division: null };
+                          : { points: null, division: null, scoredCount: 0 };
+                        const insufficientSubjects = isALevel ? scoredCount < 3 : scoredCount < 7;
+                        const displayDivision = insufficientSubjects ? '-' : (divisionValue || '-');
                         const gradeRowClass = gradeClass === 'C' && avgValue !== null && avgValue < 55 && !isALevel
                           ? `grade-row-${gradeClass}-low`
                           : `grade-row-${gradeClass}${isALevel ? ' a-level' : ''}`;
@@ -1056,7 +1061,7 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                             {activeGradingSystem ? (
                               <>
                                 <td className="result-col grd-col">{displayGrade || '-'}</td>
-                                <td className="result-col">{divisionValue || '-'}</td>
+                                <td className="result-col">{displayDivision}</td>
                                 <td className="result-col">{divisionPoints !== null && divisionPoints !== undefined ? divisionPoints : '-'}</td>
                                 <td className="result-col">{result.position || '-'}</td>
                               </>

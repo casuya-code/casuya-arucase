@@ -1028,15 +1028,20 @@ router.get('/class-grades', async (req, res) => {
       },
     };
     try {
-      let mc = await query('SELECT month, weight FROM marks_config WHERE level = $1', [normalizeMarksConfigLevel(level)]);
-      if (mc.rows.length === 0) {
-        mc = await query("SELECT month, weight FROM marks_config WHERE level = 'ALL'");
-      }
-      if (mc.rows.length > 0) {
-        const monthWeights = {};
-        mc.rows.forEach((row) => {
+      const allMc = await query("SELECT month, weight FROM marks_config WHERE level = 'ALL'");
+      const monthWeights = {};
+      if (allMc.rows.length > 0) {
+        allMc.rows.forEach((row) => {
           monthWeights[row.month] = parseFloat(row.weight);
         });
+      }
+      const formMc = await query('SELECT month, weight FROM marks_config WHERE level = $1', [normalizeMarksConfigLevel(level)]);
+      if (formMc.rows.length > 0) {
+        formMc.rows.forEach((row) => {
+          monthWeights[row.month] = parseFloat(row.weight);
+        });
+      }
+      if (Object.keys(monthWeights).length > 0) {
         marksConfig = { month_weights: monthWeights };
       }
     } catch (e) { /* use defaults */ }

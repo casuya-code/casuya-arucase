@@ -119,3 +119,4 @@ coverage/
 
 # Generated data exports (may contain student data)
 backend/reports/
+.vercel

@@ -35,12 +35,6 @@ const { BULK_MULTI_PAGE_HEADER_CSS } = require('./bulkReportHeaderCss');
 const REPORT_INNER_START = '<!-- __ARUCASE_REPORT_INNER_START__ -->';
 const REPORT_INNER_END = '<!-- __ARUCASE_REPORT_INNER_END__ -->';
 
-/** Column heading for the single continuing assessment (replaces 4 test columns). */
-const COURSE_ASSESSMENT_LABEL = {
-  sw: 'MATOKEO YA TATHMINI YA KOZI',
-  en: 'COURSE ASSESSMENT RESULTS',
-};
-
 const CLASS_LABEL = {
   sw: 'PRE-FORM ONE',
   en: 'PRE-FORM ONE',
@@ -364,16 +358,13 @@ async function generatePreFormOneContinuingReportHtml(data = {}, options = {}) {
         </colgroup>
         <thead>
           <tr>
-            <th rowspan="2">${t.subject}</th>
+            <th>${t.subject}</th>
             <th colspan="1">${t.assessmentMarks}</th>
-            <th rowspan="2" class="rotate-header">${t.total}</th>
-            <th rowspan="2" class="rotate-header table-header-white">${t.grade}</th>
-            <th rowspan="2" class="rotate-header table-header-white">${t.position}</th>
-            <th rowspan="2" class="table-header-white">${t.comments}</th>
-            <th rowspan="2" class="sahihi-header table-header-white">${t.teacherSignature.replace('\\n', '<br />')}</th>
-          </tr>
-          <tr>
-            <th>${COURSE_ASSESSMENT_LABEL[language] || COURSE_ASSESSMENT_LABEL.sw}</th>
+            <th class="rotate-header">${t.total}</th>
+            <th class="rotate-header table-header-white">${t.grade}</th>
+            <th class="rotate-header table-header-white">${t.position}</th>
+            <th class="table-header-white">${t.comments}</th>
+            <th class="sahihi-header table-header-white">${t.teacherSignature.replace('\\n', '<br />')}</th>
           </tr>
         </thead>
         <tbody>
@@ -593,7 +584,6 @@ async function buildPreFormOneContinuingBulkHtml(reportDataList, options = {}) {
 module.exports = {
   generatePreFormOneContinuingReportHtml,
   buildPreFormOneContinuingBulkHtml,
-  COURSE_ASSESSMENT_LABEL,
   CLASS_LABEL,
   CONTINUING_TERM,
   getContinuingReportMonth,

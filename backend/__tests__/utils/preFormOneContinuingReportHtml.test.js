@@ -1,7 +1,6 @@
 const {
   generatePreFormOneContinuingReportHtml,
   buildPreFormOneContinuingBulkHtml,
-  COURSE_ASSESSMENT_LABEL,
   CONTINUING_TERM,
   getContinuingReportMonth,
 } = require('../../utils/preFormOneContinuingReportHtml');
@@ -50,7 +49,6 @@ describe('generatePreFormOneContinuingReportHtml', () => {
     expect(html).toContain('C. TABIA NA MWENENDO');
     expect(html).toContain('D. MAONI KATIKA TAALUMA');
     expect(html).toContain('MAMBO YA KUFAHAMU');
-    expect(html).toContain(COURSE_ASSESSMENT_LABEL.sw);
     // Single assessment per subject — no four-month header row / weight config.
     expect(html).not.toContain('month_weights');
     expect(html).not.toContain('(13%)');
@@ -75,7 +73,6 @@ describe('generatePreFormOneContinuingReportHtml', () => {
   it('renders an English report when lang = en', async () => {
     const html = await generatePreFormOneContinuingReportHtml(baseData, { lang: 'en' });
     expect(html).toContain('<html lang="en">');
-    expect(html).toContain(COURSE_ASSESSMENT_LABEL.en);
     expect(html).toContain('A. STUDENT PROGRESS INFORMATION');
   });
 
