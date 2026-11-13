@@ -3587,13 +3587,22 @@ router.get('/teachers/list', requireModule('teachers_management'), async (req, r
       return res.status(400).json({ message: 'Invalid year parameter' });
     }
     
-    // For FORM I-IV, query BOTH 'A' and 'NA' streams since data might be inconsistent
+    // For FORM I-IV, query BOTH 'A' and 'NA' streams since data might be inconsistent.
+    // For FORM V/VI combined mode (stream=ALL), teachers live under the real
+    // streams (PCM, PCB, HGE, …), so query every stream for the level.
+    const isCombinedALevel = isFormVOrVI && queryStream === 'ALL';
+
     let result;
     if (!isFormVOrVI) {
       // Try to get teachers from both A and NA streams
       result = await query(
         'SELECT * FROM subject_teachers WHERE level = $1 AND stream IN ($2, $3) AND year = $4 ORDER BY subject_code',
         [level, 'A', 'NA', yearNum]
+      );
+    } else if (isCombinedALevel) {
+      result = await query(
+        'SELECT * FROM subject_teachers WHERE level = $1 AND year = $2 ORDER BY subject_code, stream',
+        [level, yearNum]
       );
     } else {
       result = await query(
@@ -3606,28 +3615,44 @@ router.get('/teachers/list', requireModule('teachers_management'), async (req, r
     // Also map by subject abbreviation for compatibility
     const teacherMap = {};
     result.rows.forEach(row => {
-      teacherMap[row.subject_code] = {
-        teacher_name: row.teacher_name,
-        teacher_signature: row.teacher_signature,
-      };
+      // Prefer the first non-empty assignment so combined classes are deterministic
+      if (!teacherMap[row.subject_code] || !teacherMap[row.subject_code].teacher_name) {
+        teacherMap[row.subject_code] = {
+          teacher_name: row.teacher_name,
+          teacher_signature: row.teacher_signature,
+        };
+      }
     });
     
     // Also create mappings by subject abbreviation if subjects exist
     try {
-      const subjectsResult = await query(
-        'SELECT subject_code, subject_abbreviation FROM subjects WHERE level = $1 AND stream = $2 AND year = $3',
-        [level, queryStream, yearNum]
-      );
-      
+      const subjectsResult = isCombinedALevel
+        ? await query(
+            'SELECT DISTINCT ON (subject_code) subject_code, subject_abbreviation FROM subjects WHERE level = $1 AND year = $2 ORDER BY subject_code',
+            [level, yearNum]
+          )
+        : await query(
+            'SELECT subject_code, subject_abbreviation FROM subjects WHERE level = $1 AND stream = $2 AND year = $3',
+            [level, queryStream, yearNum]
+          );
+
       subjectsResult.rows.forEach(subject => {
-        // If teacher exists for abbreviation, also map by code
-        if (teacherMap[subject.subject_abbreviation]) {
-          teacherMap[subject.subject_code] = teacherMap[subject.subject_abbreviation];
-        }
-        // If teacher exists for code, also map by abbreviation
-        if (teacherMap[subject.subject_code] && subject.subject_abbreviation) {
-          teacherMap[subject.subject_abbreviation] = teacherMap[subject.subject_code];
-        }
+        const keys = [subject.subject_code, subject.subject_abbreviation].filter(Boolean);
+        // A-level legacy rows sometimes store "DIV" instead of "A/DIV"
+        const aliases = new Set(keys);
+        keys.forEach((key) => {
+          const upper = String(key).toUpperCase();
+          if (upper.startsWith('A/')) aliases.add(upper.slice(2));
+        });
+
+        const assignment =
+          keys.map((key) => teacherMap[key]).find(Boolean) ||
+          Array.from(aliases).map((key) => teacherMap[key]).find(Boolean);
+
+        if (!assignment) return;
+        aliases.forEach((alias) => {
+          if (!teacherMap[alias]) teacherMap[alias] = assignment;
+        });
       });
     } catch (subjectError) {
       // If subject lookup fails, just use the direct mapping

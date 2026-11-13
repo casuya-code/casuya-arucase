@@ -1623,11 +1623,17 @@ async function generateMonthlyResultsPDF(level, stream, year, month, gradingSyst
     const subjectTeacherMap = {};
     try {
       const isFormVOrVIForTeachers = normalizedLevel === 'FORM V' || normalizedLevel === 'FORM VI';
+      const isCombinedTeacherScope = isFormVOrVIForTeachers && normalizedStream === 'ALL';
       let teacherResult;
       if (!isFormVOrVIForTeachers) {
         teacherResult = await query(
           'SELECT subject_code, teacher_name FROM subject_teachers WHERE level = $1 AND stream IN ($2, $3) AND year = $4',
           [normalizedLevel, 'A', 'NA', normalizedYear]
+        );
+      } else if (isCombinedTeacherScope) {
+        teacherResult = await query(
+          'SELECT subject_code, teacher_name FROM subject_teachers WHERE level = $1 AND year = $2 ORDER BY subject_code, stream',
+          [normalizedLevel, normalizedYear]
         );
       } else {
         teacherResult = await query(
@@ -1636,7 +1642,9 @@ async function generateMonthlyResultsPDF(level, stream, year, month, gradingSyst
         );
       }
       (teacherResult.rows || []).forEach((r) => {
-        subjectTeacherMap[r.subject_code] = r.teacher_name;
+        if (!subjectTeacherMap[r.subject_code]) {
+          subjectTeacherMap[r.subject_code] = r.teacher_name;
+        }
       });
     } catch (teacherErr) {
       console.error('Failed to fetch subject teachers:', teacherErr.message);
@@ -1644,7 +1652,17 @@ async function generateMonthlyResultsPDF(level, stream, year, month, gradingSyst
     const getTeacherName = (subject) => {
       const code = subject.subject_code;
       const abbrev = subject.subject_abbreviation;
-      return subjectTeacherMap[code] || (abbrev ? subjectTeacherMap[abbrev] : '') || '';
+      const codeKey = String(code || '').toUpperCase();
+      const abbrevKey = String(abbrev || '').toUpperCase();
+      const legacyKey = codeKey.startsWith('A/') ? codeKey.slice(2) : '';
+      return (
+        subjectTeacherMap[code] ||
+        (abbrev ? subjectTeacherMap[abbrev] : '') ||
+        subjectTeacherMap[codeKey] ||
+        subjectTeacherMap[abbrevKey] ||
+        (legacyKey ? subjectTeacherMap[legacyKey] : '') ||
+        ''
+      );
     };
 
     

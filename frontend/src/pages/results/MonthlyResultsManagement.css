@@ -1059,11 +1059,19 @@
 
 .summary-table-wide {
   font-size: 12px;
+  min-width: 900px;
+  width: 100%;
 }
 
 .summary-table-wide th,
 .summary-table-wide td {
   padding: 4px 6px;
+  white-space: nowrap;
+}
+
+.summary-table-wide .summary-td-left,
+.summary-table-wide .summary-th-left {
+  white-space: normal;
 }
 
 /* Summary tables responsive */
@@ -1073,10 +1081,16 @@
 }
 
 .summary-table-wrap {
+  display: block;
+  width: 100%;
+  max-width: 100%;
   overflow-x: auto;
+  overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
   margin-bottom: 14px;
+  padding-bottom: 4px;
   border-radius: 6px;
+  scrollbar-width: thin;
 }
 
 @media (max-width: 768px) {
