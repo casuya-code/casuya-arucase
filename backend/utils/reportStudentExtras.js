@@ -9,6 +9,7 @@ const {
   dedupeTabiaRowsByCriterionPreferA,
 } = require('./reportCommentDedupe');
 const { getTermMatchValues } = require('./termNormalizer');
+const { normalizeStream } = require('./streamNormalizer');
 
 const FORM_I_TO_IV = /^FORM\s+(I|II|III|IV)$/i;
 const FORM_V_OR_VI = /^FORM\s+(V|VI|5|6)$/i;
@@ -298,21 +299,56 @@ async function getStudentPhotoFilename(
 ) {
   if (!admNo || !level || !yearNum) return null;
 
+  const isFormVOrVI = /^FORM\s+(V|VI|5|6)$/i.test(level);
+  let streamForLookup = normalizedStream ? String(normalizedStream).trim() : '';
+
+  // Combined Form V/VI classes use stream=ALL, but photos are stored under the
+  // student's real stream (PCB, PCM, HGE...). Resolve it before querying.
+  if (!streamForLookup || streamForLookup.toUpperCase() === 'ALL') {
+    try {
+      const termValues =
+        isFormVOrVI && normalizedTerm
+          ? [
+              normalizedTerm,
+              normalizedTerm.replace('First Term', 'Term I').replace('Second Term', 'Term II'),
+            ]
+          : [];
+      const resolvedResult =
+        termValues.length > 0
+          ? await queryFn(
+              `SELECT stream FROM students
+                WHERE adm_no = $1 AND level = $2 AND year = $3 AND term = ANY($4::text[])
+                ORDER BY stream LIMIT 1`,
+              [admNo, level, yearNum, termValues]
+            )
+          : await queryFn(
+              `SELECT stream FROM students
+                WHERE adm_no = $1 AND level = $2 AND year = $3
+                ORDER BY stream LIMIT 1`,
+              [admNo, level, yearNum]
+            );
+      const resolvedStream = resolvedResult?.rows?.[0]?.stream;
+      if (resolvedStream) streamForLookup = normalizeStream(resolvedStream);
+    } catch {
+      // Fall back to the requested stream below.
+    }
+  }
+  if (!streamForLookup) return null;
+
   // Only show a photo if the student is actually registered in this year/term.
   // Photos follow the student (adm_no) across terms/years, not a specific position.
   let studentExists = false;
   try {
-    const isFormVOrVI = /^FORM\s+(V|VI|5|6)$/i.test(level);
     if (isFormVOrVI) {
       const existsResult = await queryFn(
         `SELECT 1 FROM students WHERE adm_no = $1 AND level = $2 AND stream = $3 AND year = $4 AND term = ANY($5::text[]) LIMIT 1`,
-        [admNo, level, normalizedStream, yearNum, normalizedTerm ? [normalizedTerm, normalizedTerm.replace('First Term', 'Term I').replace('Second Term', 'Term II')] : []]
+        [admNo, level, streamForLookup, yearNum, normalizedTerm ? [normalizedTerm, normalizedTerm.replace('First Term', 'Term I').replace('Second Term', 'Term II')] : []]
       );
       studentExists = existsResult.rows.length > 0;
     } else {
       const existsResult = await queryFn(
         `SELECT 1 FROM students WHERE adm_no = $1 AND level = $2 AND stream IN ($3, $4) AND year = $5 LIMIT 1`,
-        [admNo, level, normalizedStream === 'A' ? 'A' : normalizedStream, normalizedStream === 'A' ? 'NA' : normalizedStream, yearNum]
+        [admNo, level, streamForLookup === 'A' ? 'A' : streamForLookup, streamForLookup === 'A' ? 'NA' : streamForLookup, yearNum]
       );
       studentExists = existsResult.rows.length > 0;
     }
@@ -322,9 +358,9 @@ async function getStudentPhotoFilename(
   if (!studentExists) return null;
 
   // Photo belongs to the student (adm_no + level + stream), not to a specific year/term.
-  const streams = (isFormIToIV && normalizedStream === 'A')
+  const streams = (isFormIToIV && streamForLookup === 'A')
     ? ['A', 'NA']
-    : [normalizedStream];
+    : [streamForLookup];
 
   const params = [admNo, level, ...streams];
   const sql = streams.length === 2

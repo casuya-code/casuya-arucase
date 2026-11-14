@@ -959,7 +959,19 @@ const IndividualReportDetail = () => {
                 display: (!student?.photo_path || imageErrors.studentPhoto) ? 'flex' : 'none' 
               }}
             >
-              <i className="fas fa-user"></i>
+              <svg
+                className="photo-placeholder-icon"
+                viewBox="0 0 24 24"
+                fill="none"
+                stroke="currentColor"
+                strokeWidth="1.6"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                aria-hidden="true"
+              >
+                <circle cx="12" cy="8" r="4" />
+                <path d="M4.5 20.5c0-4.1 3.4-6.8 7.5-6.8s7.5 2.7 7.5 6.8" />
+              </svg>
             </div>
           </div>
         </div>

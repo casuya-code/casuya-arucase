@@ -48,9 +48,18 @@ function checkPhotoUploadRateLimit(username) {
   if (count >= PHOTO_UPLOAD_LIMIT) {
     return false;
   }
-  const remainingTtl = photoUploadCache.getTtl(key);
+  // node-cache getTtl() returns an absolute expiry timestamp in ms, while set()
+  // expects a TTL in seconds. Passing the timestamp through made the window last
+  // for years instead of one minute, locking users out after 30 uploads.
+  const remainingTtl = getPhotoUploadRetryAfterSeconds(username);
   photoUploadCache.set(key, count + 1, remainingTtl > 0 ? remainingTtl : PHOTO_UPLOAD_WINDOW_SEC);
   return true;
+}
+
+function getPhotoUploadRetryAfterSeconds(username) {
+  const expiresAt = photoUploadCache.getTtl(`photo_upload_${username}`);
+  if (!(expiresAt > 0)) return 0;
+  return Math.max(1, Math.ceil((expiresAt - Date.now()) / 1000));
 }
 
 const { getTermMatchValues, normalizeTerm } = require('../utils/termNormalizer');
@@ -1856,8 +1865,7 @@ router.post('/:admNo/photo', upload.single('photo'), async (req, res) => {
     const uploaderUsername = req.user?.user_id || req.user?.username || 'unknown';
     if (!checkPhotoUploadRateLimit(uploaderUsername)) {
       if (req.file?.path) await fs.unlink(req.file.path).catch(() => {});
-      const retryKey = `photo_upload_${uploaderUsername}`;
-      const retryAfter = photoUploadCache.getTtl(retryKey);
+      const retryAfter = getPhotoUploadRetryAfterSeconds(uploaderUsername);
       if (retryAfter > 0) {
         res.setHeader('Retry-After', String(retryAfter));
       }

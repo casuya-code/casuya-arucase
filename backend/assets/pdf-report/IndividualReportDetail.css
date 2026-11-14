@@ -350,7 +350,7 @@ table {
         top: auto !important;
         overflow: visible !important;
         box-sizing: border-box !important;
-        background-color: #000000 !important;
+        background-color: #ffffff !important;
         aspect-ratio: 1 / 1 !important;
         page-break-inside: avoid !important;
         break-inside: avoid !important;
@@ -393,6 +393,15 @@ table {
         display: none !important;
         visibility: hidden !important;
         opacity: 0 !important;
+    }
+
+    /* When no image exists the placeholder is the only child: keep it visible so
+       a missing photo prints as a neutral icon instead of an empty square. */
+    .logo-section .school-logo-placeholder:only-child,
+    .student-photo .photo-placeholder:only-child {
+        display: flex !important;
+        visibility: visible !important;
+        opacity: 1 !important;
     }
     
     /* Ensure images are always visible in print, even if error state exists */
@@ -993,7 +1002,7 @@ table {
     opacity: 1 !important;
     text-align: center !important;
     padding: 2px !important;
-    background-color: #000000 !important;
+    background-color: #ffffff !important;
     aspect-ratio: 1 / 1 !important;
     max-width: 90px !important;
     max-height: 90px !important;
@@ -1017,7 +1026,7 @@ table {
     object-fit: cover !important;
     object-position: center !important;
     border: none !important;
-    background-color: #000000 !important;
+    background-color: #ffffff !important;
     display: block !important;
     visibility: visible !important;
     opacity: 1 !important;
@@ -1079,13 +1088,19 @@ table {
 .photo-placeholder,
 .school-logo-placeholder {
     font-size: 2rem !important;
-    color: #000000;
+    color: #9ca3af;
     display: flex;
     align-items: center;
     justify-content: center;
     width: 100%;
     height: 100%;
-    background-color: #000000;
+    background-color: #f9fafb;
+}
+
+.photo-placeholder-icon {
+    width: 58% !important;
+    height: 58% !important;
+    display: block !important;
 }
 
 .report-section {

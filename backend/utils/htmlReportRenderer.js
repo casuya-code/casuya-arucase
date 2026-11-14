@@ -21,6 +21,14 @@ const {
   normalizeReportLanguage,
 } = require('./reportLang');
 
+// Self-contained icon so the "no photo" placeholder renders in PDFs even when
+// the Font Awesome web font is not available inside Puppeteer.
+const PHOTO_PLACEHOLDER_SVG =
+  '<svg class="photo-placeholder-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' +
+  '<circle cx="12" cy="8" r="4"></circle>' +
+  '<path d="M4.5 20.5c0-4.1 3.4-6.8 7.5-6.8s7.5 2.7 7.5 6.8"></path>' +
+  '</svg>';
+
 /**
  * Read CSS for the PDF HTML. Prefer a copy shipped with the backend so Railway/backend-only
  * deploys match localhost (the frontend tree is often not present in the container).
@@ -412,7 +420,7 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000', 
         ${
           student.photo_path
             ? `<img src="${getStudentPortraitUrl(student.photo_path)}" alt="${student.first_name} ${student.surname}" class="photo" />`
-            : '<div class="photo-placeholder"><i class="fas fa-user"></i></div>'
+            : `<div class="photo-placeholder">${PHOTO_PLACEHOLDER_SVG}</div>`
         }
       </div>
     </div>
