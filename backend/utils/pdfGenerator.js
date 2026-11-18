@@ -13,6 +13,7 @@ const {
   dedupeTabiaRowsByCriterionPreferA
 } = require('./reportCommentDedupe');
 const { formatStudentFeesDebt } = require('./reportStudentExtras');
+const { formatAuthorityDate: formatAuthorityDateValue } = require('./authorityDate');
 const {
   calculateGrade,
   getSwahiliRemarks,
@@ -565,21 +566,8 @@ async function generateIndividualReportPDF(form, stream, year, term, admNo) {
         return tabia?.grade || 'C';
       };
       
-      const formatAuthorityDate = () => {
-        if (authorityResult.rows[0]?.date) {
-          try {
-            const dateObj = new Date(authorityResult.rows[0].date);
-            if (!isNaN(dateObj.getTime())) {
-              const day = String(dateObj.getDate()).padStart(2, '0');
-              const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-              const year = dateObj.getFullYear();
-              return `${day}/${month}/${year}`;
-            }
-          } catch (e) {}
-          return authorityResult.rows[0].date;
-        }
-        return new Date().toLocaleDateString('en-GB');
-      };
+      // DD.MM.YYYY / DD/MM/YYYY stored value, day first (see utils/authorityDate.js)
+      const formatAuthorityDate = () => formatAuthorityDateValue(authorityResult.rows[0]?.date);
       
       // Page dimensions
       const pageWidth = doc.page.width;

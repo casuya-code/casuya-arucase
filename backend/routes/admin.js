@@ -35,6 +35,7 @@ const {
 } = require('../utils/staffUserPhotoSync');
 const { PUBLIC_PAGE_SLUG_ALIASES } = require('../utils/publicPageSlugs');
 const { sanitizeAuthorityDataRow } = require('../utils/authoritySignature');
+const { validateAuthorityDateInput } = require('../utils/authorityDate');
 // createCloudinaryStorage uses cloudinary.uploader.upload_stream() directly,
 // bypassing multer-storage-cloudinary whose upload() callback was never invoked
 // with the cloudinary v2 SDK (causing 60 s upload timeouts).
@@ -1563,6 +1564,14 @@ router.post('/authority-data', requireModule('school_branding'), async (req, res
       return res.status(400).json({ message: 'name and title are required' });
     }
 
+    // Authorization date: accept DD.MM.YYYY or DD/MM/YYYY (1-2 digit day/month,
+    // e.g. 2.5.2026 or 02.05.2025) and store it zero-padded so individual
+    // reports, bulk reports and their PDFs all print the same value.
+    const dateCheck = validateAuthorityDateInput(date);
+    if (!dateCheck.valid) {
+      return res.status(400).json({ message: dateCheck.message });
+    }
+
     // Get existing signature_image_path to preserve it
     const existingResult = await query('SELECT signature_image_path FROM authority_data WHERE id = 1');
     const signatureImagePath = existingResult.rows[0]?.signature_image_path || '';
@@ -1577,7 +1586,7 @@ router.post('/authority-data', requireModule('school_branding'), async (req, res
          signature = EXCLUDED.signature,
          date = EXCLUDED.date,
          updated_at = NOW()`,
-      [name, title, signature, signatureImagePath, date]
+      [name, title, signature, signatureImagePath, dateCheck.value]
     );
 
     res.json({ message: 'Authority information saved successfully' });

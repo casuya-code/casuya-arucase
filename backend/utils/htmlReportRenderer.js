@@ -10,6 +10,7 @@ const {
   getAuthoritySignatureText,
 } = require('./authoritySignature');
 const { formatReportScore, formatReportWeightPercent } = require('./reportScoreFormat');
+const { formatAuthorityDate: formatAuthorityDateValue } = require('./authorityDate');
 const {
   TRAIT_CODES,
   getReportDictionary,
@@ -242,21 +243,8 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000', 
     return commentWithSuffix?.comment_text || '';
   };
 
-  const formatAuthorityDate = () => {
-    if (authority_data?.date) {
-      try {
-        const dateObj = new Date(authority_data.date);
-        if (!isNaN(dateObj.getTime())) {
-          const day = String(dateObj.getDate()).padStart(2, '0');
-          const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-          const year = dateObj.getFullYear();
-          return `${day}/${month}/${year}`;
-        }
-      } catch (e) {}
-      return authority_data.date;
-    }
-    return new Date().toLocaleDateString('en-GB');
-  };
+  // DD.MM.YYYY / DD/MM/YYYY stored value, day first (see utils/authorityDate.js)
+  const formatAuthorityDate = () => formatAuthorityDateValue(authority_data?.date);
 
   const summary = summary_data || {
     total_marks: '0',

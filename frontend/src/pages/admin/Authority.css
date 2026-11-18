@@ -201,6 +201,29 @@
   background: #fff;
 }
 
+.excel-input.invalid {
+  border-color: #ef4444;
+  background: #fff7f7;
+}
+
+.excel-input.invalid:focus {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.12);
+}
+
+/* --- Field hint / inline validation message --- */
+.field-hint {
+  margin: 0;
+  font-size: 0.75rem;
+  line-height: 1.4;
+  color: #6b6b60;
+}
+
+.field-hint.field-error {
+  color: #dc2626;
+  font-weight: 600;
+}
+
 /* --- Buttons --- */
 .form-actions {
   margin-top: 1.25rem;

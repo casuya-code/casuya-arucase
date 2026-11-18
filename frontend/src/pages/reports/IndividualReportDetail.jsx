@@ -13,6 +13,7 @@ import {
   getAuthoritySignatureText,
 } from '../../utils/authoritySignature';
 import { formatReportScore, formatReportWeightPercent } from '../../utils/reportScoreFormat';
+import { formatAuthorityDate } from '../../utils/authorityDate';
 import {
   REPORT_TRAIT_CODES,
   getReportDictionary,
@@ -731,25 +732,10 @@ const IndividualReportDetail = () => {
     return '';
   };
 
-  // Format authority date
-  const formatAuthorityDate = () => {
-    if (authority_data?.date) {
-      try {
-        // Try parsing YYYY-MM-DD format
-        const dateObj = new Date(authority_data.date);
-        if (!isNaN(dateObj.getTime())) {
-          const day = String(dateObj.getDate()).padStart(2, '0');
-          const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-          const year = dateObj.getFullYear();
-          return `${day}/${month}/${year}`;
-        }
-      } catch (e) {
-        // If parsing fails, return as is
-      }
-      return authority_data.date;
-    }
-    return new Date().toLocaleDateString('en-GB');
-  };
+  // Format authority date — DD.MM.YYYY / DD/MM/YYYY stored value, day first.
+  // The shared helper keeps the preview identical to the downloaded PDF
+  // (see utils/authorityDate.js).
+  const formatAuthorityDateLabel = () => formatAuthorityDate(authority_data?.date);
 
   const authoritySignatureImageUrl = getAuthoritySignatureImageUrl(authority_data);
   const authoritySignatureText = getAuthoritySignatureText(authority_data);
@@ -1244,7 +1230,7 @@ const IndividualReportDetail = () => {
                   <strong style={{ writingMode: 'horizontal-tb', textOrientation: 'mixed', transform: 'none', display: 'inline' }}>{t.date}</strong>
                 </td>
                 <td className="authority-date">
-                  {formatAuthorityDate()}
+                  {formatAuthorityDateLabel()}
                 </td>
               </tr>
             </tbody>
@@ -1397,7 +1383,7 @@ const IndividualReportDetail = () => {
               {authority_data?.title || ''}
             </div>
             <div className="signature-date">
-              {t.dateShort} {formatAuthorityDate()}
+              {t.dateShort} {formatAuthorityDateLabel()}
             </div>
           </div>
           <div className="stamp-block">

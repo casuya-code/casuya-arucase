@@ -22,6 +22,7 @@ const {
   getAuthoritySignatureText,
 } = require('./authoritySignature');
 const { formatReportScore } = require('./reportScoreFormat');
+const { formatAuthorityDate: formatAuthorityDateValue } = require('./authorityDate');
 const {
   TRAIT_CODES,
   getReportDictionary,
@@ -111,21 +112,8 @@ function getTabiaEvaluation(tabiaMwenendo, code) {
 }
 
 function formatAuthorityDate(authorityData) {
-  if (authorityData?.date) {
-    try {
-      const dateObj = new Date(authorityData.date);
-      if (!Number.isNaN(dateObj.getTime())) {
-        const day = String(dateObj.getDate()).padStart(2, '0');
-        const month = String(dateObj.getMonth() + 1).padStart(2, '0');
-        const year = dateObj.getFullYear();
-        return `${day}/${month}/${year}`;
-      }
-    } catch {
-      /* fall through */
-    }
-    return authorityData.date;
-  }
-  return new Date().toLocaleDateString('en-GB');
+  // DD.MM.YYYY / DD/MM/YYYY stored value, day first (see utils/authorityDate.js)
+  return formatAuthorityDateValue(authorityData?.date);
 }
 
 /**

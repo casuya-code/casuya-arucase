@@ -12,6 +12,7 @@ import {
   getAuthoritySignatureImageUrl,
   getAuthoritySignatureText,
 } from '../../utils/authoritySignature';
+import { AUTHORITY_DATE_HINT, validateAuthorityDateInput } from '../../utils/authorityDate';
 import './Authority.css';
 
 const Authority = () => {
@@ -25,6 +26,7 @@ const Authority = () => {
     signature: '',
     date: '',
   });
+  const [dateError, setDateError] = useState('');
 
   // Fetch current authority data
   const { data: authorityData, isLoading, error: authorityError } = useQuery({
@@ -45,12 +47,17 @@ const Authority = () => {
   // Initialize form data when authority data loads
   useEffect(() => {
     if (authorityData) {
+      // Pad the stored date (2.5.2026 → 02.05.2026) so what is shown matches
+      // exactly what reports and PDFs will print; flag legacy values that are
+      // not a valid DD.MM.YYYY / DD/MM/YYYY date before the admin saves.
+      const dateCheck = validateAuthorityDateInput(authorityData.date);
       setFormData({
         name: authorityData.name || '',
         title: authorityData.title || '',
         signature: authorityData.signature || '',
-        date: authorityData.date || '',
+        date: dateCheck.empty ? '' : dateCheck.value,
       });
+      setDateError(dateCheck.valid ? '' : dateCheck.message);
     }
   }, [authorityData]);
 
@@ -104,7 +111,37 @@ const Authority = () => {
       toast.error('Name and title are required');
       return;
     }
-    saveMutation.mutate(formData);
+    // Never save an unparseable date: reports/PDFs must show the same value.
+    const dateCheck = validateAuthorityDateInput(formData.date);
+    if (!dateCheck.valid) {
+      setDateError(dateCheck.message);
+      toast.error(dateCheck.message);
+      return;
+    }
+    setDateError('');
+    saveMutation.mutate({ ...formData, date: dateCheck.value });
+  };
+
+  const handleDateChange = (e) => {
+    const value = e.target.value;
+    setFormData((prev) => ({ ...prev, date: value }));
+    // Clear a visible error as soon as the value becomes valid again.
+    if (dateError && validateAuthorityDateInput(value).valid) {
+      setDateError('');
+    }
+  };
+
+  const handleDateBlur = () => {
+    const dateCheck = validateAuthorityDateInput(formData.date);
+    if (!dateCheck.valid) {
+      setDateError(dateCheck.message);
+      return;
+    }
+    setDateError('');
+    // Store the padded form (2/5/2026 → 02/05/2026) as soon as it is typed.
+    if (!dateCheck.empty && dateCheck.value !== formData.date) {
+      setFormData((prev) => ({ ...prev, date: dateCheck.value }));
+    }
   };
 
   const handleFileSelect = (file) => {
@@ -229,10 +266,21 @@ const Authority = () => {
                         <input
                           type="text"
                           value={formData.date}
-                          onChange={(e) => setFormData({ ...formData, date: e.target.value })}
-                          className="excel-input"
-                          placeholder="Date"
+                          onChange={handleDateChange}
+                          onBlur={handleDateBlur}
+                          className={`excel-input${dateError ? ' invalid' : ''}`}
+                          placeholder="DD.MM.YYYY or DD/MM/YYYY"
+                          maxLength={10}
+                          autoComplete="off"
+                          aria-invalid={dateError ? 'true' : 'false'}
+                          aria-describedby="authorization-date-hint"
                         />
+                        <p
+                          id="authorization-date-hint"
+                          className={`field-hint${dateError ? ' field-error' : ''}`}
+                        >
+                          {dateError || `Day first — ${AUTHORITY_DATE_HINT}`}
+                        </p>
                       </div>
                     </div>
                     <div className="form-actions">
