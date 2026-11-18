@@ -996,6 +996,34 @@
     min-height: 40mm !important;
     width: 100% !important;
   }
+
+  /* Lower summary tables must print as full-width tables, not clipped
+     scrollports. A-Level has two extra grade columns, so shrink its cells. */
+  .results-summary,
+  .summary-table-wrap {
+    overflow: visible !important;
+    padding-bottom: 0 !important;
+  }
+
+  .summary-table,
+  .summary-table-wide {
+    width: 100% !important;
+    min-width: 0 !important;
+    table-layout: fixed !important;
+    margin-bottom: 8px !important;
+  }
+
+  .summary-table th,
+  .summary-table td {
+    padding: 3px 4px !important;
+    white-space: normal !important;
+    overflow-wrap: anywhere;
+    word-break: break-word;
+  }
+
+  .summary-table-a-level {
+    font-size: 9px !important;
+  }
 }
 
 /* Summary of Results */
@@ -1059,8 +1087,10 @@
 
 .summary-table-wide {
   font-size: 12px;
-  min-width: 900px;
-  width: 100%;
+  /* Let the table grow beyond the card and let the wrapper scroll instead of
+     compressing 11+ A-Level columns into an unreadable grid. */
+  width: max-content;
+  min-width: 100%;
 }
 
 .summary-table-wide th,
@@ -1087,10 +1117,18 @@
   overflow-x: auto;
   overflow-y: hidden;
   -webkit-overflow-scrolling: touch;
+  overscroll-behavior-x: contain;
   margin-bottom: 14px;
-  padding-bottom: 4px;
+  padding-bottom: 6px;
   border-radius: 6px;
   scrollbar-width: thin;
+}
+
+.summary-table-wrap--wide {
+  /* A-Level Subject Performance has 11 columns; keep the scrollport explicit
+     so it behaves like the other lower summary tables on small screens. */
+  overflow-x: auto;
+  scrollbar-color: #b9b3a5 transparent;
 }
 
 @media (max-width: 768px) {
@@ -1114,7 +1152,7 @@
 
   .summary-table-wide {
     font-size: 10px;
-    min-width: 520px;
+    min-width: 100%;
   }
 
   .summary-table-wide th,
@@ -1130,6 +1168,6 @@
 
   .summary-table-wide {
     font-size: 9px;
-    min-width: 480px;
+    min-width: 100%;
   }
 }

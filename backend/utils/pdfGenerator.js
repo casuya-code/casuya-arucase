@@ -30,8 +30,11 @@ const {
   normalizeGradingSystem,
   getGradingSystemLabel,
   remarksForGrade,
-  calculateDivisionAndPoints,
 } = require('./gradingSystems');
+const {
+  buildMonthlyResultsSummary,
+  getStudentDivisionData,
+} = require('./monthlyResultsSummary');
 
 // Helper function to check if file exists
 async function fileExists(filePath) {
@@ -1696,12 +1699,21 @@ async function generateMonthlyResultsPDF(level, stream, year, month, gradingSyst
       monthlyResultsMap[row.adm_no] = row;
     });
     
+    const subjectAliasesByCode = {};
+    subjectsResult.rows.forEach((subject) => {
+      if (!subject.subject_code || !subject.subject_abbreviation) return;
+      subjectAliasesByCode[subject.subject_code] = subject.subject_abbreviation;
+      subjectAliasesByCode[subject.subject_abbreviation] = subject.subject_code;
+    });
     const scoreLookup = {};
     scoresResult.rows.forEach(row => {
       if (!scoreLookup[row.adm_no]) {
         scoreLookup[row.adm_no] = {};
       }
-      scoreLookup[row.adm_no][row.subject_code] = parseFloat(row.score);
+      const numericScore = parseFloat(row.score);
+      scoreLookup[row.adm_no][row.subject_code] = numericScore;
+      const alias = subjectAliasesByCode[row.subject_code];
+      if (alias) scoreLookup[row.adm_no][alias] = numericScore;
     });
     
     // Get school logo
@@ -1946,6 +1958,27 @@ async function generateMonthlyResultsPDF(level, stream, year, month, gradingSyst
     .compact-results-table thead tr {
       page-break-after: avoid;
     }
+    .summary-section {
+      width: 100%;
+      page-break-inside: auto;
+    }
+    .summary-section h3 {
+      page-break-after: avoid;
+    }
+    .summary-table {
+      width: 100%;
+      table-layout: fixed;
+      overflow-wrap: anywhere;
+    }
+    .subject-performance-table th,
+    .subject-performance-table td {
+      line-height: 1.1;
+      vertical-align: middle;
+    }
+    .a-level-summary-table th,
+    .a-level-summary-table td {
+      padding: 2px !important;
+    }
     .text-left {
       text-align: left !important;
       padding-left: 6px !important;
@@ -2162,25 +2195,19 @@ async function generateMonthlyResultsPDF(level, stream, year, month, gradingSyst
         : '-';
 
       let divisionPoints = null;
-      let divisionValue = null;
       // Show '-' instead of '0' when there are too few subjects for a division
       let displayDivisionValue = null;
       if (activeGradingSystem) {
-        const subjectsData = {};
-        subjectsResult.rows.forEach((subject) => {
-          const subjectKey = subject.subject_abbreviation || subject.subject_code;
-          const score = studentScores[subjectKey] ?? studentScores[subject.subject_code];
-          const hasScore = score !== undefined && score !== null && score !== '';
-          if (!hasScore) return;
-          const g = gradeForScore(score, { system: activeGradingSystem, isALevel }) || '-';
-          subjectsData[subjectKey] = { grade: g, name: subject.subject_name || subjectKey };
+        const divisionData = getStudentDivisionData({
+          studentScores,
+          subjects: subjectsResult.rows,
+          student,
+          isALevel,
+          gradingSystem: activeGradingSystem,
+          fallbackStream: normalizedStream,
         });
-        const computed = calculateDivisionAndPoints({ isALevel: isALevel, subjectsData: subjectsData, stream: normalizedStream });
-        divisionPoints = computed.points;
-        divisionValue = computed.division;
-        const scoredCount = Object.keys(subjectsData).length;
-        const insufficientSubjects = isALevel ? scoredCount < 3 : scoredCount < 7;
-        const displayDivisionValue = insufficientSubjects ? '-' : (divisionValue || '-');
+        divisionPoints = divisionData.points;
+        displayDivisionValue = divisionData.displayDivision;
       }
       
       const resultCells = activeGradingSystem
@@ -2197,51 +2224,22 @@ async function generateMonthlyResultsPDF(level, stream, year, month, gradingSyst
     });
     
     // ---- Summary of results ----
-    const summaryScale = activeGradingSystem || 'seminary';
-    const registeredCount = studentsWithResults.length;
-    const divisionCounts = { I: 0, II: 0, III: 0, IV: 0, '0': 0, none: 0 };
-    const gradeCols = isALevel ? ['A','B','C','D','E','S','F'] : ['A','B','C','D','F'];
-    const subjectGradeCounts = {};
-    subjectsResult.rows.forEach((subject) => {
-      const code = subject.subject_code || subject.subject_abbreviation;
-      const init = { total: 0 };
-      gradeCols.forEach((g) => { init[g] = 0; });
-      subjectGradeCounts[code] = init;
+    const summary = buildMonthlyResultsSummary({
+      students: studentsWithResults,
+      subjectScores: scoreLookup,
+      subjects: subjectsResult.rows,
+      isALevel,
+      gradingSystem: activeGradingSystem || 'seminary',
+      fallbackStream: normalizedStream,
     });
-    studentsWithResults.forEach((student) => {
-      const studentScores = scoreLookup[student.adm_no] || {};
-      const subjectsData = {};
-      subjectsResult.rows.forEach((subject) => {
-        const subjectKey = subject.subject_abbreviation || subject.subject_code;
-        const score = studentScores[subjectKey] ?? studentScores[subject.subject_code];
-        const hasScore = score !== undefined && score !== null && score !== '';
-        if (!hasScore) return;
-        const g = gradeForScore(score, { system: summaryScale, isALevel }) || '-';
-        const code = subject.subject_code || subject.subject_abbreviation;
-        if (subjectGradeCounts[code]) {
-          if (subjectGradeCounts[code][g] !== undefined) subjectGradeCounts[code][g]++;
-          subjectGradeCounts[code].total++;
-        }
-        subjectsData[subjectKey] = { grade: g, name: subject.subject_name || subjectKey };
-      });
-      const computed = calculateDivisionAndPoints({ isALevel: isALevel, subjectsData: subjectsData, stream: normalizedStream });
-      const scoredCount = Object.keys(subjectsData).length;
-      const insufficientSubjects = isALevel ? scoredCount < 3 : scoredCount < 7;
-      const div = insufficientSubjects ? '0' : computed.division;
-      if (div === 'I') divisionCounts.I++;
-      else if (div === 'II') divisionCounts.II++;
-      else if (div === 'III') divisionCounts.III++;
-      else if (div === 'IV') divisionCounts.IV++;
-      else if (div === '0') divisionCounts['0']++;
-      else divisionCounts.none++;
-    });
-    const divisionRowsHtml = ['I','II','III','IV','0'].map((d) => {
+    const { registeredCount, divisionCounts, gradeCols, subjectGradeCounts } = summary;
+    const divisionRowsHtml = ['I', 'II', 'III', 'IV', '0'].map((d) => {
       const c = divisionCounts[d];
       const pct = registeredCount > 0 ? ((c / registeredCount) * 100).toFixed(1) : '0.0';
       return '<tr><td style="text-align:left;border:1px solid #999;padding:4px;">Division ' + d + '</td><td style="border:1px solid #999;padding:4px;">' + c + '</td><td style="border:1px solid #999;padding:4px;">' + pct + '%</td></tr>';
     }).join('');
     const gradeHeaderHtml = gradeCols.map((g) => '<th style="border:1px solid #999;padding:3px;">' + g + '</th>').join('');
-    const subjectSummaryRowsHtml = subjectsResult.rows.map((subject) => {
+    const subjectSummaryRowsHtml = summary.subjects.map((subject) => {
       const code = subject.subject_code || subject.subject_abbreviation;
       const abbrev = subject.subject_abbreviation || subject.subject_code;
       const counts = subjectGradeCounts[code] || { total: 0 };
@@ -2255,10 +2253,20 @@ async function generateMonthlyResultsPDF(level, stream, year, month, gradingSyst
         '<td style="border:1px solid #999;padding:3px;">' + (counts.total || 0) + '</td>' +
       '</tr>';
     }).join('');
+    const summaryColWidths = [
+      isALevel ? 7 : 8,
+      isALevel ? 18 : 22,
+      isALevel ? 15 : 18,
+      ...gradeCols.map(() => (isALevel ? 7 : 8)),
+      isALevel ? 11 : 12,
+    ];
+    const summaryColgroup = '<colgroup>' + summaryColWidths
+      .map((width) => '<col style="width:' + width + '%;">')
+      .join('') + '</colgroup>';
     const summaryHtml = `
     <div class="summary-section" style="margin-top:18px;">
       <h3 style="font-size:12px;margin:8px 0;">Summary of Results</h3>
-      <table class="summary-table" style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:12px;">
+      <table class="summary-table summary-of-results-table" style="width:100%;border-collapse:collapse;font-size:10px;margin-bottom:12px;">
         <thead>
           <tr>
             <th style="text-align:left;border:1px solid #999;padding:4px;">Item</th>
@@ -2272,7 +2280,8 @@ async function generateMonthlyResultsPDF(level, stream, year, month, gradingSyst
         </tbody>
       </table>
       <h3 style="font-size:12px;margin:8px 0;">Subject Performance</h3>
-      <table class="summary-table" style="width:100%;border-collapse:collapse;font-size:9px;">
+      <table class="summary-table subject-performance-table${isALevel ? ' a-level-summary-table' : ''}" style="width:100%;border-collapse:collapse;font-size:${isALevel ? 8 : 9}px;">
+        ${summaryColgroup}
         <thead>
           <tr>
             <th style="border:1px solid #999;padding:3px;">Code</th>

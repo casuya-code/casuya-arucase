@@ -17,8 +17,11 @@ import {
   gradeForScore,
   normalizeGradingSystem,
   remarksForGrade,
-  calculateDivisionAndPoints,
 } from '../../utils/gradingSystems';
+import {
+  buildMonthlyResultsSummary,
+  getStudentDivisionData,
+} from '../../utils/monthlyResultsSummary';
 import './MonthlyResultsManagement.css';
 import { CSV_BULK_LABELS } from '../../constants/csvBulkActions';
 
@@ -512,46 +515,23 @@ const MonthlyResultsManagement = ({ formLevel }) => {
   });
 
   // ---- Summary of results ----
-  const summaryScale = activeGradingSystem || 'seminary';
-  const registeredCount = sortedStudents.length;
-  const divisionCounts = { I: 0, II: 0, III: 0, IV: 0, '0': 0, none: 0 };
-  const gradeCols = isALevel ? ['A', 'B', 'C', 'D', 'E', 'S', 'F'] : ['A', 'B', 'C', 'D', 'F'];
-  const subjectGradeCounts = {};
-  (subjects || []).forEach((s) => {
-    const code = s.subject_code || s.subject_abbreviation;
-    const init = { total: 0 };
-    gradeCols.forEach((g) => { init[g] = 0; });
-    subjectGradeCounts[code] = init;
+  // Always aggregate with a scale. The main table may show raw marks when
+  // GRADWISE is off, but the summary still needs consistent grade buckets.
+  const summary = buildMonthlyResultsSummary({
+    students: sortedStudents,
+    subjectScores,
+    subjects,
+    isALevel,
+    gradingSystem: activeGradingSystem || 'seminary',
+    fallbackStream: normalizedStream,
   });
-  sortedStudents.forEach((student) => {
-    const studentIndex = getStudentIndex(student);
-    const result = results[studentIndex] || {};
-    const studentScores = subjectScores[student.adm_no] || {};
-    const subjectsData = {};
-    (subjects || []).forEach((subject) => {
-      const subjectKey = subject.subject_abbreviation || subject.subject_code;
-      const score = studentScores[subjectKey] ?? studentScores[subject.subject_code];
-      const hasScore = score !== undefined && score !== null && score !== '';
-      if (!hasScore) return;
-      const g = gradeForScore(score, { system: summaryScale, isALevel }) || '-';
-      const code = subject.subject_code || subject.subject_abbreviation;
-      if (subjectGradeCounts[code]) {
-        if (subjectGradeCounts[code][g] !== undefined) subjectGradeCounts[code][g]++;
-        subjectGradeCounts[code].total++;
-      }
-      subjectsData[subjectKey] = { grade: g, name: subject.subject_name || subjectKey };
-    });
-    const computed = calculateDivisionAndPoints({ isALevel, subjectsData, stream: normalizedStream });
-    const scoredCount = Object.keys(subjectsData).length;
-    const insufficientSubjects = isALevel ? scoredCount < 3 : scoredCount < 7;
-    const div = insufficientSubjects ? '0' : computed.division;
-    if (div === 'I') divisionCounts.I++;
-    else if (div === 'II') divisionCounts.II++;
-    else if (div === 'III') divisionCounts.III++;
-    else if (div === 'IV') divisionCounts.IV++;
-    else if (div === '0') divisionCounts['0']++;
-    else divisionCounts.none++;
-  });
+  const {
+    registeredCount,
+    divisionCounts,
+    gradeCols,
+    subjectGradeCounts,
+  } = summary;
+  const summarySubjects = summary.subjects;
 
   const testType = getTestType(month, normalizedLevel);
   const className = `${normalizedLevel} ${normalizedStream} ${year}`;
@@ -573,19 +553,14 @@ const MonthlyResultsManagement = ({ formLevel }) => {
     return remarksForGrade(displayGrade, { isALevel }) || result.remarks || '-';
   };
 
-  const computeDivisionAndPointsFor = (studentScores) => {
-    const subjectsData = {};
-    (subjects || []).forEach((subject) => {
-      const subjectKey = subject.subject_abbreviation || subject.subject_code;
-      const score = studentScores[subjectKey] ?? studentScores[subject.subject_code];
-      const hasScore = score !== undefined && score !== null && score !== '';
-      if (!hasScore) return;
-      const grade = gradeForScore(score, { system: activeGradingSystem, isALevel }) || '-';
-      subjectsData[subjectKey] = { grade, name: subject.subject_name || subjectKey };
-    });
-    const computed = calculateDivisionAndPoints({ isALevel, subjectsData, stream: normalizedStream });
-    return { ...computed, scoredCount: Object.keys(subjectsData).length };
-  };
+  const computeDivisionAndPointsFor = (studentScores, student) => getStudentDivisionData({
+    studentScores,
+    subjects: summarySubjects,
+    student,
+    isALevel,
+    gradingSystem: activeGradingSystem,
+    fallbackStream: normalizedStream,
+  });
   // O-Level COM when students.com is missing (bulk upload / promotion did not set it)
   const resolveComDisplay = (student, studentScores) => {
     if (isALevel) {
@@ -985,7 +960,7 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                         <th className="sticky-col col-fname">F.Name</th>
                         <th className="sticky-col col-mname">M.Name</th>
                         <th className="sticky-col col-sname">Surname</th>
-                        {subjects.map((subject) => (
+                        {summarySubjects.map((subject) => (
                           <th key={subject.subject_code} className="subject-col">
                             <div className="rotate-header">
                               {isALevel
@@ -1024,11 +999,9 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                         const avgValue = result.average !== null && result.average !== undefined
                           ? parseFloat(result.average)
                           : null;
-                        const { points: divisionPoints, division: divisionValue, scoredCount } = activeGradingSystem
-                          ? computeDivisionAndPointsFor(studentScores)
-                          : { points: null, division: null, scoredCount: 0 };
-                        const insufficientSubjects = isALevel ? scoredCount < 3 : scoredCount < 7;
-                        const displayDivision = insufficientSubjects ? '-' : (divisionValue || '-');
+                        const { points: divisionPoints, displayDivision } = activeGradingSystem
+                          ? computeDivisionAndPointsFor(studentScores, student)
+                          : { points: null, displayDivision: '-' };
                         const gradeRowClass = gradeClass === 'C' && avgValue !== null && avgValue < 55 && !isALevel
                           ? `grade-row-${gradeClass}-low`
                           : `grade-row-${gradeClass}${isALevel ? ' a-level' : ''}`;
@@ -1039,7 +1012,7 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                             <td className="sticky-col col-fname">{student.first_name}</td>
                             <td className="sticky-col col-mname">{student.middle_name || '-'}</td>
                             <td className="sticky-col col-sname">{student.surname}</td>
-                            {subjects.map((subject) => {
+                            {summarySubjects.map((subject) => {
                               const subjectKey = subject.subject_abbreviation || subject.subject_code;
                               const score = studentScores[subjectKey] ?? studentScores[subject.subject_code];
                               const hasScore = score !== undefined && score !== null && score !== '';
@@ -1120,8 +1093,8 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                 </div>
 
                 <h3 className="results-summary-title">Subject Performance</h3>
-                <div className="summary-table-wrap">
-                <table className="summary-table summary-table-wide">
+                <div className="summary-table-wrap summary-table-wrap--wide">
+                <table className={`summary-table summary-table-wide${isALevel ? ' summary-table-a-level' : ''}`}>
                   <thead>
                     <tr>
                       <th>Code</th>
@@ -1134,7 +1107,7 @@ const MonthlyResultsManagement = ({ formLevel }) => {
                     </tr>
                   </thead>
                   <tbody>
-                    {(subjects || []).map((subject) => {
+                    {summarySubjects.map((subject) => {
                       const code = subject.subject_code || subject.subject_abbreviation;
                       const abbrev = subject.subject_abbreviation || subject.subject_code;
                       const counts = subjectGradeCounts[code] || { total: 0 };
