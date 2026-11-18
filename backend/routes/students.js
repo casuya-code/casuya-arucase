@@ -4120,7 +4120,7 @@ router.post('/tabia-mwenendo', async (req, res) => {
           const params = [];
           deduped.forEach((evaluation, i) => {
             const base = i * 7;
-            placeholders.push(`(${base + 1}, ${base + 2}, ${base + 3}, ${base + 4}, ${base + 5}, ${base + 6}, ${base + 7})`);
+            placeholders.push(`($${base + 1}, $${base + 2}, $${base + 3}, $${base + 4}, $${base + 5}, $${base + 6}, $${base + 7})`);
             const rowStream = (normalizedStream === 'ALL') ? (streamByAdm[String(evaluation.adm_no).trim()] || 'ALL') : normalizedStream;
              params.push(level, rowStream, yearInt, normalizedTerm, String(evaluation.adm_no).trim(), evaluation.criterion, evaluation.evaluation);
           });
