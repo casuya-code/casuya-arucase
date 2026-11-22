@@ -14,6 +14,7 @@ import {
 } from '../../utils/authoritySignature';
 import { formatReportScore, formatReportWeightPercent } from '../../utils/reportScoreFormat';
 import { formatAuthorityDate } from '../../utils/authorityDate';
+import { calculateOLevelGrade } from '../../utils/oLevelGrading';
 import {
   REPORT_TRAIT_CODES,
   getReportDictionary,
@@ -644,12 +645,10 @@ const IndividualReportDetail = () => {
       if (total >= 40) return 'S';
       return 'F';
     } else {
-      // O-Level grading: A=85+, B=70+, C=55+, D=40+, F=<40
-      if (total >= 85) return 'A';
-      if (total >= 70) return 'B';
-      if (total >= 55) return 'C';
-      if (total >= 40) return 'D';
-      return 'F';
+      // O-Level (Forms I-IV) uses the canonical school scale:
+      // A = 85-100 | B = 70-84 | C = 50-69 | D = 40-49 | F = 0-39.
+      // 55 is only the "low C" colour band, NOT a grade boundary.
+      return calculateOLevelGrade(total);
     }
   };
 
@@ -1098,7 +1097,8 @@ const IndividualReportDetail = () => {
                 const exam = (month4 || 0) * weight4;
                 const total = test1 + midterm + test2 + exam;
                 
-                const grade = getGrade(total);
+                // Grade the rounded total so DARAJA always matches the JUMLA shown in the report.
+                const grade = getGrade(Math.round(total));
                 const comment = getComment(grade);
                 const rank = subject_rankings?.[subject.subject_code]?.[admNo] || '-';
 

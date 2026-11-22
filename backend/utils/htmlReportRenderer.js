@@ -213,9 +213,11 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000', 
       if (total >= 40) return 'S';
       return 'F';
     } else {
+      // O-Level (Forms I-IV): A = 85-100 | B = 70-84 | C = 50-69 | D = 40-49 | F = 0-39
+      // 55 is only the "low C" colour band, NOT a grade boundary.
       if (total >= 85) return 'A';
       if (total >= 70) return 'B';
-      if (total >= 55) return 'C';
+      if (total >= 50) return 'C';
       if (total >= 40) return 'D';
       return 'F';
     }
@@ -301,7 +303,8 @@ async function generateReportHTML(reportData, apiUrl = 'http://localhost:5000', 
     });
     const total = weightedScores.reduce((sum, value) => sum + value, 0);
     
-    const grade = getGrade(total);
+    // Grade the rounded total so DARAJA always matches the JUMLA shown in the report.
+    const grade = getGrade(Math.round(total));
     const comment = getComment(grade);
     const rank = subject_rankings?.[subject.subject_code]?.[student.adm_no] || '-';
 
