@@ -663,53 +663,22 @@ app.get('/health', (req, res) => {
   })();
 });
 
-// Database health check endpoint
+// Database health check endpoint.
+//
+// This endpoint is intentionally minimal and public-safe: it reports only whether
+// the database is reachable. Operational details (PostgreSQL version, table and
+// record counts, pool metrics, and error messages) are not exposed.
 app.get('/api/health/database', async (req, res) => {
+  const { query } = require('./config/database');
   try {
-    const { query } = require('./config/database');
-    const result = await query('SELECT NOW() as current_time, version() as pg_version');
-    
-    // Get table count
-    const tablesResult = await query(`
-      SELECT COUNT(*) as count 
-      FROM information_schema.tables 
-      WHERE table_schema = 'public'
-    `);
-    
-    // Get record counts for key tables
-    // Table names are whitelisted — never interpolate user input here.
-    const allowedTables = ['students', 'users', 'subjects', 'individual_scores'];
-    const tableCounts = {};
-
-    for (const table of allowedTables) {
-      try {
-        const countResult = await query(`SELECT COUNT(*) as count FROM "${table}"`);
-        tableCounts[table] = countResult.rows.length > 0 && countResult.rows[0] ? parseInt(countResult.rows[0].count) : 0;
-      } catch (err) {
-        tableCounts[table] = 'error';
-      }
-    }
-
-    const { pool } = require('./config/database');
+    await query('SELECT 1');
     res.json({
       status: 'connected',
-      database: {
-        current_time: result.rows.length > 0 ? result.rows[0].current_time : null,
-        version: result.rows.length > 0 ? result.rows[0].pg_version.split(',')[0] : 'unknown',
-        table_count: tablesResult.rows.length > 0 ? parseInt(tablesResult.rows[0].count) : 0,
-        record_counts: tableCounts,
-        pool: {
-          total: pool.totalCount,
-          idle: pool.idleCount,
-          waiting: pool.waitingCount
-        }
-      },
       timestamp: new Date().toISOString()
     });
   } catch (error) {
     res.status(503).json({
       status: 'disconnected',
-      error: error.message,
       timestamp: new Date().toISOString()
     });
   }
