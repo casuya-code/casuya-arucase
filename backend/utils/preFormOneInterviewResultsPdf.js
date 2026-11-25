@@ -594,13 +594,22 @@ function generatePreFormOneResultsPdfHtml({
  * @param {Array<{parish: string, grade: string, avgValue: (number|null)}>} rows
  * @param {'interview'|'oLevel'} grading grade profile for the average-grade cell
  */
+function normalizeParishName(value) {
+  const cleaned = String(value || '')
+    .replace(/\./g, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+  return cleaned || 'Unknown';
+}
+
 function buildParishResultsData(rows, grading = 'interview') {
   const gradeFor = grading === 'oLevel' ? calculateOLevelGrade : calculateGrade;
   const map = new Map();
   (rows || []).forEach((row) => {
-    const parish = String(row.parish || '').trim() || 'Unknown';
-    if (!map.has(parish)) {
-      map.set(parish, {
+    const parish = normalizeParishName(row.parish);
+    const key = parish.toUpperCase();
+    if (!map.has(key)) {
+      map.set(key, {
         parish,
         sat: 0,
         gradeCounts: { A: 0, B: 0, C: 0, D: 0, F: 0 },
@@ -608,7 +617,7 @@ function buildParishResultsData(rows, grading = 'interview') {
         avgCount: 0,
       });
     }
-    const entry = map.get(parish);
+    const entry = map.get(key);
     const grade = row.grade;
     if (grade && grade !== '-') {
       entry.sat += 1;

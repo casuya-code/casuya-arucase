@@ -239,11 +239,20 @@ const PreFormOneResultsPage = ({ config }) => {
   const resultsStats = useMemo(() => calculateResultsStats(displayResults), [displayResults]);
 
   const parishResults = useMemo(() => {
+    const normalizeParishKey = (value) => {
+      const cleaned = String(value || '')
+        .replace(/\./g, ' ')
+        .replace(/\s+/g, ' ')
+        .trim();
+      return cleaned || 'Unknown';
+    };
+
     const map = new Map();
     students.forEach((student) => {
-      const parish = (student.parish || '').trim() || 'Unknown';
-      if (!map.has(parish)) {
-        map.set(parish, {
+      const parish = normalizeParishKey(student.parish);
+      const parishKey = parish.toUpperCase();
+      if (!map.has(parishKey)) {
+        map.set(parishKey, {
           parish,
           sat: 0,
           gradeCounts: { A: 0, B: 0, C: 0, D: 0, F: 0 },
@@ -251,7 +260,7 @@ const PreFormOneResultsPage = ({ config }) => {
           gradedCount: 0,
         });
       }
-      const entry = map.get(parish);
+      const entry = map.get(parishKey);
       const key = admissionKey(student.admission_number);
       const result = displayResults[key];
       const grade = result?.grade;
