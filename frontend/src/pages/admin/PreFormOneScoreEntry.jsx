@@ -716,7 +716,7 @@ const PreFormOneScoreEntry = () => {
     
     return (
       <tr key={studentKey} className={hasScore ? 'scored-row' : 'pending-row'}>
-        <td className="student-name">
+        <td className="student-name" data-label="Student">
           <div className="student-info">
             <span className="name">{studentName}</span>
             <span className="status-indicator">
@@ -727,7 +727,7 @@ const PreFormOneScoreEntry = () => {
             </span>
           </div>
         </td>
-        <td className="score-input">
+        <td className="score-input" data-label="Score (0-100)">
           <input
             type="number"
             className="form-input small"
@@ -735,13 +735,15 @@ const PreFormOneScoreEntry = () => {
             min="0"
             max="100"
             step="1"
+            inputMode="numeric"
+            autoComplete="off"
             value={displayScore}
             onChange={(e) => handleScoreChange(studentKey, 'score', e.target.value)}
             onBlur={() => handleScoreBlur(studentKey)}
             aria-label={`Score for ${studentName}`}
           />
         </td>
-        <td className="grade-select">
+        <td className="grade-select" data-label="Grade">
           <select 
             className="form-input small"
             value={displayGrade}
@@ -756,12 +758,12 @@ const PreFormOneScoreEntry = () => {
             <option value="F">F</option>
           </select>
         </td>
-        <td className="status-cell">
+        <td className="status-cell" data-label="Status">
           <span className={`status-badge ${hasScore ? 'completed' : 'pending'}`}>
             {hasScore ? 'Completed' : 'Pending'}
           </span>
         </td>
-        <td className="actions-cell">
+        <td className="actions-cell" data-label="Actions">
           <div className="action-buttons-row">
             <button 
               className={`excel-btn primary small${saving ? ' is-busy' : ''}`}
