@@ -72,16 +72,32 @@ const PreFormOneParishes = () => {
       filtered = filtered.filter(student => student && student.parish === filterParish);
     }
     
-    // Apply sorting
+    // Apply sorting. Name sorts chain first/middle/surname (A-Z) so students
+    // with the same first name stay fully alphabetical, like other classes.
     filtered = [...filtered].sort((a, b) => {
+      const direction = sortOrder === 'asc' ? 1 : -1;
+
+      if (sortBy === 'first_name' || sortBy === 'surname') {
+        const fields = sortBy === 'first_name'
+          ? ['first_name', 'middle_name', 'surname']
+          : ['surname', 'first_name', 'middle_name'];
+        for (const field of fields) {
+          const cmp = String(a[field] ?? '').trim().localeCompare(
+            String(b[field] ?? '').trim(), undefined, { sensitivity: 'base' }
+          );
+          if (cmp !== 0) return cmp * direction;
+        }
+        return 0;
+      }
+
       let aValue = a[sortBy];
       let bValue = b[sortBy];
-      
+
       // Handle undefined values
       if (aValue === undefined && bValue === undefined) return 0;
-      if (aValue === undefined) return sortOrder === 'asc' ? 1 : -1;
-      if (bValue === undefined) return sortOrder === 'asc' ? -1 : 1;
-      
+      if (aValue === undefined) return direction;
+      if (bValue === undefined) return -direction;
+
       if (sortBy === 'admission_number') {
         // Convert to string and handle undefined safely
         const aStr = String(aValue || '');
@@ -89,9 +105,9 @@ const PreFormOneParishes = () => {
         aValue = parseInt(aStr.replace('789ABC', '')) || 0;
         bValue = parseInt(bStr.replace('789ABC', '')) || 0;
       }
-      
-      if (aValue < bValue) return sortOrder === 'asc' ? -1 : 1;
-      if (aValue > bValue) return sortOrder === 'asc' ? 1 : -1;
+
+      if (aValue < bValue) return -direction;
+      if (aValue > bValue) return direction;
       return 0;
     });
     

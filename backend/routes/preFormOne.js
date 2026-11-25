@@ -215,7 +215,7 @@ router.get('/:year', requireAuth, requirePreFormOneYear, async (req, res) => {
     }
 
     const result = await query(
-      'SELECT * FROM preform_one_students WHERE year = $1 ORDER BY admission_number',
+      'SELECT * FROM preform_one_students WHERE year = $1 ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC',
       [year]
     );
 
@@ -757,7 +757,7 @@ router.get('/:year/export', requireAuth, requirePreFormOneYear, async (req, res)
     }
 
     const result = await query(
-      'SELECT * FROM preform_one_students WHERE year = $1 ORDER BY admission_number',
+      'SELECT * FROM preform_one_students WHERE year = $1 ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC',
       [year]
     );
 
@@ -1786,7 +1786,7 @@ router.get('/:year/interview-results/all-pdf', requireAuth, requirePreFormOneYea
        FROM preform_one_students s
        JOIN preform_one_interview_results r ON r.student_id = s.id
        WHERE s.year = $1 AND r.year = $1
-       ORDER BY r.position, s.surname, s.first_name`,
+       ORDER BY r.position, s.first_name ASC, s.middle_name ASC NULLS LAST, s.surname ASC`,
       [year]
     );
 
@@ -2310,7 +2310,7 @@ router.get('/:year/debts', requireAuth, requirePreFormOneYear, async (req, res) 
       `SELECT id, admission_number, serial_number, first_name, middle_name, surname, sex, year, parish
          FROM preform_one_students
         WHERE year = $1
-        ORDER BY surname, first_name, middle_name`,
+        ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC`,
       [year]
     );
 

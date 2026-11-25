@@ -114,7 +114,7 @@ router.get('/eligible/:year', requireAuth, requirePreFormOneYear, async (req, re
         ) AS already_promoted
        FROM preform_one_students p
        WHERE p.year = $1
-       ORDER BY p.admission_number`,
+       ORDER BY p.first_name ASC, p.middle_name ASC NULLS LAST, p.surname ASC`,
       [sourceYear, sourceYear + 1]
     );
 
@@ -242,7 +242,7 @@ router.post('/promote/:year', requireAuth, requirePreFormOneYear, async (req, re
                    AND s.level = 'FORM I'
                    AND s.year = $2
                )
-             ORDER BY p.admission_number`,
+             ORDER BY p.first_name ASC, p.middle_name ASC NULLS LAST, p.surname ASC`,
             [sourceYear, targetYear]
           );
           studentsToPromote = result.rows;

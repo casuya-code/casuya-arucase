@@ -5370,7 +5370,7 @@ router.get('/preform-one/:year', requireAuth, async (req, res) => {
   try {
     const { year } = req.params;
     const result = await query(
-      'SELECT * FROM preform_one_students WHERE year = $1 ORDER BY admission_number',
+      'SELECT * FROM preform_one_students WHERE year = $1 ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC',
       [year]
     );
     res.json(result.rows);
@@ -5570,7 +5570,7 @@ router.get('/preform-one/:year/export', requireAuth, async (req, res) => {
     const { year } = req.params;
     
     const result = await query(
-      'SELECT * FROM preform_one_students WHERE year = $1 ORDER BY admission_number',
+      'SELECT * FROM preform_one_students WHERE year = $1 ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC',
       [year]
     );
 

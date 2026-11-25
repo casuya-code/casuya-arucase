@@ -65,7 +65,7 @@ async function loadContinuingReportContext(query, year) {
   const subjects = subjectsResult.rows;
 
   const studentsResult = await query(
-    `SELECT * FROM preform_one_students WHERE year = $1 ORDER BY surname, first_name`,
+    `SELECT * FROM preform_one_students WHERE year = $1 ORDER BY first_name ASC, middle_name ASC NULLS LAST, surname ASC`,
     [year]
   );
   const students = studentsResult.rows;
@@ -332,7 +332,11 @@ async function buildPreFormOneContinuingBulkReportData(query, { year }) {
       const pa = Number(ra?.position ?? 1e9);
       const pb = Number(rb?.position ?? 1e9);
       if (pa !== pb) return pa - pb;
-      return `${a.surname} ${a.first_name}`.localeCompare(`${b.surname} ${b.first_name}`);
+      const fn = String(a.first_name || '').localeCompare(String(b.first_name || ''), undefined, { sensitivity: 'base' });
+      if (fn !== 0) return fn;
+      const mn = String(a.middle_name || '').localeCompare(String(b.middle_name || ''), undefined, { sensitivity: 'base' });
+      if (mn !== 0) return mn;
+      return String(a.surname || '').localeCompare(String(b.surname || ''), undefined, { sensitivity: 'base' });
     });
   return ordered.map((student) => toReportData(context, student)).filter(Boolean);
 }

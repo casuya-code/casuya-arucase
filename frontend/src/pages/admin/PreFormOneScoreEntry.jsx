@@ -61,8 +61,25 @@ const PreFormOneScoreEntry = () => {
     selectedCardRef.current = selectedCard;
   }, [selectedCard]);
 
-  // Show all students directly; search and pagination are intentionally removed
-  const paginatedStudents = preFormOneStudents;
+  // Show all students sorted by name: first_name, then middle_name, then surname (A-Z).
+  // Search and pagination are intentionally removed.
+  const paginatedStudents = useMemo(
+    () =>
+      [...preFormOneStudents].sort((a, b) => {
+        const firstNameCompare = String(a?.first_name || '').trim().localeCompare(
+          String(b?.first_name || '').trim(), undefined, { sensitivity: 'base' }
+        );
+        if (firstNameCompare !== 0) return firstNameCompare;
+        const middleNameCompare = String(a?.middle_name || '').trim().localeCompare(
+          String(b?.middle_name || '').trim(), undefined, { sensitivity: 'base' }
+        );
+        if (middleNameCompare !== 0) return middleNameCompare;
+        return String(a?.surname || '').trim().localeCompare(
+          String(b?.surname || '').trim(), undefined, { sensitivity: 'base' }
+        );
+      }),
+    [preFormOneStudents]
+  );
 
   // Cleanup auto-save when navigating away and manage auto-save lifecycle
   useEffect(() => {
@@ -870,7 +887,7 @@ const PreFormOneScoreEntry = () => {
         </div>
       </div>
     );
-  }, [selectedSubject, selectedCard, preFormOneStudents, loading, scoreStats, paginatedStudents, handleBack, renderVirtualItem, saveAllScores, exportScores, saving, exporting]);
+  }, [selectedSubject, selectedCard, loading, scoreStats, paginatedStudents, handleBack, renderVirtualItem, saveAllScores, exportScores, saving, exporting]);
 
   // True when the user has any allocated subject for a score type in this year.
   // Admins always true (unrestricted).

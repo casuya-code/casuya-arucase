@@ -109,13 +109,21 @@ const PreFormOneRegistration = () => {
     setCurrentPage(1);
   }, [students]);
 
-  // Sort students by admission number for stable display
+  // Sort students by name: first_name, then middle_name, then surname (A-Z)
   const sortedStudents = useMemo(() => {
     const list = Array.isArray(students) ? students : [];
     return [...list].sort((a, b) => {
-      const aVal = parseInt(String(a?.admission_number || '').replace('789ABC', '')) || 0;
-      const bVal = parseInt(String(b?.admission_number || '').replace('789ABC', '')) || 0;
-      return aVal - bVal;
+      const firstNameCompare = String(a?.first_name || '').trim().localeCompare(
+        String(b?.first_name || '').trim(), undefined, { sensitivity: 'base' }
+      );
+      if (firstNameCompare !== 0) return firstNameCompare;
+      const middleNameCompare = String(a?.middle_name || '').trim().localeCompare(
+        String(b?.middle_name || '').trim(), undefined, { sensitivity: 'base' }
+      );
+      if (middleNameCompare !== 0) return middleNameCompare;
+      return String(a?.surname || '').trim().localeCompare(
+        String(b?.surname || '').trim(), undefined, { sensitivity: 'base' }
+      );
     });
   }, [students]);
 

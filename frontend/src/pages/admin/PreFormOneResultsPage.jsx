@@ -313,7 +313,7 @@ const PreFormOneResultsPage = ({ config }) => {
       sensitivity: 'base',
     });
     if (mn !== 0) return mn;
-    return (a.surname || '').localeCompare(b.surname || '', { sensitivity: 'base' });
+    return (a.surname || '').localeCompare(b.surname || '', undefined, { sensitivity: 'base' });
   };
 
   const sortedStudents = useMemo(() => {

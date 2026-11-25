@@ -110,7 +110,7 @@ router.get('/year/:year', requireAuth, requireModule('pre_form_one_scores'), asy
       JOIN ${subjectsTable} sub ON sc.subject_id = sub.id
       JOIN preform_one_students st ON sc.student_id = st.id
       WHERE sc.subject_type = $1 AND st.year = $2 AND sub.is_active = true AND sc.score IS NOT NULL
-      ORDER BY st.admission_number, sub.subject_code
+      ORDER BY st.first_name ASC, st.middle_name ASC NULLS LAST, st.surname ASC, sub.subject_code
       `,
       [subjectType, parseInt(year, 10)]
     );
@@ -192,7 +192,7 @@ router.get('/subject/:subjectId', requireAuth, requireModule('pre_form_one_score
       FROM preform_one_scores sc
       JOIN preform_one_students st ON sc.student_id = st.id
       WHERE sc.subject_id = $1 AND sc.subject_type = $2 AND st.year = $3
-      ORDER BY st.admission_number
+      ORDER BY st.first_name ASC, st.middle_name ASC NULLS LAST, st.surname ASC
     `, [subjectId, subjectType, yearNum]);
     
     return sendSuccess(res, 200, 'Scores retrieved successfully', result.rows);
@@ -494,7 +494,7 @@ router.get('/export/:subjectId', requireAuth, requireModule('pre_form_one_scores
       FROM preform_one_students st
       LEFT JOIN preform_one_scores sc ON st.id = sc.student_id AND sc.subject_id = $1 AND sc.subject_type = $2
       WHERE st.year = $3
-      ORDER BY st.admission_number
+      ORDER BY st.first_name ASC, st.middle_name ASC NULLS LAST, st.surname ASC
     `, [subjectId, subjectType, yearNum]);
     
     // Generate CSV
