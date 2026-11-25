@@ -132,20 +132,30 @@ async function calculateAndSavePreFormOneResults(client, options) {
 
   const results = [];
 
+  // Fetch all scores for this year/type once instead of once per student.
+  const studentIds = studentsResult.rows.map((student) => student.id);
+  const allScoresResult = await client.query(
+    'SELECT student_id, subject_id, score FROM preform_one_scores WHERE student_id = ANY($1::int[]) AND subject_type = $2',
+    [studentIds, scoreType]
+  );
+  const scoresByStudent = new Map();
+  for (const row of allScoresResult.rows) {
+    if (!scoresByStudent.has(row.student_id)) {
+      scoresByStudent.set(row.student_id, new Map());
+    }
+    scoresByStudent.get(row.student_id).set(String(row.subject_id), row.score);
+  }
+
   for (const student of studentsResult.rows) {
-    const scoresResult = await client.query(
-      'SELECT subject_id, score FROM preform_one_scores WHERE student_id = $1 AND subject_type = $2',
-      [student.id, scoreType]
-    );
+    const studentScores = scoresByStudent.get(student.id) || new Map();
 
     let totalMarks = 0;
     let scoredSubjectCount = 0;
 
     for (const subject of subjectsResult.rows) {
-      const sid = String(subject.id);
-      const row = scoresResult.rows.find((s) => String(s.subject_id) === sid);
-      if (row && row.score != null) {
-        const n = Number(row.score);
+      const score = studentScores.get(String(subject.id));
+      if (score != null) {
+        const n = Number(score);
         if (Number.isFinite(n)) {
           totalMarks += n;
           scoredSubjectCount++;

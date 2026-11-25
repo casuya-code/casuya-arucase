@@ -21,11 +21,12 @@ function makeClient({ students, scores, existingResults = [], resultsTable = 'pr
       if (normalized.includes('WHERE is_active = true')) {
         return { rows: SUBJECTS, rowCount: SUBJECTS.length };
       }
-      if (normalized.includes('FROM preform_one_scores WHERE student_id =')) {
-        const [studentId, subjectType] = params;
+      if (normalized.includes('FROM preform_one_scores WHERE student_id = ANY')) {
+        const [studentIds, subjectType] = params;
+        const allowedIds = Array.isArray(studentIds) ? studentIds.map(String) : [String(studentIds)];
         const rows = scores
-          .filter((s) => String(s.student_id) === String(studentId) && s.subject_type === subjectType)
-          .map((s) => ({ subject_id: s.subject_id, score: s.score }));
+          .filter((s) => allowedIds.includes(String(s.student_id)) && s.subject_type === subjectType)
+          .map((s) => ({ student_id: s.student_id, subject_id: s.subject_id, score: s.score }));
         return { rows, rowCount: rows.length };
       }
       if (normalized.includes(`SELECT id FROM ${resultsTable}`)) {
