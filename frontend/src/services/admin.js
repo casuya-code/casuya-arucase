@@ -178,6 +178,8 @@ export const adminAPI = {
   // AI Matters (upload PDF/CSV/Word, chat over content)
   getAIMattersDocuments: () => api.get('/admin/ai-matters/documents'),
   uploadAIMattersDocument: (formData) => api.post('/admin/ai-matters/upload', formData),
+  setAIMattersDocumentPublic: (id, isPublic) =>
+    api.patch(`/admin/ai-matters/documents/${id}/public`, { is_public: isPublic }),
   deleteAIMattersDocument: (id) => api.delete(`/admin/ai-matters/documents/${id}`),
   chatAIMatters: (message) => api.post('/admin/ai-matters/chat', { message }),
 

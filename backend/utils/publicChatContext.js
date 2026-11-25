@@ -181,6 +181,7 @@ async function buildFeesHighlightSection(query) {
     const docs = await query(
       `SELECT name, extracted_text FROM ai_matters_documents
        WHERE extracted_text IS NOT NULL AND TRIM(extracted_text) != ''
+         AND is_public = TRUE
        ORDER BY created_at DESC`
     );
     for (const d of docs.rows || []) {
@@ -296,6 +297,7 @@ async function buildAdmissionsHighlightSection(query) {
     const docs = await query(
       `SELECT name, extracted_text FROM ai_matters_documents
        WHERE extracted_text IS NOT NULL AND TRIM(extracted_text) != ''
+         AND is_public = TRUE
        ORDER BY created_at DESC LIMIT ${DOC_LIMIT}`
     );
     for (const d of docs.rows || []) {
@@ -328,8 +330,9 @@ async function buildDocumentsSection(query) {
   return buildAiMattersDocumentsSection(query, {
     maxPerDoc: DOC_TEXT_MAX,
     docLimit: DOC_LIMIT,
+    publicOnly: true,
     heading:
-      'School documents (uploaded in Admin → AI Matters — fees, policies, letters, schedules)',
+      'School documents approved for public answers (Admin → AI Matters — fees, policies, letters, schedules)',
   });
 }
 
@@ -547,8 +550,13 @@ async function buildPublicChatContext(query, { nectaSummary = '', bypassCache = 
   return knowledgeBase;
 }
 
+function clearPublicChatContextCache() {
+  contextCache = { text: '', expiresAt: 0 };
+}
+
 module.exports = {
   buildPublicChatContext,
+  clearPublicChatContextCache,
   buildFeesHighlightSection,
   buildFeesAnnouncementsSection,
   buildAdmissionsHighlightSection,

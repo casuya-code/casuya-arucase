@@ -154,6 +154,37 @@ const rateLimitHeaders = (rateLimitInfo) => {
   };
 };
 
+const SENSITIVE_KEY = /pass(word)?|pwd|secret|token|auth|cookie|session|national.?id|id.?no|phone|email|student|dob|address|adm/i;
+
+// Used only to detect attack patterns. Sensitive values are removed before
+// serialization, and the result is never written to logs.
+const safeSerializeForScan = (value) => {
+  if (value === undefined || value === null) return '';
+  try {
+    return JSON.stringify(value, (key, val) => {
+      if (key && SENSITIVE_KEY.test(key)) return undefined;
+      if (typeof val === 'string' && val.length > 4000) return val.slice(0, 4000);
+      if (typeof val === 'bigint') return val.toString();
+      return val;
+    });
+  } catch (_) {
+    return '';
+  }
+};
+
+const safeObjectKeys = (value) => {
+  if (!value || typeof value !== 'object' || Array.isArray(value)) return [];
+  return Object.keys(value).slice(0, 30);
+};
+
+const safeRequestPath = (req) => {
+  try {
+    return new URL(req.originalUrl || req.url, 'http://localhost').pathname.slice(0, 500);
+  } catch (_) {
+    return String(req.url || '').split('?')[0].slice(0, 500);
+  }
+};
+
 // Security monitoring middleware
 const securityMonitor = (req, res, next) => {
   const startTime = Date.now();
@@ -167,19 +198,23 @@ const securityMonitor = (req, res, next) => {
     /data:.*base64/i  // Base64 encoded data
   ];
   
+  const bodyScan = safeSerializeForScan(req.body);
+  const queryScan = safeSerializeForScan(req.query);
   const isSuspicious = suspiciousPatterns.some(pattern => 
-    pattern.test(req.url) || 
-    pattern.test(JSON.stringify(req.body)) ||
-    pattern.test(JSON.stringify(req.query))
+    pattern.test(req.url) ||
+    pattern.test(bodyScan) ||
+    pattern.test(queryScan)
   );
   
   if (isSuspicious) {
+    // Log a minimal summary only: never the raw body, query values, or full URL.
     console.warn('🚨 Suspicious request detected:', {
       ip: req.ip,
-      url: req.url,
-      userAgent: req.headers['user-agent'],
-      body: req.body,
-      query: req.query
+      method: req.method,
+      path: safeRequestPath(req),
+      userAgent: req.headers['user-agent'] ? String(req.headers['user-agent']).slice(0, 300) : undefined,
+      bodyKeys: safeObjectKeys(req.body),
+      queryKeys: safeObjectKeys(req.query)
     });
   }
   

@@ -52,6 +52,21 @@ export default function AIMatters() {
     },
   });
 
+  const visibilityMutation = useMutation({
+    mutationFn: ({ id, isPublic }) => adminAPI.setAIMattersDocumentPublic(id, isPublic),
+    onSuccess: (_data, variables) => {
+      queryClient.invalidateQueries(['ai-matters-documents']);
+      toast.success(
+        variables.isPublic
+          ? 'Document approved for the public chatbot.'
+          : 'Document is now private.'
+      );
+    },
+    onError: (err) => {
+      toast.error(err.response?.data?.message || 'Could not update visibility');
+    },
+  });
+
   const handleFile = (file) => {
     if (!file) return;
     const ext = (file.name || '').toLowerCase().split('.').pop();
@@ -111,7 +126,7 @@ export default function AIMatters() {
               </h1>
               <p className="ai-matters-top-sub">
                 Upload PDF, CSV, or Word documents. Ask questions and get answers from their
-                content.
+                content. Uploads are private until you approve them for the public chatbot.
               </p>
             </div>
           </header>
@@ -152,6 +167,21 @@ export default function AIMatters() {
                       <li key={doc.id} className="ai-matters-list-item">
                         <span className="ai-matters-doc-name" title={doc.name}>{doc.name}</span>
                         <span className="ai-matters-doc-date">{formatDate(doc.created_at)}</span>
+                        <button
+                          type="button"
+                          className={'ai-matters-visibility' + (doc.is_public ? ' is-public' : '')}
+                          onClick={() => visibilityMutation.mutate({ id: doc.id, isPublic: !doc.is_public })}
+                          disabled={visibilityMutation.isPending}
+                          aria-pressed={!!doc.is_public}
+                          title={
+                            doc.is_public
+                              ? 'Public chatbot can use this document. Click to make it private.'
+                              : 'Private. Click to approve this document for the public chatbot.'
+                          }
+                        >
+                          <i className={doc.is_public ? 'fas fa-globe' : 'fas fa-lock'} />
+                          <span>{doc.is_public ? 'Public' : 'Private'}</span>
+                        </button>
                         <button
                           type="button"
                           className="ai-matters-delete"

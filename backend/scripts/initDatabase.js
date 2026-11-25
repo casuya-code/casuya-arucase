@@ -1075,8 +1075,13 @@ async function initDatabase() {
         extracted_text TEXT,
         mime_type VARCHAR(100),
         created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-        created_by INTEGER
+        created_by INTEGER,
+        is_public BOOLEAN NOT NULL DEFAULT FALSE
       )
+    `);
+    await query(`
+      ALTER TABLE ai_matters_documents
+      ADD COLUMN IF NOT EXISTS is_public BOOLEAN NOT NULL DEFAULT FALSE
     `);
     console.log('✅ AI Matters documents table created');
 

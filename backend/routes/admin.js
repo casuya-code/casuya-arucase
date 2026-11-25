@@ -4391,12 +4391,13 @@ const {
   ensureAiMattersTable,
   buildAiMattersDocumentsSection,
 } = require('../utils/aiMattersDocuments');
+const { clearPublicChatContextCache } = require('../utils/publicChatContext');
 
 router.get('/ai-matters/documents', requireModule('ai_matters'), async (req, res) => {
   try {
     await ensureAiMattersTable(query);
     const result = await query(
-      'SELECT id, name, file_path, mime_type, created_at FROM ai_matters_documents ORDER BY created_at DESC'
+      'SELECT id, name, file_path, mime_type, is_public, created_at FROM ai_matters_documents ORDER BY created_at DESC'
     );
     res.json({ documents: result.rows });
   } catch (error) {
@@ -4415,12 +4416,12 @@ router.post('/ai-matters/upload', requireModule('ai_matters'), documentUpload.si
     const extracted = await extractText(buffer, req.file.originalname || req.file.filename);
     const userId = req.user?.id || null;
     await query(
-      `INSERT INTO ai_matters_documents (name, file_path, extracted_text, mime_type, created_by)
-       VALUES ($1, $2, $3, $4, $5)`,
+      `INSERT INTO ai_matters_documents (name, file_path, extracted_text, mime_type, created_by, is_public)
+       VALUES ($1, $2, $3, $4, $5, FALSE)`,
       [req.file.originalname || req.file.filename, req.file.filename, extracted || null, req.file.mimetype || null, userId]
     );
     const inserted = await query(
-      'SELECT id, name, file_path, mime_type, created_at FROM ai_matters_documents ORDER BY id DESC LIMIT 1'
+      'SELECT id, name, file_path, mime_type, is_public, created_at FROM ai_matters_documents ORDER BY id DESC LIMIT 1'
     );
     res.status(201).json({ document: inserted.rows[0] });
   } catch (error) {
@@ -4432,15 +4433,45 @@ router.post('/ai-matters/upload', requireModule('ai_matters'), documentUpload.si
   }
 });
 
+// Explicitly approve or revoke a document for the public chatbot. Uploads are
+// private by default, so nothing reaches the public without this action.
+router.patch('/ai-matters/documents/:id/public', requireModule('ai_matters'), async (req, res) => {
+  try {
+    const id = parseInt(req.params.id, 10);
+    if (isNaN(id)) return res.status(400).json({ message: 'Invalid id' });
+
+    const isPublic = req.body?.is_public ?? req.body?.isPublic;
+    if (typeof isPublic !== 'boolean') {
+      return res.status(400).json({ message: 'is_public must be a boolean' });
+    }
+
+    await ensureAiMattersTable(query);
+    const result = await query(
+      `UPDATE ai_matters_documents
+       SET is_public = $1
+       WHERE id = $2
+       RETURNING id, name, is_public, created_at`,
+      [isPublic, id]
+    );
+    if (result.rowCount === 0) return res.status(404).json({ message: 'Document not found' });
+    clearPublicChatContextCache();
+    res.json({ document: result.rows[0] });
+  } catch (error) {
+    console.error('AI Matters visibility update error:', error);
+    return sendError(res, error, 500);
+  }
+});
+
 router.delete('/ai-matters/documents/:id', requireModule('ai_matters'), async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10);
     if (isNaN(id)) return res.status(400).json({ message: 'Invalid id' });
-    const row = await query('SELECT file_path FROM ai_matters_documents WHERE id = $1', [id]);
+    const row = await query('SELECT file_path, is_public FROM ai_matters_documents WHERE id = $1', [id]);
     if (row.rows.length === 0) return res.status(404).json({ message: 'Document not found' });
     const filePath = path.join(aiMattersPath, row.rows[0]?.file_path);
     try { await fs.unlink(filePath); } catch (_) {}
     await query('DELETE FROM ai_matters_documents WHERE id = $1', [id]);
+    if (row.rows[0]?.is_public) clearPublicChatContextCache();
     res.json({ message: 'Document deleted' });
   } catch (error) {
     console.error('AI Matters delete error:', error);

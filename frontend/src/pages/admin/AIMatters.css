@@ -228,6 +228,48 @@
   cursor: not-allowed;
 }
 
+.ai-matters-visibility {
+  flex-shrink: 0;
+  min-height: 2rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+  padding: 0 0.5rem;
+  border: 1px solid #e0ddd5;
+  border-radius: 8px;
+  background: #f5f5f0;
+  color: #6b6b60;
+  font-size: 0.72rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background 0.15s ease;
+}
+
+.ai-matters-visibility.is-public {
+  background: #edf8f1;
+  border-color: #bfe6cd;
+  color: #217a46;
+}
+
+.ai-matters-visibility:hover:not(:disabled) {
+  background: #ecece5;
+}
+
+.ai-matters-visibility.is-public:hover:not(:disabled) {
+  background: #dff2e6;
+}
+
+.ai-matters-visibility:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+@media (max-width: 480px) {
+  .ai-matters-doc-date {
+    display: none;
+  }
+}
+
 /* --- Chat --- */
 .ai-matters-chat {
   display: flex;
