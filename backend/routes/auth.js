@@ -175,13 +175,12 @@ router.post('/login',
     // Clear failed attempts on successful login
     clearFailedAttempts(req.body.username);
     
-    // Set HttpOnly cookie for JWT token (for server-side auth)
+    // Set HttpOnly cookie for JWT token. Do not return the token to JavaScript;
+    // the browser sends the cookie automatically on subsequent requests.
     res.cookie('token', token, cookieShape(24 * 60 * 60 * 1000));
-    
-    // Also return token in response body for client-side storage
+
     res.json({
-      user: userData,
-      token: token
+      user: userData
     });
   } catch (error) {
     console.error('Login error:', error);

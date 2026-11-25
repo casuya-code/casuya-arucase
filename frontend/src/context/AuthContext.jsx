@@ -251,16 +251,14 @@ export const AuthProvider = ({ children }) => {
           }
 
           const user = fallbackData?.user;
-          const token = fallbackData?.token;
           if (!user) {
             return { success: false, error: pickAuthErrorMessage(fallbackData) };
           }
-          
-          // Store token in localStorage for fallback
-          if (token) {
-            try { localStorage.setItem('token', token); } catch (_) { /* storage blocked */ }
-          }
-          
+
+          // The backend now authenticates via HttpOnly cookies only. Clear any
+          // legacy localStorage token so it cannot be read by JavaScript.
+          try { localStorage.removeItem('token'); } catch (_) { /* storage blocked */ }
+
           // Fresh start: drop any cache left by a previous account/session BEFORE
           // the app re-renders with the new user, so queries mount into a clean cache.
           await resetQueryCacheOnAuthChange();

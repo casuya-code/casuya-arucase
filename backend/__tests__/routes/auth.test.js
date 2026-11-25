@@ -43,7 +43,7 @@ function resetQuery() {
 describe('POST /api/auth/login', () => {
   beforeEach(resetQuery);
 
-  it('logs in successfully and returns a token', async () => {
+  it('logs in successfully without exposing a token to JavaScript', async () => {
     const passwordHash = await bcrypt.hash('testpass123', 4);
     query.mockImplementation((sql) => {
       if (typeof sql === 'string' && sql.includes('FROM users WHERE username')) {
@@ -61,9 +61,9 @@ describe('POST /api/auth/login', () => {
 
     expect(res.body.user.username).toBe('testuser');
     expect(res.body.user.role).toBe('teacher');
-    expect(res.body.token).toBeDefined();
-    const decoded = jwt.verify(res.body.token, JWT_SECRET);
-    expect(decoded.user_id).toBe('testuser');
+    expect(res.body.token).toBeUndefined();
+    expect(res.headers['set-cookie']).toBeDefined();
+    expect(res.headers['set-cookie'].join(';')).toContain('token=');
   });
 
   it('rejects invalid username', async () => {
