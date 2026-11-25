@@ -136,8 +136,9 @@ const withTransaction = async (fn) => {
     throw new DatabaseOverloadError();
   }
   activeQueries += 1;
-  const client = await pool.connect();
+  let client;
   try {
+    client = await pool.connect();
     await ensureSessionGuards(client);
     await client.query('BEGIN');
     const result = await fn(client);
@@ -145,12 +146,16 @@ const withTransaction = async (fn) => {
     return result;
   } catch (error) {
     console.error('Transaction error, rolling back:', { message: error.message, code: error.code });
-    await client.query('ROLLBACK').catch((rollbackError) => {
-      console.error('Rollback error:', rollbackError.message);
-    });
+    if (client) {
+      await client.query('ROLLBACK').catch((rollbackError) => {
+        console.error('Rollback error:', rollbackError.message);
+      });
+    }
     throw error;
   } finally {
-    client.release();
+    if (client) {
+      client.release();
+    }
     activeQueries -= 1;
   }
 };
