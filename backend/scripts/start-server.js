@@ -50,7 +50,9 @@ async function main() {
     const { initDatabase } = require('./initDatabase');
     await initDatabase();
   } catch (initError) {
-    console.error('⚠️ Database schema initialization encountered an error:', initError.message);
+    console.error('❌ Database schema initialization failed — aborting startup:', initError.message);
+    console.error(initError.stack);
+    process.exit(1);
   }
 
   try {
