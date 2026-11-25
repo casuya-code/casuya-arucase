@@ -16,27 +16,27 @@ import { CSV_BULK_LABELS, CSV_BULK_TITLES } from '../../constants/csvBulkActions
 import './preform-one-modern.css';
 
 const TAALUMA_GRADE_COMMENTS = {
-  A: 'Hongera kwa mafanikio haya; amepata wastani mzuri sana. Tunahitaji aendelee na nidhamu na bidii ili kudumisha kiwango hiki.',
-  B: 'Mwanafunzi mahiri; akizingatia zaidi usahihi na kina cha majibu, kiwango cha juu kipo karibu. Tunasisitiza usimamizi mzuri nyumbani na ufuatiliaji wa karibu. Ahimizwe kusoma.',
-  C: 'Ana msingi mzuri; anahitaji kufanya mazoezi zaidi na kudhibiti muda wake wa kusoma ili kuboresha matokeo. Tunasisitiza usimamizi mzuri nyumbani na ufuatiliaji wa karibu. Ahimizwe kusoma.',
-  D: 'Anahitaji msaada wa ziada; inashauriwa afuate masomo kwa makini, aulizie mwalimu pale anapokwama, na afanye marudio ya masomo nyumbani. Mabadiliko ya haraka yanahitajika. Asipofikisha wastani, atashauriwa kutafuta shule nyingine.',
-  F: 'Matokeo yanalazimu mabadiliko ya haraka; mzazi/mlezi ashirikiane na uongozi wa Seminari ili kupanga mkakati wa kusaidia mwanafunzi huyu kwa pamoja. Asipofikisha wastani, atashauriwa kutafuta shule nyingine.',
+  A: 'Hongera kwa mwanzo mzuri sana wa safari yako ya seminari. Umeonyesha bidii, nidhamu, na ufahamu mzuri katika masomo. Endelea kuzingatia maelekezo ya walimu ili kudumisha kiwango hiki.',
+  B: 'Umeanza vizuri safari yako ya seminari kwa ufaulu mzuri. Una uwezo mzuri; ongeza umakini, usahihi, na marudio ya masomo ili kufikia kiwango cha juu zaidi.',
+  C: 'Una msingi unaoweza kukua katika safari hii ya seminari. Ongeza juhudi, tumia muda wako vizuri, na muulize mwalimu unapokumbana na changamoto ili kuboresha matokeo yako.',
+  D: 'Uko mwanzoni mwa safari ya seminari, hivyo unahitaji kuongeza bidii na kubadilisha mbinu za kujisomea. Shiriki kwa karibu na walimu, fanya marudio ya mara kwa mara, na fuata ratiba ya masomo kwa uaminifu.',
+  F: 'Matokeo haya yanaonyesha haja ya mabadiliko ya haraka katika jitihada za masomo. Mwanafunzi anapaswa kushirikiana kwa karibu na walimu na uongozi, na mzazi/mlezi afuatilie kwa ukaribu ili kumsaidia kuimarika katika safari yake ya seminari.',
 };
 
 const MWALIMU_GRADE_COMMENTS = {
-  A: 'Amefanya vizuri',
-  B: 'Amefanya vizuri',
-  C: 'Ufaulu wa wastani',
-  D: 'Ufaulu dhaifu. Aongeze bidii katika masomo',
-  F: 'Amefeli',
+  A: 'Ameanza safari ya seminari kwa bidii kubwa na amefanya vizuri sana katika masomo. Aendelee hivyo.',
+  B: 'Ameonyesha juhudi nzuri katika masomo. Akiongeza umakini na ushiriki darasani, atafikia matokeo bora zaidi.',
+  C: 'Ana uwezo wa kufanya vizuri zaidi. Ahimizwe kuongeza bidii, kuzingatia maelekezo, na kushiriki kikamilifu darasani.',
+  D: 'Anahitaji kuongeza juhudi na umakini katika masomo. Afuate kwa karibu ushauri wa walimu ili kuboresha ufaulu wake.',
+  F: 'Ufaulu wake ni dhaifu; anahitaji mabadiliko ya dhati, nidhamu katika masomo, na kufuata kwa karibu maelekezo ya walimu.',
 };
 
 const MKUU_GRADE_COMMENTS = {
-  A: 'Pongezi kwa matokeo haya mazuri; dumu katika kiwango hiki.',
-  B: 'Amefanya vizuri, akazane kufikia kiwango cha juu zaidi.',
-  C: 'Uwezo upo, ongeza umakini ili kupata matokeo bora zaidi.',
-  D: 'Asikate tamaa; akiongeza juhudi atafanya vyema zaidi.',
-  F: 'Ni lazima azingatie maelekezo ya walimu ili kufaulu.',
+  A: 'Hongera kwa mwanzo mzuri wa maisha ya seminari. Endelea kuwa mfano wa bidii, nidhamu, na uwajibikaji katika masomo na malezi.',
+  B: 'Ameanza vizuri safari ya seminari. Ahimizwe kuendelea kujituma ili kufikia ubora zaidi kitaaluma na kiutumishi.',
+  C: 'Ana uwezo wa kukua vizuri katika seminari. Anashauriwa kuongeza bidii, nidhamu, na umakini ili kupata matokeo bora zaidi.',
+  D: 'Anahitaji kuzingatia kwa dhati maelekezo ya walimu na uongozi ili kuboresha maendeleo yake ya kitaaluma katika seminari.',
+  F: 'Anapaswa kufanya mabadiliko ya haraka katika nidhamu na juhudi za masomo. Ushirikiano wa karibu kati ya mwanafunzi, wazazi/walezi, na uongozi unahitajika.',
 };
 
 function getGradeComment(commentType, grade) {
