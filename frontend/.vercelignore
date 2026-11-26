@@ -1,0 +1,16 @@
+node_modules
+dist
+dist-*
+dist_*
+dist[0-9]*
+dist[0-9]
+.env
+.env.local
+.env.development
+.env.development.local
+.env.check
+.env.verify
+.env.example
+.env.vercel
+.env.vercel.prod
+*.log

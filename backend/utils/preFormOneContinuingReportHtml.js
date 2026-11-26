@@ -139,7 +139,9 @@ function buildContinuingTableCss() {
     .academic-table.continuing-academic-table colgroup col:nth-child(5) { width: 6% !important; }
     .academic-table.continuing-academic-table colgroup col:nth-child(6) { width: 17% !important; }
     .academic-table.continuing-academic-table colgroup col:nth-child(7) { width: 21% !important; }
-    .academic-table.continuing-academic-table .continuing-assessment-cell { white-space: normal !important; }
+    .academic-table.continuing-academic-table .continuing-assessment-cell { white-space: normal !important; text-align: left !important; }
+    .academic-table.continuing-academic-table .subject-name { text-align: left !important; }
+    .academic-table.continuing-academic-table .comments-col { text-align: left !important; white-space: normal !important; }
   `;
 }
 
@@ -198,12 +200,12 @@ async function generatePreFormOneContinuingReportHtml(data = {}, options = {}) {
       }
       return `
       <tr>
-        <td class="continuing-assessment-cell">${escapeHtml(subject.subject_name || subject.subject_code || '')}</td>
+        <td class="subject-name continuing-assessment-cell">${escapeHtml(subject.subject_name || subject.subject_code || '')}</td>
         <td>${escapeHtml(score)}</td>
         <td><strong>${escapeHtml(score)}</strong></td>
         <td><strong>${escapeHtml(grade)}</strong></td>
         <td>${escapeHtml(String(position))}</td>
-        <td>${escapeHtml(comment)}</td>
+        <td class="comments-col">${escapeHtml(comment)}</td>
         <td class="teacher-signature">${escapeHtml(subject.teacher_signature || '')}</td>
       </tr>`;
     })

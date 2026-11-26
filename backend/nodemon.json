@@ -1,0 +1,28 @@
+{
+  "watch": [
+    "server.js",
+    "routes",
+    "utils",
+    "config",
+    "middleware",
+    "scripts",
+    "migrations",
+    "database"
+  ],
+  "ext": "js,json,mjs,cjs",
+  "ignore": [
+    "node_modules",
+    "assets",
+    "static",
+    "backups",
+    "reports",
+    "admin-photos-source",
+    "__tests__",
+    "__mocks__",
+    "*.log",
+    "uploads"
+  ],
+  "kill-others": true,
+  "delay": 1200,
+  "verbose": false
+}

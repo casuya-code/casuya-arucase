@@ -1,0 +1,13 @@
+# Uploaded to Vercel by the CLI. The Vercel project builds the "frontend" root
+# directory, so the repo is uploaded whole and this list keeps the payload small
+# and free of machine-local files.
+node_modules
+**/node_modules
+frontend/dist
+frontend/dist-*
+frontend/dist_*
+frontend/dist[0-9]*
+frontend/.vercel
+frontend/.env
+frontend/.env.*
+**/*.log
