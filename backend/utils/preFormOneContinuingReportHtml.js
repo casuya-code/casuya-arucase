@@ -420,9 +420,6 @@ async function generatePreFormOneContinuingReportHtml(data = {}, options = {}) {
         </table>
       </div>
 
-      <div class="grade-key-legend" style="margin-top: 8px; padding: 4px; font-size: 10.5px; line-height: 1.4; white-space: nowrap; overflow: visible;">
-        <strong>${t.marksKey}</strong> ${getMarksLegend(language, false)} | <strong>${t.conductKey}</strong> ${t.conductLegend}
-      </div>
     </div>
 
     <div class="report-section section-maoni-taaluma">

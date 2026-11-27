@@ -156,18 +156,19 @@ async function calculateAndSavePreFormOneResults(client, options) {
       const score = studentScores.get(String(subject.id));
       if (score != null) {
         const n = Number(score);
-        if (Number.isFinite(n)) {
+        if (Number.isFinite(n) && n >= 0 && n <= 100) {
           totalMarks += n;
           scoredSubjectCount++;
         }
       }
     }
 
-    // No usable score means no result: never publish a fabricated average of 0.
+    // No usable entered score means no result: never publish a fabricated average of 0.
     if (scoredSubjectCount === 0) {
       continue;
     }
 
+    // Overall average is based on available entered scores (0-100), not dashes/missing.
     const average = roundAverage(totalMarks / scoredSubjectCount);
 
     results.push({

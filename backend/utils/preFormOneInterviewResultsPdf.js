@@ -78,7 +78,12 @@ function calculateInterviewMetrics(scoresByCode, activeSubjects, grading = 'inte
     }
   }
 
-  const average = scoredCount > 0 ? total_marks / scoredCount : 0;
+  // No usable entered score means no result: never publish a fabricated average of 0.
+  if (scoredCount === 0) {
+    return { total_marks: 0, average: 0, grade: '-', remarks: '-' };
+  }
+
+  const average = total_marks / scoredCount;
   const useOLevel = grading === 'oLevel';
   const grade = useOLevel ? calculateOLevelGrade(average) : calculateGrade(average);
 

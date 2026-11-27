@@ -45,7 +45,7 @@ export function buildSubjectScoresMap(rows, admissionKeyFn) {
   return map;
 }
 
-/** Average over scored subjects only (missing/empty scores excluded). */
+/** Average over available entered scores only (0-100). Missing/dash scores excluded. */
 function calculateMetrics(scoresByCode, activeSubjects, gradeFor, remarksFor) {
   if (!activeSubjects?.length) {
     return { total_marks: 0, average: 0, grade: '-', remarks: '-' };
@@ -58,14 +58,19 @@ function calculateMetrics(scoresByCode, activeSubjects, gradeFor, remarksFor) {
     const raw = scoreForSubject(scoresByCode, subject.subject_code);
     if (raw !== null && raw !== undefined && raw !== '') {
       const num = Number(raw);
-      if (Number.isFinite(num)) {
+      if (Number.isFinite(num) && num >= 0 && num <= 100) {
         total_marks += num;
         scoredCount++;
       }
     }
   }
 
-  const average = roundPreFormOneAverage(scoredCount > 0 ? total_marks / scoredCount : 0);
+  // No usable entered score means no result: never publish a fabricated average of 0.
+  if (scoredCount === 0) {
+    return { total_marks: 0, average: 0, grade: '-', remarks: '-' };
+  }
+
+  const average = roundPreFormOneAverage(total_marks / scoredCount);
 
   return {
     total_marks,
