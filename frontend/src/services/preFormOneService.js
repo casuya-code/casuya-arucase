@@ -163,7 +163,7 @@ export const preFormOneService = {
       if (month && month !== 'all') {
         url += `?month=${encodeURIComponent(month)}`;
       }
-      const response = await api.post(url);
+      const response = await api.post(url, null, { timeout: 120000 });
       
       return response.data;
     } catch (error) {
@@ -190,7 +190,7 @@ export const preFormOneService = {
       if (month && month !== 'all') {
         url += `?month=${encodeURIComponent(month)}`;
       }
-      const response = await api.post(url);
+      const response = await api.post(url, null, { timeout: 120000 });
       
       return response.data;
     } catch (error) {
